@@ -1,0 +1,8 @@
+interface:
+  display_name: "Video Agent"
+  short_description: "Generate reusable product/demo videos"
+  brand_color: "#0EA5E9"
+  default_prompt: "Use $video-agent to generate a vertical product/demo video from my website, script, images, voice clone, and QA requirements."
+
+policy:
+  allow_implicit_invocation: true

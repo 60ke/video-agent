@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "vision_reviewed",
+  "materials": [
+    {
+      "asset_id": "asset_001",
+      "filename": "example.png",
+      "type": "image",
+      "vision_summary": "The image shows a product result preview suitable for a short demo beat.",
+      "page_or_scene_role": "result_preview",
+      "visible_text": [],
+      "supported_claims": [
+        "The product can generate a visual result."
+      ],
+      "recommended_usage": "show_result_quality",
+      "display_risk": [],
+      "layout_advice": "Use full-preview unless the image contains dense UI details.",
+      "needs_review": false
+    }
+  ]
+}

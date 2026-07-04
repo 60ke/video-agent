@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "case": {
+    "case_dir": "C:/Users/CNGG/Documents/video_generate/example_case",
+    "materials_dir": "C:/Users/CNGG/Documents/视频素材整理1/VI",
+    "frontend_dir": null
+  },
+  "request": {
+    "target_url": null,
+    "video_goal": "功能种草",
+    "duration": 25,
+    "brand_profile": "科幻熊猫",
+    "target_platform": "douyin",
+    "preferred_features": ["VI设计"]
+  },
+  "dependency_mode": {
+    "browser": "kimi_webbridge",
+    "renderer": "hyperframes",
+    "asr": "funasr",
+    "tts": "voice_clone_api"
+  },
+  "voice_config": {
+    "mode": "voice_clone",
+    "engine": "voice_clone_api",
+    "prompt_audio_policy": "default",
+    "case_prompt_audio": "audio/voice_prompt_5s.wav"
+  },
+  "ending_track": {
+    "id": "default_panda_outro",
+    "type": "video",
+    "policy": "default",
+    "source": "assets/outro/default_panda_outro.mp4",
+    "start_policy": "after_main_video",
+    "participates_in_script": false,
+    "participates_in_subtitles": false,
+    "preserve_audio": true
+  }
+}

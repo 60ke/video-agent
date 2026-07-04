@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "status": "reviewed",
+  "voice_style": "快节奏、清晰、种草",
+  "high_risk_terms": [
+    "科幻熊猫",
+    "AI"
+  ],
+  "segments": [
+    {
+      "id": "seg_001",
+      "stage": "hook",
+      "text": "科幻熊猫AI一键生成品牌视觉。",
+      "feature_id": "visual_generation",
+      "visual_intent": "show_result_quality",
+      "material_task": "use_verified_result_preview",
+      "preferred_asset_ids": [
+        "asset_001"
+      ],
+      "keywords": [
+        "科幻熊猫",
+        "品牌视觉"
+      ],
+      "duration_hint": 3.2,
+      "allow_rewrite": true
+    }
+  ]
+}

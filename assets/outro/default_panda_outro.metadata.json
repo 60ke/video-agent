@@ -1,0 +1,17 @@
+{
+  "id": "default_panda_outro",
+  "file": "default_panda_outro.mp4",
+  "role": "default_video_outro",
+  "format": "mp4",
+  "video_codec": "h264",
+  "audio_codec": "aac",
+  "width": 2160,
+  "height": 3840,
+  "fps": 30,
+  "duration": 3.436009,
+  "aspect_ratio": "9:16",
+  "has_audio": true,
+  "sha256": "AF927F0D16D4E2C90CA10353B201B5267368C76AECEEBB626F6F845CB5B45E4A",
+  "source_note": "Approved fixed panda outro. Append after the generated main video; do not include it in script, subtitle, or visual planning.",
+  "usage": "Copy or reference during postprocess and append with ffmpeg after main render."
+}
