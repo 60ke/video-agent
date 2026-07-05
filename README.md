@@ -21,11 +21,12 @@ Read these in order:
 1. `SKILL.md` - agent-facing skill entry
 2. `docs/agent-playbook.md` - execution routing and acceptance checks
 3. `docs/minimal-command-sop.md` - command budget, retry rules, and anti-patterns
-4. `references/SPEC.md` - product and execution specification
-5. `references/DEPENDENCIES.md` - required local tools and skills
-6. `references/SCHEMA.md` - multi-track `video_project.json` contract
-7. `references/QA.md` - voice, visual, layout, and render quality gates
-8. `DEVELOPMENT_PLAN.md` - implementation roadmap
+4. `rules/douyin-real-demo.md` - real-demo and Douyin quality gates
+5. `references/SPEC.md` - product and execution specification
+6. `references/DEPENDENCIES.md` - required local tools and skills
+7. `references/SCHEMA.md` - multi-track `video_project.json` contract
+8. `references/QA.md` - voice, visual, layout, and render quality gates
+9. `DEVELOPMENT_PLAN.md` - implementation roadmap
 
 ## Reference Docs
 
@@ -58,4 +59,5 @@ These are retained as source material, not implementation contracts:
 
 - `rules/setup.md` - skill root and asset bootstrap
 - `rules/browser-webbridge.md` - Kimi WebBridge evidence-gathering boundary
+- `rules/douyin-real-demo.md` - real operation, quota handling, category focus, and Douyin layout boundary
 - `rules/hyperframes-render.md` - HyperFrames render boundary and QA expectations

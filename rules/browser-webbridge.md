@@ -34,6 +34,7 @@ For each selected feature, save evidence under the case directory:
 - screenshot before operation
 - screenshot or recording during operation when useful
 - result screenshot or result area
+- quota/points/login blocker screenshot when the operation cannot complete
 - error screenshot if the operation fails
 
 ## Output Artifacts
@@ -57,6 +58,7 @@ Each browser material should include:
   "origin": "browser_capture",
   "page_url": "/design/vi",
   "role": "feature_entry",
+  "operation_status": "verified_result",
   "visible_text": ["上传", "开始生成"],
   "supported_claims": ["选择参数后一键生成"],
   "quality": {
@@ -83,11 +85,14 @@ Do not perform:
 
 If sensitive data appears, mask it, crop it out, or recapture a safer state.
 
+If the user is logged in but has no credits/points, capture the available setup/input UI and the quota blocker. Do not create or substitute a fake generated result.
+
 ## Material Quality Rules
 
 - Prefer portrait/mobile captures when the target video is vertical.
 - If the website is desktop-only, capture functional regions instead of full unreadable pages.
 - Capture both input/control state and result state when the claim depends on before/after.
+- For category features, crop around the requested category so it is the visual subject. Do not present unrelated categories as equal subjects.
 - Do not use browser screenshots as tiny full-page strips.
 - Do not use filenames as semantic truth; use visible content and vision review.
 
@@ -100,3 +105,5 @@ If login is required and not available, stop and ask for access or static materi
 If the feature cannot be safely operated, document the limitation in `feature_cards.json` and choose another supported feature.
 
 If captured materials cannot support the proposed narration, revise the narration or recapture evidence. Do not invent.
+
+If the feature is only an entry point and clicking it does not change URL/content/state, record `operation_status: "verified_entry_only"` and limit claims to the visible entry point.

@@ -15,11 +15,12 @@ Read these files before running a full case:
 2. `docs/minimal-command-sop.md`
 3. `rules/setup.md`
 4. `rules/browser-webbridge.md` when browser/website interaction is required
-5. `rules/hyperframes-render.md` before building or rendering HyperFrames
-6. `references/SPEC.md`
-7. `references/DEPENDENCIES.md`
-8. `references/SCHEMA.md`
-9. `references/QA.md`
+5. `rules/douyin-real-demo.md` when the target platform is Douyin/Kuaishou/Reels/Shorts or when the video must demonstrate a real website flow
+6. `rules/hyperframes-render.md` before building or rendering HyperFrames
+7. `references/SPEC.md`
+8. `references/DEPENDENCIES.md`
+9. `references/SCHEMA.md`
+10. `references/QA.md`
 
 Use `references/copywriting-rules.md` and `references/copywriting-options.md` as copywriting knowledge when the brand is 科幻熊猫.
 
@@ -80,6 +81,8 @@ Required:
 2. Research the website with Kimi WebBridge.
    - Capture pages, screenshots, DOM/page text, and safe interaction evidence.
    - Stop if required login or permissions are unavailable.
+   - For Douyin/product-demo cases, classify every requested feature as `verified_result`, `verified_entry_only`, `blocked_login`, `blocked_quota`, `blocked_permission`, `unsafe_action`, or `unavailable` before script planning.
+   - If the result state is not captured, do not invent or generate substitute result visuals.
 
 3. Generate feature cards and operation recipes.
    - Every selected feature must have page evidence.
@@ -88,6 +91,8 @@ Required:
 4. Capture browser materials.
    - Screenshots and recordings are frozen local assets.
    - Record action events and result-ready moments.
+   - Prefer real screen recordings or sequential screenshots of input, action, loading, and result states.
+   - If the user is logged in but has no credits/points, capture the blocker and build only an approved workflow preview, not a fake result video.
 
 5. Generate structured video script.
    - Do not stop at plain copy.
@@ -132,6 +137,11 @@ Required:
 - Do not mutate bundled skill assets; copy default voice assets into the case before use.
 - Do not include the fixed outro in script, subtitle, voice, or visual beat planning; append it only after the main video is complete.
 - Do not generate video from imagination when real website material is available.
+- Do not use generated product photos, generic mockups, emoji, or invented UI as product evidence.
+- Do not claim or show a generated result unless the real result was captured or supplied.
+- Do not spend credits/points, publish, pay, delete, or change account state unless the user explicitly approves that action.
+- Do not show unrelated category labels as equal subjects when the user asked for a specific category such as `电商`; crop and narrate only the verified category state.
+- Do not add arbitrary zoompan, jitter, breathing, or floating motion. Motion must be tied to voiceover or a real browser action.
 - Do not skip contact-sheet or snapshot QA.
 - Do not present a video as final if brand voice, subtitle timing, visual readability, or layout QA fails.
 - Keep older output versions; never overwrite an accepted render.

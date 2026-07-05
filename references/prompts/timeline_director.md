@@ -19,6 +19,8 @@ Return JSON fields that can be merged into `video_project.json`:
       "start": 0.0,
       "end": 3.2,
       "asset_ids": ["asset_003"],
+      "evidence_binding": "real_result",
+      "operation_status": "verified_result",
       "layout": "crop-focus",
       "display_mode": "crop-focus",
       "framing": {
@@ -53,3 +55,8 @@ Return JSON fields that can be merged into `video_project.json`:
 - Tall pages require computed slow-scroll duration; if too fast, split into `multi-section`.
 - Dual panels must not have large empty lower areas.
 - Do not include the fixed panda outro in `visual_track`.
+- Default to stable holds for UI/result readability. Do not add arbitrary zoompan, breathing, jitter, or floating motion.
+- Motion must be tied to a real browser action, a voiceover cue, or a deliberate transition between evidence states.
+- Category scenes must use `crop-focus` around the requested category. Do not use a whole category row as the primary visual when only one category is discussed.
+- Result/demo scenes must use `real_recording`, `real_screenshot`, or `real_result` assets. Packaging-only assets cannot support result claims.
+- If operation status is `blocked_quota`, use quota/input/setup evidence only and mark the visual as workflow preview.

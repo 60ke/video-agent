@@ -28,6 +28,8 @@ Usage rule:
 - Use WebBridge for browser interaction and website material capture.
 - Do not treat WebBridge as a renderer.
 - Save all captured artifacts to the case folder before HyperFrames consumes them.
+- Use captured browser evidence as product truth. Do not replace missing product result states with generated images or invented UI.
+- If a generation action requires credits/points, stop before spending quota unless the user explicitly approves. Capture the blocker and ask for next material/permission.
 
 ### HyperFrames
 

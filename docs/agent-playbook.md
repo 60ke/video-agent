@@ -26,11 +26,17 @@ Use this route unless the user explicitly asks for only one stage.
    - For website cases, use Kimi WebBridge to capture real browser evidence.
    - For static-material cases, register supplied assets and inspect them with vision.
    - Save material descriptions, visible text, supported claims, and privacy notes.
+   - For product/demo videos, capture the real operation path before writing copy: entry screen, selected feature/category, input/control state, loading/generation state when available, result state, and any login/quota blocker.
+   - Classify each requested feature as `verified_result`, `verified_entry_only`, `blocked_login`, `blocked_quota`, `blocked_permission`, `unsafe_action`, or `unavailable`.
+   - If the operation is blocked by quota/points, do not invent a result. Capture the blocker and ask for credits, supplied result material, or approval for a workflow-only preview.
 
 4. Plan script and visuals.
    - Generate structured `video_script.json`, not only plain copy.
    - Bind every script segment to visual intent and candidate assets.
    - Use copywriting references only as guidance; final render uses structured segments.
+   - Every segment must map to captured evidence. If no evidence supports the line, rewrite the line or recapture.
+   - Do not use generated photos, generic ecommerce mockups, emoji, or invented UI as product evidence.
+   - When a requested category such as `电商` is shown, crop and narrate only that category state. Do not show unrelated category labels as equal subjects.
 
 5. Generate voice and align subtitles.
    - Generate voice from reviewed text.
@@ -47,6 +53,7 @@ Use this route unless the user explicitly asks for only one stage.
    - Use only frozen local assets.
    - Preserve `video_project.json` timing.
    - Do not add unsupported claims or undeclared text.
+   - Use stable holds and action-tied motion. Do not add arbitrary zoompan, breathing, jitter, floating cards, or motion that makes UI harder to read.
 
 8. Postprocess.
    - Append default panda outro after main video when declared.
@@ -173,12 +180,17 @@ Before telling the user the video is final, verify:
 - Contact sheet or snapshots were inspected.
 - Render report records warnings and failures.
 - No accepted output version was overwritten.
+- For real-demo videos, the render report records `real_demo_status` and no product-result claim appears without captured or supplied result evidence.
+- For category-focused videos, requested categories are visually dominant and unrelated categories are not presented as equal subjects.
+- For Douyin videos, the contact sheet passes mobile readability: one dominant subject, no tiny full-page strips, no subtitle covering active UI/result content, and no artificial motion artifacts.
 
 ## Failure Policy
 
 If a required dependency is missing, stop and report the missing dependency.
 
 If browser evidence is insufficient, stop and ask for access, screenshots, or a material folder.
+
+If the user is logged in but has no credits/points, stop before any paid/quota-consuming action. Ask for permission/materials or produce only an explicitly labeled workflow preview.
 
 If voice QA fails, do not continue to visual polish until the voice or text is repaired.
 

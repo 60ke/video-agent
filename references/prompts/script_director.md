@@ -28,6 +28,8 @@ Return JSON:
       "feature_id": "vi_design",
       "visual_intent": "show_result_quality",
       "material_task": "use_result_or_before_after",
+      "evidence_binding": "real_result",
+      "operation_status": "verified_result",
       "preferred_asset_ids": ["asset_003"],
       "layout_intent": "portrait-showcase",
       "focus_region": "final_result_center",
@@ -46,6 +48,7 @@ Return JSON:
 - Keep speech density around 4.8-6.2 Chinese characters per second.
 - Include high-risk terms for ASR checks.
 - Bind each segment to a visual intent and material task.
+- Bind each segment to real evidence. Use one of: `real_recording`, `real_screenshot`, `real_result`, `quota_or_error_state`, `evidence_cover`, or `packaging_only`.
 - Use `preferred_asset_ids` only when the material is visually verified.
 - Include `layout_intent` when the segment needs a specific layout such as `portrait-showcase`, `crop-focus`, `multi-section`, `grid-rebuild`, `main-plus-reference`, or `browser-recording`.
 - Include `focus_region` for website/app screenshots. Use a real functional region, not `auto`, when the scene depends on UI readability.
@@ -53,3 +56,7 @@ Return JSON:
 - When using tall detail pages, reserve enough time for readable movement or request `multi-section`.
 - Do not add extra on-screen titles unless they are explicitly part of `overlay_track`.
 - Fixed panda outro is not part of script.
+- Do not claim or imply a generated result unless a captured/supplied result asset exists.
+- Do not use generated product photos, generic mockups, emoji, or invented UI as product evidence.
+- If a feature is `blocked_quota`, `blocked_login`, or `verified_entry_only`, write a workflow/entry-point script only, or stop for user approval/materials.
+- For category features such as `电商`, the script must name only the verified category state. Do not write copy that suggests unrelated categories or an opened result page unless captured evidence proves it.

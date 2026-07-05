@@ -78,12 +78,22 @@ Required checks:
 - no flicker when the same asset is held across adjacent segments
 - visual content matches the current subtitle
 - website/app scenes are real captured states when a URL/frontend is available
+- product-result claims are backed by captured or supplied result evidence
+- generated photos, generic mockups, emoji, or invented UI are not used as product evidence
+- category-focused scenes make the requested category dominant and do not show unrelated category labels as equal subjects
 
 Contact sheet:
 
 - extract frames at event starts, midpoints, and ends
 - inspect the first 3 seconds, every major transition, and final outro join
 - any failed scene must be marked `needs_layout_revision`
+
+Reject a scene if:
+
+- it uses generated artwork to imply a real product result that was not captured
+- it shows a whole category row when the script is about one category, such as `电商`
+- it claims a category/result page opened when URL/content/state did not change
+- it uses arbitrary zoompan, breathing, jitter, or floating motion without a browser action or voiceover cue
 
 ## Layout QA
 
@@ -96,6 +106,7 @@ General rules:
 - Empty space must be intentional and useful.
 - UI screenshots must be readable or intentionally crop-focused.
 - Captions must not obscure the core UI/result.
+- Douyin/mobile scenes should have one dominant subject and no more than one short headline plus subtitle rail.
 
 Reject a scene if:
 
@@ -104,6 +115,8 @@ Reject a scene if:
 - a portrait result image has large side margins while the content could safely fill more width
 - a blurred/background duplicate panel takes more visual weight than the actual material
 - the chosen layout cannot be explained from subtitle meaning and asset role
+- the scene is mostly decorative packaging while the real evidence is tiny
+- subtitle or title overlaps the active input, selected category, result, or CTA
 
 Repair actions:
 
@@ -161,8 +174,15 @@ Required checks:
 - screenshots exist for pages used in video
 - action events exist for browser operations
 - result screenshot or result area exists for result claims
+- quota/points/login blocker screenshots exist when a real operation cannot complete
 - no private user information, credentials, payment info, or sensitive account data appears
 - failed browser steps include error screenshot and reason
+
+Reject browser materials if:
+
+- they only prove an entry point but the script claims a generated result
+- the selected category is not visually dominant
+- captured screenshots are too wide/dense to serve as mobile primary visuals and no crop-focus regions are declared
 
 ## Render QA
 

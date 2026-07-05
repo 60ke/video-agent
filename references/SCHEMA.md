@@ -104,6 +104,8 @@ Assets are frozen local files captured or supplied before render.
   "description": "文化墙生成表单，包含实景图上传、行业、主题、场景和开始生成按钮。",
   "visible_text": ["上传实景图", "行业", "主题", "开始生成"],
   "supported_claims": ["无需提示词", "选择行业主题", "一键生成"],
+  "operation_status": "verified_result",
+  "evidence_role": "real_screenshot",
   "aspect_ratio": 0.5625,
   "quality": {
     "readable": true,
@@ -129,6 +131,27 @@ Allowed `origin`:
 - `generated_asset`
 - `user_supplied_video`
 
+Allowed `operation_status`:
+
+- `verified_result`: input/action/result evidence was captured.
+- `verified_entry_only`: an entry point or category exists, but no changed state/result was captured.
+- `blocked_login`: login is required.
+- `blocked_quota`: logged-in operation is blocked by credits/points/quota.
+- `blocked_permission`: account or browser permission blocks operation.
+- `unsafe_action`: operation would pay, publish, delete, change account state, or spend quota without approval.
+- `unavailable`: requested feature could not be found.
+
+Allowed `evidence_role`:
+
+- `real_recording`
+- `real_screenshot`
+- `real_result`
+- `quota_or_error_state`
+- `evidence_cover`
+- `packaging_only`
+
+Assets with `origin: "generated_asset"` are `packaging_only` by default. They must not support product-result claims unless explicitly supplied as real product output by the user.
+
 ## script_segments
 
 ```json
@@ -139,11 +162,17 @@ Allowed `origin`:
   "feature_id": "culture_wall",
   "visual_intent": "show_operation_steps",
   "material_task": "use_browser_recording_or_ui_sequence",
+  "evidence_binding": "real_recording",
+  "operation_status": "verified_result",
   "keywords": ["现场照片", "行业主题", "点生成"],
   "duration_hint": 4.5,
   "allow_rewrite": true
 }
 ```
+
+`evidence_binding` must be one of the allowed `evidence_role` values. A segment with `evidence_binding: "packaging_only"` must not contain product-result claims.
+
+If `operation_status` is `verified_entry_only`, `blocked_quota`, `blocked_login`, or `blocked_permission`, the segment text must be limited to the visible workflow state or blocker unless the user supplies result material.
 
 ## voice_track
 
@@ -210,7 +239,9 @@ Each visual event binds time, semantic intent, assets, layout, and framing.
   },
   "motion": {
     "name": "stable_focus_with_callout",
-    "avoid_flicker": true
+    "avoid_flicker": true,
+    "motion_reason": "callout follows the generate button mentioned in voiceover",
+    "forbidden_motion": ["arbitrary_zoompan", "breathing", "jitter"]
   },
   "qa_expectations": {
     "no_black_frame": true,
@@ -233,6 +264,8 @@ Allowed `display_mode`:
 - `grid-rebuild`
 - `browser-recording`
 - `outro-video`
+
+Motion must be stable by default. `zoompan`, breathing, jitter, and floating-card motion are not valid unless the event declares a specific `motion_reason` tied to voiceover or a browser action.
 
 ## overlay_track
 
@@ -319,7 +352,11 @@ The ending track is postprocess-only. It must not influence script text, subtitl
     "no_unexplained_blanks": true,
     "min_subject_frame_ratio": 0.35,
     "ui_must_be_readable": true,
-    "subtitle_must_not_cover_key_content": true
+    "subtitle_must_not_cover_key_content": true,
+    "real_result_claims_require_result_evidence": true,
+    "generated_assets_are_packaging_only": true,
+    "category_focus_required": true,
+    "no_arbitrary_motion": true
   },
   "layout": {
     "dual_panel_height_must_match_media": true,
