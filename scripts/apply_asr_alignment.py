@@ -42,18 +42,18 @@ def load_script_segments(case_dir: Path) -> list[dict[str, Any]]:
     return normalized
 
 
-def asr_bounds(alignment: dict[str, Any]) -> tuple[float, float]:
+def alignment_bounds(alignment: dict[str, Any]) -> tuple[float, float]:
     segments = alignment.get("segments", [])
     if not isinstance(segments, list) or not segments:
         duration = alignment.get("duration")
         if isinstance(duration, (int, float)) and duration > 0:
             return 0.0, float(duration)
-        raise ValueError("FunASR alignment has no segments or duration")
+        raise ValueError("alignment has no segments or duration")
 
     starts = [float(seg.get("start", 0)) for seg in segments if isinstance(seg, dict)]
     ends = [float(seg.get("end", 0)) for seg in segments if isinstance(seg, dict)]
     if not starts or not ends or max(ends) <= min(starts):
-        raise ValueError("FunASR alignment has invalid start/end values")
+        raise ValueError("alignment has invalid start/end values")
     return min(starts), max(ends)
 
 
@@ -84,6 +84,61 @@ def allocate_subtitles(script_segments: list[dict[str, Any]], start: float, end:
     return subtitles
 
 
+def normalized_chars(text: str) -> str:
+    return "".join(str(text).split())
+
+
+def build_char_timeline(alignment_segments: list[dict[str, Any]]) -> tuple[str, list[float], list[float]]:
+    chars: list[str] = []
+    starts: list[float] = []
+    ends: list[float] = []
+    for segment in alignment_segments:
+        text = normalized_chars(str(segment.get("text", "")))
+        if not text:
+            continue
+        start = float(segment.get("start", 0))
+        end = float(segment.get("end", start))
+        duration = max(end - start, 0.001)
+        count = len(text)
+        for idx, char in enumerate(text):
+            chars.append(char)
+            starts.append(start + duration * idx / count)
+            ends.append(start + duration * (idx + 1) / count)
+    return "".join(chars), starts, ends
+
+
+def allocate_from_alignment_text(script_segments: list[dict[str, Any]], alignment: dict[str, Any]) -> list[dict[str, Any]] | None:
+    alignment_segments = alignment.get("segments", [])
+    if not isinstance(alignment_segments, list) or not alignment_segments:
+        return None
+
+    combined, starts, ends = build_char_timeline([seg for seg in alignment_segments if isinstance(seg, dict)])
+    if not combined or len(starts) != len(combined) or len(ends) != len(combined):
+        return None
+
+    subtitles: list[dict[str, Any]] = []
+    search_from = 0
+    for idx, segment in enumerate(script_segments):
+        needle = normalized_chars(segment["text"])
+        if not needle:
+            return None
+        found = combined.find(needle, search_from)
+        if found < 0:
+            return None
+        end_index = found + len(needle)
+        subtitles.append(
+            {
+                "id": f"sub_{idx + 1:03d}",
+                "script_segment_id": segment["id"],
+                "text": segment["text"],
+                "start": round(starts[found], 3),
+                "end": round(ends[min(end_index - 1, len(ends) - 1)], 3),
+            }
+        )
+        search_from = end_index
+    return subtitles
+
+
 def update_project(case_dir: Path, script_segments: list[dict[str, Any]], subtitle_track: dict[str, Any]) -> None:
     project_path = case_dir / "video_project.json"
     project = load_json(project_path)
@@ -105,15 +160,21 @@ def update_project(case_dir: Path, script_segments: list[dict[str, Any]], subtit
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
     case_dir = Path(args.case).expanduser().resolve(strict=False)
-    alignment_path = Path(args.alignment).expanduser().resolve(strict=False) if args.alignment else case_dir / "output" / "funasr" / "funasr_alignment.json"
+    alignment_path = Path(args.alignment).expanduser().resolve(strict=False) if args.alignment else case_dir / "output" / "minimax" / "minimax_alignment.json"
     alignment = load_json(alignment_path)
     script_segments = load_script_segments(case_dir)
-    start, end = asr_bounds(alignment)
-    subtitles = allocate_subtitles(script_segments, start, end)
+    start, end = alignment_bounds(alignment)
+    subtitles = allocate_from_alignment_text(script_segments, alignment)
+    allocation_format = "minimax_text_matched_reviewed_text"
+    warnings: list[str] = []
+    if subtitles is None:
+        subtitles = allocate_subtitles(script_segments, start, end)
+        allocation_format = "duration_allocated_reviewed_text"
+        warnings.append("exact Minimax text matching failed; fell back to proportional duration allocation")
 
     subtitle_track = {
         "source": str(alignment_path),
-        "format": "asr_duration_allocated_reviewed_text",
+        "format": allocation_format,
         "segments": subtitles,
     }
     output_path = case_dir / "subtitle_track.json"
@@ -133,12 +194,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "segment_count": len(subtitles),
             "start": start,
             "end": end,
+            "warnings": warnings,
         },
     }
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Apply FunASR timing to reviewed script subtitles.")
+    parser = argparse.ArgumentParser(description="Apply Minimax timing to reviewed script subtitles.")
     parser.add_argument("--case", required=True)
     parser.add_argument("--alignment")
     parser.add_argument("--update-project", action="store_true")

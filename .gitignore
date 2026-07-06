@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 *.pyo
 cases/
+config/*.local.json
+.env
+.env.*
+!.env.example

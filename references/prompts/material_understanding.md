@@ -31,11 +31,11 @@ Return JSON:
       "supported_claims": ["上传素材后一键生成"],
       "recommended_usage": "show_operation_entry",
       "display_risk": ["wide_desktop_ui", "dense_desktop_ui"],
-      "layout_advice": "Use crop-focus on the form area, not full-page tiny display.",
+      "layout_advice": "Do not render this wide screenshot directly. Request or create an AI-verified 9:16 function screenshot before final render.",
       "layout_plan": {
-        "primary_display_mode": "crop-focus",
+        "primary_display_mode": "full-width",
         "focus_region": "left_form_and_generate_button",
-        "fill_strategy": "crop_to_readable_functional_region",
+        "fill_strategy": "fit_width_preserve_image",
         "min_subject_frame_ratio": 0.45,
         "center_safe_region": {"x": 0.18, "y": 0.12, "w": 0.64, "h": 0.68},
         "must_be_visible": ["上传", "开始生成"],
@@ -53,18 +53,19 @@ Return JSON:
 - Use ASCII `asset_id` exactly from `asset_manifest.json`.
 - Preserve Chinese visible text in `visible_text`.
 - Mark website/app screenshots by their functional role.
-- A wide desktop website/app screenshot must be classified as `wide_desktop_ui` and must not recommend `full-preview` as the primary display mode.
+- A wide desktop website/app screenshot must be classified as `wide_desktop_ui` and must not be recommended as a final visual unless it has already been recaptured/prepared as a 9:16 screenshot.
 - For tall screenshots, say whether they need `slow-scroll` or `multi-section`.
-- For dense desktop UI, prefer `crop-focus`.
+- For dense desktop UI, request a prepared 9:16 function screenshot; do not ask the renderer to crop the wide source.
 - For ordinary 9:16 or near-portrait result images, prefer `portrait-showcase`: fill most of the canvas width while preserving the key content.
 - Never recommend showing a long page as a narrow full-height strip.
 - Only recommend `slow-scroll` when the segment is long enough to read the content; otherwise recommend `multi-section`.
 - For website/app screens, identify the functional region: upload area, form fields, result gallery, editor canvas, generate button, checkout/payment area, etc.
-- For every wide UI crop, list `must_be_visible` labels/buttons/results that must remain inside the center safe region throughout the scene.
-- If the narrated subject would sit on the far left/right edge after cropping, mark `needs_review: true` and request a recrop or a more specific browser screenshot.
+- For navigation screenshots, identify the step precisely. Use `home_entry`, `text_to_image_entry`, `menu_select`, `feature_menu_select`, or `feature_page_empty` rather than a vague `feature_entry`.
+- For every function screenshot, list `must_be_visible` labels/buttons/results that must be visible in the prepared 9:16 image.
+- If the narrated subject is not already visible in a 9:16-ready asset, mark `needs_review: true` and request recapture/preparation.
 - If a two-column or gallery layout would make both images unreadable, recommend sequential close-ups or `main-plus-reference`, not equal-width tiny panels.
 - Mark over-zoom risk when cropping would hide the page purpose, important labels, or result area.
-- For result images, identify whether the image is an input/reference/result/final effect.
+- For result images, identify whether the image is an input/reference/result/final effect. Website result pages are not result images; they are operation evidence only.
 - Do not invent claims that are not visually supported.
 - For annotated screenshots, explain the underlying clean screenshot and the callout purpose. Do not treat red boxes/arrows as product UI.
 - For generated result crops/exports, state whether they can support a result-quality claim or only a workflow claim.

@@ -19,7 +19,7 @@ Return JSON:
     {
       "target": "vis_003",
       "problem": "UI screenshot is too narrow to read.",
-      "action": "Switch to crop-focus and enlarge the main form region."
+      "action": "Recapture or prepare an AI-verified 9:16 function screenshot before rendering."
     }
   ]
 }
@@ -32,7 +32,8 @@ Return JSON:
 - no sudden flash when the same image continues
 - UI/result content is readable on mobile
 - narrated website/app subject stays inside the central safe region
-- no wide desktop screenshot is used as a full-preview primary visual for a narrated scene
+- no wide desktop screenshot is used directly as a narrated scene
+- generated-result scenes use saved result crops/exports, not website result page screenshots
 - no website/app frame is mostly blank while the active UI/result is on the edge or offscreen
 - no large meaningless blank or blurred panels
 - subtitles are visible and do not cover key content
@@ -49,8 +50,9 @@ Return JSON:
 - If a scene is only decorative background with tiny content, fail it.
 - If a tall image scrolls too fast to understand, fail it.
 - If dual-panel media occupies only the top of tall empty panels, fail it.
-- If website/app screenshots are available but the render uses unclear static material, request recapture or crop-focus.
-- If a wide desktop UI screenshot is used as the primary visual without crop-focus, multi-section, browser-recording, or a result crop/export, fail it.
+- If website/app screenshots are unclear, request an AI-verified 9:16 function screenshot.
+- If a wide desktop UI screenshot is used directly as the primary visual, fail it.
+- If a generated result is shown through the website result page instead of a saved result image/crop/export, fail it.
 - If pan/zoom motion moves the menu item, form field, generate button, result gallery, or result image outside the central safe region, fail it.
 - If a real generation/result was not captured but the render shows a generated-looking result, fail it.
 - If the user asked for `电商` but the frame visually emphasizes the entire category row or unrelated category labels, fail it.

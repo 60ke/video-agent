@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from utils.skill_path import default_outro_path, default_voice_prompt_path, require_skill_root
+from utils.skill_path import default_outro_path, require_skill_root
 
 
 OUTPUT_DIRS = (
@@ -19,8 +17,8 @@ OUTPUT_DIRS = (
     "assets/browser/annotated",
     "assets/results",
     "audio",
-    "hyperframes",
     "output",
+    "output/minimax",
     "output/versions",
     "output/qa",
     "output/reports",
@@ -46,6 +44,11 @@ PLACEHOLDER_JSON = {
     "browser_materials.json": {
         "schema_version": 1,
         "status": "pending",
+        "auth_state": {
+            "logged_in": None,
+            "points_balance": None,
+            "evidence_asset_id": None,
+        },
         "materials": [],
     },
     "image_resources.json": {
@@ -93,51 +96,13 @@ def _write_json(path: Path, payload: dict[str, Any], *, force: bool, touched: li
     touched.append(str(path))
 
 
-def _copy_file(src: Path, dst: Path, *, force: bool, touched: list[str], skipped: list[str]) -> None:
-    if dst.exists() and not force:
-        skipped.append(str(dst))
-        return
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src, dst)
-    touched.append(str(dst))
-
-
-def _convert_prompt_to_wav(
-    src: Path,
-    dst: Path,
-    *,
-    force: bool,
-    touched: list[str],
-    skipped: list[str],
-) -> None:
-    if dst.exists() and not force:
-        skipped.append(str(dst))
-        return
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    cmd = [
-        "ffmpeg",
-        "-y",
-        "-i",
-        str(src),
-        "-t",
-        "5",
-        "-ac",
-        "1",
-        "-ar",
-        "16000",
-        str(dst),
-    ]
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    if proc.returncode != 0:
-        raise RuntimeError(f"ffmpeg failed to convert voice prompt: {proc.stderr.strip()}")
-    touched.append(str(dst))
-
-
-def _build_input(args: argparse.Namespace, skill_root: Path, voice_prompt: str | None) -> dict[str, Any]:
+def _build_input(args: argparse.Namespace, skill_root: Path) -> dict[str, Any]:
     ending_policy = args.ending_policy
     ending_track: dict[str, Any]
     if ending_policy == "default":
         outro = default_outro_path(skill_root)
+        if not outro.is_file():
+            raise FileNotFoundError(f"default ending video missing: {outro}")
         ending_track = {
             "id": "default_panda_outro",
             "type": "video",
@@ -151,11 +116,14 @@ def _build_input(args: argparse.Namespace, skill_root: Path, voice_prompt: str |
     elif ending_policy == "custom":
         if not args.ending_video:
             raise ValueError("--ending-video is required when --ending-policy custom")
+        ending_video = Path(args.ending_video).resolve(strict=False)
+        if not ending_video.is_file():
+            raise FileNotFoundError(f"custom ending video missing: {ending_video}")
         ending_track = {
             "id": "custom_outro",
             "type": "video",
             "policy": "custom",
-            "source": str(Path(args.ending_video).resolve(strict=False)),
+            "source": str(ending_video),
             "start_policy": "after_main_video",
             "participates_in_script": False,
             "participates_in_subtitles": False,
@@ -184,15 +152,14 @@ def _build_input(args: argparse.Namespace, skill_root: Path, voice_prompt: str |
         },
         "dependency_mode": {
             "browser": "kimi_webbridge",
-            "renderer": "hyperframes",
-            "asr": "funasr",
-            "tts": args.tts_engine,
+            "renderer": "simple_ffmpeg",
+            "alignment": "minimax_t2a",
+            "tts": "minimax_t2a",
         },
         "voice_config": {
-            "mode": "voice_clone" if args.voice_policy in ("default", "custom") else "plain_tts",
-            "engine": args.tts_engine,
-            "prompt_audio_policy": args.voice_policy,
-            "case_prompt_audio": voice_prompt,
+            "mode": "tts",
+            "engine": "minimax_t2a",
+            "local_config": "config/minimax.local.json",
         },
         "ending_track": ending_track,
     }
@@ -227,37 +194,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     if args.frontend and not Path(args.frontend).expanduser().exists():
         warnings.append(f"frontend path does not exist yet: {args.frontend}")
 
-    voice_prompt_path: Path | None = None
-    if args.voice_policy == "default":
-        voice_prompt_path = case_dir / "audio" / "voice_prompt_5s.wav"
-        _copy_file(
-            default_voice_prompt_path(skill_root),
-            voice_prompt_path,
-            force=args.force,
-            touched=touched,
-            skipped=skipped,
-        )
-    elif args.voice_policy == "custom":
-        if not args.voice_prompt:
-            raise ValueError("--voice-prompt is required when --voice-policy custom")
-        src = Path(args.voice_prompt).expanduser().resolve(strict=False)
-        if not src.is_file():
-            raise FileNotFoundError(f"custom voice prompt not found: {src}")
-        voice_prompt_path = case_dir / "audio" / "voice_prompt_5s.wav"
-        if src.suffix.lower() == ".wav":
-            _copy_file(src, voice_prompt_path, force=args.force, touched=touched, skipped=skipped)
-        else:
-            _convert_prompt_to_wav(src, voice_prompt_path, force=args.force, touched=touched, skipped=skipped)
-    elif args.voice_policy == "none":
-        voice_prompt_path = None
-    else:
-        raise ValueError(f"unsupported voice policy: {args.voice_policy}")
-
-    input_payload = _build_input(
-        args,
-        skill_root,
-        str(voice_prompt_path.relative_to(case_dir)) if voice_prompt_path else None,
-    )
+    input_payload = _build_input(args, skill_root)
     _write_json(case_dir / "input.json", input_payload, force=args.force, touched=touched, skipped=skipped)
 
     for filename, payload in PLACEHOLDER_JSON.items():
@@ -270,8 +207,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "data": {
             "skill_root": str(skill_root),
             "case_dir": str(case_dir),
-            "voice_policy": args.voice_policy,
-            "voice_prompt": str(voice_prompt_path) if voice_prompt_path else None,
+            "voice_engine": "minimax_t2a",
             "ending_policy": args.ending_policy,
             "touched": touched,
             "skipped": skipped,
@@ -291,9 +227,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--brand-profile", default="柯幻熊猫")
     parser.add_argument("--target-platform", default="douyin")
     parser.add_argument("--preferred-feature", action="append", default=[])
-    parser.add_argument("--tts-engine", default="voice_clone_api")
-    parser.add_argument("--voice-policy", choices=("default", "custom", "none"), default="default")
-    parser.add_argument("--voice-prompt", help="Custom prompt audio path for --voice-policy custom.")
     parser.add_argument("--ending-policy", choices=("default", "custom", "none"), default="default")
     parser.add_argument("--ending-video", help="Custom ending video path for --ending-policy custom.")
     parser.add_argument("--force", action="store_true", help="Overwrite existing scaffold files.")

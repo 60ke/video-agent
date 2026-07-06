@@ -51,15 +51,16 @@ Return JSON:
 - Bind each segment to real evidence. Use one of: `real_recording`, `real_screenshot`, `real_result`, `quota_or_error_state`, `evidence_cover`, or `packaging_only`.
 - For website/product tasks, real evidence means Kimi WebBridge browser capture by default. Use static material assets as the primary evidence only when the user explicitly requested static resources/material folders/supplied assets.
 - Use `preferred_asset_ids` only when the material is visually verified.
-- Include `layout_intent` when the segment needs a specific layout such as `portrait-showcase`, `crop-focus`, `multi-section`, `grid-rebuild`, `main-plus-reference`, or `browser-recording`. **CRITICAL: For generated effect images or result exports, you MUST set `layout_intent: "result-showcase"` to prevent improper cropping.**
-- Include `focus_region` for website/app screenshots. Use a real functional region, not `auto`, when the scene depends on UI readability.
+- Include `layout_intent` only for already prepared assets, such as `result-showcase`, `full-width`, `grid-rebuild`, `main-plus-reference`, or `browser-recording`.
+- Website/app screenshots used in final video must already be AI-verified 9:16 screenshots. Generated result visuals must be saved result crops/exports under `assets/results/`, not website result-page screenshots.
 - Do not select multiple images for one segment unless the layout can keep them readable in 9:16. Use sequential close-ups if equal-width comparison would be too narrow.
 - When using tall detail pages, reserve enough time for readable movement or request `multi-section`.
 - Do not add extra on-screen titles unless they are explicitly part of `overlay_track`.
 - Fixed panda outro is not part of script.
-- Do not claim or imply a generated result unless a captured/supplied result asset exists.
+- Do not claim or imply a generated result unless a captured/supplied result image exists. A website result page screenshot is evidence only; it is not a result image for final display.
 - Do not use generated product photos, generic mockups, emoji, or invented UI as product evidence.
 - If a feature is `blocked_quota`, `blocked_login`, or `verified_entry_only`, write a workflow/entry-point script only, or stop for user approval/materials.
 - For category features such as `电商`, the script must name only the verified category state. Do not write copy that suggests unrelated categories or an opened result page unless captured evidence proves it.
-- For 柯幻熊猫 generated-result demos, a preferred hook is `生成这样的一张效果图要多久？先看结果，再用真实截图证明它怎么来的。` When mentioning functions, inputs, or features, you MUST combine the narration with the actual website UI and interaction flow (e.g., inputting text, clicking buttons). Do not just abstractly describe the feature without showing the website operation.
+- For 柯幻熊猫 generated-result demos, a preferred hook is `生成这样的一张效果图要多久？先看结果，再用真实截图证明它怎么来的。` The "result" must be a saved result image/crop/export, while website screenshots may only prove the operation path.
+- For 柯幻熊猫 feature seeding, include at least one process segment that explains the entry path unless a real browser recording is used: from `文生图`, click into the target feature such as `VI`, then arrive at the feature page. Do not jump straight from result to form.
 - If multiple generated result assets share a result group, add one short gallery segment instead of repeating the same screenshot.

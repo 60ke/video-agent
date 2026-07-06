@@ -17,6 +17,9 @@ The goal is to capture a complete, auditable product flow that can support futur
 - If the balance is 100 or lower, or the balance cannot be read, do not press `开始生成`; capture the blocker and stop for approval or supplied result material.
 - If the user explicitly asked for the full generation flow and the balance is greater than 100, pressing the generation button is allowed for this site.
 - Every screenshot used in the video must be copied into the case directory. Do not leave final assets in temp folders.
+- Generated-result visuals used in the final video must be saved images/crops/exports under `assets/results/`. A website result page screenshot is evidence only and must not be used as the result image in the final video.
+- Function/process visuals used in the final video must be captured or prepared as AI-verified 9:16 screenshots. The renderer will place images by width-fit and will not perform local crop/zoom repair.
+- For feature seeding videos, the entry path must be visible. Prefer a short browser recording from home/dashboard through `文生图` into the target feature. If recording is not available, capture multiple red-callout screenshots that show the step-by-step path: home or feature entry, `文生图` menu expansion, target feature selection such as `VI`, and the destination feature page.
 
 ## Case Directory Layout
 
@@ -60,6 +63,12 @@ The profile is a shortcut, not proof. Kimi WebBridge must still verify live page
    - Record page URL, page title, visible navigation labels, avatar/login indicator, and points balance.
 3. Capture the feature entry path.
    - Show the left navigation or top feature card.
+   - Prefer a short recording that starts before the first click and ends after the target feature page is visible.
+   - If recording is unavailable, save a sequential screenshot set with red callouts:
+     - `home_entry`: dashboard/home with the first entry target visible.
+     - `text_to_image_entry`: the `文生图` entry before or during click.
+     - `menu_select` or `feature_menu_select`: the expanded menu with `VI`, `LOGO`, `门头招牌`, or the requested target marked.
+     - `feature_page_empty`: the loaded feature page title and empty form.
    - Create a red callout version that marks the functional entry the viewer should click.
    - If a menu opens, capture the menu and mark the selected category, such as `LOGO`.
 4. Click into the feature page.
@@ -86,8 +95,13 @@ The profile is a shortcut, not proof. Kimi WebBridge must still verify live page
    - Export/download the generated image if the site provides an action.
    - If no export is available, crop the result area from the browser screenshot and save it under `assets/results/`.
    - If multiple results are produced, save at least 2 and preferably 4 result crops or exports.
+   - Mark the result image resources as `workflow_step: result_crop`, `result_export`, or `result_gallery`; do not mark the webpage screenshot as the final result visual.
 9. Write metadata.
    - Update `browser_materials.json` for browser evidence.
+   - Record machine-checkable login proof in `browser_materials.auth_state`:
+     - `logged_in: true`
+     - `points_balance: <number greater than 100>`
+     - `evidence_asset_id: <screenshot asset id showing avatar/balance>`
    - Update `image_resources.json` for every clean, annotated, and result image.
    - Update `generation_receipts.json` with before/after points, feature id, generation cost when visible, input summary, result assets, and any errors.
 
@@ -100,6 +114,7 @@ Required:
 - A clean raw screenshot for evidence.
 - A separate annotated screenshot, or an `overlay_track` callout, for video presentation.
 - Callout metadata in `image_resources.json` with target label and normalized box coordinates when available.
+- For step-by-step entry paths, set `workflow_step` precisely: `home_entry`, `text_to_image_entry`, `menu_select` or `feature_menu_select`, then `feature_page_empty`.
 
 Allowed callouts:
 
@@ -118,7 +133,7 @@ Separate evidence from storytelling:
 - `candidate_video_visual`: feature entry, filled form, loading state, result page, red-callout images.
 - `final_video_visual`: only the visuals selected for the requested hook, claim, or user-approved demo narrative.
 
-Do not make the capture workflow itself the default video topic. Use it to prove that the result is real, then choose the most persuasive subset for the final short video.
+Do not make the capture workflow itself the whole video topic. Use it to prove that the result is real, then choose the most persuasive subset for the final short video. The selected subset must still include a readable entry path: one short recording or sequential red-callout screenshots from `文生图` to the target feature.
 
 The script should emphasize the requested selling point, real result quality, and only the minimum process evidence needed to make the claim credible. Default hook pattern:
 

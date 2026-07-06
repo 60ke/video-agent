@@ -13,8 +13,10 @@ IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
 
 WORKFLOW_STEPS = (
     "home_entry",
+    "text_to_image_entry",
     "feature_card",
     "navigation_callout",
+    "feature_menu_select",
     "menu_select",
     "feature_page_empty",
     "form_filled",
@@ -24,6 +26,7 @@ WORKFLOW_STEPS = (
     "result_crop",
     "result_export",
     "result_gallery",
+    "operation_recording",
     "quota_or_error",
     "packaging",
 )
@@ -93,8 +96,11 @@ def infer_step(asset: dict[str, Any], insight: dict[str, Any], existing: dict[st
         ("generate_callout", ("generate_callout", "开始生成", "button", "按钮")),
         ("form_filled", ("form_filled", "filled", "已填写", "表单")),
         ("feature_page_empty", ("form_empty", "empty", "功能页")),
+        ("feature_menu_select", ("vi_select", "feature_menu_select", "功能选择")),
         ("menu_select", ("menu", "select", "logo", "菜单", "选择")),
         ("navigation_callout", ("callout", "annotated", "红框", "箭头")),
+        ("text_to_image_entry", ("text_to_image", "文生图")),
+        ("operation_recording", ("recording", "screen_record", "录屏")),
         ("home_entry", ("home", "entry", "首页", "入口")),
     )
     for step, tokens in checks:
@@ -168,9 +174,10 @@ def merge_unique(*values: Any) -> list[str]:
     return merged
 
 
-def existing_maps(existing_payload: dict[str, Any]) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+def existing_maps(existing_payload: dict[str, Any]) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
     by_asset_id: dict[str, dict[str, Any]] = {}
     by_source: dict[str, dict[str, Any]] = {}
+    by_filename: dict[str, dict[str, Any]] = {}
     for item in as_list(existing_payload.get("resources")):
         if not isinstance(item, dict):
             continue
@@ -179,7 +186,10 @@ def existing_maps(existing_payload: dict[str, Any]) -> tuple[dict[str, dict[str,
         source = str(item.get("source") or "")
         if source:
             by_source[source.replace("\\", "/")] = item
-    return by_asset_id, by_source
+        filename = str(item.get("filename") or Path(source).name or "")
+        if filename:
+            by_filename[filename.lower()] = item
+    return by_asset_id, by_source, by_filename
 
 
 def collect_manifest_assets(case_dir: Path) -> list[dict[str, Any]]:
@@ -277,7 +287,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         raise FileNotFoundError(f"case directory not found: {case_dir}")
 
     existing_payload = load_json(case_dir / "image_resources.json", {"resources": []})
-    existing_by_asset_id, existing_by_source = existing_maps(existing_payload)
+    existing_by_asset_id, existing_by_source, existing_by_filename = existing_maps(existing_payload)
     understanding = load_json(case_dir / "material_understanding.json", {"materials": []})
     insights = {
         str(item.get("asset_id")): item
@@ -293,7 +303,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     for idx, asset in enumerate(assets):
         source = rel_source(case_dir, str(asset.get("source") or ""))
         asset_id = str(asset.get("id") or "")
-        existing = existing_by_asset_id.get(asset_id) or existing_by_source.get(source) or {}
+        filename = str(asset.get("filename") or Path(source).name or "").lower()
+        existing = existing_by_asset_id.get(asset_id) or existing_by_source.get(source) or existing_by_filename.get(filename) or {}
         resource = build_resource(case_dir, asset, insights.get(asset_id, {}), existing, idx, args.default_feature)
         resources.append(resource)
 

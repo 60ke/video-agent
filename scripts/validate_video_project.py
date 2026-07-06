@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from utils.case_guards import kehuanxiongmao_auth_errors
 from utils.skill_path import require_skill_root
 
 
@@ -104,19 +105,22 @@ def validate_input_json(input_data: dict[str, Any], ctx: ValidationContext) -> N
             ctx.error("dependency_mode.browser=static_materials requires input.case.static_materials_explicit=true")
         elif browser_mode not in ("kimi_webbridge", "static_materials", None):
             ctx.error(f"unsupported dependency_mode.browser: {browser_mode}")
+        renderer = dependency_mode.get("renderer")
+        if renderer and renderer != "simple_ffmpeg":
+            ctx.error(f"unsupported dependency_mode.renderer: {renderer}")
+        tts = dependency_mode.get("tts")
+        if tts and tts != "minimax_t2a":
+            ctx.error(f"unsupported dependency_mode.tts: {tts}")
     else:
         ctx.error("input.json dependency_mode must be an object")
 
     voice = input_data.get("voice_config", {})
     if isinstance(voice, dict):
-        policy = voice.get("prompt_audio_policy", "default")
-        prompt_audio = voice.get("case_prompt_audio")
-        if policy in ("default", "custom"):
-            path = ctx.resolve_path(prompt_audio)
-            if not path or not path.is_file():
-                ctx.error(f"voice prompt audio missing for policy {policy}: {prompt_audio}")
-        elif policy != "none":
-            ctx.error(f"unsupported voice prompt policy: {policy}")
+        engine = voice.get("engine")
+        if engine and engine != "minimax_t2a":
+            ctx.error(f"unsupported voice_config.engine: {engine}")
+        if "prompt_audio_policy" in voice or "case_prompt_audio" in voice:
+            ctx.error("voice prompt fields are legacy and must be removed for Minimax V2")
     else:
         ctx.error("input.json voice_config must be an object")
 
@@ -157,6 +161,7 @@ def validate_strict_project(project: dict[str, Any], ctx: ValidationContext) -> 
         assets = []
 
     asset_ids: set[str] = set()
+    project_assets: dict[str, dict[str, Any]] = {}
     for idx, asset in enumerate(assets):
         if not isinstance(asset, dict):
             ctx.error(f"assets[{idx}] must be an object")
@@ -168,6 +173,7 @@ def validate_strict_project(project: dict[str, Any], ctx: ValidationContext) -> 
             ctx.error(f"duplicate asset id: {asset_id}")
         else:
             asset_ids.add(asset_id)
+            project_assets[str(asset_id)] = asset
         source = asset.get("source")
         if source:
             path = ctx.resolve_path(source)
@@ -186,10 +192,12 @@ def validate_strict_project(project: dict[str, Any], ctx: ValidationContext) -> 
 
     validate_voice_track(project.get("voice_track", {}), ctx)
     validate_subtitles(project.get("subtitle_track", {}), script_ids, ctx)
+    ctx.project_assets = project_assets
     validate_visual_track(project.get("visual_track", []), asset_ids, script_ids, ctx)
     validate_overlay_track(project.get("overlay_track", []), asset_ids, ctx)
     validate_audio_tracks(project.get("audio_tracks", []), ctx)
     validate_renderer_plan(project.get("renderer_plan", {}), ctx)
+    validate_operation_path(project, project_assets, ctx)
 
 
 def _validate_timed_event(event: dict[str, Any], label: str, ctx: ValidationContext) -> None:
@@ -247,6 +255,7 @@ def validate_visual_track(track: Any, asset_ids: set[str], script_ids: set[str],
     if not isinstance(track, list):
         ctx.error("visual_track must be a list")
         return
+    project_assets = getattr(ctx, "project_assets", {})
     for idx, event in enumerate(track):
         if not isinstance(event, dict):
             ctx.error(f"visual_track[{idx}] must be an object")
@@ -255,6 +264,7 @@ def validate_visual_track(track: Any, asset_ids: set[str], script_ids: set[str],
         for asset_id in event.get("asset_ids", []):
             if asset_id not in asset_ids:
                 ctx.error(f"visual_track[{idx}] references missing asset: {asset_id}")
+        validate_visual_asset_policy(event, idx, project_assets, ctx)
         for script_id in event.get("script_segment_ids", []):
             if script_ids and script_id not in script_ids:
                 ctx.error(f"visual_track[{idx}] references missing script segment: {script_id}")
@@ -262,6 +272,133 @@ def validate_visual_track(track: Any, asset_ids: set[str], script_ids: set[str],
             ctx.warn(f"visual_track[{idx}] missing layout")
         if not event.get("qa_expectations"):
             ctx.warn(f"visual_track[{idx}] missing qa_expectations")
+
+
+def asset_aspect(asset: dict[str, Any]) -> float | None:
+    metadata = asset.get("metadata", {}) if isinstance(asset.get("metadata"), dict) else {}
+    aspect = metadata.get("aspect_ratio")
+    if isinstance(aspect, (int, float)) and aspect > 0:
+        return float(aspect)
+    width = metadata.get("width")
+    height = metadata.get("height")
+    if isinstance(width, (int, float)) and isinstance(height, (int, float)) and height > 0:
+        return float(width) / float(height)
+    return None
+
+
+def validate_visual_asset_policy(event: dict[str, Any], idx: int, assets: dict[str, dict[str, Any]], ctx: ValidationContext) -> None:
+    evidence = str(event.get("evidence_binding") or "").lower()
+    for asset_id in event.get("asset_ids", []):
+        asset = assets.get(asset_id, {})
+        aspect = asset_aspect(asset)
+        image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+        workflow_step = str(image_resource.get("workflow_step") or "").lower()
+        source = str(asset.get("source") or "").replace("\\", "/").lower()
+        origin = str(asset.get("origin") or "").lower()
+
+        is_generated_claim = evidence in {"real_generated_result", "real_result"} or workflow_step in {"result_page", "result_crop", "result_export", "result_gallery"}
+        is_saved_result = workflow_step in {"result_crop", "result_export", "result_gallery"} or "assets/results/" in source
+        if is_generated_claim and workflow_step == "result_page":
+            ctx.error(
+                f"visual_track[{idx}] uses website result page screenshot for generated-result display: {asset_id}; "
+                "save/export/crop the generated result image itself under assets/results"
+            )
+        elif is_generated_claim and not is_saved_result:
+            ctx.error(
+                f"visual_track[{idx}] uses non-result asset for generated-result display: {asset_id}; "
+                "save/export/crop the generated result image itself under assets/results"
+            )
+        elif is_generated_claim and aspect and aspect > 1.2 and not is_saved_result:
+            ctx.error(
+                f"visual_track[{idx}] uses a wide webpage/result screenshot for generated-result display: {asset_id}; "
+                "save a result image/crop under assets/results or mark workflow_step=result_crop/result_export"
+            )
+
+        is_function_screenshot = workflow_step in {"menu_select", "feature_page_empty", "form_filled", "generate_callout", "generating"} or "browser" in origin
+        if is_function_screenshot and aspect and aspect > 1.2:
+            ctx.error(
+                f"visual_track[{idx}] uses a wide function screenshot: {asset_id}; capture/verify a 9:16 screenshot before rendering"
+            )
+
+
+def workflow_steps_for_event(event: dict[str, Any], assets: dict[str, dict[str, Any]]) -> set[str]:
+    steps: set[str] = set()
+    for asset_id in event.get("asset_ids", []):
+        asset = assets.get(str(asset_id), {})
+        if not isinstance(asset, dict):
+            continue
+        image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+        for key in ("workflow_step", "source_workflow_step", "operation_step"):
+            value = str(image_resource.get(key) or "").strip().lower()
+            if value:
+                steps.add(value)
+        for key in ("role", "source", "filename", "description"):
+            value = str(asset.get(key) or "").replace("\\", "/").lower()
+            if not value:
+                continue
+            if any(token in value for token in ("home", "首页", "dashboard")):
+                steps.add("home_entry")
+            if any(token in value for token in ("文生图", "text_to_image", "text-to-image")):
+                steps.add("text_to_image_entry")
+            if any(token in value for token in ("menu", "select", "vi", "菜单", "选择")):
+                steps.add("menu_select")
+            if any(token in value for token in ("form_empty", "feature_page", "功能页")):
+                steps.add("feature_page_empty")
+            if any(token in value for token in ("form_filled", "filled", "表单")):
+                steps.add("form_filled")
+            if any(token in value for token in ("recording", "录屏", "screen_record")):
+                steps.add("operation_recording")
+        source_asset_id = str(asset.get("source_asset_id") or image_resource.get("source_asset_id") or "")
+        source_asset = assets.get(source_asset_id, {}) if source_asset_id else {}
+        if isinstance(source_asset, dict):
+            source_resource = source_asset.get("image_resource", {}) if isinstance(source_asset.get("image_resource"), dict) else {}
+            source_step = str(source_resource.get("workflow_step") or "").strip().lower()
+            if source_step:
+                steps.add(source_step)
+    if str(event.get("evidence_binding") or "").lower() == "real_recording":
+        steps.add("operation_recording")
+    if str(event.get("layout") or event.get("display_mode") or "").lower() == "browser-recording":
+        steps.add("operation_recording")
+    return steps
+
+
+def validate_operation_path(project: dict[str, Any], assets: dict[str, dict[str, Any]], ctx: ValidationContext) -> None:
+    inputs = project.get("inputs", {}) if isinstance(project.get("inputs"), dict) else {}
+    request = inputs.get("request", {}) if isinstance(inputs.get("request"), dict) else {}
+    target_url = str(request.get("target_url") or "").lower()
+    if "kehuanxiongmao.com" not in target_url:
+        return
+
+    visual_track = project.get("visual_track", [])
+    if not isinstance(visual_track, list):
+        return
+    has_verified_result = any(
+        isinstance(event, dict)
+        and (
+            str(event.get("operation_status") or "").lower() == "verified_result"
+            or str(event.get("evidence_binding") or "").lower() in {"real_result", "real_generated_result"}
+        )
+        for event in visual_track
+    )
+    if not has_verified_result:
+        return
+
+    all_steps: set[str] = set()
+    for event in visual_track:
+        if isinstance(event, dict):
+            all_steps.update(workflow_steps_for_event(event, assets))
+
+    if "operation_recording" in all_steps:
+        return
+
+    has_entry = bool(all_steps & {"home_entry", "feature_card", "navigation_callout", "text_to_image_entry"})
+    has_selection = bool(all_steps & {"menu_select", "feature_menu_select", "vi_menu_select"})
+    has_destination = bool(all_steps & {"feature_page_empty", "form_filled", "generate_callout"})
+    if not (has_entry and has_selection and has_destination):
+        ctx.error(
+            "kehuanxiongmao verified-result video must show the stepwise entry path. "
+            "Use a browser recording, or include annotated 9:16 screenshots for entry/text-to-image menu, VI/menu selection, and the destination feature page."
+        )
 
 
 def validate_overlay_track(track: Any, asset_ids: set[str], ctx: ValidationContext) -> None:
@@ -299,13 +436,13 @@ def validate_renderer_plan(plan: Any, ctx: ValidationContext) -> None:
         ctx.error("renderer_plan must be an object")
         return
     renderer = plan.get("renderer")
-    if renderer and renderer != "hyperframes":
-        ctx.error(f"P0 renderer must be hyperframes, got: {renderer}")
+    if renderer and renderer != "simple_ffmpeg":
+        ctx.error(f"renderer must be simple_ffmpeg, got: {renderer}")
     if not renderer:
         ctx.error("renderer_plan.renderer missing")
 
 
-def validate_case(case_dir: Path, strict: bool) -> dict[str, Any]:
+def validate_case(case_dir: Path, strict: bool, project_path: Path | None = None) -> dict[str, Any]:
     skill_root = require_skill_root(Path(__file__).resolve())
     ctx = ValidationContext(case_dir.resolve(strict=False), skill_root, strict)
     if strict and not is_relative_to(ctx.case_dir, skill_root):
@@ -317,8 +454,11 @@ def validate_case(case_dir: Path, strict: bool) -> dict[str, Any]:
 
     input_data = load_json(case_dir / "input.json", ctx)
     validate_input_json(input_data, ctx)
+    if strict:
+        for error in kehuanxiongmao_auth_errors(ctx.case_dir, input_data):
+            ctx.error(error)
 
-    project = load_json(case_dir / "video_project.json", ctx)
+    project = load_json(project_path or case_dir / "video_project.json", ctx)
     if project and not validate_placeholder_project(project, ctx):
         validate_strict_project(project, ctx)
 
@@ -343,6 +483,7 @@ def result(ctx: ValidationContext) -> dict[str, Any]:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Validate video-agent case/project JSON.")
     parser.add_argument("--case", required=True, help="Case directory containing input.json and video_project.json.")
+    parser.add_argument("--project", help="Project JSON path. Defaults to <case>/video_project.json.")
     parser.add_argument("--strict", action="store_true", help="Require complete render-ready video_project.json.")
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
     return parser
@@ -352,7 +493,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        output = validate_case(Path(args.case).expanduser(), args.strict)
+        project_path = Path(args.project).expanduser().resolve(strict=False) if args.project else None
+        output = validate_case(Path(args.case).expanduser(), args.strict, project_path)
     except Exception as exc:  # noqa: BLE001 - CLI must report structured failure.
         output = {
             "ok": False,

@@ -12,7 +12,6 @@ RUNTIME_DIR_NAMES = {"__pycache__", ".pytest_cache", ".mypy_cache"}
 RUNTIME_SUFFIXES = {".pyc", ".pyo", ".tmp", ".temp"}
 GENERATED_MEDIA_SUFFIXES = {".mp4", ".mov", ".wav", ".mp3", ".m4a", ".jpg", ".jpeg", ".png", ".webp"}
 ALLOWED_SKILL_MEDIA_PREFIXES = (
-    Path("assets") / "voice",
     Path("assets") / "outro",
 )
 
@@ -65,8 +64,8 @@ def check_case_hygiene(case_dir: Path) -> tuple[list[str], list[str]]:
         "assets/browser/annotated",
         "assets/results",
         "audio",
-        "hyperframes",
         "output",
+        "output/minimax",
         "output/versions",
         "output/qa",
         "output/reports",

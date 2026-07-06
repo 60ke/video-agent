@@ -7,10 +7,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-READABLE_WIDE_UI_LAYOUTS = {"crop-focus", "multi-section", "main-plus-reference", "browser-recording"}
-GENERIC_FOCUS_REGIONS = {"", "auto", "center", "whole_page", "whole-page"}
-
-
 def load_json(path: Path) -> dict[str, Any]:
     if not path.is_file():
         return {}
@@ -23,6 +19,13 @@ def ffprobe(path: Path) -> dict[str, Any]:
     if proc.returncode != 0:
         raise RuntimeError(f"ffprobe failed: {proc.stderr.strip()}")
     return json.loads(proc.stdout)
+
+
+def resolve_case_path(case_dir: Path, value: str | None) -> Path | None:
+    if not value:
+        return None
+    path = Path(value)
+    return path if path.is_absolute() else case_dir / path
 
 
 def choose_video(case_dir: Path, explicit: str | None) -> Path:
@@ -90,7 +93,7 @@ def is_generated_result_asset(asset: dict[str, Any]) -> bool:
     return any(token in combined for token in result_tokens) and not any(token in combined for token in ui_tokens)
 
 
-def check_wide_ui_layout(project: dict[str, Any]) -> tuple[list[str], list[str]]:
+def check_visual_asset_readiness(project: dict[str, Any]) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
     assets = {
@@ -102,55 +105,96 @@ def check_wide_ui_layout(project: dict[str, Any]) -> tuple[list[str], list[str]]
         if not isinstance(event, dict):
             continue
         event_assets = [assets.get(asset_id, {}) for asset_id in event.get("asset_ids", [])]
-        if not any(is_wide_ui_asset(asset) for asset in event_assets):
-            continue
         label = event.get("id") or f"visual_track[{idx}]"
-        layout = str(event.get("display_mode") or event.get("layout") or "")
-        if layout not in READABLE_WIDE_UI_LAYOUTS:
-            errors.append(f"{label}: wide desktop UI uses unreadable primary layout `{layout or 'missing'}`")
-        framing = event.get("framing", {}) if isinstance(event.get("framing"), dict) else {}
-        focus_region = str(framing.get("focus_region") or "").lower()
-        if focus_region in GENERIC_FOCUS_REGIONS:
-            errors.append(f"{label}: wide desktop UI must declare a named functional focus_region")
-        if not isinstance(framing.get("center_safe_region"), dict):
-            errors.append(f"{label}: missing center_safe_region for 9:16 readability")
-        visible = framing.get("must_be_visible")
-        if not isinstance(visible, list) or not visible:
-            errors.append(f"{label}: missing must_be_visible labels for narrated UI content")
-        viewport_transform = framing.get("viewport_transform", {})
-        if not isinstance(viewport_transform, dict) or not viewport_transform.get("lock_subject_in_center_safe_region"):
-            warnings.append(f"{label}: viewport_transform should lock the narrated subject inside center_safe_region")
-        motion = event.get("motion", {}) if isinstance(event.get("motion"), dict) else {}
-        forbidden_motion = motion.get("forbidden_motion", [])
-        if not isinstance(forbidden_motion, list) or "pan_subject_out_of_frame" not in forbidden_motion:
-            warnings.append(f"{label}: motion should forbid pan_subject_out_of_frame")
+        evidence = str(event.get("evidence_binding") or "").lower()
+        for asset in event_assets:
+            aspect = asset_aspect(asset)
+            image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+            workflow_step = str(image_resource.get("workflow_step") or "").lower()
+            source = str(asset.get("source") or "").replace("\\", "/").lower()
+            origin = str(asset.get("origin") or "").lower()
+            asset_id = asset.get("id", "unknown")
+            is_generated_claim = evidence in {"real_generated_result", "real_result"} or workflow_step in {"result_page", "result_crop", "result_export", "result_gallery"}
+            is_saved_result = workflow_step in {"result_crop", "result_export", "result_gallery"} or "assets/results/" in source
+            if is_generated_claim and workflow_step == "result_page":
+                errors.append(f"{label}: generated result uses website result page `{asset_id}`; save/export/crop the generated result image itself")
+            elif is_generated_claim and not is_saved_result:
+                errors.append(f"{label}: generated result uses non-result asset `{asset_id}`; save/export/crop the generated result image itself")
+            elif is_generated_claim and aspect and aspect > 1.2 and not is_saved_result:
+                errors.append(f"{label}: generated result uses wide webpage screenshot `{asset_id}`; save/crop the result image first")
+            is_function_screenshot = workflow_step in {"menu_select", "feature_page_empty", "form_filled", "generate_callout", "generating"} or "browser" in origin
+            if is_function_screenshot and aspect and aspect > 1.2:
+                errors.append(f"{label}: function screenshot `{asset_id}` is wide; capture an AI-verified 9:16 screenshot first")
     return errors, warnings
 
 
-def check_result_layout(project: dict[str, Any]) -> list[str]:
-    errors: list[str] = []
+def workflow_steps_for_event(event: dict[str, Any], assets: dict[str, dict[str, Any]]) -> set[str]:
+    steps: set[str] = set()
+    for asset_id in event.get("asset_ids", []):
+        asset = assets.get(str(asset_id), {})
+        if not isinstance(asset, dict):
+            continue
+        image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+        for key in ("workflow_step", "source_workflow_step", "operation_step"):
+            value = str(image_resource.get(key) or "").strip().lower()
+            if value:
+                steps.add(value)
+        combined = " ".join(
+            str(asset.get(key) or "").replace("\\", "/").lower()
+            for key in ("role", "source", "filename", "description")
+        )
+        if any(token in combined for token in ("home", "首页", "dashboard")):
+            steps.add("home_entry")
+        if any(token in combined for token in ("文生图", "text_to_image", "text-to-image")):
+            steps.add("text_to_image_entry")
+        if any(token in combined for token in ("menu", "select", "vi", "菜单", "选择")):
+            steps.add("menu_select")
+        if any(token in combined for token in ("form_empty", "feature_page", "功能页")):
+            steps.add("feature_page_empty")
+        if any(token in combined for token in ("form_filled", "filled", "表单")):
+            steps.add("form_filled")
+        if any(token in combined for token in ("recording", "录屏", "screen_record")):
+            steps.add("operation_recording")
+    if str(event.get("evidence_binding") or "").lower() == "real_recording":
+        steps.add("operation_recording")
+    if str(event.get("layout") or event.get("display_mode") or "").lower() == "browser-recording":
+        steps.add("operation_recording")
+    return steps
+
+
+def check_operation_path(project: dict[str, Any]) -> list[str]:
+    inputs = project.get("inputs", {}) if isinstance(project.get("inputs"), dict) else {}
+    request = inputs.get("request", {}) if isinstance(inputs.get("request"), dict) else {}
+    if "kehuanxiongmao.com" not in str(request.get("target_url") or "").lower():
+        return []
     assets = {
         asset.get("id"): asset
         for asset in project.get("assets", [])
         if isinstance(asset, dict) and asset.get("id")
     }
-    for idx, event in enumerate(project.get("visual_track", [])):
-        if not isinstance(event, dict):
-            continue
-        event_assets = [assets.get(asset_id, {}) for asset_id in event.get("asset_ids", [])]
-        if not any(is_generated_result_asset(asset) for asset in event_assets):
-            continue
-        layout = str(event.get("display_mode") or event.get("layout") or "")
-        if layout in {"crop-focus", "ui_operation_focus"}:
-            label = event.get("id") or f"visual_track[{idx}]"
-            errors.append(f"{label}: generated result image should preserve the whole result, not use `{layout}`")
-    return errors
+    events = [event for event in project.get("visual_track", []) if isinstance(event, dict)]
+    has_verified_result = any(
+        str(event.get("operation_status") or "").lower() == "verified_result"
+        or str(event.get("evidence_binding") or "").lower() in {"real_result", "real_generated_result"}
+        for event in events
+    )
+    if not has_verified_result:
+        return []
+    steps: set[str] = set()
+    for event in events:
+        steps.update(workflow_steps_for_event(event, assets))
+    if "operation_recording" in steps:
+        return []
+    if steps & {"home_entry", "feature_card", "navigation_callout", "text_to_image_entry"} and steps & {"menu_select", "feature_menu_select", "vi_menu_select"} and steps & {"feature_page_empty", "form_filled", "generate_callout"}:
+        return []
+    return ["missing stepwise entry path: include browser recording or annotated screenshots for 文生图 entry, target feature selection, and destination feature page"]
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
     case_dir = Path(args.case).expanduser().resolve(strict=False)
     video = choose_video(case_dir, args.video)
-    project = load_json(case_dir / "video_project.json")
+    project_path = Path(args.project).expanduser().resolve(strict=False) if args.project else case_dir / "video_project.json"
+    project = load_json(project_path)
     input_data = load_json(case_dir / "input.json")
     data = ffprobe(video)
     streams = data.get("streams", [])
@@ -188,13 +232,21 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     ending = project.get("ending_track", {})
     if isinstance(ending, dict) and ending.get("policy") in ("default", "custom"):
-        if duration <= float(ending.get("duration", 0) or 0):
-            errors.append("final video duration is not longer than declared ending duration")
+        ending_path = resolve_case_path(case_dir, ending.get("source"))
+        ending_duration = 0.0
+        if ending_path and ending_path.is_file():
+            ending_data = ffprobe(ending_path)
+            ending_fmt = ending_data.get("format", {})
+            ending_duration = float(ending_fmt.get("duration", 0) or 0)
+        else:
+            errors.append(f"ending video missing: {ending.get('source')}")
+        if ending_duration and duration <= ending_duration:
+            errors.append("final video duration is not longer than ending duration")
 
-    layout_errors, layout_warnings = check_wide_ui_layout(project)
+    layout_errors, layout_warnings = check_visual_asset_readiness(project)
     errors.extend(layout_errors)
     warnings.extend(layout_warnings)
-    errors.extend(check_result_layout(project))
+    errors.extend(check_operation_path(project))
 
     voice_qa = load_json(case_dir / "output" / "reports" / "voice_qa_report.json")
     if voice_qa and voice_qa.get("status") != "passed":
@@ -214,6 +266,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "schema_version": 1,
         "status": "passed" if ok else "failed",
         "video": str(video),
+        "project": str(project_path),
         "duration": duration,
         "has_video": video_stream is not None,
         "has_audio": audio_stream is not None,
@@ -239,6 +292,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run machine-checkable render QA.")
     parser.add_argument("--case", required=True)
     parser.add_argument("--video")
+    parser.add_argument("--project", help="Project JSON path. Defaults to <case>/video_project.json.")
     parser.add_argument("--json", action="store_true")
     return parser
 

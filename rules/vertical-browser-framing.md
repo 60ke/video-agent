@@ -5,9 +5,9 @@ description: Rules for turning wide desktop browser evidence into readable 9:16 
 
 # Vertical Browser Framing Rules
 
-Use these rules for website/app screenshots and recordings that will appear in a vertical `1080x1920` video. Generated effect/result images are different: preserve the full result whenever possible.
+Use these rules for website/app screenshots and recordings that will appear in a vertical `1080x1920` video. Generated effect/result images are different: save the actual result image/crop/export and preserve it whenever possible.
 
-The browser captures evidence. The render uses readable vertical shots. A wide desktop page is not a finished shot.
+The browser captures evidence. The render uses prepared vertical shots. A wide desktop page is not a finished shot.
 
 ## Core Rule
 
@@ -21,7 +21,7 @@ Wide screenshots may be used only as:
 
 Every narration-bearing scene must use one of:
 
-- a cropped functional region
+- an AI-verified 9:16 function screenshot
 - a result export/crop
 - a sequential close-up
 - a split into readable sections
@@ -44,7 +44,7 @@ Examples:
 - `primary_result_image`
 - `history_result_card`
 
-Do not use vague values such as `center`, `auto`, or `whole_page` for a wide desktop screenshot.
+Do not use vague values such as `center`, `auto`, or `whole_page` for a wide desktop screenshot. If the screenshot is still wide, prepare a 9:16 capture before it becomes a final video asset.
 
 ## Center Safe Region
 
@@ -75,7 +75,7 @@ Allowed:
 Forbidden for wide UI screenshots:
 
 - arbitrary pan across the full page
-- zooming into a wide screenshot without a declared crop box
+- asking the renderer to repair framing with local crop/zoom
 - moving the active UI out of the center safe region
 - using blur/background duplicates as the main visual
 - showing mostly empty website canvas while narration discusses a form, button, or result
@@ -88,9 +88,9 @@ For every wide website/app screenshot, write:
 {
   "display_risk": ["wide_desktop_ui"],
   "layout_plan": {
-    "primary_display_mode": "crop-focus",
+    "primary_display_mode": "portrait-showcase",
     "focus_region": "left_form_required_fields",
-    "fill_strategy": "crop_to_functional_region_before_animation",
+    "fill_strategy": "prepared_9x16_then_width_fit",
     "min_subject_frame_ratio": 0.45,
     "center_safe_region": {"x": 0.18, "y": 0.12, "w": 0.64, "h": 0.68},
     "must_be_visible": ["行业", "背景底板", "字体材质", "开始生成"],
@@ -108,9 +108,9 @@ If the screenshot cannot be cropped into a readable region, request a new browse
 
 ## Result Display
 
-Generated result images should be exported or cropped into `assets/results/` and shown with `portrait-showcase` or `result_showcase`.
+Generated result images must be exported, downloaded, or cropped into `assets/results/` and shown with `portrait-showcase` or `result-showcase`.
 
-The result page screenshot can prove that the product generated the result, but the result crop/export should carry the visual quality claim.
+The result page screenshot can prove that the product generated the result, but it is evidence only. It must not be used as the generated-result visual in the final video.
 
 For generated effect images/result exports:
 

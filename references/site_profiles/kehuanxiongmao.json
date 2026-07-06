@@ -149,6 +149,9 @@
       },
       "required_capture_steps": [
         "home_logged_in_points",
+        "home_entry",
+        "text_to_image_entry",
+        "feature_menu_select",
         "feature_entry_callout",
         "feature_page_empty",
         "form_filled",

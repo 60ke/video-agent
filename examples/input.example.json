@@ -17,15 +17,14 @@
   },
   "dependency_mode": {
     "browser": "kimi_webbridge",
-    "renderer": "hyperframes",
-    "asr": "funasr",
-    "tts": "voice_clone_api"
+    "renderer": "simple_ffmpeg",
+    "alignment": "minimax_t2a",
+    "tts": "minimax_t2a"
   },
   "voice_config": {
-    "mode": "voice_clone",
-    "engine": "voice_clone_api",
-    "prompt_audio_policy": "default",
-    "case_prompt_audio": "audio/voice_prompt_5s.wav"
+    "mode": "tts",
+    "engine": "minimax_t2a",
+    "local_config": "config/minimax.local.json"
   },
   "ending_track": {
     "id": "default_panda_outro",

@@ -6,7 +6,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
-READABLE_WIDE_UI_LAYOUTS = {"crop-focus", "multi-section", "main-plus-reference", "browser-recording"}
+from utils.case_guards import kehuanxiongmao_auth_errors
+
+READABLE_WIDE_UI_LAYOUTS = {
+    "full-width",
+    "main-plus-reference",
+    "portrait-showcase",
+    "result-showcase",
+}
 DEFAULT_CENTER_SAFE_REGION = {"x": 0.18, "y": 0.12, "w": 0.64, "h": 0.68}
 
 
@@ -23,6 +30,17 @@ def resolve_case_path(case_dir: Path, value: str | None) -> str | None:
     return str(path if path.is_absolute() else case_dir / path)
 
 
+def as_case_relative(case_dir: Path, value: str | None) -> str | None:
+    if not value:
+        return None
+    path = Path(value)
+    resolved = path if path.is_absolute() else case_dir / path
+    try:
+        return resolved.resolve(strict=False).relative_to(case_dir.resolve(strict=False)).as_posix()
+    except ValueError:
+        return str(resolved)
+
+
 def material_map(case_dir: Path) -> dict[str, dict[str, Any]]:
     manifest = load_json(case_dir / "asset_manifest.json", {"assets": []})
     understanding = load_json(case_dir / "material_understanding.json", {"materials": []})
@@ -36,6 +54,11 @@ def material_map(case_dir: Path) -> dict[str, dict[str, Any]]:
         item.get("asset_id"): item
         for item in image_resources.get("resources", [])
         if isinstance(item, dict) and item.get("asset_id")
+    }
+    image_by_filename = {
+        str(item.get("filename") or Path(str(item.get("source") or "")).name).lower(): item
+        for item in image_resources.get("resources", [])
+        if isinstance(item, dict) and (item.get("filename") or item.get("source"))
     }
     assets: dict[str, dict[str, Any]] = {}
     for asset in manifest.get("assets", []):
@@ -52,12 +75,15 @@ def material_map(case_dir: Path) -> dict[str, dict[str, Any]]:
             merged["recommended_usage"] = insight.get("recommended_usage", "")
             merged["display_risk"] = insight.get("display_risk", [])
             merged["layout_plan"] = insight.get("layout_plan", {})
-        image_resource = image_by_asset_id.get(asset["id"], {})
+        filename = str(asset.get("filename") or Path(str(asset.get("source") or "")).name).lower()
+        image_resource = image_by_asset_id.get(asset["id"], {}) or image_by_filename.get(filename, {})
         if image_resource:
             merged["image_resource"] = {
                 "id": image_resource.get("id"),
                 "feature_id": image_resource.get("feature_id"),
                 "workflow_step": image_resource.get("workflow_step"),
+                "source_workflow_step": image_resource.get("source_workflow_step"),
+                "operation_step": image_resource.get("operation_step"),
                 "variant": image_resource.get("variant"),
                 "capture_method": image_resource.get("capture_method"),
                 "page_url": image_resource.get("page_url"),
@@ -128,6 +154,8 @@ def is_generated_result_asset(asset: dict[str, Any]) -> bool:
     role = str(asset.get("role") or "").lower()
     description = str(asset.get("description") or "").lower()
     source = str(asset.get("source") or "").lower()
+    if "packaging" in role and any(token in role for token in ("result", "fullfit", "gallery")):
+        return True
     combined = " ".join((variant, workflow_step, origin, role, description, source))
     result_tokens = (
         "result",
@@ -139,6 +167,8 @@ def is_generated_result_asset(asset: dict[str, Any]) -> bool:
         "生成图",
         "生成样例",
         "代表样例",
+        "packaging",
+        "vi_result",
     )
     ui_tokens = ("ui", "界面", "表单", "首页", "菜单", "button", "按钮", "page", "browser")
     return any(token in combined for token in result_tokens) and not any(token in combined for token in ui_tokens)
@@ -146,7 +176,9 @@ def is_generated_result_asset(asset: dict[str, Any]) -> bool:
 
 def layout_for(segment: dict[str, Any], asset: dict[str, Any], asset_count: int) -> str:
     segment_layout = str(segment.get("layout_intent") or "").strip()
-    if segment_layout and not (is_wide_ui_asset(asset) and segment_layout == "full-preview"):
+    if segment_layout == "crop-focus":
+        raise ValueError("layout_intent=crop-focus is no longer supported; prepare a 9:16 asset or saved result image first")
+    if segment_layout:
         return segment_layout
     if asset_count >= 3:
         return "grid-rebuild"
@@ -154,7 +186,9 @@ def layout_for(segment: dict[str, Any], asset: dict[str, Any], asset_count: int)
         return "main-plus-reference"
     plan = asset.get("layout_plan", {}) if isinstance(asset.get("layout_plan"), dict) else {}
     planned = str(plan.get("primary_display_mode") or "").strip()
-    if planned and not (is_wide_ui_asset(asset) and planned == "full-preview"):
+    if planned == "crop-focus":
+        raise ValueError("layout_plan.primary_display_mode=crop-focus is no longer supported; prepare a 9:16 asset or saved result image first")
+    if planned:
         return planned
     advice = str(asset.get("layout_advice") or asset.get("recommended_usage") or "").lower()
     role = str(asset.get("role") or "").lower()
@@ -163,16 +197,8 @@ def layout_for(segment: dict[str, Any], asset: dict[str, Any], asset_count: int)
     aspect = metadata.get("aspect_ratio") if isinstance(metadata, dict) else None
     if is_generated_result_asset(asset):
         return "result-showcase"
-    if "multi-section" in advice or "tall" in risks:
-        return "multi-section"
-    if "scroll" in advice and isinstance(aspect, (int, float)) and aspect < 0.35:
-        return "multi-section"
-    if isinstance(aspect, (int, float)) and aspect < 0.35:
-        return "multi-section"
-    if "crop" in advice or "ui" in role or "entry" in role or "wide" in risks:
-        return "crop-focus"
     if isinstance(aspect, (int, float)) and aspect > 1.2:
-        return "crop-focus"
+        return "full-width"
     if isinstance(aspect, (int, float)) and 0.42 <= aspect <= 0.78:
         return "portrait-showcase"
     return "full-preview"
@@ -235,9 +261,9 @@ def viewport_transform_for(asset: dict[str, Any]) -> dict[str, Any]:
         return transform
     if is_wide_ui_asset(asset):
         return {
-            "mode": "crop_to_region_before_motion",
-            "lock_subject_in_center_safe_region": True,
-            "allow_subject_drift": False,
+            "mode": "prepared_9x16_or_width_fit",
+            "requires_ai_verified_asset": True,
+            "allow_detail_crop": False,
         }
     if is_generated_result_asset(asset):
         return {
@@ -288,8 +314,8 @@ def build_visual_track(script_segments: list[dict[str, Any]], subtitles: list[di
         asset = asset_by_id.get(asset_ids[0], {})
         layout = layout_for(segment, asset, len(asset_ids))
         if is_wide_ui_asset(asset) and layout not in READABLE_WIDE_UI_LAYOUTS:
-            layout = "crop-focus"
-        if is_generated_result_asset(asset) and layout == "crop-focus":
+            layout = "full-width"
+        if is_generated_result_asset(asset) and layout == "full-width":
             layout = "result-showcase"
         plan = asset.get("layout_plan", {}) if isinstance(asset.get("layout_plan"), dict) else {}
         center_safe_region = center_safe_region_for(asset)
@@ -315,10 +341,10 @@ def build_visual_track(script_segments: list[dict[str, Any]], subtitles: list[di
                     "viewport_transform": viewport_transform,
                     "subtitle_safe": True,
                     "target_canvas": "1080x1920",
-                    "fill_strategy": plan.get("fill_strategy", "fit_or_crop_for_readability"),
+                    "fill_strategy": plan.get("fill_strategy", "fit_width_preserve_image"),
                 },
                 "motion": {
-                    "name": "stable_crop_focus" if is_wide_ui_asset(asset) else "stable_focus",
+                    "name": "stable_width_fit",
                     "avoid_flicker": True,
                     "forbidden_motion": forbidden_motion,
                 },
@@ -341,8 +367,11 @@ def build_visual_track(script_segments: list[dict[str, Any]], subtitles: list[di
 def run(args: argparse.Namespace) -> dict[str, Any]:
     case_dir = Path(args.case).expanduser().resolve(strict=False)
     input_data = load_json(case_dir / "input.json", {})
+    auth_errors = kehuanxiongmao_auth_errors(case_dir, input_data)
+    if auth_errors:
+        raise ValueError("; ".join(auth_errors))
     script = load_json(case_dir / "video_script.json", {})
-    voice_report = load_json(case_dir / "output" / "voice_clone" / "voice_clone_report.json", {})
+    voice_report = load_json(case_dir / "output" / "minimax" / "voice_report.json", {})
     voice_plan = load_json(case_dir / "voice_plan.json", {})
     subtitles = subtitle_segments(case_dir)
     assets_map = material_map(case_dir)
@@ -394,18 +423,18 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "assets": project_assets,
         "script_segments": script_segments,
         "voice_track": {
-            "mode": input_data.get("voice_config", {}).get("mode", "voice_clone"),
-            "engine": input_data.get("voice_config", {}).get("engine", "voice_clone_api"),
+            "mode": input_data.get("voice_config", {}).get("mode", "tts"),
+            "engine": voice_report.get("engine") or input_data.get("voice_config", {}).get("engine", "minimax_t2a"),
             "source_text": voice_plan.get("text") or voice_report.get("text"),
-            "audio_path": "audio/voice.wav",
+            "audio_path": as_case_relative(case_dir, voice_report.get("audio_path")) or "audio/voice.mp3",
             "duration": duration,
             "speed_policy": voice_plan.get("speed_policy", {}),
             "high_risk_terms": voice_plan.get("high_risk_terms", []),
             "qa": {},
         },
         "subtitle_track": {
-            "source": "output/funasr/funasr_alignment.json",
-            "format": "asr_aligned_reviewed_text",
+            "source": "output/minimax/minimax_alignment.json",
+            "format": "minimax_aligned_reviewed_text",
             "segments": subtitles,
         },
         "visual_track": build_visual_track(script_segments, subtitles, assets),
@@ -413,15 +442,15 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "audio_tracks": [],
         "ending_track": ending_track,
         "renderer_plan": {
-            "renderer": "hyperframes",
-            "composition_dir": "hyperframes",
+            "renderer": "simple_ffmpeg",
+            "composition_dir": None,
             "main_output": "output/versions/main.mp4",
             "final_output": "output/versions/final.mp4",
-            "allow_creative_layout": True,
+            "allow_creative_layout": False,
             "must_follow_tracks": True,
         },
         "qa_rules": {
-            "voice": {"require_asr_alignment": True, "require_brand_term_check": True, "max_internal_silence_seconds": 0.12},
+            "voice": {"require_minimax_alignment": True, "require_brand_term_check": True, "max_internal_silence_seconds": 0.12},
             "visual": {"no_black_frames": True, "no_unexplained_blanks": True, "min_subject_frame_ratio": 0.35, "ui_must_be_readable": True, "subtitle_must_not_cover_key_content": True},
             "layout": {
                 "dual_panel_height_must_match_media": True,

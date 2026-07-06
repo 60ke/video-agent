@@ -86,7 +86,7 @@ def extract_script_text(case_dir: Path, args: argparse.Namespace) -> str:
     voice_plan = load_json(case_dir / "voice_plan.json")
     if voice_plan.get("text"):
         return str(voice_plan["text"]).strip()
-    report = load_json(case_dir / "output" / "voice_clone" / "voice_clone_report.json")
+    report = load_json(case_dir / "output" / "minimax" / "voice_report.json")
     if report.get("text"):
         return str(report["text"]).strip()
     return ""
@@ -102,8 +102,8 @@ def extract_asr_text(alignment: dict[str, Any]) -> str:
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
     case_dir = Path(args.case).expanduser().resolve(strict=False)
-    audio_path = Path(args.audio).expanduser().resolve(strict=False) if args.audio else case_dir / "audio" / "voice.wav"
-    alignment_path = Path(args.alignment).expanduser().resolve(strict=False) if args.alignment else case_dir / "output" / "funasr" / "funasr_alignment.json"
+    audio_path = Path(args.audio).expanduser().resolve(strict=False) if args.audio else case_dir / "audio" / "voice.mp3"
+    alignment_path = Path(args.alignment).expanduser().resolve(strict=False) if args.alignment else case_dir / "output" / "minimax" / "minimax_alignment.json"
 
     errors: list[str] = []
     warnings: list[str] = []
@@ -118,7 +118,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     alignment = load_json(alignment_path)
     if not alignment:
-        errors.append(f"FunASR alignment missing: {alignment_path}")
+        errors.append(f"Minimax alignment missing: {alignment_path}")
 
     script_text = extract_script_text(case_dir, args)
     asr_text = extract_asr_text(alignment)

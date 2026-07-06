@@ -23,9 +23,9 @@
     "brand_profile": "柯幻熊猫",
     "dependency_mode": {
       "browser": "kimi_webbridge",
-      "renderer": "hyperframes",
-      "asr": "funasr",
-      "tts": "voice_clone_api"
+      "renderer": "simple_ffmpeg",
+      "alignment": "minimax_t2a",
+      "tts": "minimax_t2a"
     }
   },
   "assets": [
@@ -59,10 +59,10 @@
     }
   ],
   "voice_track": {
-    "mode": "voice_clone",
-    "engine": "voice_clone_api",
+    "mode": "tts",
+    "engine": "minimax_t2a",
     "source_text": "做一套品牌视觉，不用从零开始。",
-    "audio_path": "audio/voice.wav",
+    "audio_path": "audio/voice.mp3",
     "duration": 3.2,
     "speed_policy": {
       "minimum_units_per_second": 6.0
@@ -75,8 +75,8 @@
     }
   },
   "subtitle_track": {
-    "source": "output/funasr/funasr_alignment.json",
-    "format": "asr_aligned_segments",
+    "source": "output/minimax/minimax_alignment.json",
+    "format": "minimax_aligned_reviewed_text",
     "segments": [
       {
         "id": "sub_001",
@@ -127,16 +127,16 @@
     "duration": 3.436009
   },
   "renderer_plan": {
-    "renderer": "hyperframes",
-    "composition_dir": "hyperframes",
+    "renderer": "simple_ffmpeg",
+    "composition_dir": null,
     "main_output": "output/versions/main.mp4",
     "final_output": "output/versions/final.mp4",
-    "allow_creative_layout": true,
+    "allow_creative_layout": false,
     "must_follow_tracks": true
   },
   "qa_rules": {
     "voice": {
-      "require_asr_alignment": true,
+      "require_minimax_alignment": true,
       "require_brand_term_check": true,
       "max_internal_silence_seconds": 0.12
     },

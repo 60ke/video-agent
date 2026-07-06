@@ -105,7 +105,7 @@ Every frame must pass a mobile squint test:
 - subtitles must not cover the active input, result, category, or CTA area
 - cover frame must be designed from actual captured evidence or explicitly marked packaging
 
-Use large focus crops, screen recordings, and result close-ups. Split dense UI into sequential close-ups instead of showing the whole page.
+Use large focus crops, screen recordings, and result close-ups. Split dense UI into sequential close-ups instead of showing the whole page. For feature-entry demos, prefer a short recording of the click path; when recording is unavailable, use multiple red-callout screenshots so the viewer can follow each click.
 
 ## Motion Rules
 

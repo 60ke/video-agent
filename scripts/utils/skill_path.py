@@ -7,7 +7,6 @@ from typing import Iterable, NamedTuple
 
 SKILL_MARKER = "SKILL.md"
 ENV_VAR = "VIDEO_AGENT_SKILL_ROOT"
-DEFAULT_VOICE_PROMPT = Path("assets") / "voice" / "default_voice_clone_prompt_5s.wav"
 DEFAULT_OUTRO = Path("assets") / "outro" / "default_panda_outro.mp4"
 
 
@@ -96,11 +95,6 @@ def require_skill_root(start: str | os.PathLike[str] | None = None) -> Path:
     )
 
 
-def default_voice_prompt_path(root: str | os.PathLike[str] | None = None) -> Path:
-    skill_root = Path(root).resolve(strict=False) if root else require_skill_root()
-    return skill_root / DEFAULT_VOICE_PROMPT
-
-
 def default_outro_path(root: str | os.PathLike[str] | None = None) -> Path:
     skill_root = Path(root).resolve(strict=False) if root else require_skill_root()
     return skill_root / DEFAULT_OUTRO
@@ -108,17 +102,15 @@ def default_outro_path(root: str | os.PathLike[str] | None = None) -> Path:
 
 def require_default_assets(root: str | os.PathLike[str] | None = None) -> dict[str, str]:
     skill_root = Path(root).resolve(strict=False) if root else require_skill_root()
-    voice_prompt = skill_root / DEFAULT_VOICE_PROMPT
     outro = skill_root / DEFAULT_OUTRO
 
-    missing = [path for path in (voice_prompt, outro) if not path.is_file()]
+    missing = [path for path in (outro,) if not path.is_file()]
     if missing:
         formatted = "\n- ".join(str(path) for path in missing)
         raise FileNotFoundError(f"Missing bundled video-agent assets:\n- {formatted}")
 
     return {
         "skill_root": str(skill_root),
-        "default_voice_prompt": str(voice_prompt),
         "default_outro": str(outro),
     }
 

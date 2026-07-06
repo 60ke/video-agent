@@ -35,6 +35,7 @@ For each selected feature, save evidence under the case directory:
 - screenshot of the feature entry page
 - visible page text or DOM summary when available
 - interaction steps
+- short browser recording of the entry path when available
 - screenshot before operation
 - screenshot or recording during operation when useful
 - result screenshot or result area
@@ -42,6 +43,8 @@ For each selected feature, save evidence under the case directory:
 - error screenshot if the operation fails
 
 For `https://kehuanxiongmao.com`, also read `rules/kehuanxiongmao-capture.md` and follow its fixed sequence for logged-in/points verification, red callout screenshots, generation, result export/crop, and image resource metadata.
+
+For navigation-heavy product demos, recording is preferred. If the browser bridge cannot record, capture a stepwise screenshot set with annotated click targets. Do not jump directly from result or form screenshots without showing how the viewer reaches the feature.
 
 ## Output Artifacts
 
