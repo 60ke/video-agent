@@ -52,6 +52,14 @@ class ValidationContext:
         return self.skill_root / path
 
 
+def is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.resolve(strict=False).relative_to(root.resolve(strict=False))
+    except ValueError:
+        return False
+    return True
+
+
 def load_json(path: Path, ctx: ValidationContext, required: bool = True) -> dict[str, Any]:
     if not path.is_file():
         if required:
@@ -88,6 +96,16 @@ def validate_input_json(input_data: dict[str, Any], ctx: ValidationContext) -> N
                 ctx.warn(f"input.json {optional_key} does not exist: {value}")
     else:
         ctx.error("input.json case must be an object")
+
+    dependency_mode = input_data.get("dependency_mode", {})
+    if isinstance(dependency_mode, dict):
+        browser_mode = dependency_mode.get("browser", "kimi_webbridge")
+        if browser_mode == "static_materials" and not (isinstance(case, dict) and case.get("static_materials_explicit") is True):
+            ctx.error("dependency_mode.browser=static_materials requires input.case.static_materials_explicit=true")
+        elif browser_mode not in ("kimi_webbridge", "static_materials", None):
+            ctx.error(f"unsupported dependency_mode.browser: {browser_mode}")
+    else:
+        ctx.error("input.json dependency_mode must be an object")
 
     voice = input_data.get("voice_config", {})
     if isinstance(voice, dict):
@@ -155,6 +173,8 @@ def validate_strict_project(project: dict[str, Any], ctx: ValidationContext) -> 
             path = ctx.resolve_path(source)
             if not path or not path.is_file():
                 ctx.error(f"asset source missing: {source}")
+            elif ctx.strict and not is_relative_to(path, ctx.case_dir):
+                ctx.error(f"asset source must be inside case directory after registration: {source}")
         else:
             ctx.error(f"assets[{idx}] missing source")
 
@@ -288,6 +308,8 @@ def validate_renderer_plan(plan: Any, ctx: ValidationContext) -> None:
 def validate_case(case_dir: Path, strict: bool) -> dict[str, Any]:
     skill_root = require_skill_root(Path(__file__).resolve())
     ctx = ValidationContext(case_dir.resolve(strict=False), skill_root, strict)
+    if strict and not is_relative_to(ctx.case_dir, skill_root):
+        ctx.error(f"case directory must be inside skill project: {ctx.case_dir}")
 
     if not case_dir.is_dir():
         ctx.error(f"case directory does not exist: {case_dir}")

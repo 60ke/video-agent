@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "status": "ready",
+  "naming_policy": "kx_<feature>_<step>_<seq>_<variant>.png",
+  "resources": [
+    {
+      "id": "img_logo_menu_select_001",
+      "asset_id": "asset_002",
+      "filename": "kx_logo_menu_select_002_callout.png",
+      "source": "assets/browser/annotated/kx_logo_menu_select_002_callout.png",
+      "type": "image",
+      "feature_id": "logo",
+      "workflow_step": "menu_select",
+      "variant": "callout",
+      "origin": "browser_capture",
+      "capture_method": "kimi_webbridge_screenshot_annotation",
+      "page_url": "https://kehuanxiongmao.com",
+      "title": "文生图菜单中选择LOGO",
+      "description": "首页左侧进入文生图后展开功能菜单，红圈标注LOGO入口，用于说明点击路径。",
+      "visible_text": ["文生图", "LOGO"],
+      "prompt_inputs": {},
+      "callouts": [
+        {
+          "type": "red_circle",
+          "target_label": "LOGO",
+          "purpose": "click_feature",
+          "box": {"x": 0.49, "y": 0.61, "w": 0.21, "h": 0.07}
+        }
+      ],
+      "relations": {
+        "raw_source_id": "img_logo_home_entry_001"
+      },
+      "supported_claims": ["文生图菜单里可以进入LOGO生成功能"],
+      "recommended_usage": ["operation_path", "click_callout"],
+      "quality": {
+        "readable": true,
+        "contains_private_info": false,
+        "needs_review": false
+      },
+      "layout_plan": {
+        "primary_display_mode": "crop-focus",
+        "focus_region": "logo_menu_item",
+        "fill_strategy": "crop_to_menu_and_left_nav",
+        "min_subject_frame_ratio": 0.45,
+        "safe_area_notes": "Do not place subtitles over the LOGO callout.",
+        "forbidden_treatments": ["full_page_tiny_strip", "fast_scroll"]
+      }
+    },
+    {
+      "id": "img_logo_result_001",
+      "asset_id": "asset_007",
+      "filename": "kx_logo_result_crop_007_result.png",
+      "source": "assets/results/kx_logo_result_crop_007_result.png",
+      "type": "image",
+      "feature_id": "logo",
+      "workflow_step": "result_crop",
+      "variant": "result",
+      "origin": "browser_capture",
+      "capture_method": "kimi_webbridge_screenshot_crop",
+      "page_url": "https://kehuanxiongmao.com",
+      "title": "LOGO生成结果",
+      "description": "真实生成后的LOGO结果裁切图，可作为视频主效果图展示。",
+      "visible_text": [],
+      "prompt_inputs": {
+        "brand_name": "星野咖啡实验室",
+        "industry": "咖啡饮品",
+        "description": "面向年轻办公人群，想要一个简洁、温暖、容易识别的品牌标志。"
+      },
+      "callouts": [],
+      "relations": {
+        "result_group_id": "logo_generation_001"
+      },
+      "supported_claims": ["填写品牌信息后可生成LOGO效果图"],
+      "recommended_usage": ["hook_visual", "result_showcase", "gallery"],
+      "quality": {
+        "readable": true,
+        "contains_private_info": false,
+        "needs_review": false
+      },
+      "layout_plan": {
+        "primary_display_mode": "portrait-showcase",
+        "focus_region": "generated_logo",
+        "fill_strategy": "fill_mobile_width_without_cropping_logo",
+        "min_subject_frame_ratio": 0.5,
+        "safe_area_notes": "Keep result above subtitle rail.",
+        "forbidden_treatments": ["tiny_full_page_strip", "invented_result"]
+      }
+    }
+  ],
+  "warnings": []
+}

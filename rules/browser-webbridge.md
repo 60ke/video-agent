@@ -17,9 +17,13 @@ Use WebBridge when:
 - the user provides a frontend project that must be operated in a browser
 - the video claims depend on real UI state, generated result pages, uploads, forms, dashboards, or browser interactions
 
+This is the default for website/product videos. Do not downgrade to static materials unless the user's prompt explicitly asks to use static resources, an existing material folder, or already supplied assets as the evidence source.
+
+On Windows, send WebBridge commands as JSON files posted with `curl.exe --data-binary`, especially when arguments contain Chinese text. Do not inline Chinese JSON in PowerShell command strings.
+
 Do not use WebBridge when:
 
-- the user only provides a static material folder and no live UI is needed
+- the user explicitly asks to use only a static material folder or supplied assets and no live UI is needed
 - the task is only validating an existing `video_project.json`
 - the task is only appending the fixed outro or checking audio
 
@@ -36,6 +40,8 @@ For each selected feature, save evidence under the case directory:
 - result screenshot or result area
 - quota/points/login blocker screenshot when the operation cannot complete
 - error screenshot if the operation fails
+
+For `https://kehuanxiongmao.com`, also read `rules/kehuanxiongmao-capture.md` and follow its fixed sequence for logged-in/points verification, red callout screenshots, generation, result export/crop, and image resource metadata.
 
 ## Output Artifacts
 
@@ -71,6 +77,8 @@ Each browser material should include:
 
 Use ASCII ids. Keep Chinese text in `visible_text`, `description`, and `supported_claims`.
 
+For image assets, also write `image_resources.json`. `browser_materials.json` records browser evidence; `image_resources.json` records reusable image-level meaning, filename conventions, callouts, result relationships, and layout guidance for later agents.
+
 ## Safety Boundaries
 
 Do not perform:
@@ -100,7 +108,7 @@ If the user is logged in but has no credits/points, capture the available setup/
 
 If WebBridge is not installed or reachable, stop and report the dependency failure.
 
-If login is required and not available, stop and ask for access or static materials.
+If login is required and not available, stop and ask for access. Ask for static materials only as an explicit fallback option, and label the resulting workflow as static-materials based.
 
 If the feature cannot be safely operated, document the limitation in `feature_cards.json` and choose another supported feature.
 

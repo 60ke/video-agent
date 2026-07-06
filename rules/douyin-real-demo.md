@@ -56,6 +56,8 @@ Rules:
 
 If a result is not captured, do not write narration such as "生成高质量主图" unless it is clearly framed as a capability stated by the website and backed by page text. Prefer "进入电商分类" or "准备输入产品、风格、场景".
 
+When real generated results are captured, favor a short result gallery beat over repeating the same UI screenshot. Save each result as a separate local asset and describe it in `image_resources.json` before using lines such as "连续看几张不同方向的结果".
+
 ## Category Selection Rules
 
 When the requested feature is a category, such as `电商`, the visual must make that category the only focal point.

@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import mimetypes
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -103,30 +104,52 @@ def metadata_from_probe(path: Path, kind: str) -> dict[str, Any]:
     return payload
 
 
-def collect_assets(materials_dir: Path, recursive: bool) -> list[dict[str, Any]]:
+def case_relative(case_dir: Path, path: Path) -> str:
+    try:
+        return str(path.resolve(strict=False).relative_to(case_dir.resolve(strict=False))).replace("\\", "/")
+    except ValueError as exc:
+        raise ValueError(f"registered material must be frozen inside case directory: {path}") from exc
+
+
+def copy_to_case_static(src: Path, materials_dir: Path, frozen_root: Path) -> Path:
+    try:
+        rel = src.relative_to(materials_dir)
+    except ValueError:
+        rel = Path(src.name)
+    dst = frozen_root / rel
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.resolve(strict=False) != src.resolve(strict=False):
+        shutil.copy2(src, dst)
+    return dst
+
+
+def collect_assets(materials_dir: Path, recursive: bool, case_dir: Path) -> list[dict[str, Any]]:
     pattern = "**/*" if recursive else "*"
     assets: list[dict[str, Any]] = []
+    frozen_root = case_dir / "assets" / "static"
     for path in sorted(materials_dir.glob(pattern), key=lambda p: str(p).lower()):
         if not path.is_file():
             continue
         kind = media_type(path)
         if not kind:
             continue
-        rel = path.relative_to(materials_dir)
+        frozen_path = copy_to_case_static(path, materials_dir, frozen_root)
+        rel = frozen_path.relative_to(frozen_root)
         asset_id = f"asset_{len(assets) + 1:03d}"
-        mime, _ = mimetypes.guess_type(str(path))
-        metadata = metadata_from_probe(path, kind)
+        mime, _ = mimetypes.guess_type(str(frozen_path))
+        metadata = metadata_from_probe(frozen_path, kind)
         assets.append(
             {
                 "id": asset_id,
                 "type": kind,
-                "source": str(path.resolve(strict=False)),
+                "source": case_relative(case_dir, frozen_path),
                 "relative_source": str(rel),
-                "filename": path.name,
+                "filename": frozen_path.name,
                 "mime_type": mime,
-                "size_bytes": path.stat().st_size,
-                "sha256": sha256_file(path),
-                "origin": "static_material_folder",
+                "size_bytes": frozen_path.stat().st_size,
+                "sha256": sha256_file(frozen_path),
+                "origin": "static_material_image" if kind == "image" else "static_material_folder",
+                "source_policy": "frozen_into_case",
                 "role": "unclassified",
                 "description": "",
                 "visible_text": [],
@@ -151,12 +174,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     if not materials_dir.is_dir():
         raise FileNotFoundError(f"materials directory not found: {materials_dir}")
 
-    assets = collect_assets(materials_dir, args.recursive)
+    assets = collect_assets(materials_dir, args.recursive, case_dir)
     output_path = case_dir / "asset_manifest.json"
     payload = {
         "schema_version": 1,
         "status": "registered",
-        "materials_dir": str(materials_dir),
+        "materials_dir": "assets/static",
+        "source_policy": "frozen_into_case",
         "asset_count": len(assets),
         "assets": assets,
     }
@@ -199,7 +223,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "reason": "",
         "data": {
             "case_dir": str(case_dir),
-            "materials_dir": str(materials_dir),
+            "materials_dir": str(case_dir / "assets" / "static"),
+            "original_materials_dir": str(materials_dir),
             "asset_manifest": str(output_path),
             "material_understanding": str(understanding_path),
             "asset_count": len(assets),

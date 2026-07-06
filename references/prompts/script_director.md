@@ -19,7 +19,7 @@ Return JSON:
   "schema_version": 1,
   "status": "reviewed",
   "voice_style": "快节奏、清晰、种草",
-  "high_risk_terms": ["科幻熊猫", "AI"],
+  "high_risk_terms": ["柯幻熊猫", "AI"],
   "segments": [
     {
       "id": "seg_001",
@@ -45,12 +45,13 @@ Return JSON:
 
 - Each segment must be short enough for subtitles.
 - Prefer 8-18 Chinese characters per subtitle line, but segment text can be longer if semantically needed.
-- Keep speech density around 4.8-6.2 Chinese characters per second.
+- Keep speech density at 6.0 or more Chinese characters/speech units per second.
 - Include high-risk terms for ASR checks.
 - Bind each segment to a visual intent and material task.
 - Bind each segment to real evidence. Use one of: `real_recording`, `real_screenshot`, `real_result`, `quota_or_error_state`, `evidence_cover`, or `packaging_only`.
+- For website/product tasks, real evidence means Kimi WebBridge browser capture by default. Use static material assets as the primary evidence only when the user explicitly requested static resources/material folders/supplied assets.
 - Use `preferred_asset_ids` only when the material is visually verified.
-- Include `layout_intent` when the segment needs a specific layout such as `portrait-showcase`, `crop-focus`, `multi-section`, `grid-rebuild`, `main-plus-reference`, or `browser-recording`.
+- Include `layout_intent` when the segment needs a specific layout such as `portrait-showcase`, `crop-focus`, `multi-section`, `grid-rebuild`, `main-plus-reference`, or `browser-recording`. **CRITICAL: For generated effect images or result exports, you MUST set `layout_intent: "result-showcase"` to prevent improper cropping.**
 - Include `focus_region` for website/app screenshots. Use a real functional region, not `auto`, when the scene depends on UI readability.
 - Do not select multiple images for one segment unless the layout can keep them readable in 9:16. Use sequential close-ups if equal-width comparison would be too narrow.
 - When using tall detail pages, reserve enough time for readable movement or request `multi-section`.
@@ -60,3 +61,5 @@ Return JSON:
 - Do not use generated product photos, generic mockups, emoji, or invented UI as product evidence.
 - If a feature is `blocked_quota`, `blocked_login`, or `verified_entry_only`, write a workflow/entry-point script only, or stop for user approval/materials.
 - For category features such as `电商`, the script must name only the verified category state. Do not write copy that suggests unrelated categories or an opened result page unless captured evidence proves it.
+- For 柯幻熊猫 generated-result demos, a preferred hook is `生成这样的一张效果图要多久？先看结果，再用真实截图证明它怎么来的。` When mentioning functions, inputs, or features, you MUST combine the narration with the actual website UI and interaction flow (e.g., inputting text, clicking buttons). Do not just abstractly describe the feature without showing the website operation.
+- If multiple generated result assets share a result group, add one short gallery segment instead of repeating the same screenshot.

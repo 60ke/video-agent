@@ -60,6 +60,10 @@ def check_case_hygiene(case_dir: Path) -> tuple[list[str], list[str]]:
 
     expected_dirs = [
         "assets",
+        "assets/browser",
+        "assets/browser/raw",
+        "assets/browser/annotated",
+        "assets/results",
         "audio",
         "hyperframes",
         "output",

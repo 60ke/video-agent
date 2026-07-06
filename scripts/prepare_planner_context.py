@@ -60,6 +60,16 @@ def compact_asset(asset: dict[str, Any], insight: dict[str, Any] | None) -> dict
     return payload
 
 
+def image_resource_map(case_dir: Path) -> dict[str, dict[str, Any]]:
+    payload = load_json(case_dir / "image_resources.json", {"resources": []})
+    resources = payload.get("resources", []) if isinstance(payload, dict) else []
+    return {
+        str(item.get("asset_id")): item
+        for item in resources
+        if isinstance(item, dict) and item.get("asset_id")
+    }
+
+
 def material_insights(case_dir: Path) -> dict[str, dict[str, Any]]:
     understanding = load_json(case_dir / "material_understanding.json", {"materials": []})
     materials = understanding.get("materials", []) if isinstance(understanding, dict) else []
@@ -73,7 +83,7 @@ def material_insights(case_dir: Path) -> dict[str, dict[str, Any]]:
 def copywriting_context(skill_root: Path, input_data: dict[str, Any]) -> dict[str, Any]:
     request = input_data.get("request", {}) if isinstance(input_data.get("request"), dict) else {}
     brand_profile = str(request.get("brand_profile") or "")
-    if "科幻熊猫" not in brand_profile:
+    if "柯幻熊猫" not in brand_profile:
         return {}
     rules = read_text(skill_root / "references" / "copywriting-rules.md")
     options = read_text(skill_root / "references" / "copywriting-options.md")
@@ -89,6 +99,7 @@ def build_context(case_dir: Path, skill_root: Path, stage: str) -> dict[str, Any
     manifest = load_json(case_dir / "asset_manifest.json", {"assets": []})
     assets = manifest.get("assets", []) if isinstance(manifest, dict) else []
     insights = material_insights(case_dir)
+    image_resources_by_asset = image_resource_map(case_dir)
 
     prompts = {}
     selected = PROMPTS if stage == "all" else {stage: PROMPTS[stage]}
@@ -105,10 +116,18 @@ def build_context(case_dir: Path, skill_root: Path, stage: str) -> dict[str, Any
         "stage": stage,
         "input": input_data,
         "prompts": prompts,
-        "assets": [compact_asset(asset, insights.get(str(asset.get("id")))) for asset in assets if isinstance(asset, dict)],
+        "assets": [
+            {
+                **compact_asset(asset, insights.get(str(asset.get("id")))),
+                "image_resource": image_resources_by_asset.get(str(asset.get("id")), {}),
+            }
+            for asset in assets
+            if isinstance(asset, dict)
+        ],
         "website_knowledge": load_json(case_dir / "website_knowledge.json", {}),
         "feature_cards": load_json(case_dir / "feature_cards.json", {}),
         "browser_materials": load_json(case_dir / "browser_materials.json", {}),
+        "image_resources": load_json(case_dir / "image_resources.json", {}),
         "operation_recipes": load_json(case_dir / "operation_recipes.json", {}),
         "material_understanding": load_json(case_dir / "material_understanding.json", {}),
         "video_script": load_json(case_dir / "video_script.json", {}),
@@ -120,6 +139,7 @@ def build_context(case_dir: Path, skill_root: Path, stage: str) -> dict[str, Any
         },
         "non_negotiable_rules": [
             "Do not rely on filenames alone for visual decisions.",
+            "Use image_resources.json for screenshot/result meaning when available.",
             "Use asset IDs exactly as listed in asset_manifest.json.",
             "Do not include the fixed outro in script or visual planning.",
             "Do not invent product claims unsupported by material evidence.",

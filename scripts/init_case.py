@@ -14,6 +14,10 @@ from utils.skill_path import default_outro_path, default_voice_prompt_path, requ
 
 OUTPUT_DIRS = (
     "assets",
+    "assets/browser",
+    "assets/browser/raw",
+    "assets/browser/annotated",
+    "assets/results",
     "audio",
     "hyperframes",
     "output",
@@ -43,6 +47,17 @@ PLACEHOLDER_JSON = {
         "schema_version": 1,
         "status": "pending",
         "materials": [],
+    },
+    "image_resources.json": {
+        "schema_version": 1,
+        "status": "pending",
+        "naming_policy": "kx_<feature>_<step>_<seq>_<variant>.png",
+        "resources": [],
+    },
+    "generation_receipts.json": {
+        "schema_version": 1,
+        "status": "pending",
+        "receipts": [],
     },
     "asset_manifest.json": {
         "schema_version": 1,
@@ -154,7 +169,9 @@ def _build_input(args: argparse.Namespace, skill_root: Path, voice_prompt: str |
         "created_at": _now_iso(),
         "case": {
             "case_dir": str(Path(args.case).resolve(strict=False)),
-            "materials_dir": str(Path(args.materials).resolve(strict=False)) if args.materials else None,
+            "materials_dir": "assets/static" if args.materials else None,
+            "materials_source_policy": "freeze_into_case" if args.materials else None,
+            "static_materials_explicit": bool(args.materials),
             "frontend_dir": str(Path(args.frontend).resolve(strict=False)) if args.frontend else None,
         },
         "request": {
@@ -181,12 +198,23 @@ def _build_input(args: argparse.Namespace, skill_root: Path, voice_prompt: str |
     }
 
 
+def _is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.resolve(strict=False).relative_to(root.resolve(strict=False))
+    except ValueError:
+        return False
+    return True
+
+
 def run(args: argparse.Namespace) -> dict[str, Any]:
     skill_root = require_skill_root(Path(__file__).resolve())
     case_dir = Path(args.case).expanduser().resolve(strict=False)
     touched: list[str] = []
     skipped: list[str] = []
     warnings: list[str] = []
+
+    if not _is_relative_to(case_dir, skill_root):
+        raise ValueError(f"case directory must be inside skill project: {case_dir}")
 
     case_dir.mkdir(parents=True, exist_ok=True)
     for rel in OUTPUT_DIRS:
@@ -260,7 +288,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--target-url", help="Optional target website URL.")
     parser.add_argument("--video-goal", default="功能种草")
     parser.add_argument("--duration", type=float, default=30.0)
-    parser.add_argument("--brand-profile", default="科幻熊猫")
+    parser.add_argument("--brand-profile", default="柯幻熊猫")
     parser.add_argument("--target-platform", default="douyin")
     parser.add_argument("--preferred-feature", action="append", default=[])
     parser.add_argument("--tts-engine", default="voice_clone_api")

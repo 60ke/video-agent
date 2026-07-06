@@ -12,6 +12,7 @@ P0 must do:
 
 - open and inspect a target website using Kimi WebBridge
 - collect real browser screenshots, DOM/page text, and optionally short recordings
+- save generated result images/crops and image-level descriptions into the case directory
 - classify operation evidence for requested features, including generated result, entry-only, login blocker, quota blocker, permission blocker, unsafe action, and unavailable states
 - generate a structured script with semantic segments
 - generate or receive TTS voice
@@ -41,6 +42,7 @@ user input
   -> feature_cards.json
   -> operation_recipes.json
   -> browser_materials.json
+  -> image_resources.json
   -> vision asset understanding
   -> video_script.json
   -> voice.wav
@@ -67,10 +69,13 @@ The browser layer is responsible for:
 - recording action events
 - capturing result images or result areas
 - capturing login, quota/points, permission, or error blockers when a result cannot be produced
+- writing image resource metadata so later agents know what each screenshot/result image shows, how it was captured, what claims it supports, and how it should be framed
 
 The browser layer is not the renderer. It freezes website evidence into files that HyperFrames can use.
 
 For real product demos, the browser layer is the source of truth. HyperFrames may package, crop, annotate, and sequence captured evidence, but it must not invent product states or generated results.
+
+For 柯幻熊猫 cases, the browser layer must use Kimi WebBridge only, verify logged-in state and points greater than 100 before generation, capture red-callout click evidence, and save final generated results under the case directory.
 
 ## Rendering
 
@@ -143,6 +148,7 @@ HyperFrames can choose creative HTML/CSS implementation details, but it cannot v
 5. Capture browser materials.
    - Collect screenshots/recordings/result areas tied to action events.
    - Store evidence in `browser_materials.json`.
+   - Store reusable image descriptions in `image_resources.json`.
    - If only an entry point is visible, store it as entry evidence only. Do not upgrade it into result evidence.
    - If the user is logged in but lacks credits/points, store the blocker and ask for permission/materials before planning a result demo.
 

@@ -78,6 +78,7 @@ Required checks:
 - no flicker when the same asset is held across adjacent segments
 - visual content matches the current subtitle
 - website/app scenes are real captured states when a URL/frontend is available
+- website/app narrated subjects remain inside the central safe region of the 9:16 frame
 - product-result claims are backed by captured or supplied result evidence
 - generated photos, generic mockups, emoji, or invented UI are not used as product evidence
 - category-focused scenes make the requested category dominant and do not show unrelated category labels as equal subjects
@@ -94,6 +95,9 @@ Reject a scene if:
 - it shows a whole category row when the script is about one category, such as `电商`
 - it claims a category/result page opened when URL/content/state did not change
 - it uses arbitrary zoompan, breathing, jitter, or floating motion without a browser action or voiceover cue
+- it uses a wide desktop screenshot as the primary full-preview visual for a narrated feature
+- the active form, button, menu item, result, or canvas drifts out of frame because of pan/zoom animation
+- the website frame is mostly blank canvas while the spoken subject sits on an edge or outside the crop
 
 ## Layout QA
 
@@ -105,6 +109,7 @@ General rules:
 - Decorative background is allowed, but should not dominate the scene.
 - Empty space must be intentional and useful.
 - UI screenshots must be readable or intentionally crop-focused.
+- Full wide desktop screenshots are evidence or establishing context only; narrated website/app scenes need crop-focus, multi-section, browser-recording, or a result crop/export.
 - Captions must not obscure the core UI/result.
 - Douyin/mobile scenes should have one dominant subject and no more than one short headline plus subtitle rail.
 
@@ -162,8 +167,11 @@ Wide website/app screenshot rules:
 - prefer portrait/mobile capture when available
 - crop into functional area for form, result, gallery, editor, or detail page scenes
 - use browser capture or frontend capture rather than static supplied screenshots when the live page is available
+- fail if a website/product task used `static_materials` as the primary evidence source without an explicit user request for static resources/material folders/supplied assets
 - every `crop-focus` scene must declare a focus region such as upload form, generate button, result gallery, editor canvas, or navigation/sidebar
 - if the focus region is unknown, send the frame back to vision review instead of guessing with a center crop
+- every narrated wide UI scene must declare `center_safe_region` and `must_be_visible`
+- fail the scene if any item in `must_be_visible` is unreadable, clipped, or outside the central safe region
 
 ## Browser Material QA
 
@@ -172,6 +180,7 @@ Required checks:
 - `website_knowledge.json` exists
 - each selected feature has URL evidence
 - screenshots exist for pages used in video
+- `image_resources.json` exists and describes screenshots/result images used in video
 - action events exist for browser operations
 - result screenshot or result area exists for result claims
 - quota/points/login blocker screenshots exist when a real operation cannot complete
@@ -183,6 +192,7 @@ Reject browser materials if:
 - they only prove an entry point but the script claims a generated result
 - the selected category is not visually dominant
 - captured screenshots are too wide/dense to serve as mobile primary visuals and no crop-focus regions are declared
+- image meaning exists only in filenames and not in `image_resources.json`
 
 ## Render QA
 

@@ -1,15 +1,17 @@
 {
   "schema_version": 1,
   "case": {
-    "case_dir": "C:/Users/CNGG/Documents/video_generate/example_case",
-    "materials_dir": "C:/Users/CNGG/Documents/视频素材整理1/VI",
+    "case_dir": "examples/example_case",
+    "materials_dir": "examples/example_case/assets/static",
+    "materials_source_policy": "freeze_into_case",
+    "static_materials_explicit": true,
     "frontend_dir": null
   },
   "request": {
     "target_url": null,
     "video_goal": "功能种草",
     "duration": 25,
-    "brand_profile": "科幻熊猫",
+    "brand_profile": "柯幻熊猫",
     "target_platform": "douyin",
     "preferred_features": ["VI设计"]
   },

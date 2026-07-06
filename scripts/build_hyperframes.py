@@ -53,15 +53,23 @@ def focus_class(event: dict[str, Any]) -> str:
     return "focus-center"
 
 
-def media_element(media_id: str, media_src: str, asset: dict[str, Any], extra_class: str = "") -> str:
+def media_element(media_id: str, media_src: str, asset: dict[str, Any], extra_class: str = "", start: float | None = None, duration: float | None = None) -> str:
     alt = html.escape(str(asset.get("description") or asset.get("filename") or asset.get("id") or "visual"))
     classes = "visual-media"
     if extra_class:
         classes += f" {html.escape(extra_class)}"
     if asset.get("type") in VIDEO_TYPES:
+        if start is not None and duration is not None:
+            classes += " clip"
+            return (
+                f'<video id="{media_id}" class="{classes}" src="{media_src}" muted playsinline '
+                f'preload="auto" data-start="{start:.3f}" data-duration="{duration:.3f}" data-track-index="1"></video>'
+            )
+        meta = asset.get("metadata") or {}
+        video_dur = float(meta.get("duration") or 0.0)
         return (
             f'<video id="{media_id}" class="{classes}" src="{media_src}" muted playsinline '
-            f'preload="auto"></video>'
+            f'preload="auto" data-start="0" data-duration="{video_dur:.3f}"></video>'
         )
     return f'<img id="{media_id}" class="{classes}" src="{media_src}" alt="{alt}" />'
 
@@ -133,17 +141,20 @@ def render_visual_clips(
     clips: list[str] = []
     timeline_lines: list[str] = []
 
+    previous_end = 0.0
     for idx, event in enumerate(project.get("visual_track", []), start=1):
         if not isinstance(event, dict):
             continue
-        start = float(event.get("start", 0))
+        start = max(float(event.get("start", 0)), previous_end)
         end = float(event.get("end", start + 1))
         duration = max(end - start, 0.1)
+        previous_end = start + duration
         asset_ids = event.get("asset_ids", [])
         if not asset_ids:
             continue
         clip_id = f"visual-{idx:03d}"
         layout = html.escape(str(event.get("layout") or "full-preview"))
+        has_video = any(assets.get(str(aid), {}).get("type") in VIDEO_TYPES for aid in asset_ids)
         media_items: list[dict[str, str]] = []
         for media_idx, asset_id in enumerate(asset_ids[:4], start=1):
             asset = assets.get(str(asset_id))
@@ -154,28 +165,38 @@ def render_visual_clips(
                 raise ValueError(f"asset missing source: {asset.get('id')}")
             media_src = copy_media(src, media_dir, "asset")
             media_id = f"{clip_id}-media-{media_idx}"
+            is_first_media = (media_idx == 1)
             media_items.append(
                 {
-                    "media": media_element(media_id, media_src, asset),
+                    "media": media_element(media_id, media_src, asset, start=start if (has_video and is_first_media) else None, duration=duration if (has_video and is_first_media) else None),
                     "media_mid": media_element(f"{media_id}-mid", media_src, asset, "pos-mid"),
                     "media_bottom": media_element(f"{media_id}-bottom", media_src, asset, "pos-bottom"),
                 }
             )
         focus = focus_class(event)
         inner = scene_inner(str(event.get("layout") or "full-preview"), media_items)
-        clips.append(
-            f'''
+        if has_video:
+            clips.append(
+                f'''
+      <section id="{clip_id}" class="clip scene {layout} {focus}">
+        <div class="scene-bg"></div>
+        <div class="scene-content">
+{inner}
+        </div>
+      </section>'''
+            )
+        else:
+            clips.append(
+                f'''
       <section id="{clip_id}" class="clip scene {layout} {focus}" data-start="{start:.3f}" data-duration="{duration:.3f}" data-track-index="1">
         <div class="scene-bg"></div>
+        <div class="scene-content">
 {inner}
+        </div>
       </section>'''
-        )
-        fade_out_at = max(end - 0.16, start + 0.04)
+            )
         timeline_lines.append(
-            f'tl.fromTo("#{clip_id}", {{ opacity: 0 }}, {{ opacity: 1, duration: 0.18, ease: "power1.out" }}, {start:.3f});'
-        )
-        timeline_lines.append(
-            f'tl.to("#{clip_id}", {{ opacity: 0, duration: 0.16, ease: "power1.in" }}, {fade_out_at:.3f});'
+            f'tl.fromTo("#{clip_id} .scene-content", {{ opacity: 0 }}, {{ opacity: 1, duration: 0.18, ease: "power1.out" }}, {start:.3f});'
         )
 
     return "\n".join(clips), timeline_lines
@@ -196,8 +217,8 @@ def render_subtitle_clips(project: dict[str, Any]) -> tuple[str, list[str]]:
         clip_id = f"subtitle-{idx:03d}"
         clips.append(
             f'''
-      <div id="{clip_id}" class="clip subtitle-clip" data-start="{start:.3f}" data-duration="{duration:.3f}" data-track-index="5">
-        <div class="subtitle-text">{text}</div>
+      <div id="{clip_id}" class="clip subtitle-clip" data-start="{start:.3f}" data-duration="{duration:.3f}" data-track-index="5" data-layout-allow-occlusion="subtitle-overlay">
+        <div class="subtitle-text" data-layout-allow-occlusion="subtitle-over-media">{text}</div>
       </div>'''
         )
         timeline_lines.append(
@@ -235,6 +256,8 @@ def build_html(project: dict[str, Any], visual_clips: str, subtitle_clips: str, 
     <title>{title}</title>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <style>
+      @font-face {{ font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"); }}
+      @font-face {{ font-family: "PingFang SC"; src: local("PingFang SC"); }}
       * {{ box-sizing: border-box; }}
       body {{
         margin: 0;
@@ -257,8 +280,10 @@ def build_html(project: dict[str, Any], visual_clips: str, subtitle_clips: str, 
       .clip {{
         position: absolute;
         inset: 0;
-        opacity: 0;
+        opacity: 1;
       }}
+      .scene-content {{ opacity: 0; width: 100%; height: 100%; }}
+      .scene {{ z-index: 1; }}
       .scene-bg {{
         position: absolute;
         inset: 0;
@@ -297,6 +322,16 @@ def build_html(project: dict[str, Any], visual_clips: str, subtitle_clips: str, 
         top: 92px;
         width: calc(100% - 88px);
         height: 1520px;
+      }}
+      .result-showcase .media-frame {{
+        left: 28px;
+        top: 86px;
+        width: calc(100% - 56px);
+        height: 1500px;
+      }}
+      .result-showcase .visual-media {{
+        object-fit: contain;
+        object-position: center;
       }}
       .crop-focus .media-frame,
       .ui_operation_focus .media-frame {{
@@ -386,12 +421,15 @@ def build_html(project: dict[str, Any], visual_clips: str, subtitle_clips: str, 
         gap: 24px;
       }}
       .subtitle-clip {{
+        z-index: 20;
         pointer-events: none;
         display: grid;
         align-items: end;
         padding: 0 72px 168px;
       }}
       .subtitle-text {{
+        position: relative;
+        z-index: 21;
         margin: 0 auto;
         max-width: 936px;
         padding: 18px 28px;
@@ -406,7 +444,7 @@ def build_html(project: dict[str, Any], visual_clips: str, subtitle_clips: str, 
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-width="{width}" data-height="{height}" data-duration="{duration:.3f}">
+    <div id="root" data-composition-id="main" data-start="0" data-width="{width}" data-height="{height}" data-duration="{duration:.3f}">
       {audio}
 {visual_clips}
 {subtitle_clips}

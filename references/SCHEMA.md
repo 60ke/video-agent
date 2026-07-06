@@ -56,7 +56,7 @@ The default canvas is vertical mobile video: `1080x1920`, `9:16`. Planner, mater
   "target_url": "https://example.com",
   "video_goal": "功能种草",
   "preferred_features": ["文化墙"],
-  "brand_profile": "科幻熊猫",
+  "brand_profile": "柯幻熊猫",
   "dependency_mode": {
     "browser": "kimi_webbridge",
     "renderer": "hyperframes",
@@ -106,6 +106,14 @@ Assets are frozen local files captured or supplied before render.
   "supported_claims": ["无需提示词", "选择行业主题", "一键生成"],
   "operation_status": "verified_result",
   "evidence_role": "real_screenshot",
+  "image_resource": {
+    "id": "img_culture_wall_form_001",
+    "feature_id": "culture_wall",
+    "workflow_step": "form_filled",
+    "variant": "clean",
+    "capture_method": "kimi_webbridge_screenshot",
+    "recommended_usage": ["operation_path"]
+  },
   "aspect_ratio": 0.5625,
   "quality": {
     "readable": true,
@@ -117,8 +125,10 @@ Assets are frozen local files captured or supplied before render.
     "focus_region": "left_form_and_generate_button",
     "fill_strategy": "crop_to_readable_functional_region",
     "min_subject_frame_ratio": 0.45,
+    "center_safe_region": {"x": 0.18, "y": 0.12, "w": 0.64, "h": 0.68},
+    "must_be_visible": ["上传实景图", "行业", "开始生成"],
     "safe_area_notes": "Keep primary UI above subtitles.",
-    "forbidden_treatments": ["full_page_tiny_strip", "fast_scroll", "decorative_empty_panel"]
+    "forbidden_treatments": ["full_page_tiny_strip", "wide_full_preview_as_primary", "pan_subject_out_of_frame", "fast_scroll", "decorative_empty_panel"]
   }
 }
 ```
@@ -128,6 +138,7 @@ Allowed `origin`:
 - `browser_capture`
 - `frontend_capture`
 - `static_material_image`
+- `product_export`
 - `generated_asset`
 - `user_supplied_video`
 
@@ -151,6 +162,194 @@ Allowed `evidence_role`:
 - `packaging_only`
 
 Assets with `origin: "generated_asset"` are `packaging_only` by default. They must not support product-result claims unless explicitly supplied as real product output by the user.
+
+## image_resources.json
+
+`image_resources.json` is a case-level image catalog for later agents. It is separate from `video_project.json` because it can describe clean evidence screenshots, annotated derivatives, generated result exports, and result crops before the final render plan exists.
+
+Filenames are hints only. The catalog is the semantic source of truth for image meaning.
+
+```json
+{
+  "schema_version": 1,
+  "status": "ready",
+  "naming_policy": "kx_<feature>_<step>_<seq>_<variant>.png",
+  "resources": [
+    {
+      "id": "img_logo_result_001",
+      "asset_id": "asset_007",
+      "filename": "kx_logo_result_crop_007_result.png",
+      "source": "assets/results/kx_logo_result_crop_007_result.png",
+      "type": "image",
+      "feature_id": "logo",
+      "workflow_step": "result_crop",
+      "variant": "result",
+      "origin": "browser_capture",
+      "capture_method": "kimi_webbridge_screenshot_crop",
+      "page_url": "https://kehuanxiongmao.com/...",
+      "title": "LOGO生成结果裁切图",
+      "description": "真实生成后的LOGO结果图，适合做视频里的主效果展示。",
+      "visible_text": [],
+      "prompt_inputs": {
+        "brand_name": "星野咖啡实验室",
+        "industry": "咖啡饮品",
+        "description": "面向年轻办公人群，想要一个简洁、温暖、容易识别的品牌标志。"
+      },
+      "callouts": [],
+      "relations": {
+        "raw_source_id": "img_logo_result_page_001",
+        "annotated_version_id": null,
+        "result_group_id": "logo_generation_001"
+      },
+      "supported_claims": ["填写品牌信息后可生成LOGO效果图"],
+      "recommended_usage": ["result_showcase", "hook_visual", "gallery"],
+      "quality": {
+        "readable": true,
+        "contains_private_info": false,
+        "needs_review": false
+      },
+      "layout_plan": {
+        "primary_display_mode": "portrait-showcase",
+        "focus_region": "generated_logo",
+        "fill_strategy": "fill_mobile_width_without_cropping_logo",
+        "min_subject_frame_ratio": 0.5,
+        "center_safe_region": {"x": 0.12, "y": 0.08, "w": 0.76, "h": 0.72},
+        "must_be_visible": ["完整LOGO结果"],
+        "safe_area_notes": "Keep result above subtitle rail.",
+        "forbidden_treatments": ["tiny_full_page_strip", "invented_result"]
+      }
+    }
+  ]
+}
+```
+
+Allowed `workflow_step` values:
+
+- `home_entry`
+- `feature_card`
+- `navigation_callout`
+- `menu_select`
+- `feature_page_empty`
+- `form_filled`
+- `generate_callout`
+- `generating`
+- `result_page`
+- `result_crop`
+- `result_export`
+- `result_gallery`
+- `quota_or_error`
+- `packaging`
+
+`callouts` should use normalized coordinates when available:
+
+```json
+{
+  "type": "red_box",
+  "target_label": "LOGO",
+  "purpose": "click_feature",
+  "box": {"x": 0.28, "y": 0.45, "w": 0.18, "h": 0.07}
+}
+```
+
+For 柯幻熊猫 result demos:
+
+- `capture_method` must mention Kimi WebBridge.
+- `origin` must be `browser_capture` for screenshots/crops or `product_export` for downloaded/generated result files.
+- At least one `result_crop` or `result_export` resource is required before claiming `verified_result`.
+- Multiple generated outputs should share a `result_group_id` so the renderer can build a gallery beat.
+- Annotated images must relate back to a clean raw source through `relations.raw_source_id`.
+
+For wide website/app screenshots:
+
+- `primary_display_mode` must be `crop-focus`, `multi-section`, `main-plus-reference`, or `browser-recording`.
+- `full-preview` is allowed only for non-narrated establishing context.
+- `focus_region` must name the functional subject, not `whole_page` or `auto`.
+- `center_safe_region` describes where the spoken subject must remain in the 9:16 frame.
+- `must_be_visible` lists labels/buttons/results that must be readable in the rendered shot.
+- `forbidden_treatments` must include `wide_full_preview_as_primary` and `pan_subject_out_of_frame`.
+
+## generation_receipts.json
+
+`generation_receipts.json` records quota/points state, generation inputs, and result assets for real website generation actions.
+
+```json
+{
+  "schema_version": 1,
+  "status": "ready",
+  "receipts": [
+    {
+      "id": "receipt_logo_001",
+      "feature_id": "logo",
+      "operation_status": "verified_result",
+      "page_url": "https://kehuanxiongmao.com/...",
+      "browser_session": {
+        "tool": "kimi_webbridge",
+        "session_name": "kehuanxiongmao-logo-demo"
+      },
+      "account_state": {
+        "logged_in": true,
+        "points_before": 1000,
+        "points_after": 994,
+        "visible_generation_cost": 6,
+        "balance_requirement": ">100"
+      },
+      "input_summary": {
+        "brand_name": "星野咖啡实验室",
+        "industry": "咖啡饮品",
+        "description": "面向年轻办公人群，想要一个简洁、温暖、容易识别的品牌标志。"
+      },
+      "action_assets": [
+        "img_logo_form_filled_001",
+        "img_logo_generate_callout_001",
+        "img_logo_generating_001"
+      ],
+      "result_assets": [
+        "img_logo_result_001",
+        "img_logo_result_002"
+      ],
+      "started_at": "2026-07-06T00:00:00Z",
+      "finished_at": "2026-07-06T00:00:35Z",
+      "errors": [],
+      "notes": []
+    }
+  ]
+}
+```
+
+If `operation_status` is not `verified_result`, `result_assets` must be empty and the receipt must explain the blocker in `errors` or `notes`.
+
+## site_profile_snapshot.json
+
+`site_profile_snapshot.json` is a case-local copy of stable website structure used to reduce repeated exploration. It must not replace Kimi WebBridge evidence for login, points, screenshots, generation, or results.
+
+```json
+{
+  "schema_version": 1,
+  "status": "active",
+  "profile": {
+    "profile_id": "kehuanxiongmao",
+    "canonical_url": "https://kehuanxiongmao.com",
+    "frontend_code_evidence": {},
+    "features": []
+  },
+  "selected_feature": {
+    "id": "signboard",
+    "route": "/textToImage/signboard",
+    "url": "https://kehuanxiongmao.com/textToImage/signboard",
+    "form_fields": [],
+    "default_demo_inputs": {},
+    "api_payload_template": {}
+  },
+  "frontend_root": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend",
+  "applied_at": "2026-07-06T00:00:00Z",
+  "next_agent_instructions": []
+}
+```
+
+Allowed `status`:
+
+- `active`: profile can seed planning, but live WebBridge verification is still required.
+- `refresh_needed`: do not trust seeded fields until the profile is manually updated from frontend code and fresh browser snapshots.
 
 ## script_segments
 
@@ -184,13 +383,9 @@ If `operation_status` is `verified_entry_only`, `blocked_quota`, `blocked_login`
   "audio_path": "outputs/audio/voice.wav",
   "duration": 27.4,
   "speed_policy": {
-    "target_units_per_second": 5.2,
-    "ideal_min": 4.8,
-    "ideal_max": 6.2,
-    "hard_min": 4.2,
-    "hard_max": 7.0
+    "minimum_units_per_second": 6.0
   },
-  "high_risk_terms": ["科幻熊猫", "AI"],
+  "high_risk_terms": ["柯幻熊猫", "AI"],
   "qa": {
     "brand_terms_recognized": true,
     "internal_silence_ok": true,
@@ -235,19 +430,28 @@ Each visual event binds time, semantic intent, assets, layout, and framing.
   "framing": {
     "focus_region": "left_form_and_generate_button",
     "subject_min_frame_ratio": 0.45,
-    "subtitle_safe": true
+    "subtitle_safe": true,
+    "center_safe_region": {"x": 0.18, "y": 0.12, "w": 0.64, "h": 0.68},
+    "must_be_visible": ["行业", "开始生成"],
+    "viewport_transform": {
+      "mode": "crop_to_region_before_motion",
+      "lock_subject_in_center_safe_region": true,
+      "allow_subject_drift": false
+    }
   },
   "motion": {
     "name": "stable_focus_with_callout",
     "avoid_flicker": true,
     "motion_reason": "callout follows the generate button mentioned in voiceover",
-    "forbidden_motion": ["arbitrary_zoompan", "breathing", "jitter"]
+    "forbidden_motion": ["arbitrary_zoompan", "breathing", "jitter", "pan_subject_out_of_frame"]
   },
   "qa_expectations": {
     "no_black_frame": true,
     "no_flash_if_same_asset": true,
     "readable_ui": true,
-    "no_meaningless_empty_panel": true
+    "no_meaningless_empty_panel": true,
+    "narrated_subject_inside_center_safe_region": true,
+    "wide_ui_not_full_preview_primary": true
   }
 }
 ```
@@ -364,7 +568,9 @@ The ending track is postprocess-only. It must not influence script text, subtitl
     "tall_image_requires_scroll_or_sections": true,
     "portrait_result_should_fill_mobile_width": true,
     "no_overzoom_without_focus_reason": true,
-    "same_asset_continuity_no_flash": true
+    "same_asset_continuity_no_flash": true,
+    "wide_ui_not_full_preview_primary": true,
+    "narrated_subject_inside_center_safe_region": true
   }
 }
 ```

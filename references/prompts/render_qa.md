@@ -31,6 +31,9 @@ Return JSON:
 - no missing media
 - no sudden flash when the same image continues
 - UI/result content is readable on mobile
+- narrated website/app subject stays inside the central safe region
+- no wide desktop screenshot is used as a full-preview primary visual for a narrated scene
+- no website/app frame is mostly blank while the active UI/result is on the edge or offscreen
 - no large meaningless blank or blurred panels
 - subtitles are visible and do not cover key content
 - no undeclared text/title appears outside subtitle rail
@@ -47,6 +50,8 @@ Return JSON:
 - If a tall image scrolls too fast to understand, fail it.
 - If dual-panel media occupies only the top of tall empty panels, fail it.
 - If website/app screenshots are available but the render uses unclear static material, request recapture or crop-focus.
+- If a wide desktop UI screenshot is used as the primary visual without crop-focus, multi-section, browser-recording, or a result crop/export, fail it.
+- If pan/zoom motion moves the menu item, form field, generate button, result gallery, or result image outside the central safe region, fail it.
 - If a real generation/result was not captured but the render shows a generated-looking result, fail it.
 - If the user asked for `电商` but the frame visually emphasizes the entire category row or unrelated category labels, fail it.
 - If motion makes UI text harder to read, fail it.

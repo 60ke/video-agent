@@ -28,8 +28,10 @@ Usage rule:
 - Use WebBridge for browser interaction and website material capture.
 - Do not treat WebBridge as a renderer.
 - Save all captured artifacts to the case folder before HyperFrames consumes them.
+- Write `image_resources.json` for captured image/result semantics instead of relying on filenames.
 - Use captured browser evidence as product truth. Do not replace missing product result states with generated images or invented UI.
 - If a generation action requires credits/points, stop before spending quota unless the user explicitly approves. Capture the blocker and ask for next material/permission.
+- For `https://kehuanxiongmao.com`, user-approved full-flow cases may press generation only after a logged-in state and points balance greater than 100 are captured.
 
 ### HyperFrames
 
@@ -221,8 +223,7 @@ ffprobe -v error -show_entries format=duration -of default=nk=1:nw=1 outputs/aud
 Speed policy:
 
 ```text
-ideal Chinese speech density: 4.8-6.2 chars/sec
-hard Chinese speech density: 4.2-7.0 chars/sec
+minimum Chinese speech density: 6.0 chars/sec
 ```
 
 The pipeline should calculate text density before TTS and measure actual generated duration after TTS.

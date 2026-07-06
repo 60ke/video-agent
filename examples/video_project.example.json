@@ -20,7 +20,7 @@
     "target_url": null,
     "video_goal": "功能种草",
     "preferred_features": ["VI设计"],
-    "brand_profile": "科幻熊猫",
+    "brand_profile": "柯幻熊猫",
     "dependency_mode": {
       "browser": "kimi_webbridge",
       "renderer": "hyperframes",
@@ -65,13 +65,9 @@
     "audio_path": "audio/voice.wav",
     "duration": 3.2,
     "speed_policy": {
-      "target_units_per_second": 5.2,
-      "ideal_min": 4.8,
-      "ideal_max": 6.2,
-      "hard_min": 4.2,
-      "hard_max": 7.0
+      "minimum_units_per_second": 6.0
     },
-    "high_risk_terms": ["科幻熊猫", "AI"],
+    "high_risk_terms": ["柯幻熊猫", "AI"],
     "qa": {
       "brand_terms_recognized": true,
       "internal_silence_ok": true,

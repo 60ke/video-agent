@@ -128,7 +128,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         for subcommand in ("lint", "validate", "inspect"):
             result = run_command([npx, "hyperframes", subcommand], hyperframes_dir)
             commands.append(result)
-            if result["returncode"] != 0 and args.strict:
+            if result["returncode"] != 0:
                 raise RuntimeError(f"npx hyperframes {subcommand} failed")
 
     render_cmd = [npx, "hyperframes", "render", "--quality", args.quality, "--output", str(main_output)]
@@ -184,7 +184,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--case", required=True)
     parser.add_argument("--label")
     parser.add_argument("--quality", default="draft")
-    parser.add_argument("--strict", action="store_true")
+    parser.add_argument("--strict", action="store_true", help="Pass --strict to HyperFrames render. Pre-render lint/validate/inspect always fail on non-zero.")
     parser.add_argument("--skip-checks", action="store_true")
     parser.add_argument("--json", action="store_true")
     return parser

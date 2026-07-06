@@ -40,6 +40,27 @@ ALLOWED_DISPLAY_MODES = {
     "browser-recording",
 }
 
+ALLOWED_OPERATION_STATUS = {
+    "verified_result",
+    "verified_entry_only",
+    "blocked_login",
+    "blocked_quota",
+    "blocked_permission",
+    "unsafe_action",
+    "unavailable",
+}
+
+ALLOWED_EVIDENCE_BINDINGS = {
+    "real_recording",
+    "real_screenshot",
+    "real_result",
+    "quota_or_error_state",
+    "evidence_cover",
+    "packaging_only",
+}
+
+MIN_SPEECH_UNITS_PER_SECOND = 6.0
+
 
 def load_json(path: Path) -> dict[str, Any]:
     if not path.is_file():
@@ -92,11 +113,15 @@ def normalize_layout_plan(value: Any, label: str) -> dict[str, Any]:
     if mode and mode not in ALLOWED_DISPLAY_MODES:
         raise ValueError(f"{label}.primary_display_mode is not supported: {mode}")
     forbidden = [str(v) for v in ensure_list(plan.get("forbidden_treatments"), f"{label}.forbidden_treatments")]
+    must_be_visible = [str(v) for v in ensure_list(plan.get("must_be_visible"), f"{label}.must_be_visible")]
     normalized = {
         "primary_display_mode": mode,
         "focus_region": str(plan.get("focus_region") or "").strip(),
         "fill_strategy": str(plan.get("fill_strategy") or "").strip(),
         "min_subject_frame_ratio": float(plan.get("min_subject_frame_ratio") or 0.45),
+        "center_safe_region": ensure_object(plan.get("center_safe_region"), f"{label}.center_safe_region"),
+        "must_be_visible": must_be_visible,
+        "viewport_transform": ensure_object(plan.get("viewport_transform"), f"{label}.viewport_transform"),
         "safe_area_notes": str(plan.get("safe_area_notes") or "").strip(),
         "forbidden_treatments": forbidden,
     }
@@ -146,6 +171,16 @@ def normalize_material(payload: dict[str, Any], case_dir: Path) -> tuple[dict[st
         risks = set(normalized[-1]["display_risk"])
         if risks & {"wide_desktop_ui", "dense_desktop_ui", "tall_image_needs_scroll"} and not normalized[-1]["layout_plan"]:
             warnings.append(f"materials[{idx}] has display risk but no layout_plan")
+        if risks & {"wide_desktop_ui", "dense_desktop_ui"}:
+            plan = normalized[-1]["layout_plan"]
+            mode = str(plan.get("primary_display_mode") or "")
+            focus_region = str(plan.get("focus_region") or "").lower()
+            if mode == "full-preview":
+                raise ValueError(f"materials[{idx}] wide desktop UI cannot use full-preview as primary display mode")
+            if focus_region in {"", "auto", "center", "whole_page", "whole-page"}:
+                warnings.append(f"materials[{idx}] wide desktop UI should declare a named functional focus_region")
+            if not plan.get("must_be_visible"):
+                warnings.append(f"materials[{idx}] wide desktop UI should declare must_be_visible labels")
 
     missing = ids - seen
     if missing:
@@ -205,10 +240,8 @@ def normalize_script(payload: dict[str, Any], case_dir: Path) -> tuple[dict[str,
         if duration <= 0:
             raise ValueError(f"segments[{idx}] duration_hint must be > 0")
         density = speech_units(text) / duration
-        if density < 4.2 or density > 7.0:
-            raise ValueError(f"{seg_id} speech density {density:.2f} outside hard policy 4.2-7.0")
-        elif density < 4.8 or density > 6.2:
-            warnings.append(f"{seg_id} speech density {density:.2f} outside ideal policy 4.8-6.2")
+        if density < MIN_SPEECH_UNITS_PER_SECOND:
+            raise ValueError(f"{seg_id} speech density {density:.2f} below minimum policy {MIN_SPEECH_UNITS_PER_SECOND:.1f} units/sec")
 
         planning_text = " ".join(
             str(item.get(key) or "")
@@ -216,6 +249,17 @@ def normalize_script(payload: dict[str, Any], case_dir: Path) -> tuple[dict[str,
         ).lower()
         if any(token in planning_text for token in ("outro", "ending", "片尾", "结尾")):
             raise ValueError(f"{seg_id} appears to plan the fixed outro inside script/visual beats")
+
+        operation_status = str(item.get("operation_status") or "").strip()
+        if operation_status and operation_status not in ALLOWED_OPERATION_STATUS:
+            raise ValueError(f"{seg_id} unsupported operation_status: {operation_status}")
+        evidence_binding = str(item.get("evidence_binding") or "").strip()
+        if evidence_binding and evidence_binding not in ALLOWED_EVIDENCE_BINDINGS:
+            raise ValueError(f"{seg_id} unsupported evidence_binding: {evidence_binding}")
+        if operation_status in {"verified_entry_only", "blocked_login", "blocked_quota", "blocked_permission"} and evidence_binding == "real_result":
+            raise ValueError(f"{seg_id} cannot bind to real_result when operation_status is {operation_status}")
+        if evidence_binding == "packaging_only" and any(token in text for token in ("生成结果", "效果图", "出图", "成品")):
+            raise ValueError(f"{seg_id} uses packaging_only but contains product-result language")
 
         normalized.append(
             {
@@ -225,6 +269,8 @@ def normalize_script(payload: dict[str, Any], case_dir: Path) -> tuple[dict[str,
                 "feature_id": str(item.get("feature_id") or ""),
                 "visual_intent": str(item.get("visual_intent") or "").strip(),
                 "material_task": str(item.get("material_task") or "").strip(),
+                "evidence_binding": evidence_binding,
+                "operation_status": operation_status,
                 "preferred_asset_ids": preferred,
                 "layout_intent": str(item.get("layout_intent") or "").strip(),
                 "focus_region": str(item.get("focus_region") or "").strip(),
@@ -236,7 +282,7 @@ def normalize_script(payload: dict[str, Any], case_dir: Path) -> tuple[dict[str,
 
     all_text = "".join(seg["text"] for seg in normalized)
     high_risk = [str(v) for v in ensure_list(payload.get("high_risk_terms"), "video_script.high_risk_terms")]
-    for term in ("科幻熊猫", "AI"):
+    for term in ("柯幻熊猫", "AI"):
         if term in all_text and term not in high_risk:
             high_risk.append(term)
 

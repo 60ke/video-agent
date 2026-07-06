@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_RISK_TERMS = ("科幻熊猫", "AI")
+DEFAULT_RISK_TERMS = ("柯幻熊猫", "AI")
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -64,10 +64,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "high_risk_terms": high_risk,
         "char_count": len("".join(text.split())),
         "speed_policy": {
-            "ideal_min": 4.8,
-            "ideal_max": 6.2,
-            "hard_min": 4.2,
-            "hard_max": 7.0
+            "minimum_units_per_second": 6.0
         }
     }
     output_path = case_dir / "voice_plan.json"

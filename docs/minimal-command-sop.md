@@ -58,6 +58,8 @@ Voice clone endpoint smoke check should be non-destructive. Prefer a short reque
 
 ## Step 3: Case Scaffold
 
+Create `<CASE_DIR>` inside the current `video-agent` project. Do not create cases beside this repository or in unrelated `Documents` folders. If a user supplies `<MATERIALS_DIR>` outside the project, treat it only as an import source; the registration step must copy/freeze usable media into `<CASE_DIR>\assets\static`.
+
 Use:
 
 ```powershell
@@ -90,6 +92,10 @@ If this command fails before creating the case, report the structured error. Cre
 case/
   input.json
   assets/
+    browser/
+      raw/
+      annotated/
+    results/
   audio/
   hyperframes/
   output/
@@ -102,9 +108,31 @@ case/
 
 Website case:
 
+- for stable 柯幻熊猫 pages, seed known structure from the site profile before live capture:
+
+```powershell
+python scripts\apply_site_profile.py `
+  --case "<CASE_DIR>" `
+  --profile kehuanxiongmao `
+  --feature signboard `
+  --frontend-root "C:\Users\CNGG\Documents\video_generate\wanxiang-frontend" `
+  --json
+```
+
 - use Kimi WebBridge to capture evidence
+- prefer `scripts/kimi_webbridge.py` for WebBridge calls to avoid Windows/PowerShell JSON quoting issues:
+
+```powershell
+python scripts\kimi_webbridge.py `
+  --session "kehuanxiongmao-demo" `
+  --action navigate `
+  --args "{""url"":""https://kehuanxiongmao.com"",""newTab"":true,""group_title"":""柯幻熊猫素材采集""}" `
+  --json
+```
+
 - save screenshots and page text under the case
 - write or update `browser_materials.json`
+- for 柯幻熊猫, follow `rules/kehuanxiongmao-capture.md` and write `image_resources.json` plus `generation_receipts.json`
 
 Static material case:
 
@@ -122,6 +150,30 @@ python scripts\register_materials.py `
 ```
 
 Do not assign assets to script segments using filenames alone.
+
+After browser or static image assets exist, refresh the image resource catalog:
+
+```powershell
+python scripts\build_image_resources.py `
+  --case "<CASE_DIR>" `
+  --default-feature "logo" `
+  --json
+```
+
+Manual site-profile refresh:
+
+```powershell
+python scripts\apply_site_profile.py `
+  --case "<CASE_DIR>" `
+  --profile kehuanxiongmao `
+  --feature signboard `
+  --frontend-root "C:\Users\CNGG\Documents\video_generate\wanxiang-frontend" `
+  --refresh-needed `
+  --force `
+  --json
+```
+
+Use `--refresh-needed` when live WebBridge evidence no longer matches the profile. Then update `references/site_profiles/kehuanxiongmao.json` from frontend code plus fresh WebBridge snapshots before using it as ready again.
 
 ## Step 4.5: Contract Validation
 
@@ -182,6 +234,7 @@ Generate these in order:
 
 ```text
 material_understanding.json
+image_resources.json
 video_script.json
 voice_plan.json
 video_project.json

@@ -9,10 +9,7 @@ from pathlib import Path
 from typing import Any
 
 
-IDEAL_MIN = 4.8
-IDEAL_MAX = 6.2
-HARD_MIN = 4.2
-HARD_MAX = 7.0
+MIN_SPEECH_UNITS_PER_SECOND = 6.0
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -129,10 +126,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     cps = round(chars / duration, 3) if duration and chars else None
 
     if cps is not None:
-        if cps < HARD_MIN or cps > HARD_MAX:
-            errors.append(f"speech density outside hard range: {cps} chars/sec")
-        elif cps < IDEAL_MIN or cps > IDEAL_MAX:
-            warnings.append(f"speech density outside ideal range: {cps} chars/sec")
+        if cps < MIN_SPEECH_UNITS_PER_SECOND:
+            errors.append(f"speech density below minimum policy: {cps} chars/sec")
 
     high_risk_terms = list(args.high_risk_term or [])
     voice_plan = load_json(case_dir / "voice_plan.json")
@@ -172,8 +167,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "asr_text": asr_text,
         "chars": chars,
         "chars_per_second": cps,
-        "ideal_range": [IDEAL_MIN, IDEAL_MAX],
-        "hard_range": [HARD_MIN, HARD_MAX],
+        "minimum_units_per_second": MIN_SPEECH_UNITS_PER_SECOND,
         "high_risk_terms": high_risk_terms,
         "missing_terms": missing_terms,
         "silence_events": silence,

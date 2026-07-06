@@ -21,12 +21,14 @@ Read these in order:
 1. `SKILL.md` - agent-facing skill entry
 2. `docs/agent-playbook.md` - execution routing and acceptance checks
 3. `docs/minimal-command-sop.md` - command budget, retry rules, and anti-patterns
-4. `rules/douyin-real-demo.md` - real-demo and Douyin quality gates
-5. `references/SPEC.md` - product and execution specification
-6. `references/DEPENDENCIES.md` - required local tools and skills
-7. `references/SCHEMA.md` - multi-track `video_project.json` contract
-8. `references/QA.md` - voice, visual, layout, and render quality gates
-9. `DEVELOPMENT_PLAN.md` - implementation roadmap
+4. `rules/browser-webbridge.md` - Kimi WebBridge evidence-gathering boundary
+5. `rules/kehuanxiongmao-capture.md` - fixed 柯幻熊猫 screenshot/generation/result capture flow
+6. `rules/douyin-real-demo.md` - real-demo and Douyin quality gates
+7. `references/SPEC.md` - product and execution specification
+8. `references/DEPENDENCIES.md` - required local tools and skills
+9. `references/SCHEMA.md` - multi-track `video_project.json` contract and `image_resources.json`
+10. `references/QA.md` - voice, visual, layout, and render quality gates
+11. `DEVELOPMENT_PLAN.md` - implementation roadmap
 
 ## Reference Docs
 
@@ -39,6 +41,9 @@ These are retained as source material, not implementation contracts:
 
 - `scripts/init_case.py` - create a case scaffold and copy default assets
 - `scripts/register_materials.py` - register static image/video/audio materials
+- `scripts/apply_site_profile.py` - seed stable website knowledge from `references/site_profiles/*.json`
+- `scripts/kimi_webbridge.py` - call Kimi WebBridge with UTF-8 JSON from Python
+- `scripts/build_image_resources.py` - merge manifest, browser materials, and vision notes into reusable `image_resources.json`
 - `scripts/prepare_planner_context.py` - build model-ready planning context and brief files
 - `scripts/accept_planner_output.py` - validate AI planner JSON and write reviewed artifacts
 - `scripts/create_voice_plan.py` - join reviewed script segments into voice text and risk terms

@@ -64,6 +64,12 @@ HyperFrames must not:
 - Use multi-section or slow-scroll for tall screenshots only when scroll speed is readable.
 - For dual panels, panel height should match actual displayed media height; do not leave large blurred/empty lower panels.
 - If the same asset continues across adjacent visual events, hold continuity and avoid flash transitions.
+- Visual clips on the same track must not overlap, even by a small lead-in such as `0.12s`. If a visual should feel early, move the previous clip end or use an overlay track; do not overlap primary scene clips.
+- The root composition element must include `data-start="0"` as well as `data-composition-id`, dimensions, and duration.
+- Declare every non-standard font family with `@font-face`, using `src: local("Exact Font Name")` for OS fonts when no font file is bundled.
+- Do not animate opacity or exit state on the `.clip` element itself. Put scene media inside an inner wrapper such as `.scene-content` and animate that wrapper; the HyperFrames runtime owns clip visibility.
+- Do not add GSAP exit tweens on clip elements that end at a clip boundary unless a matching hard kill is present. Prefer stable holds with entry-only content animation for website/product demos.
+- Subtitle overlays are intentionally layered above visual media. Keep them on a higher track/z-index and add `data-layout-allow-occlusion` to the subtitle clip/text so `hyperframes inspect` can distinguish deliberate caption-over-media composition from accidental hidden text.
 
 ## Default Outro Rule
 
@@ -91,6 +97,8 @@ npx hyperframes lint
 npx hyperframes validate
 npx hyperframes inspect
 ```
+
+All three commands are hard gates. Any non-zero result must stop the render and trigger a composition fix before MP4 generation. A rendered MP4 produced after a failed lint is preview-only and must not be called final.
 
 Then render through the project script or wrapper:
 

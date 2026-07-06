@@ -6,6 +6,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+READABLE_WIDE_UI_LAYOUTS = {"crop-focus", "multi-section", "main-plus-reference", "browser-recording"}
+DEFAULT_CENTER_SAFE_REGION = {"x": 0.18, "y": 0.12, "w": 0.64, "h": 0.68}
+
 
 def load_json(path: Path, default: Any = None) -> Any:
     if not path.is_file():
@@ -23,9 +26,15 @@ def resolve_case_path(case_dir: Path, value: str | None) -> str | None:
 def material_map(case_dir: Path) -> dict[str, dict[str, Any]]:
     manifest = load_json(case_dir / "asset_manifest.json", {"assets": []})
     understanding = load_json(case_dir / "material_understanding.json", {"materials": []})
+    image_resources = load_json(case_dir / "image_resources.json", {"resources": []})
     insights = {
         item.get("asset_id"): item
         for item in understanding.get("materials", [])
+        if isinstance(item, dict) and item.get("asset_id")
+    }
+    image_by_asset_id = {
+        item.get("asset_id"): item
+        for item in image_resources.get("resources", [])
         if isinstance(item, dict) and item.get("asset_id")
     }
     assets: dict[str, dict[str, Any]] = {}
@@ -43,6 +52,26 @@ def material_map(case_dir: Path) -> dict[str, dict[str, Any]]:
             merged["recommended_usage"] = insight.get("recommended_usage", "")
             merged["display_risk"] = insight.get("display_risk", [])
             merged["layout_plan"] = insight.get("layout_plan", {})
+        image_resource = image_by_asset_id.get(asset["id"], {})
+        if image_resource:
+            merged["image_resource"] = {
+                "id": image_resource.get("id"),
+                "feature_id": image_resource.get("feature_id"),
+                "workflow_step": image_resource.get("workflow_step"),
+                "variant": image_resource.get("variant"),
+                "capture_method": image_resource.get("capture_method"),
+                "page_url": image_resource.get("page_url"),
+                "title": image_resource.get("title"),
+                "description": image_resource.get("description"),
+                "prompt_inputs": image_resource.get("prompt_inputs", {}),
+                "callouts": image_resource.get("callouts", []),
+                "relations": image_resource.get("relations", {}),
+                "recommended_usage": image_resource.get("recommended_usage", []),
+            }
+            merged["description"] = image_resource.get("description") or merged.get("description", "")
+            merged["visible_text"] = image_resource.get("visible_text", merged.get("visible_text", []))
+            merged["supported_claims"] = image_resource.get("supported_claims", merged.get("supported_claims", []))
+            merged["layout_plan"] = image_resource.get("layout_plan", merged.get("layout_plan", {}))
         assets[asset["id"]] = merged
     return assets
 
@@ -61,9 +90,63 @@ def choose_asset_ids(segment: dict[str, Any], assets: list[dict[str, Any]], idx:
     return [str(assets[min(idx, len(assets) - 1)]["id"])]
 
 
+def asset_aspect(asset: dict[str, Any]) -> float | None:
+    metadata = asset.get("metadata", {})
+    if not isinstance(metadata, dict):
+        return None
+    aspect = metadata.get("aspect_ratio")
+    if isinstance(aspect, (int, float)) and aspect > 0:
+        return float(aspect)
+    width = metadata.get("width")
+    height = metadata.get("height")
+    if isinstance(width, (int, float)) and isinstance(height, (int, float)) and height > 0:
+        return float(width) / float(height)
+    return None
+
+
+def is_wide_ui_asset(asset: dict[str, Any]) -> bool:
+    risks = {str(v).lower() for v in asset.get("display_risk", []) if isinstance(v, str)}
+    if risks & {"wide_desktop_ui", "dense_desktop_ui"}:
+        return True
+    origin = str(asset.get("origin") or "").lower()
+    role = str(asset.get("role") or "").lower()
+    source = str(asset.get("source") or "").lower()
+    aspect = asset_aspect(asset)
+    capture_origin = origin in {"browser_capture", "frontend_capture", "kimi_webbridge", "webbridge_capture"}
+    source_looks_like_ui = any(
+        token in source
+        for token in ("homepage", "signboard", "workbench", "dropdown", "browser", "page", "kehuan")
+    )
+    return bool(aspect and aspect > 1.2 and (capture_origin or "ui" in role or "page" in role or aspect > 1.8 and source_looks_like_ui))
+
+
+def is_generated_result_asset(asset: dict[str, Any]) -> bool:
+    image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+    variant = str(image_resource.get("variant") or "").lower()
+    workflow_step = str(image_resource.get("workflow_step") or "").lower()
+    origin = str(asset.get("origin") or "").lower()
+    role = str(asset.get("role") or "").lower()
+    description = str(asset.get("description") or "").lower()
+    source = str(asset.get("source") or "").lower()
+    combined = " ".join((variant, workflow_step, origin, role, description, source))
+    result_tokens = (
+        "result",
+        "export",
+        "crop",
+        "效果图",
+        "结果",
+        "样例",
+        "生成图",
+        "生成样例",
+        "代表样例",
+    )
+    ui_tokens = ("ui", "界面", "表单", "首页", "菜单", "button", "按钮", "page", "browser")
+    return any(token in combined for token in result_tokens) and not any(token in combined for token in ui_tokens)
+
+
 def layout_for(segment: dict[str, Any], asset: dict[str, Any], asset_count: int) -> str:
     segment_layout = str(segment.get("layout_intent") or "").strip()
-    if segment_layout:
+    if segment_layout and not (is_wide_ui_asset(asset) and segment_layout == "full-preview"):
         return segment_layout
     if asset_count >= 3:
         return "grid-rebuild"
@@ -71,13 +154,15 @@ def layout_for(segment: dict[str, Any], asset: dict[str, Any], asset_count: int)
         return "main-plus-reference"
     plan = asset.get("layout_plan", {}) if isinstance(asset.get("layout_plan"), dict) else {}
     planned = str(plan.get("primary_display_mode") or "").strip()
-    if planned:
+    if planned and not (is_wide_ui_asset(asset) and planned == "full-preview"):
         return planned
     advice = str(asset.get("layout_advice") or asset.get("recommended_usage") or "").lower()
     role = str(asset.get("role") or "").lower()
     risks = " ".join(str(v).lower() for v in asset.get("display_risk", []) if isinstance(v, str))
     metadata = asset.get("metadata", {})
     aspect = metadata.get("aspect_ratio") if isinstance(metadata, dict) else None
+    if is_generated_result_asset(asset):
+        return "result-showcase"
     if "multi-section" in advice or "tall" in risks:
         return "multi-section"
     if "scroll" in advice and isinstance(aspect, (int, float)) and aspect < 0.35:
@@ -122,6 +207,59 @@ def focus_region_for(segment: dict[str, Any], asset: dict[str, Any]) -> str:
     return "center_functional_area"
 
 
+def visible_requirements_for(segment: dict[str, Any], asset: dict[str, Any]) -> list[str]:
+    plan = asset.get("layout_plan", {}) if isinstance(asset.get("layout_plan"), dict) else {}
+    visible = plan.get("must_be_visible")
+    if isinstance(visible, list) and visible:
+        return [str(value) for value in visible if str(value).strip()]
+    keywords = segment.get("keywords")
+    if isinstance(keywords, list) and keywords:
+        return [str(value) for value in keywords[:3] if str(value).strip()]
+    return []
+
+
+def center_safe_region_for(asset: dict[str, Any]) -> dict[str, float]:
+    plan = asset.get("layout_plan", {}) if isinstance(asset.get("layout_plan"), dict) else {}
+    region = plan.get("center_safe_region")
+    if isinstance(region, dict):
+        required = {"x", "y", "w", "h"}
+        if required <= set(region):
+            return {key: float(region[key]) for key in ("x", "y", "w", "h")}
+    return dict(DEFAULT_CENTER_SAFE_REGION)
+
+
+def viewport_transform_for(asset: dict[str, Any]) -> dict[str, Any]:
+    plan = asset.get("layout_plan", {}) if isinstance(asset.get("layout_plan"), dict) else {}
+    transform = plan.get("viewport_transform")
+    if isinstance(transform, dict) and transform:
+        return transform
+    if is_wide_ui_asset(asset):
+        return {
+            "mode": "crop_to_region_before_motion",
+            "lock_subject_in_center_safe_region": True,
+            "allow_subject_drift": False,
+        }
+    if is_generated_result_asset(asset):
+        return {
+            "mode": "fit_full_result",
+            "fill_width_when_possible": True,
+            "preserve_entire_result": True,
+            "allow_detail_crop": False,
+        }
+    return {}
+
+
+def forbidden_motion_for(asset: dict[str, Any]) -> list[str]:
+    plan = asset.get("layout_plan", {}) if isinstance(asset.get("layout_plan"), dict) else {}
+    forbidden = plan.get("forbidden_treatments")
+    values = [str(value) for value in forbidden] if isinstance(forbidden, list) else []
+    if is_wide_ui_asset(asset):
+        for value in ("arbitrary_zoompan", "breathing", "jitter", "pan_subject_out_of_frame"):
+            if value not in values:
+                values.append(value)
+    return values
+
+
 def layout_reason_for(layout: str, asset: dict[str, Any], segment: dict[str, Any]) -> str:
     role = asset.get("role", "asset")
     task = segment.get("material_task", "")
@@ -149,31 +287,47 @@ def build_visual_track(script_segments: list[dict[str, Any]], subtitles: list[di
         asset_ids = choose_asset_ids(segment, assets, idx)
         asset = asset_by_id.get(asset_ids[0], {})
         layout = layout_for(segment, asset, len(asset_ids))
+        if is_wide_ui_asset(asset) and layout not in READABLE_WIDE_UI_LAYOUTS:
+            layout = "crop-focus"
+        if is_generated_result_asset(asset) and layout == "crop-focus":
+            layout = "result-showcase"
         plan = asset.get("layout_plan", {}) if isinstance(asset.get("layout_plan"), dict) else {}
+        center_safe_region = center_safe_region_for(asset)
+        must_be_visible = visible_requirements_for(segment, asset)
+        viewport_transform = viewport_transform_for(asset)
+        forbidden_motion = forbidden_motion_for(asset)
         visuals.append(
             {
                 "id": f"vis_{idx + 1:03d}",
                 "script_segment_ids": [segment.get("id")],
-                "start": round(max(start - 0.12, 0), 3),
+                "start": round(max(start, 0), 3),
                 "end": round(end, 3),
                 "asset_ids": asset_ids,
+                "evidence_binding": segment.get("evidence_binding", ""),
+                "operation_status": segment.get("operation_status", ""),
                 "layout": layout,
                 "display_mode": layout,
                 "framing": {
                     "focus_region": focus_region_for(segment, asset),
                     "subject_min_frame_ratio": float(plan.get("min_subject_frame_ratio") or 0.45),
+                    "center_safe_region": center_safe_region,
+                    "must_be_visible": must_be_visible,
+                    "viewport_transform": viewport_transform,
                     "subtitle_safe": True,
                     "target_canvas": "1080x1920",
                     "fill_strategy": plan.get("fill_strategy", "fit_or_crop_for_readability"),
                 },
                 "motion": {
-                    "name": "stable_focus",
+                    "name": "stable_crop_focus" if is_wide_ui_asset(asset) else "stable_focus",
                     "avoid_flicker": True,
+                    "forbidden_motion": forbidden_motion,
                 },
                 "qa_expectations": {
                     "no_black_frame": True,
                     "no_flash_if_same_asset": True,
                     "readable_ui": True,
+                    "narrated_subject_inside_center_safe_region": True,
+                    "wide_ui_not_full_preview_primary": True,
                     "no_meaningless_empty_panel": True,
                     "no_narrow_full_page_strip": True,
                     "no_overzoom_without_focus_reason": True,
@@ -213,6 +367,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 "metadata": asset.get("metadata", {}),
                 "display_risk": asset.get("display_risk", []),
                 "layout_plan": asset.get("layout_plan", {}),
+                "image_resource": asset.get("image_resource", {}),
                 "quality": asset.get("quality", {}),
             }
         )
@@ -271,6 +426,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "layout": {
                 "dual_panel_height_must_match_media": True,
                 "wide_ui_requires_crop_or_capture_if_unreadable": True,
+                "wide_ui_not_full_preview_primary": True,
+                "narrated_subject_inside_center_safe_region": True,
                 "tall_image_requires_scroll_or_sections": True,
                 "portrait_result_should_fill_mobile_width": True,
                 "no_overzoom_without_focus_reason": True,
