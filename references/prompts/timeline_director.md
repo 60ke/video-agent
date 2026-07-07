@@ -38,9 +38,15 @@ Return JSON fields that can be merged into `video_project.json`:
         "subtitle_safe": true
       },
       "motion": {
-        "name": "stable_focus",
+        "name": "push_in",
+        "amount": 0.028,
+        "anchor": "center",
         "avoid_flicker": true,
         "forbidden_motion": ["arbitrary_zoompan", "breathing", "jitter", "pan_subject_out_of_frame"]
+      },
+      "transition_in": {
+        "name": "cut",
+        "duration": 0.0
       },
       "qa_expectations": {
         "no_black_frame": true,
@@ -66,9 +72,12 @@ Return JSON fields that can be merged into `video_project.json`:
 - Dense/wide UI screenshots must not be repaired by renderer crop. Use only AI-verified 9:16 function screenshots in final video.
 - Generated result scenes must use saved result crops/exports under `assets/results/`; website result-page screenshots are evidence only.
 - Final visual assets are placed by width-fit/preserve-image rules. Do not request arbitrary zoom, crop, pan, or local magnification.
+- `layout` is the renderer authority. If `display_mode` is present, it must exactly equal `layout`.
+- Use only controlled `motion.name` values: `hold`, `push_in`, `pull_out`. Use `hold` with `amount=0` for dense UI/multi-image scenes; use small `push_in`/`pull_out` values up to `0.06` for single-result scenes.
+- Use only `transition_in.name` values: `cut`, `crossfade`. Use `crossfade` only when `layout + asset_ids` changes; identical consecutive visuals must use `cut`.
 - Dual panels must not have large empty lower areas.
 - Do not include the fixed panda outro in `visual_track`.
-- Default to stable holds for UI/result readability. Do not add arbitrary zoompan, breathing, jitter, or floating motion.
+- Do not add arbitrary zoompan, breathing, jitter, local crop, or floating motion.
 - Motion must not pan or zoom the active UI/result out of the center safe region.
 - Motion must be tied to a real browser action, a voiceover cue, or a deliberate transition between evidence states.
 - Category scenes must use a prepared 9:16 screenshot around the requested category. Do not use a whole wide category row as the primary visual.

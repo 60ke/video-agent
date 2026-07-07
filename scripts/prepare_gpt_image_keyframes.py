@@ -359,8 +359,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         asset_ids = [str(asset_id) for asset_id in event.get("asset_ids", [])]
         if asset_ids and asset_ids[0] in replacement_by_source:
             replacement = replacement_by_source[asset_ids[0]]
+            prepared_layout = "result-showcase" if new_asset_by_id[replacement]["role"] == "gpt_result_keyframe" else "portrait-showcase"
             event["asset_ids"] = [replacement]
-            event["layout"] = "result-showcase" if new_asset_by_id[replacement]["role"] == "gpt_result_keyframe" else "portrait-showcase"
+            event["layout"] = prepared_layout
+            event["display_mode"] = prepared_layout
             event.setdefault("qa_expectations", {})["uses_gpt_image_prepared_keyframe"] = True
 
     output_project = Path(args.output_project).expanduser().resolve(strict=False) if args.output_project else case_dir / "video_project.gpt_image.json"

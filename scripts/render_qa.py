@@ -123,8 +123,12 @@ def check_visual_asset_readiness(project: dict[str, Any]) -> tuple[list[str], li
             elif is_generated_claim and aspect and aspect > 1.2 and not is_saved_result:
                 errors.append(f"{label}: generated result uses wide webpage screenshot `{asset_id}`; save/crop the result image first")
             is_function_screenshot = workflow_step in {"menu_select", "feature_page_empty", "form_filled", "generate_callout", "generating"} or "browser" in origin
+            layout = str(event.get("layout") or event.get("display_mode") or "").lower()
+            is_recording_layout = layout in {"browser-recording", "browser-recording-fit-width"}
+            asset_type = str(asset.get("type") or "").lower()
             if is_function_screenshot and aspect and aspect > 1.2:
-                errors.append(f"{label}: function screenshot `{asset_id}` is wide; capture an AI-verified 9:16 screenshot first")
+                if not (is_recording_layout and asset_type == "video"):
+                    errors.append(f"{label}: function screenshot `{asset_id}` is wide; capture an AI-verified 9:16 screenshot first")
     return errors, warnings
 
 

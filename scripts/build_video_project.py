@@ -13,6 +13,8 @@ READABLE_WIDE_UI_LAYOUTS = {
     "main-plus-reference",
     "portrait-showcase",
     "result-showcase",
+    "browser-recording",
+    "browser-recording-fit-width",
 }
 DEFAULT_CENTER_SAFE_REGION = {"x": 0.18, "y": 0.12, "w": 0.64, "h": 0.68}
 
@@ -131,6 +133,8 @@ def asset_aspect(asset: dict[str, Any]) -> float | None:
 
 
 def is_wide_ui_asset(asset: dict[str, Any]) -> bool:
+    if str(asset.get("type") or "").lower() == "video" and str(asset.get("origin") or "").lower() == "cdp_browser_recording":
+        return False
     risks = {str(v).lower() for v in asset.get("display_risk", []) if isinstance(v, str)}
     if risks & {"wide_desktop_ui", "dense_desktop_ui"}:
         return True
@@ -180,6 +184,8 @@ def layout_for(segment: dict[str, Any], asset: dict[str, Any], asset_count: int)
         raise ValueError("layout_intent=crop-focus is no longer supported; prepare a 9:16 asset or saved result image first")
     if segment_layout:
         return segment_layout
+    if str(asset.get("type") or "").lower() == "video" and str(asset.get("origin") or "").lower() == "cdp_browser_recording":
+        return "browser-recording-fit-width"
     if asset_count >= 3:
         return "grid-rebuild"
     if asset_count == 2:
@@ -286,6 +292,30 @@ def forbidden_motion_for(asset: dict[str, Any]) -> list[str]:
     return values
 
 
+DEFAULT_PUSH_IN_AMOUNT = 0.028
+MOTION_HOLD_LAYOUTS = {"grid-rebuild", "main-plus-reference", "full-preview"}
+MOTION_HOLD_LAYOUTS.update({"browser-recording", "browser-recording-fit-width"})
+
+
+def motion_for(layout: str, asset: dict[str, Any]) -> dict[str, Any]:
+    """Pick a conservative, whole-frame, bounded motion. Dense/multi-panel UI stays
+    perfectly still so text remains readable; single-subject shots get a small,
+    fixed-direction push-in so the video does not read as a static slideshow.
+    Never a local/arbitrary zoom, never per-asset improvisation."""
+    if is_wide_ui_asset(asset) or layout in MOTION_HOLD_LAYOUTS:
+        return {"name": "hold", "amount": 0.0, "anchor": "center"}
+    return {"name": "push_in", "amount": DEFAULT_PUSH_IN_AMOUNT, "anchor": "center"}
+
+
+def transition_for(previous_key: tuple | None, current_key: tuple) -> dict[str, Any]:
+    """Crossfade only when the visual actually changes; reusing the same visual
+    (same layout + asset_ids) always cuts so the renderer merges it into one
+    continuous shot instead of a flash/re-zoom."""
+    if previous_key is None or previous_key == current_key:
+        return {"name": "cut", "duration": 0.0}
+    return {"name": "crossfade", "duration": 0.22}
+
+
 def layout_reason_for(layout: str, asset: dict[str, Any], segment: dict[str, Any]) -> str:
     role = asset.get("role", "asset")
     task = segment.get("material_task", "")
@@ -306,6 +336,7 @@ def build_visual_track(script_segments: list[dict[str, Any]], subtitles: list[di
     asset_by_id = {asset["id"]: asset for asset in assets}
     subtitle_by_seg = {sub.get("script_segment_id"): sub for sub in subtitles if isinstance(sub, dict)}
     visuals: list[dict[str, Any]] = []
+    previous_key: tuple | None = None
     for idx, segment in enumerate(script_segments):
         sub = subtitle_by_seg.get(segment.get("id"))
         start = float(sub.get("start", idx * 3.0)) if isinstance(sub, dict) else idx * 3.0
@@ -322,6 +353,10 @@ def build_visual_track(script_segments: list[dict[str, Any]], subtitles: list[di
         must_be_visible = visible_requirements_for(segment, asset)
         viewport_transform = viewport_transform_for(asset)
         forbidden_motion = forbidden_motion_for(asset)
+        current_key = (layout, tuple(asset_ids))
+        motion = motion_for(layout, asset)
+        transition_in = transition_for(previous_key, current_key)
+        previous_key = current_key
         visuals.append(
             {
                 "id": f"vis_{idx + 1:03d}",
@@ -343,11 +378,8 @@ def build_visual_track(script_segments: list[dict[str, Any]], subtitles: list[di
                     "target_canvas": "1080x1920",
                     "fill_strategy": plan.get("fill_strategy", "fit_width_preserve_image"),
                 },
-                "motion": {
-                    "name": "stable_width_fit",
-                    "avoid_flicker": True,
-                    "forbidden_motion": forbidden_motion,
-                },
+                "motion": motion | {"avoid_flicker": True, "forbidden_motion": forbidden_motion},
+                "transition_in": transition_in,
                 "qa_expectations": {
                     "no_black_frame": True,
                     "no_flash_if_same_asset": True,

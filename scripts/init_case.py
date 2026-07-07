@@ -16,6 +16,7 @@ OUTPUT_DIRS = (
     "assets/browser/raw",
     "assets/browser/annotated",
     "assets/results",
+    "assets/recordings",
     "audio",
     "output",
     "output/minimax",

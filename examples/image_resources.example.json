@@ -38,7 +38,7 @@
         "needs_review": false
       },
       "layout_plan": {
-        "primary_display_mode": "crop-focus",
+        "primary_display_mode": "portrait-showcase",
         "focus_region": "logo_menu_item",
         "fill_strategy": "crop_to_menu_and_left_nav",
         "min_subject_frame_ratio": 0.45,

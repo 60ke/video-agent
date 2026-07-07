@@ -9,7 +9,7 @@ Use this skill when the user provides a target website or asks for a short featu
 
 ## Required Reading
 
-1. `docs/pipeline_v2_refactor.md`
+1. `docs/pipeline_v2_refactor.md` (see §4 for the `motion`/`transition_in` controlled-motion contract)
 2. `rules/browser-webbridge.md` when browser interaction is required
 3. `rules/kehuanxiongmao-capture.md` for `https://kehuanxiongmao.com` or 柯幻熊猫
 4. `rules/douyin-real-demo.md` for Douyin/Kuaishou/Reels/Shorts style output
@@ -19,6 +19,7 @@ Use this skill when the user provides a target website or asks for a short featu
 ## V2 Outputs
 
 - `image_resources.json`
+- `assets/recordings/<label>/video.mp4` when a CDP operation recording is used
 - `video_script.json`
 - `audio/voice.mp3`
 - `output/minimax/minimax_alignment.json`
@@ -31,7 +32,7 @@ Use this skill when the user provides a target website or asks for a short featu
 ## Execution
 
 1. Initialize the case with `scripts/init_case.py`.
-2. Gather real website/material evidence. For 柯幻熊猫, use Kimi WebBridge and capture entry, form, generation/loading, and final result states when credits and permissions allow.
+2. Gather real website/material evidence. For 柯幻熊猫, use Kimi WebBridge and capture entry, form, generation/loading, and final result states when credits and permissions allow. Use CDP recording for the visible entry path when available.
 3. Build or update `image_resources.json`; every visual must say what it proves and how it should be framed in 9:16.
 4. Plan visually before writing narration. Decide whether each beat uses a website screenshot, operation state, or generated result image, then write the matching `video_script.json`.
 5. Generate voice and native timing with `scripts/generate_voice_minimax.py`. The Minimax key stays local in `config/minimax.local.json` or `MINIMAX_API_KEY`.
@@ -42,6 +43,8 @@ Use this skill when the user provides a target website or asks for a short featu
 8. Prepare GPT image keyframes with `scripts/prepare_gpt_image_keyframes.py`; render from `video_project.gpt_image.json` so result images and function screenshots are already 1080x1920-ready.
 9. Render with `scripts/render_simple_ffmpeg.py`; it produces the main FFmpeg video and appends the configured outro.
    - Subtitles are burned through ASS using the `douyin-live-smartclip` style: bottom centered, bold white text, black outline, height-based font size, and two-line wrapping.
+   - Each `visual_track` event may carry `motion` (`hold` / `push_in` / `pull_out`, amount capped at `0.06`, anchor fixed at `center`) and `transition_in` (`cut` / `crossfade`). `build_video_project.py` fills conservative defaults automatically; do not hand-author values outside the whitelist. See `docs/pipeline_v2_refactor.md` §4.
+   - Browser recordings use `layout=browser-recording-fit-width`: normal landscape recording, fitted to 1080px width, vertically centered, no crop, no extra motion.
 10. Run contact-sheet and render QA before presenting a final video.
 
 ## Non-Negotiable Rules
@@ -53,8 +56,10 @@ Use this skill when the user provides a target website or asks for a short featu
 - Do not press costly, publishing, deleting, payment, or account-mutating actions without explicit user approval.
 - For 柯幻熊猫, do not press `开始生成` unless logged-in state and enough points are visible, or the user has explicitly approved the action.
 - For 柯幻熊猫, write login proof to `browser_materials.auth_state.logged_in=true` and `points_balance>100`; V2 build/render refuses to continue without it.
-- For 柯幻熊猫 feature seeding, show the entry path. Prefer a short browser recording; if recording is unavailable, use sequential red-callout screenshots from home/`文生图` menu to the target feature and destination page.
+- For 柯幻熊猫 feature seeding, show the entry path. Prefer a short CDP browser recording; if recording is unavailable, use sequential red-callout screenshots from home/`文生图` menu to the target feature and destination page.
+- CDP recording must use the fixed `kehuanxiongmao` profile. Record only meaningful actions from entry to the real `开始生成` click, with all required inputs actually filled. Put `stopRecordingAfter: true` on that click; the same CDP task must continue after recording stops to wait for and save/export/crop the real result. Show final results from saved result images, not from a waiting result page recording.
 - Final visuals must already be prepared and AI-verified. Function/process screenshots should be 9:16 captures; generated results must be saved images/crops/exports under `assets/results/`. The renderer width-fits images and does not perform local crop/zoom repair.
+- The renderer merges consecutive `visual_track` events that share the same `layout`+`asset_ids` into one continuous shot with one uninterrupted motion sweep. Do not declare `crossfade` or a different `motion` between two such events; the validator rejects it.
 - GPT image edits are for format, ratio, and layout optimization only. Prompts must preserve the original screenshot/result content and must not invent new UI, generated results, text, logos, or product details.
 - Do not include the fixed outro in script, voice, subtitles, or visual beat planning; append it after the main video.
 - Do not present a video as final if voice, subtitle timing, visual readability, or render QA fails.

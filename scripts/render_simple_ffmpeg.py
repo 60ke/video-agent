@@ -2,6 +2,7 @@ import argparse
 import json
 import subprocess
 import sys
+from bisect import bisect_right
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -317,6 +318,49 @@ def open_visual_asset(src: Path, temp_dir: Path, idx: int) -> Image.Image:
     return Image.open(src).convert("RGB")
 
 
+RECORDING_LAYOUTS = {"browser-recording", "browser-recording-fit-width"}
+
+
+def ffprobe_video_duration(path: Path) -> float:
+    duration = ffprobe_duration(path)
+    return duration if duration and duration > 0 else 0.001
+
+
+def extract_recording_frames(src: Path, dst_dir: Path, width: int, height: int, fps: int) -> list[Path]:
+    dst_dir.mkdir(parents=True, exist_ok=True)
+    for existing in dst_dir.glob("frame_*.jpg"):
+        existing.unlink()
+
+    vf = (
+        f"scale={width}:-2:force_original_aspect_ratio=decrease,"
+        f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color=0x080a0c,"
+        f"setsar=1,fps={fps}"
+    )
+    output_pattern = dst_dir / "frame_%06d.jpg"
+    proc = run_command(
+        ["ffmpeg", "-y", "-i", str(src), "-vf", vf, "-q:v", "3", str(output_pattern)],
+        dst_dir,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(f"failed to extract browser recording frames from {src}:\n{proc.stderr[-4000:]}")
+    frames = sorted(dst_dir.glob("frame_*.jpg"))
+    if not frames:
+        raise RuntimeError(f"browser recording produced no frames: {src}")
+    return frames
+
+
+class RecordingClip:
+    def __init__(self, src: Path, frame_dir: Path, width: int, height: int, fps: int) -> None:
+        self.src = src
+        self.duration = ffprobe_video_duration(src)
+        self.frames = extract_recording_frames(src, frame_dir, width, height, fps)
+
+    def frame_at(self, progress: float) -> Image.Image:
+        progress = min(1.0, max(0.0, progress))
+        index = min(len(self.frames) - 1, max(0, int(round(progress * (len(self.frames) - 1)))))
+        return Image.open(self.frames[index]).convert("RGB")
+
+
 def fit_width_on_canvas(image: Image.Image, width: int, height: int, *, color: tuple[int, int, int] = (8, 10, 12)) -> Image.Image:
     canvas = Image.new("RGB", (width, height), color)
     scale = width / image.width
@@ -353,19 +397,158 @@ def grid_on_canvas(images: list[Image.Image], width: int, height: int) -> Image.
     return canvas
 
 
-def render_event_frame(
+MOTION_NAMES = {"hold", "push_in", "pull_out"}
+MOTION_MAX_AMOUNT = 0.06
+TRANSITION_NAMES = {"cut", "crossfade"}
+TRANSITION_MAX_DURATION = 0.6
+
+
+def smoothstep(value: float) -> float:
+    value = min(1.0, max(0.0, value))
+    return value * value * (3.0 - 2.0 * value)
+
+
+def event_label(event: dict[str, Any], idx: int | None = None) -> str:
+    if event.get("id"):
+        return str(event["id"])
+    return f"visual_track[{idx}]" if idx is not None else "visual_track event"
+
+
+def is_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def canonical_layout(event: dict[str, Any], label: str) -> str:
+    layout = str(event.get("layout") or "").strip()
+    display_mode = str(event.get("display_mode") or "").strip()
+    if layout and display_mode and layout != display_mode:
+        raise ValueError(f"{label} has conflicting layout/display_mode: {layout!r} != {display_mode!r}")
+    return layout or display_mode
+
+
+def visual_group_key(event: dict[str, Any], label: str | None = None) -> tuple:
+    layout = canonical_layout(event, label or event_label(event))
+    asset_ids = tuple(str(asset_id) for asset_id in event.get("asset_ids", []))
+    return (layout, asset_ids)
+
+
+def normalize_motion(event: dict[str, Any], label: str) -> dict[str, Any]:
+    raw_motion = event.get("motion")
+    if raw_motion is None:
+        motion: dict[str, Any] = {}
+    elif isinstance(raw_motion, dict):
+        motion = raw_motion
+    else:
+        raise ValueError(f"{label}.motion must be an object")
+    name = motion.get("name", "hold")
+    if name not in MOTION_NAMES:
+        raise ValueError(f"{label}.motion.name must be one of {sorted(MOTION_NAMES)}, got: {name!r}")
+    amount = motion.get("amount", 0.0)
+    if not is_number(amount) or amount < 0 or amount > MOTION_MAX_AMOUNT:
+        raise ValueError(f"{label}.motion.amount must be a number in [0, {MOTION_MAX_AMOUNT}], got: {amount!r}")
+    anchor = motion.get("anchor", "center")
+    if anchor != "center":
+        raise ValueError(f"{label}.motion.anchor must be 'center' in this renderer version, got: {anchor!r}")
+    amount = float(amount)
+    if name == "hold":
+        if amount != 0:
+            raise ValueError(f"{label}.motion.name=hold requires amount=0, got: {amount!r}")
+        amount = 0.0
+    return {"name": name, "amount": amount, "anchor": anchor}
+
+
+def normalize_transition(event: dict[str, Any], label: str) -> dict[str, Any]:
+    raw_transition = event.get("transition_in")
+    if raw_transition is None:
+        transition: dict[str, Any] = {}
+    elif isinstance(raw_transition, dict):
+        transition = raw_transition
+    else:
+        raise ValueError(f"{label}.transition_in must be an object")
+    name = transition.get("name", "cut")
+    if name not in TRANSITION_NAMES:
+        raise ValueError(f"{label}.transition_in.name must be one of {sorted(TRANSITION_NAMES)}, got: {name!r}")
+    duration = transition.get("duration", 0.0)
+    if not is_number(duration) or duration < 0 or duration > TRANSITION_MAX_DURATION:
+        raise ValueError(
+            f"{label}.transition_in.duration must be a number in [0, {TRANSITION_MAX_DURATION}], got: {duration!r}"
+        )
+    duration = float(duration)
+    if name == "crossfade" and duration <= 0:
+        raise ValueError(f"{label}.transition_in.name=crossfade requires duration > 0")
+    if name == "cut":
+        if duration != 0:
+            raise ValueError(f"{label}.transition_in.name=cut requires duration=0, got: {duration!r}")
+        duration = 0.0
+    return {"name": name, "duration": duration}
+
+
+def build_visual_groups(track: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Merge consecutive visual_track events that share the exact same visual
+    (layout + asset_ids) into one continuous shot. This is the core anti-flicker
+    measure: motion runs once across the whole merged span instead of restarting
+    per caption change, and no transition is ever drawn between two slices of the
+    same visual."""
+    events = sorted(
+        (
+            (idx, event)
+            for idx, event in enumerate(track)
+            if isinstance(event, dict)
+            and isinstance(event.get("start"), (int, float))
+            and isinstance(event.get("end"), (int, float))
+            and float(event["end"]) > float(event["start"])
+        ),
+        key=lambda item: item[1]["start"],
+    )
+    groups: list[dict[str, Any]] = []
+    for idx, event in events:
+        label = event_label(event, idx)
+        key = visual_group_key(event, label)
+        motion = normalize_motion(event, label)
+        transition_in = normalize_transition(event, label)
+        if groups and groups[-1]["key"] == key:
+            group = groups[-1]
+            if transition_in["name"] != "cut":
+                raise ValueError(
+                    f"{label} reuses the same visual as the previous event but declares "
+                    f"{transition_in['name']} transition; use transition_in.name=cut"
+                )
+            if motion != group["motion"]:
+                raise ValueError(
+                    f"{label} reuses the same visual as the previous event but declares different motion"
+                )
+            group["end"] = max(group["end"], float(event["end"]))
+            group["events"].append(event)
+            continue
+        groups.append(
+            {
+                "key": key,
+                "start": float(event["start"]),
+                "end": float(event["end"]),
+                "events": [event],
+                "asset_ids": [str(asset_id) for asset_id in event.get("asset_ids", [])],
+                "layout": key[0],
+                "motion": motion,
+                "transition_in": transition_in,
+            }
+        )
+    if groups:
+        groups[0]["transition_in"] = {"name": "cut", "duration": 0.0}
+    return groups
+
+
+def compose_group_frame(
     case_dir: Path,
-    event: dict[str, Any],
+    group: dict[str, Any],
     assets: dict[str, dict[str, Any]],
-    frame_path: Path,
     temp_dir: Path,
     width: int,
     height: int,
     idx: int,
-) -> None:
-    asset_ids = [str(asset_id) for asset_id in event.get("asset_ids", [])]
+) -> Image.Image:
+    asset_ids = group["asset_ids"]
     if not asset_ids:
-        raise ValueError(f"visual event missing asset_ids: {event.get('id') or idx}")
+        raise ValueError(f"visual group missing asset_ids: {group['events'][0].get('id') or idx}")
 
     images: list[Image.Image] = []
     for asset_id in asset_ids[:4]:
@@ -376,60 +559,139 @@ def render_event_frame(
         if src and src.is_file():
             images.append(open_visual_asset(src, temp_dir, idx))
     if not images:
-        raise FileNotFoundError(f"no renderable asset for visual event: {event.get('id') or idx}")
+        raise FileNotFoundError(f"no renderable asset for visual group: {group['events'][0].get('id') or idx}")
 
-    layout = str(event.get("display_mode") or event.get("layout") or "").lower()
+    layout = group["layout"].lower()
     if len(images) > 1 or layout in {"grid-rebuild", "main-plus-reference"}:
-        frame = grid_on_canvas(images, width, height)
+        return grid_on_canvas(images, width, height)
+    return fit_width_on_canvas(images[0], width, height)
+
+
+def is_recording_group(group: dict[str, Any]) -> bool:
+    return str(group.get("layout") or "").lower() in RECORDING_LAYOUTS
+
+
+def apply_motion(base: Image.Image, motion: dict[str, Any], progress: float, width: int, height: int) -> Image.Image:
+    """Whole-frame, center-anchored, amount-capped, monotonic scale. This never
+    crops into an arbitrary local region of the source image; it always zooms
+    the entire composed canvas, which is what keeps the motion from reading as
+    an unpredictable local zoom."""
+    name = motion.get("name", "hold")
+    amount = float(motion.get("amount", 0.0))
+    if name == "hold" or amount <= 0:
+        return base
+    eased = smoothstep(progress)
+    if name == "push_in":
+        scale = 1.0 + amount * eased
+    elif name == "pull_out":
+        scale = (1.0 + amount) - amount * eased
     else:
-        frame = fit_width_on_canvas(images[0], width, height)
-    frame_path.parent.mkdir(parents=True, exist_ok=True)
-    frame.save(frame_path)
+        return base
+    scaled_w = max(width, int(round(width * scale)))
+    scaled_h = max(height, int(round(height * scale)))
+    resized = base.resize((scaled_w, scaled_h), Image.Resampling.LANCZOS)
+    left = (scaled_w - width) // 2
+    top = (scaled_h - height) // 2
+    return resized.crop((left, top, left + width, top + height))
 
 
-def build_concat_file(case_dir: Path, project: dict[str, Any], concat_path: Path, temp_dir: Path, width: int, height: int) -> list[dict[str, Any]]:
-    assets = asset_index(project)
-    lines = []
-    rendered_events: list[dict[str, Any]] = []
-    last_file = None
-    previous_end = 0.0
-    
-    for idx, event in enumerate(project.get("visual_track", []), start=1):
-        if not isinstance(event, dict):
-            continue
-            
-        end = float(event.get("end", previous_end + 1))
-        if end <= previous_end:
-            continue
-        duration = max(end - previous_end, 0.1)
-        previous_end = end
+class VisualGroupRenderer:
+    """Streams deterministic frames for the merged visual groups: static hold,
+    or a small bounded push_in/pull_out, with a crossfade only at boundaries
+    where the visual actually changes. No per-frame improvisation."""
 
-        frame_path = temp_dir / "frames" / f"event_{idx:03d}.png"
-        render_event_frame(case_dir, event, assets, frame_path, temp_dir, width, height, idx)
-        abs_src = frame_path.resolve(strict=False).as_posix()
-        
-        lines.append(f"file '{abs_src}'")
-        lines.append(f"duration {duration:.3f}")
-        last_file = abs_src
-        rendered_events.append(
+    def __init__(
+        self,
+        case_dir: Path,
+        project: dict[str, Any],
+        temp_dir: Path,
+        width: int,
+        height: int,
+    ) -> None:
+        self.case_dir = case_dir
+        self.width = width
+        self.height = height
+        meta = project.get("meta", {}) if isinstance(project.get("meta"), dict) else {}
+        self.fps = int(meta.get("fps", 30) or 30)
+        self.assets = asset_index(project)
+        self.groups = build_visual_groups(project.get("visual_track", []))
+        if not self.groups:
+            raise ValueError("visual_track produced no renderable groups")
+        self.group_starts = [group["start"] for group in self.groups]
+        self.temp_dir = temp_dir
+        self._base_cache: dict[int, Image.Image] = {}
+        self._recording_cache: dict[int, RecordingClip] = {}
+
+    def base_frame(self, group_idx: int) -> Image.Image:
+        if group_idx not in self._base_cache:
+            self._base_cache[group_idx] = compose_group_frame(
+                self.case_dir, self.groups[group_idx], self.assets, self.temp_dir, self.width, self.height, group_idx
+            )
+        return self._base_cache[group_idx]
+
+    def recording_clip(self, group_idx: int) -> RecordingClip:
+        if group_idx not in self._recording_cache:
+            group = self.groups[group_idx]
+            if not group["asset_ids"]:
+                raise ValueError(f"browser recording group missing asset_ids: {group['events'][0].get('id') or group_idx}")
+            asset_id = group["asset_ids"][0]
+            asset = self.assets.get(asset_id)
+            if not asset:
+                raise FileNotFoundError(f"browser recording asset missing: {asset_id}")
+            src = resolve_case_path(self.case_dir, asset.get("source"))
+            if not src or not src.is_file():
+                raise FileNotFoundError(f"browser recording source missing: {asset.get('source')}")
+            self._recording_cache[group_idx] = RecordingClip(
+                src,
+                self.temp_dir / "recording_frames" / f"group_{group_idx:03d}_{src.stem}",
+                self.width,
+                self.height,
+                self.fps,
+            )
+        return self._recording_cache[group_idx]
+
+    def frame_for_group(self, group_idx: int, t: float) -> Image.Image:
+        group = self.groups[group_idx]
+        duration = max(group["end"] - group["start"], 0.001)
+        progress = (t - group["start"]) / duration
+        if is_recording_group(group):
+            return self.recording_clip(group_idx).frame_at(progress)
+        return apply_motion(self.base_frame(group_idx), group["motion"], progress, self.width, self.height)
+
+    def active_group_index(self, t: float) -> int:
+        index = bisect_right(self.group_starts, t) - 1
+        return min(max(index, 0), len(self.groups) - 1)
+
+    def render_frame(self, t: float) -> Image.Image:
+        idx = self.active_group_index(t)
+        group = self.groups[idx]
+        clamped_t = min(max(t, group["start"]), group["end"] - 1e-4)
+        frame = self.frame_for_group(idx, clamped_t)
+
+        transition = group["transition_in"]
+        if idx > 0 and transition["name"] == "crossfade" and transition["duration"] > 0:
+            elapsed = t - group["start"]
+            if 0 <= elapsed < transition["duration"]:
+                alpha = smoothstep(elapsed / transition["duration"])
+                previous_group = self.groups[idx - 1]
+                previous_frame = self.frame_for_group(idx - 1, previous_group["end"] - 1e-4)
+                frame = Image.blend(previous_frame, frame, alpha)
+        return frame
+
+    def render_report(self) -> list[dict[str, Any]]:
+        return [
             {
-                "event_id": event.get("id") or f"visual_track[{idx - 1}]",
-                "frame": str(frame_path),
-                "duration": round(duration, 3),
-                "layout": event.get("display_mode") or event.get("layout"),
-                "asset_ids": event.get("asset_ids", []),
+                "group_index": i,
+                "event_ids": [event.get("id") for event in group["events"]],
+                "start": round(group["start"], 3),
+                "end": round(group["end"], 3),
+                "layout": group["layout"],
+                "asset_ids": group["asset_ids"],
+                "motion": group["motion"],
+                "transition_in": group["transition_in"],
             }
-        )
-        
-    if last_file:
-        # FFmpeg concat demuxer requirement: the last file needs to be repeated without duration
-        # to ensure the final frame is rendered properly up to the duration of the video.
-        lines.append(f"file '{last_file}'")
-        
-    if not lines:
-        raise ValueError("visual_track produced no renderable frames")
-    concat_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return rendered_events
+            for i, group in enumerate(self.groups)
+        ]
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
@@ -452,13 +714,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     final_output = versions_dir / f"{label}.mp4"
     main_output = versions_dir / f"{label}_main.mp4"
     ass_path = temp_dir / "subs.ass"
-    concat_path = temp_dir / "concat.txt"
-    
+    ffmpeg_log_path = temp_dir / f"{label}_ffmpeg.log"
+
     meta = project.get("meta", {})
     width = int(meta.get("width", 1080)) if isinstance(meta, dict) else 1080
     height = int(meta.get("height", 1920)) if isinstance(meta, dict) else 1920
+    fps = int(meta.get("fps", 30)) if isinstance(meta, dict) else 30
 
-    # 1. Build ASS subtitles and render per-event frames for the concat file.
+    # 1. Build ASS subtitles and the deterministic motion/transition timeline.
     subtitle_style_report = build_ass(
         project,
         ass_path,
@@ -467,7 +730,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         font_name=args.subtitle_font_name,
         font_size_override=args.subtitle_font_size,
     )
-    rendered_events = build_concat_file(case_dir, project, concat_path, temp_dir, width, height)
+    renderer = VisualGroupRenderer(case_dir, project, temp_dir, width, height)
+    duration = max(
+        float(meta.get("target_duration") or 0) if isinstance(meta, dict) else 0,
+        renderer.groups[-1]["end"],
+    )
+    frame_count = max(1, int(round(duration * fps)))
 
     # 2. Get Voice Audio
     voice = project.get("voice_track", {})
@@ -477,47 +745,77 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         audio_src = case_dir / "audio" / "voice.mp3"
         if not audio_src.is_file():
             raise FileNotFoundError("Voice audio file not found")
-            
+
     rel_audio_src = audio_src.relative_to(case_dir).as_posix()
     rel_ass = ass_path.relative_to(case_dir)
-    rel_concat = concat_path.relative_to(case_dir).as_posix()
     rel_main_output = main_output.relative_to(case_dir).as_posix()
-    
+
     # Subtitles escaping in FFmpeg can be tricky on Windows.
-    # We use a simple force_style, and relative path to srt
-    # For Windows ffmpeg, colon in paths within filters is extremely problematic, 
+    # For Windows ffmpeg, colon in paths within filters is extremely problematic,
     # so running from case_dir with pure relative paths is safest.
-    
-    filter_complex = (
-        f"[0:v]scale={width}:{height}:force_original_aspect_ratio=decrease,"
-        f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30[vbg];"
-        f"[vbg]ass='{escape_filter_path(rel_ass)}'[vout]"
-    )
-    
+    filter_complex = f"[0:v]ass='{escape_filter_path(rel_ass)}'[vout]"
+
     cmd = [
         "ffmpeg",
         "-y",
-        "-f", "concat",
-        "-safe", "0",
-        "-i", rel_concat,
+        "-f", "rawvideo",
+        "-pix_fmt", "rgb24",
+        "-s", f"{width}x{height}",
+        "-r", str(fps),
+        "-i", "-",
         "-i", rel_audio_src,
         "-filter_complex", filter_complex,
         "-map", "[vout]",
         "-map", "1:a",
+        "-t", f"{duration:.3f}",
         "-c:v", "libx264",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-shortest",
         "-movflags", "+faststart",
-        rel_main_output
+        rel_main_output,
     ]
-    
-    print(f"Running FFmpeg: {' '.join(cmd)}", file=sys.stderr)
-    
-    proc = run_command(cmd, case_dir)
-    
-    if proc.returncode != 0:
-        raise RuntimeError(f"FFmpeg failed:\n{proc.stderr[-4000:]}")
+
+    print(f"Running FFmpeg (streaming {frame_count} frames): {' '.join(cmd)}", file=sys.stderr)
+
+    # Frames are piped in as raw RGB24 rather than written through the concat
+    # demuxer, so every frame comes from one deterministic per-group render
+    # function (hold / push_in / pull_out + crossfade) instead of a single
+    # static PNG per timeline event. stderr goes to a log file, not a pipe,
+    # so a full ffmpeg log buffer can never deadlock against us still writing
+    # frames to stdin.
+    with open(ffmpeg_log_path, "wb") as log_file:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(case_dir),
+            stdin=subprocess.PIPE,
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+        )
+        try:
+            if proc.stdin is None:
+                raise RuntimeError("FFmpeg stdin pipe was not created")
+            for frame_index in range(frame_count):
+                t = frame_index / fps
+                frame = renderer.render_frame(t)
+                proc.stdin.write(frame.tobytes())
+            proc.stdin.close()
+        except BrokenPipeError:
+            pass
+        except Exception:
+            if proc.stdin and not proc.stdin.closed:
+                try:
+                    proc.stdin.close()
+                except OSError:
+                    pass
+            proc.kill()
+            proc.wait()
+            raise
+        returncode = proc.wait()
+
+    if returncode != 0:
+        log_text = ffmpeg_log_path.read_text(encoding="utf-8", errors="replace")
+        raise RuntimeError(f"FFmpeg failed:\n{log_text[-4000:]}")
 
     appended_outro = False
     if args.skip_outro:
@@ -539,8 +837,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "outro_appended": appended_outro,
         "ass": str(ass_path),
         "subtitle_style": subtitle_style_report,
-        "concat": str(concat_path),
-        "rendered_events": rendered_events,
+        "frame_count": frame_count,
+        "fps": fps,
+        "rendered_groups": renderer.render_report(),
         "command": cmd,
     }
     report_path = reports_dir / f"{label}_render_report.json"

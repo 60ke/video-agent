@@ -1,0 +1,71 @@
+{
+  "profileId": "kehuanxiongmao",
+  "url": "https://www.kehuanxiongmao.com",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "recording": {
+    "fps": 30,
+    "jpegQuality": 78,
+    "format": "mp4",
+    "videoCodec": "libx264",
+    "pixelFormat": "yuv420p",
+    "crf": "20",
+    "preset": "veryfast"
+  },
+  "chrome": {
+    "mode": "headless",
+    "port": 9333,
+    "extraArgs": []
+  },
+  "overlay": {
+    "enabled": true,
+    "cursor": {
+      "color": "#ffffff",
+      "size": 24,
+      "showTrail": false
+    },
+    "ripple": {
+      "color": "#ffffff",
+      "duration": 600
+    },
+    "highlight": {
+      "color": "#ffeb3b",
+      "duration": 1000
+    }
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "duration": 2000
+    },
+    {
+      "type": "scroll",
+      "direction": "down",
+      "amount": 1500,
+      "duration": 5000,
+      "narration": "打开页面后，先快速浏览核心功能入口。"
+    },
+    {
+      "type": "wait",
+      "duration": 1000
+    },
+    {
+      "type": "scroll",
+      "direction": "up",
+      "amount": 800,
+      "duration": 3000
+    },
+    {
+      "type": "screenshot",
+      "name": "after-scroll",
+      "narration": "保留当前页面状态，作为操作路径证据。"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "document.title"
+    }
+  ],
+  "outputDir": "./output"
+}

@@ -10,6 +10,13 @@ from utils.case_guards import kehuanxiongmao_auth_errors
 from utils.skill_path import require_skill_root
 
 
+MOTION_NAMES = {"hold", "push_in", "pull_out"}
+MOTION_MAX_AMOUNT = 0.06
+MOTION_DEFAULT_ANCHORS = {"center"}
+TRANSITION_NAMES = {"cut", "crossfade"}
+TRANSITION_MAX_DURATION = 0.6
+MIN_VISUAL_HOLD_SECONDS = 0.6
+
 REQUIRED_STRICT_TOP_LEVEL = (
     "schema_version",
     "meta",
@@ -251,6 +258,107 @@ def validate_subtitles(track: Any, script_ids: set[str], ctx: ValidationContext)
             ctx.error(f"subtitle_track.segments[{idx}] missing text")
 
 
+def is_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def validate_layout_contract(event: dict[str, Any], idx: int, ctx: ValidationContext) -> None:
+    layout = str(event.get("layout") or "").strip()
+    display_mode = str(event.get("display_mode") or "").strip()
+    if layout and display_mode and layout != display_mode:
+        ctx.error(
+            f"visual_track[{idx}] has conflicting layout/display_mode: {layout!r} != {display_mode!r}; "
+            "layout is the renderer authority, so keep display_mode equal or omit it"
+        )
+
+
+def visual_event_key(event: dict[str, Any]) -> tuple:
+    layout = str(event.get("layout") or event.get("display_mode") or "").strip()
+    asset_ids = tuple(str(asset_id) for asset_id in event.get("asset_ids", []))
+    return (layout, asset_ids)
+
+
+def validate_motion(event: dict[str, Any], idx: int, ctx: ValidationContext) -> None:
+    motion = event.get("motion")
+    if motion is None:
+        return
+    if not isinstance(motion, dict):
+        ctx.error(f"visual_track[{idx}].motion must be an object")
+        return
+    name = motion.get("name", "hold")
+    if name not in MOTION_NAMES:
+        ctx.error(
+            f"visual_track[{idx}].motion.name must be one of {sorted(MOTION_NAMES)}, got: {name!r}"
+        )
+    amount = motion.get("amount", 0.0)
+    if not is_number(amount) or amount < 0 or amount > MOTION_MAX_AMOUNT:
+        ctx.error(
+            f"visual_track[{idx}].motion.amount must be a number in [0, {MOTION_MAX_AMOUNT}], got: {amount!r}"
+        )
+    anchor = motion.get("anchor", "center")
+    if anchor not in MOTION_DEFAULT_ANCHORS:
+        ctx.error(
+            f"visual_track[{idx}].motion.anchor must be one of {sorted(MOTION_DEFAULT_ANCHORS)} in this renderer version, got: {anchor!r}"
+        )
+    if name == "hold" and amount not in (0, 0.0):
+        ctx.error(f"visual_track[{idx}].motion.name=hold requires amount=0, got: {amount!r}")
+
+
+def validate_transition(event: dict[str, Any], idx: int, ctx: ValidationContext) -> None:
+    transition = event.get("transition_in")
+    if transition is None:
+        return
+    if not isinstance(transition, dict):
+        ctx.error(f"visual_track[{idx}].transition_in must be an object")
+        return
+    name = transition.get("name", "cut")
+    if name not in TRANSITION_NAMES:
+        ctx.error(
+            f"visual_track[{idx}].transition_in.name must be one of {sorted(TRANSITION_NAMES)}, got: {name!r}"
+        )
+    duration = transition.get("duration", 0.0)
+    if not is_number(duration) or duration < 0 or duration > TRANSITION_MAX_DURATION:
+        ctx.error(
+            f"visual_track[{idx}].transition_in.duration must be a number in [0, {TRANSITION_MAX_DURATION}], got: {duration!r}"
+        )
+    if name == "cut" and duration not in (0, 0.0):
+        ctx.error(f"visual_track[{idx}].transition_in.name=cut requires duration=0, got: {duration!r}")
+    if name == "crossfade" and duration <= 0:
+        ctx.error(f"visual_track[{idx}].transition_in.name=crossfade requires duration > 0")
+
+
+def validate_anti_flicker(track: list[dict[str, Any]], ctx: ValidationContext) -> None:
+    """Guard against the flicker/re-zoom-snap patterns called out in the render redesign:
+    a transition or a motion restart between two consecutive events that share the exact
+    same visual (layout + asset_ids) reads as a flash or a jump-cut zoom on screen."""
+    ordered = sorted(
+        (event for event in track if isinstance(event, dict) and isinstance(event.get("start"), (int, float))),
+        key=lambda event: event["start"],
+    )
+    for idx in range(1, len(ordered)):
+        previous, current = ordered[idx - 1], ordered[idx]
+        if visual_event_key(previous) != visual_event_key(current):
+            continue
+        label = current.get("id") or f"visual_track[{idx}]"
+        transition = current.get("transition_in")
+        if isinstance(transition, dict) and transition.get("name", "cut") != "cut":
+            ctx.error(
+                f"{label} reuses the same visual as the previous event but declares a "
+                f"{transition.get('name')} transition; use transition_in.name=cut (or omit it) "
+                "so the renderer merges them into one continuous shot instead of flashing"
+            )
+        prev_motion = previous.get("motion") if isinstance(previous.get("motion"), dict) else {}
+        cur_motion = current.get("motion") if isinstance(current.get("motion"), dict) else {}
+        if prev_motion.get("name", "hold") != cur_motion.get("name", "hold") or prev_motion.get(
+            "amount", 0.0
+        ) != cur_motion.get("amount", 0.0):
+            ctx.error(
+                f"{label} reuses the same visual as the previous event but declares a different "
+                "motion; the renderer merges same-visual events into one continuous shot, so "
+                "motion.name/amount must match the previous event"
+            )
+
+
 def validate_visual_track(track: Any, asset_ids: set[str], script_ids: set[str], ctx: ValidationContext) -> None:
     if not isinstance(track, list):
         ctx.error("visual_track must be a list")
@@ -261,10 +369,13 @@ def validate_visual_track(track: Any, asset_ids: set[str], script_ids: set[str],
             ctx.error(f"visual_track[{idx}] must be an object")
             continue
         _validate_timed_event(event, f"visual_track[{idx}]", ctx)
+        validate_layout_contract(event, idx, ctx)
         for asset_id in event.get("asset_ids", []):
             if asset_id not in asset_ids:
                 ctx.error(f"visual_track[{idx}] references missing asset: {asset_id}")
         validate_visual_asset_policy(event, idx, project_assets, ctx)
+        validate_motion(event, idx, ctx)
+        validate_transition(event, idx, ctx)
         for script_id in event.get("script_segment_ids", []):
             if script_ids and script_id not in script_ids:
                 ctx.error(f"visual_track[{idx}] references missing script segment: {script_id}")
@@ -272,6 +383,19 @@ def validate_visual_track(track: Any, asset_ids: set[str], script_ids: set[str],
             ctx.warn(f"visual_track[{idx}] missing layout")
         if not event.get("qa_expectations"):
             ctx.warn(f"visual_track[{idx}] missing qa_expectations")
+        start, end = event.get("start"), event.get("end")
+        if isinstance(start, (int, float)) and isinstance(end, (int, float)) and end - start < MIN_VISUAL_HOLD_SECONDS:
+            message = (
+                f"visual_track[{idx}] duration {end - start:.2f}s is under the {MIN_VISUAL_HOLD_SECONDS}s "
+                "minimum hold; merge with a neighbor or lengthen it"
+            )
+            if ctx.strict:
+                ctx.error(message)
+            else:
+                ctx.warn(message)
+
+    if isinstance(track, list):
+        validate_anti_flicker([event for event in track if isinstance(event, dict)], ctx)
 
 
 def asset_aspect(asset: dict[str, Any]) -> float | None:
@@ -288,8 +412,11 @@ def asset_aspect(asset: dict[str, Any]) -> float | None:
 
 def validate_visual_asset_policy(event: dict[str, Any], idx: int, assets: dict[str, dict[str, Any]], ctx: ValidationContext) -> None:
     evidence = str(event.get("evidence_binding") or "").lower()
+    layout = str(event.get("layout") or event.get("display_mode") or "").lower()
+    is_recording_layout = layout in {"browser-recording", "browser-recording-fit-width"}
     for asset_id in event.get("asset_ids", []):
         asset = assets.get(asset_id, {})
+        asset_type = str(asset.get("type") or "").lower()
         aspect = asset_aspect(asset)
         image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
         workflow_step = str(image_resource.get("workflow_step") or "").lower()
@@ -316,9 +443,10 @@ def validate_visual_asset_policy(event: dict[str, Any], idx: int, assets: dict[s
 
         is_function_screenshot = workflow_step in {"menu_select", "feature_page_empty", "form_filled", "generate_callout", "generating"} or "browser" in origin
         if is_function_screenshot and aspect and aspect > 1.2:
-            ctx.error(
-                f"visual_track[{idx}] uses a wide function screenshot: {asset_id}; capture/verify a 9:16 screenshot before rendering"
-            )
+            if not (is_recording_layout and asset_type == "video"):
+                ctx.error(
+                    f"visual_track[{idx}] uses a wide function screenshot: {asset_id}; capture/verify a 9:16 screenshot before rendering"
+                )
 
 
 def workflow_steps_for_event(event: dict[str, Any], assets: dict[str, dict[str, Any]]) -> set[str]:
@@ -357,7 +485,7 @@ def workflow_steps_for_event(event: dict[str, Any], assets: dict[str, dict[str, 
                 steps.add(source_step)
     if str(event.get("evidence_binding") or "").lower() == "real_recording":
         steps.add("operation_recording")
-    if str(event.get("layout") or event.get("display_mode") or "").lower() == "browser-recording":
+    if str(event.get("layout") or event.get("display_mode") or "").lower() in {"browser-recording", "browser-recording-fit-width"}:
         steps.add("operation_recording")
     return steps
 

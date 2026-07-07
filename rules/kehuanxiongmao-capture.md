@@ -13,13 +13,14 @@ The goal is to capture a complete, auditable product flow that can support futur
 
 - Access the website only through Kimi WebBridge.
 - Use the user's already logged-in browser session. Do not ask for passwords or handle credentials.
+- CDP automation and recording must use the fixed local profile `kehuanxiongmao`; if the profile/auth state is unavailable or the page is not logged in, refuse execution instead of recording an anonymous flow.
 - Before generation, capture visible evidence that the account is logged in and the points/credits balance is greater than 100.
 - If the balance is 100 or lower, or the balance cannot be read, do not press `开始生成`; capture the blocker and stop for approval or supplied result material.
 - If the user explicitly asked for the full generation flow and the balance is greater than 100, pressing the generation button is allowed for this site.
 - Every screenshot used in the video must be copied into the case directory. Do not leave final assets in temp folders.
 - Generated-result visuals used in the final video must be saved images/crops/exports under `assets/results/`. A website result page screenshot is evidence only and must not be used as the result image in the final video.
 - Function/process visuals used in the final video must be captured or prepared as AI-verified 9:16 screenshots. The renderer will place images by width-fit and will not perform local crop/zoom repair.
-- For feature seeding videos, the entry path must be visible. Prefer a short browser recording from home/dashboard through `文生图` into the target feature. If recording is not available, capture multiple red-callout screenshots that show the step-by-step path: home or feature entry, `文生图` menu expansion, target feature selection such as `VI`, and the destination feature page.
+- For feature seeding videos, the entry path must be visible. Prefer a short browser recording from home/dashboard through `文生图` into the target feature. The recording should stop right after clicking `开始生成`; do not wait for the result in the recording. This is only the recording boundary, not the automation boundary: the same browser task must continue after recording stops and obtain the real generated result. If recording is not available, capture multiple red-callout screenshots that show the step-by-step path: home or feature entry, `文生图` menu expansion, target feature selection such as `VI`, and the destination feature page.
 
 ## Case Directory Layout
 
@@ -28,6 +29,7 @@ Save browser and result materials under:
 ```text
 assets/browser/raw/
 assets/browser/annotated/
+assets/recordings/
 assets/results/
 ```
 
@@ -63,7 +65,11 @@ The profile is a shortcut, not proof. Kimi WebBridge must still verify live page
    - Record page URL, page title, visible navigation labels, avatar/login indicator, and points balance.
 3. Capture the feature entry path.
    - Show the left navigation or top feature card.
-   - Prefer a short recording that starts before the first click and ends after the target feature page is visible.
+   - Prefer a short CDP recording that starts before the first useful click and ends immediately after the `开始生成` trigger if generation is part of the demo.
+   - The recording must include real required-field input and the real generation click. Do not use mock UI, skipped fields, pre-filled fake states, or a video that only pretends to click generation.
+   - In the CDP task, put `stopRecordingAfter: true` on the real `开始生成` click action. Continue the remaining task actions after that point to wait for the real result and save/export/crop it.
+   - Keep the recording landscape/normal browser size. In final video use `browser-recording-fit-width`, which fills the 1080px width and centers the recording vertically without crop.
+   - Add concise `narration` text to key CDP actions, such as opening `文生图`, selecting `VI`, filling fields, and clicking `开始生成`; `recording_narration_track.json` will use actual action timestamps.
    - If recording is unavailable, save a sequential screenshot set with red callouts:
      - `home_entry`: dashboard/home with the first entry target visible.
      - `text_to_image_entry`: the `文生图` entry before or during click.
@@ -89,8 +95,10 @@ The profile is a shortcut, not proof. Kimi WebBridge must still verify live page
 7. Generate.
    - Re-check that points balance is greater than 100 if the page shows a cost near the button.
    - Click `开始生成`.
-   - Capture loading/generation state when visible.
+   - For CDP recording, stop the recording immediately after this real click, but keep the browser automation running.
+   - Capture loading/generation state when visible as evidence after the recording boundary if useful.
 8. Capture the result.
+   - Continue in the same authenticated browser session until a real generated result is visible or a timeout/error is captured.
    - Save the result page screenshot.
    - Export/download the generated image if the site provides an action.
    - If no export is available, crop the result area from the browser screenshot and save it under `assets/results/`.
@@ -104,6 +112,7 @@ The profile is a shortcut, not proof. Kimi WebBridge must still verify live page
      - `evidence_asset_id: <screenshot asset id showing avatar/balance>`
    - Update `image_resources.json` for every clean, annotated, and result image.
    - Update `generation_receipts.json` with before/after points, feature id, generation cost when visible, input summary, result assets, and any errors.
+   - For CDP tasks, include the recording boundary action index and the post-recording result capture action(s) so reviewers can verify that the video stopped waiting but the real generation chain continued.
 
 ## Red Callout Policy
 

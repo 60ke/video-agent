@@ -6,6 +6,7 @@ Pipeline V2 is the only supported path:
 
 ```text
 Kimi WebBridge / static materials
+-> optional CDP browser recording asset
 -> image_resources.json
 -> visual-first video_script.json
 -> Minimax T2A voice + native alignment
@@ -42,10 +43,13 @@ Final visuals are prepared before rendering. Function/process screenshots must b
 
 For website feature seeding, the entry path is part of the proof. Prefer a short browser recording; otherwise use multiple red-callout screenshots that show the route from the product entry/menu into the target feature before the form/result appears.
 
+CDP browser recordings are normal landscape captures. Register them into the case with `scripts/register_cdp_recording.py`; the renderer displays `browser-recording-fit-width` segments by fitting the recording to the 1080px video width and centering it vertically without cropping. Record only the useful operation path and stop right after the real generation trigger by setting `stopRecordingAfter: true` on that action; the same CDP task must continue after recording stops to wait for and save/export/crop the real result under `assets/results/`.
+
 ## Current Scripts
 
 - `scripts/init_case.py` - create a V2 case scaffold
 - `scripts/register_materials.py` - freeze static media into a case
+- `scripts/register_cdp_recording.py` - freeze a `cdp-capture` output directory into `assets/recordings/`
 - `scripts/apply_site_profile.py` - seed website knowledge from profiles
 - `scripts/kimi_webbridge.py` - call Kimi WebBridge with UTF-8 JSON
 - `scripts/build_image_resources.py` - merge browser/material evidence into reusable image resources

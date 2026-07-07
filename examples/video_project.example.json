@@ -94,16 +94,22 @@
       "start": 0,
       "end": 3.2,
       "asset_ids": ["asset_001"],
-      "layout": "ui_operation_focus",
-      "display_mode": "crop-focus",
+      "layout": "portrait-showcase",
+      "display_mode": "portrait-showcase",
       "framing": {
         "focus_region": "primary_action_area",
         "subject_min_frame_ratio": 0.45,
         "subtitle_safe": true
       },
       "motion": {
-        "name": "stable_focus_with_callout",
+        "name": "hold",
+        "amount": 0.0,
+        "anchor": "center",
         "avoid_flicker": true
+      },
+      "transition_in": {
+        "name": "cut",
+        "duration": 0.0
       },
       "qa_expectations": {
         "no_black_frame": true,

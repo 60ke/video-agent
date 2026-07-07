@@ -1,0 +1,21 @@
+{
+  "name": "cdp-capture",
+  "version": "1.0.0",
+  "description": "CDP-based web page screen capture tool — task JSON CLI, headless Chrome, screencast recording, overlay animation",
+  "main": "lib/task-runner.js",
+  "bin": {
+    "cdp-capture": "bin/cdp-capture.js"
+  },
+  "scripts": {
+    "login": "node bin/cdp-capture.js profile login",
+    "run": "node bin/cdp-capture.js run",
+    "verify": "node bin/cdp-capture.js verify"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "ffmpeg-static": "^5.2.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
