@@ -13,11 +13,11 @@
       "feature page route returns 404 or redirects unexpectedly",
       "required field labels changed",
       "generation cost or points rule changed",
-      "Kimi WebBridge snapshot cannot find the expected feature entry",
+      "CDP snapshot cannot find the expected feature entry",
       "user explicitly asks to update the site profile"
     ],
     "minimum_live_verification": [
-      "open canonical_url with Kimi WebBridge",
+      "open canonical_url with CDP",
       "confirm logged-in indicator when generation is requested",
       "confirm points balance is greater than 100 before generation",
       "confirm target feature page title and generate button are visible"
@@ -66,18 +66,17 @@
       }
     }
   },
-  "webbridge": {
-    "endpoint": "http://127.0.0.1:10086/command",
-    "session_name": "kehuanxiongmao-demo",
+  "cdp_capture": {
+    "profile_id": "kehuanxiongmao",
     "group_title": "柯幻熊猫素材采集",
-    "windows_request_policy": "write each JSON body to a unique temp file, post it with curl.exe --data-binary, then delete the temp file",
+    "recording_layout": "browser-recording-fit-width",
     "required_actions": [
-      "navigate",
-      "snapshot",
-      "click",
-      "fill",
+      "open_url",
+      "click_selector",
+      "type_text",
+      "evaluate_js",
       "screenshot",
-      "evaluate"
+      "recording"
     ]
   },
   "stable_navigation": {

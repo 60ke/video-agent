@@ -49,7 +49,7 @@ Return JSON:
 - Include high-risk terms for ASR checks.
 - Bind each segment to a visual intent and material task.
 - Bind each segment to real evidence. Use one of: `real_recording`, `real_screenshot`, `real_result`, `quota_or_error_state`, `evidence_cover`, or `packaging_only`.
-- For website/product tasks, real evidence means Kimi WebBridge browser capture by default. Use static material assets as the primary evidence only when the user explicitly requested static resources/material folders/supplied assets.
+- For website/product tasks, real evidence means CDP browser capture by default. Use static material assets as the primary evidence only when the user explicitly requested static resources/material folders/supplied assets.
 - Use `preferred_asset_ids` only when the material is visually verified.
 - Include `layout_intent` only for already prepared assets, such as `result-showcase`, `full-width`, `grid-rebuild`, `main-plus-reference`, or `browser-recording`.
 - Website/app screenshots used in final video must already be AI-verified 9:16 screenshots. Generated result visuals must be saved result crops/exports under `assets/results/`, not website result-page screenshots.

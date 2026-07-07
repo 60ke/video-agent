@@ -67,7 +67,7 @@ def is_wide_ui_asset(asset: dict[str, Any]) -> bool:
     role = str(asset.get("role") or "").lower()
     source = str(asset.get("source") or "").lower()
     aspect = asset_aspect(asset)
-    capture_origin = origin in {"browser_capture", "frontend_capture", "kimi_webbridge", "webbridge_capture"}
+    capture_origin = origin in {"browser_capture", "frontend_capture", "cdp_capture", "cdp_browser_recording"}
     source_looks_like_ui = any(
         token in source
         for token in ("homepage", "signboard", "workbench", "dropdown", "browser", "page", "kehuan")

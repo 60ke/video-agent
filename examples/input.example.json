@@ -16,7 +16,7 @@
     "preferred_features": ["VI设计"]
   },
   "dependency_mode": {
-    "browser": "kimi_webbridge",
+    "browser": "cdp_capture",
     "renderer": "simple_ffmpeg",
     "alignment": "minimax_t2a",
     "tts": "minimax_t2a"

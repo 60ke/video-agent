@@ -140,11 +140,11 @@ def infer_feature(asset: dict[str, Any], insight: dict[str, Any], existing: dict
 
 def capture_method(origin: str, source: str) -> str:
     if origin == "browser_capture":
-        return "kimi_webbridge_screenshot"
+        return "cdp_screenshot"
     if origin == "product_export":
-        return "kimi_webbridge_product_export"
+        return "cdp_product_export"
     if "assets/results" in source.replace("\\", "/"):
-        return "kimi_webbridge_screenshot_crop"
+        return "cdp_result_crop"
     if origin == "generated_asset":
         return "local_packaging_asset"
     return "local_registered_asset"

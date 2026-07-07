@@ -107,10 +107,10 @@ def validate_input_json(input_data: dict[str, Any], ctx: ValidationContext) -> N
 
     dependency_mode = input_data.get("dependency_mode", {})
     if isinstance(dependency_mode, dict):
-        browser_mode = dependency_mode.get("browser", "kimi_webbridge")
+        browser_mode = dependency_mode.get("browser", "cdp_capture")
         if browser_mode == "static_materials" and not (isinstance(case, dict) and case.get("static_materials_explicit") is True):
             ctx.error("dependency_mode.browser=static_materials requires input.case.static_materials_explicit=true")
-        elif browser_mode not in ("kimi_webbridge", "static_materials", None):
+        elif browser_mode not in ("cdp_capture", "static_materials", None):
             ctx.error(f"unsupported dependency_mode.browser: {browser_mode}")
         renderer = dependency_mode.get("renderer")
         if renderer and renderer != "simple_ffmpeg":

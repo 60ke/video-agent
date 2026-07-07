@@ -28,7 +28,7 @@
 
 ## 3. 全新极简流水线总览
 
-1. **Material Gathering**: Kimi WebBridge 抓取网站实况、截图及生成结果（`image_resources.json`）。需要展示真实操作路径时，使用 CDP 录制一段短的横屏操作素材，并通过 `scripts/register_cdp_recording.py` 注册为 `assets/recordings/` 资产。
+1. **Material Gathering**: CDP 抓取网站实况、截图及生成结果（`image_resources.json`）。需要展示真实操作路径时，使用 CDP 录制一段短的横屏操作素材，并通过 `scripts/register_cdp_recording.py` 注册为 `assets/recordings/` 资产。
 2. **Visual Planning & Scripting**: 大模型先行决定图片来源与骨架，再填充旁白文案（`video_script.json`）。
 3. **Voice & Subtitle Sync**: 运行 `generate_voice_minimax.py`，一键调用 Minimax 接口，秒级输出 `audio/voice.mp3` 与原生的 `output/minimax/minimax_alignment.json`。
 4. **Project Assembly**: 构建 `video_project.json` 和 `subtitle_track.json`，把“声、文、图”精准锁定。

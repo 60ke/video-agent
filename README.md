@@ -5,7 +5,7 @@ Agent-driven website-to-video workflow for short vertical product/demo videos.
 Pipeline V2 is the only supported path:
 
 ```text
-Kimi WebBridge / static materials
+CDP browser capture / static materials
 -> optional CDP browser recording asset
 -> image_resources.json
 -> visual-first video_script.json
@@ -22,7 +22,7 @@ Read these in order:
 
 1. `SKILL.md` - agent-facing execution entry
 2. `docs/pipeline_v2_refactor.md` - V2 rationale and architectural boundary
-3. `rules/browser-webbridge.md` - browser evidence-gathering boundary
+3. `cdp-capture/README.md` - CDP browser operation, recording, profile, and timeline contract
 4. `rules/kehuanxiongmao-capture.md` - 柯幻熊猫 capture and generation flow
 5. `rules/douyin-real-demo.md` - real-demo and short-video quality gates
 6. `rules/vertical-browser-framing.md` - 9:16 website/result framing rules
@@ -51,7 +51,6 @@ CDP browser recordings are normal landscape captures. Register them into the cas
 - `scripts/register_materials.py` - freeze static media into a case
 - `scripts/register_cdp_recording.py` - freeze a `cdp-capture` output directory into `assets/recordings/`
 - `scripts/apply_site_profile.py` - seed website knowledge from profiles
-- `scripts/kimi_webbridge.py` - call Kimi WebBridge with UTF-8 JSON
 - `scripts/build_image_resources.py` - merge browser/material evidence into reusable image resources
 - `scripts/prepare_planner_context.py` - prepare visual-first planner context
 - `scripts/accept_planner_output.py` - validate AI planner JSON and write reviewed artifacts

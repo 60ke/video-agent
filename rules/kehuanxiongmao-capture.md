@@ -1,6 +1,6 @@
 ---
 name: kehuanxiongmao-capture
-description: Fixed Kimi WebBridge capture workflow for 柯幻熊猫 real generation demos.
+description: Fixed CDP capture workflow for 柯幻熊猫 real generation demos.
 ---
 
 # 柯幻熊猫截图与结果采集规则
@@ -11,7 +11,7 @@ The goal is to capture a complete, auditable product flow that can support futur
 
 ## Hard Requirements
 
-- Access the website only through Kimi WebBridge.
+- Access and operate the website only through CDP capture.
 - Use the user's already logged-in browser session. Do not ask for passwords or handle credentials.
 - CDP automation and recording must use the fixed local profile `kehuanxiongmao`; if the profile/auth state is unavailable or the page is not logged in, refuse execution instead of recording an anonymous flow.
 - Before generation, capture visible evidence that the account is logged in and the points/credits balance is greater than 100.
@@ -57,9 +57,9 @@ Keep the filename short. Put Chinese details, prompt text, visible text, and usa
 
 Before sequence capture, use `references/site_profiles/kehuanxiongmao.json` when available. The profile stores stable frontend-derived facts such as routes, component names, form fields, charge config defaults, API names, and expected capture steps. This reduces repeated browser exploration.
 
-The profile is a shortcut, not proof. Kimi WebBridge must still verify live page state, login state, points balance, screenshots, and generated results.
+The profile is a shortcut, not proof. CDP must still verify live page state, login state, points balance, screenshots, and generated results.
 
-1. Open `https://kehuanxiongmao.com` with Kimi WebBridge.
+1. Open `https://kehuanxiongmao.com` with CDP using the fixed `kehuanxiongmao` profile.
 2. Capture the home page or dashboard state.
    - Save a clean screenshot.
    - Record page URL, page title, visible navigation labels, avatar/login indicator, and points balance.
@@ -179,13 +179,13 @@ Do not upgrade a feature to `verified_result` until at least one real generated 
 Default run:
 
 1. Apply `references/site_profiles/kehuanxiongmao.json` into the case with `scripts/apply_site_profile.py`.
-2. Use Kimi WebBridge to verify only the minimum live state: route/page title, expected labels, logged-in account, points balance, and generate button.
+2. Use CDP to verify only the minimum live state: route/page title, expected labels, logged-in account, points balance, and generate button.
 3. Continue with screenshot/result capture.
 
 Manual refresh:
 
 1. Re-read the frontend code for the target feature.
-2. Use Kimi WebBridge to capture fresh snapshots of the home page, feature entry, form, cost display, and result list/history state.
+2. Use CDP to capture fresh snapshots of the home page, feature entry, form, cost display, and result list/history state.
 3. Update `references/site_profiles/kehuanxiongmao.json`.
 4. Run `scripts/apply_site_profile.py --refresh-needed --force` on an existing case to mark stale artifacts, then re-apply without `--refresh-needed` after the profile is reviewed.
 
@@ -195,4 +195,4 @@ Refresh when:
 - `src/router/index.js` maps the route to a different component.
 - `src/views/textToSvg/components/LeftFormPanel.vue` changes required fields, option lists, quality values, or submit payload.
 - `src/api/textToSvg.js` changes generation or task-list API names.
-- WebBridge snapshots cannot find the expected page title, `开始生成`, or points display.
+- CDP snapshots cannot find the expected page title, `开始生成`, or points display.

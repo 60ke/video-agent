@@ -1,6 +1,6 @@
 ---
 name: video-agent
-description: Generate a vertical product/demo video from a target website using Kimi WebBridge or frozen materials, visual-first planning, Minimax T2A voice/timing, video_project.json, FFmpeg rendering, and QA.
+description: Generate a vertical product/demo video from a target website using CDP browser capture or frozen materials, visual-first planning, Minimax T2A voice/timing, video_project.json, FFmpeg rendering, and QA.
 ---
 
 # Video Agent
@@ -10,7 +10,7 @@ Use this skill when the user provides a target website or asks for a short featu
 ## Required Reading
 
 1. `docs/pipeline_v2_refactor.md` (see §4 for the `motion`/`transition_in` controlled-motion contract)
-2. `rules/browser-webbridge.md` when browser interaction is required
+2. `cdp-capture/README.md` when browser interaction, screenshots, or recording is required
 3. `rules/kehuanxiongmao-capture.md` for `https://kehuanxiongmao.com` or 柯幻熊猫
 4. `rules/douyin-real-demo.md` for Douyin/Kuaishou/Reels/Shorts style output
 5. `rules/vertical-browser-framing.md` for 9:16 website screenshots or result images
@@ -32,7 +32,7 @@ Use this skill when the user provides a target website or asks for a short featu
 ## Execution
 
 1. Initialize the case with `scripts/init_case.py`.
-2. Gather real website/material evidence. For 柯幻熊猫, use Kimi WebBridge and capture entry, form, generation/loading, and final result states when credits and permissions allow. Use CDP recording for the visible entry path when available.
+2. Gather real website/material evidence with CDP capture. For 柯幻熊猫, use the fixed `kehuanxiongmao` profile and capture entry, form, generation/loading, and final result states when credits and permissions allow. Use CDP recording for the visible entry path when available.
 3. Build or update `image_resources.json`; every visual must say what it proves and how it should be framed in 9:16.
 4. Plan visually before writing narration. Decide whether each beat uses a website screenshot, operation state, or generated result image, then write the matching `video_script.json`.
 5. Generate voice and native timing with `scripts/generate_voice_minimax.py`. The Minimax key stays local in `config/minimax.local.json` or `MINIMAX_API_KEY`.

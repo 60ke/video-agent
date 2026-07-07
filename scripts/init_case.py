@@ -152,7 +152,7 @@ def _build_input(args: argparse.Namespace, skill_root: Path) -> dict[str, Any]:
             "preferred_features": args.preferred_feature,
         },
         "dependency_mode": {
-            "browser": "kimi_webbridge",
+            "browser": "cdp_capture",
             "renderer": "simple_ffmpeg",
             "alignment": "minimax_t2a",
             "tts": "minimax_t2a",

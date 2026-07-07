@@ -65,12 +65,12 @@ def build_website_knowledge(profile: dict[str, Any], feature: dict[str, Any], re
                 "url": profile.get("canonical_url"),
                 "title": profile.get("site_name"),
                 "role": "homepage",
-                "description": "Profile-seeded homepage/navigation structure. Verify live state with Kimi WebBridge before capture.",
+                "description": "Profile-seeded homepage/navigation structure. Verify live state with CDP before capture.",
                 "visible_text": [item.get("label") for item in nav.get("left_nav", []) if isinstance(item, dict)],
                 "account_indicators": nav.get("account_indicators", []),
                 "verification": {
                     "source": "site_profile",
-                    "requires_kimi_webbridge_snapshot": True
+                    "requires_cdp_snapshot": True
                 }
             },
             {
@@ -92,13 +92,13 @@ def build_website_knowledge(profile: dict[str, Any], feature: dict[str, Any], re
                 },
                 "verification": {
                     "source": "frontend_code_and_site_profile",
-                    "requires_kimi_webbridge_snapshot": True
+                    "requires_cdp_snapshot": True
                 }
             }
         ],
         "notes": [
             "This file is seeded from a stable site profile to reduce repeated exploration.",
-            "Kimi WebBridge must still verify login state, points balance, visible page state, and real generated results.",
+            "CDP must still verify login state, points balance, visible page state, and real generated results.",
             "Run a manual refresh when profile refresh triggers are observed."
         ]
     }
@@ -116,7 +116,7 @@ def build_feature_cards(profile: dict[str, Any], feature: dict[str, Any], refres
                 "id": f"feature_{feature.get('id')}",
                 "name": feature.get("name"),
                 "category": feature.get("category"),
-                "summary": "根据前端代码和站点画像固化的功能卡；真实截图和生成结果仍需 Kimi WebBridge 验证。",
+                "summary": "根据前端代码和站点画像固化的功能卡；真实截图和生成结果仍需 CDP 验证。",
                 "page_url": feature.get("url"),
                 "page_evidence_id": f"page_{feature.get('id')}",
                 "key_points": feature.get("supported_claims", []),
@@ -144,13 +144,13 @@ def build_operation_recipes(profile: dict[str, Any], feature: dict[str, Any], re
         "generated_at": now_iso(),
         "recipes": [
             {
-                "id": f"recipe_{feature.get('id')}_webbridge_capture",
+                "id": f"recipe_{feature.get('id')}_cdp_capture",
                 "feature_id": feature.get("id"),
-                "name": f"{feature.get('name')} Kimi WebBridge 素材采集",
+                "name": f"{feature.get('name')} CDP 素材采集",
                 "mode": "site_profile_accelerated",
                 "target_url": feature.get("url"),
                 "frontend_code_evidence": frontend,
-                "webbridge": profile.get("webbridge", {}),
+                "cdp_capture": profile.get("cdp_capture", {}),
                 "entry_path": feature.get("entry_path", []),
                 "minimum_live_verification": profile.get("refresh_policy", {}).get("minimum_live_verification", []),
                 "refresh_triggers": profile.get("refresh_policy", {}).get("refresh_triggers", []),
@@ -183,7 +183,7 @@ def build_site_profile_snapshot(profile: dict[str, Any], feature: dict[str, Any]
         "applied_at": now_iso(),
         "next_agent_instructions": [
             "Use this snapshot to avoid re-reading the full frontend unless refresh_needed is true.",
-            "Use Kimi WebBridge for live login, points, screenshots, form filling, generation, and result capture.",
+            "Use CDP for live login, points, screenshots, form filling, generation, and result capture.",
             "If route, field labels, required fields, or cost differ from this snapshot, refresh the profile manually."
         ]
     }
