@@ -83,7 +83,6 @@ def build_website_knowledge(profile: dict[str, Any], feature: dict[str, Any], re
                 "description": "Profile-seeded feature page from frontend route/component evidence.",
                 "visible_text": expected_text,
                 "form_fields": feature.get("form_fields", []),
-                "cost": feature.get("known_cost", {}),
                 "frontend_code_evidence": {
                     "router_file": frontend.get("router_file"),
                     "component": frontend.get("signboard_route", {}).get("component"),
@@ -98,7 +97,7 @@ def build_website_knowledge(profile: dict[str, Any], feature: dict[str, Any], re
         ],
         "notes": [
             "This file is seeded from a stable site profile to reduce repeated exploration.",
-            "CDP must still verify login state, points balance, visible page state, and real generated results.",
+            "CDP must still verify login state, visible page state, and real generated results.",
             "Run a manual refresh when profile refresh triggers are observed."
         ]
     }
@@ -165,8 +164,8 @@ def build_operation_recipes(profile: dict[str, Any], feature: dict[str, Any], re
                     for step in feature.get("required_capture_steps", [])
                 ],
                 "safety": {
-                    "generation_allowed_when": "logged-in state visible and points balance > 100",
-                    "do_not_generate_when": "points <= 100, login missing, or page state differs from profile in a way that changes cost/required fields"
+                    "generation_allowed_when": "logged-in state visible and required fields are available",
+                    "do_not_generate_when": "login missing, required fields missing, or page state differs from profile in a way that changes required fields"
                 }
             }
         ]
@@ -183,8 +182,8 @@ def build_site_profile_snapshot(profile: dict[str, Any], feature: dict[str, Any]
         "applied_at": now_iso(),
         "next_agent_instructions": [
             "Use this snapshot to avoid re-reading the full frontend unless refresh_needed is true.",
-            "Use CDP for live login, points, screenshots, form filling, generation, and result capture.",
-            "If route, field labels, required fields, or cost differ from this snapshot, refresh the profile manually."
+            "Use CDP for live login, screenshots, form filling, generation, and result capture.",
+            "If route, field labels, required fields, or result flow differ from this snapshot, refresh the profile manually."
         ]
     }
 

@@ -43,7 +43,9 @@ Final visuals are prepared before rendering. Function/process screenshots must b
 
 For website feature seeding, the entry path is part of the proof. Prefer a short browser recording; otherwise use multiple red-callout screenshots that show the route from the product entry/menu into the target feature before the form/result appears.
 
-CDP browser recordings are normal landscape captures. Register them into the case with `scripts/register_cdp_recording.py`; the renderer displays `browser-recording-fit-width` segments by fitting the recording to the 1080px video width and centering it vertically without cropping. Record only the useful operation path and stop right after the real generation trigger by setting `stopRecordingAfter: true` on that action; the same CDP task must continue after recording stops to wait for and save/export/crop the real result under `assets/results/`.
+CDP browser recordings are normal landscape captures. Register them into the case with `scripts/register_cdp_recording.py`; the renderer displays `browser-recording-fit-width` segments by fitting the recording to the 1080px video width and centering it vertically. If `recording_camera_track.json` is present, the renderer uses it as a virtual camera: full page first, then smooth focus on the left nav, feature menu, form, generate button, or result area according to real action timing.
+
+Record only the useful operation path and stop right after the real generation trigger by setting `stopRecordingAfter: true` on that action. This only stops encoding the recording; the same CDP task must continue after recording stops to wait for and save/export/crop the real result under `assets/results/`. When registering with `--ends-after-generation-trigger`, `scripts/register_cdp_recording.py` requires metadata proof of post-recording result capture and copies result assets into `assets/results/`, `image_resources.json`, and `generation_receipts.json`.
 
 ## Current Scripts
 
@@ -71,7 +73,9 @@ CDP browser recordings are normal landscape captures. Register them into the cas
 ```powershell
 python scripts\init_case.py --case cases\demo --target-url "https://kehuanxiongmao.com/" --preferred-feature "活动美陈" --json
 python scripts\apply_site_profile.py --case cases\demo --profile kehuanxiongmao --json
-# capture/register materials, then produce reviewed video_script.json
+node cdp-capture\bin\cdp-capture.js run cdp-capture\examples\task_activity_meichen.json
+python scripts\register_cdp_recording.py --case cases\demo --recording-dir cdp-capture\output\<task-id> --label activity_meichen --feature-id activity_meichen --ends-after-generation-trigger --json
+# capture/register any extra materials, then produce reviewed video_script.json
 python scripts\create_voice_plan.py --case cases\demo --json
 python scripts\generate_voice_minimax.py --case cases\demo --json
 python scripts\apply_asr_alignment.py --case cases\demo --json

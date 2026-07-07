@@ -65,25 +65,36 @@ node bin/cdp-capture.js verify output/task-2026-07-07_00-00-00-000
   },
   "overlay": {
     "enabled": true,
-    "cursor": { "color": "#ffffff", "size": 24, "showTrail": false },
-    "ripple": { "color": "#ffffff", "duration": 600 },
-    "highlight": { "color": "#ffeb3b", "duration": 1000 }
+    "cursor": { "color": "#ffffff", "size": 34, "showTrail": true },
+    "ripple": { "color": "#ffd54f", "duration": 900 },
+    "highlight": { "color": "#38bdf8", "duration": 1200 }
   },
   "actions": [
     { "type": "wait", "duration": 2000 },
-    { "type": "scroll", "direction": "down", "amount": 1500, "duration": 5000 },
-    { "type": "click_selector", "selector": ".some-button", "moveDuration": 500 },
+    { "type": "scroll", "direction": "down", "amount": 1500, "duration": 5000, "cameraFocus": "full_page" },
+    { "type": "click_selector", "selector": ".some-button", "moveDuration": 500, "required": true, "cameraFocus": "left_nav" },
     { "type": "click_point", "x": 100, "y": 200, "moveDuration": 500 },
-    { "type": "type_text", "selector": "#search", "text": "hello", "clear": true },
+    { "type": "type_text", "selector": "#search", "text": "hello", "clear": true, "required": true, "cameraFocus": "left_form" },
     {
       "type": "evaluate_js",
       "script": "document.querySelector('.btn').click()",
       "narration": "点击开始生成。",
       "required": true,
+      "expectIncludes": "clicked",
+      "cameraFocus": "generate_button",
+      "emphasis": "generate",
       "stopRecordingAfter": true
     },
     { "type": "wait", "duration": 30000 },
-    { "type": "screenshot", "name": "final" }
+    {
+      "type": "capture_element",
+      "selector": ".result img, .image-result img, .preview img",
+      "name": "real_result",
+      "workflowStep": "result_crop",
+      "resultAsset": true,
+      "required": true,
+      "cameraFocus": "result_area"
+    }
   ],
   "outputDir": "./output"
 }
@@ -99,21 +110,33 @@ node bin/cdp-capture.js verify output/task-2026-07-07_00-00-00-000
 | `click_point` | `x`, `y`, `moveDuration` | 点击指定坐标 |
 | `click_selector` | `selector`, `moveDuration` | 点击 CSS 选择器匹配的元素 |
 | `type_text` | `selector`, `text`, `clear` | 在元素中输入文本 |
-| `evaluate_js` | `script`, `awaitPromise` | 执行任意 JS |
+| `evaluate_js` | `script`, `awaitPromise`, `expectIncludes`, `failIfIncludes` | 执行任意 JS，并可校验返回文本 |
 | `screenshot` | `name`, `format` | 截图保存到 screenshots/ |
+| `capture_element` | `selector`, `name`, `workflowStep`, `resultAsset` | 裁剪指定元素；`resultAsset=true` 时保存到 results/ |
 
 > 任何 action 可添加 `"required": true`，失败时中止整个任务。
 > 任何 action 可添加 `"narration": "..."`，任务结束后会按真实 action 时间导出 `recording_narration_track.json`，用于后续配音/字幕和录屏段对齐。
+> 任何 action 可添加 `"cameraFocus": "full_page|left_nav|feature_menu|left_form|generate_button|result_area"`，任务结束后会导出 `recording_camera_track.json`，用于最终竖屏视频的虚拟镜头移动。
 > 点击生成的 action 可添加 `"stopRecordingAfter": true` 或 `"recordingBoundary": "stop_after"`：该 action 会出现在录屏里，录屏随后停止编码，但后续 actions 会继续在同一个真实浏览器会话中执行，用于等待、截图、导出或裁剪真实结果。
+> 点击生成动作可加 `"emphasis": "generate"`，录制时会给按钮更明显的脉冲提示。`type_text` 会默认校验输入值；特殊控件可以显式设置 `"verify": false`。
 
 ### 录屏边界和真实链路
 
 短视频素材不应录下无意义等待，但自动化任务必须跑完整真实链路：
 
 1. 录屏内执行真实输入、真实选择、真实点击 `开始生成`。
-2. 在点击生成 action 上设置 `stopRecordingAfter: true`。
-3. 录屏停止后，继续执行等待结果、截图结果页、导出/下载/裁剪结果图等 actions。
-4. 最终视频展示的结果图必须来自后续真实结果获取动作，而不是虚构素材或网页静态示例。
+2. 每个必填输入、必选控件和开始生成按钮都必须是 `required: true`；selector 不存在、输入失败、按钮不可点都会中止任务，不允许跳过或伪造状态。
+3. 在真实点击生成的 action 上设置 `stopRecordingAfter: true`。这只停止录屏，不停止 CDP 自动化任务。
+4. 录屏停止后，继续执行等待结果、截图结果页、导出/下载/裁剪结果图等 actions。
+5. 至少保留一个后置 `capture_element` 或导出动作，并把真实结果写入 `results/`。最终视频展示的结果图必须来自同一次 CDP 生成链路，不得使用网页静态示例、旧结果或伪结果。
+
+当任务使用 `stopRecordingAfter` 但后续没有真实结果获取动作时，`cdp-capture run` 会失败；当注册时使用 `scripts/register_cdp_recording.py --ends-after-generation-trigger`，也会要求 `metadata.json` 证明录屏停止后继续执行了结果获取动作，并要求 `results/` 中存在真实结果图片。
+
+### 录制增强与后期镜头
+
+录制时 overlay 会强化光标、点击涟漪、点击前高亮、输入框聚焦描边和开始生成按钮脉冲。这些效果写进录屏素材本身，便于短视频观看时聚焦。
+
+录屏仍按正常横屏浏览器尺寸采集。最终竖屏渲染时，`recording_camera_track.json` 会把真实 action 时间转换成虚拟镜头轨道：先展示 `full_page`，再根据 `cameraFocus` 平滑移动到 `left_nav`、`feature_menu`、`left_form`、`generate_button` 或 `result_area`。如果没有 camera track，渲染器会退回到横屏录屏按 1080px 宽度居中展示。
 
 ### Profile 约定
 
@@ -149,8 +172,10 @@ output/<task-id>/
 ├─ timeline.json       # 每个 action 的时间戳和结果
 ├─ metadata.json       # 录制元数据（fps、分辨率、帧数等）
 ├─ recording_narration_track.json # 从 action.narration 派生的旁白时间段
+├─ recording_camera_track.json    # 从 action.cameraFocus 派生的虚拟镜头时间段
 ├─ verify.json         # FFmpeg 验证结果
 ├─ screenshots/        # 截图文件
+├─ results/            # 同一次真实生成链路裁剪/导出的结果图
 ├─ frames/             # 原始 screencast 帧
 ├─ cfr_frames/         # CFR 补帧后的帧序列
 └─ logs/

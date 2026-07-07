@@ -82,6 +82,6 @@ Return JSON fields that can be merged into `video_project.json`:
 - Motion must be tied to a real browser action, a voiceover cue, or a deliberate transition between evidence states.
 - Category scenes must use a prepared 9:16 screenshot around the requested category. Do not use a whole wide category row as the primary visual.
 - Result/demo scenes must use `real_result` saved image assets for result claims. Browser screenshots can support workflow claims only.
-- If operation status is `blocked_quota`, use quota/input/setup evidence only and mark the visual as workflow preview.
+- If operation status is `blocked_permission`, use input/setup evidence only and mark the visual as workflow preview.
 - For 柯幻熊猫, keep red-callout assets tied to click/navigation segments and real result assets tied to hook/result/gallery segments.
 - For 柯幻熊猫 verified-result videos, the visual track must include either one `browser-recording` / `real_recording` event for the entry path, or sequential prepared screenshots/callouts for `home_entry` or `text_to_image_entry`, `menu_select` or `feature_menu_select`, and `feature_page_empty`. A single form screenshot is not enough to prove the route.

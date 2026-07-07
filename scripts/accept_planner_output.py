@@ -45,7 +45,6 @@ ALLOWED_OPERATION_STATUS = {
     "verified_result",
     "verified_entry_only",
     "blocked_login",
-    "blocked_quota",
     "blocked_permission",
     "unsafe_action",
     "unavailable",
@@ -55,7 +54,7 @@ ALLOWED_EVIDENCE_BINDINGS = {
     "real_recording",
     "real_screenshot",
     "real_result",
-    "quota_or_error_state",
+    "error_state",
     "evidence_cover",
     "packaging_only",
 }
@@ -259,7 +258,7 @@ def normalize_script(payload: dict[str, Any], case_dir: Path) -> tuple[dict[str,
         evidence_binding = str(item.get("evidence_binding") or "").strip()
         if evidence_binding and evidence_binding not in ALLOWED_EVIDENCE_BINDINGS:
             raise ValueError(f"{seg_id} unsupported evidence_binding: {evidence_binding}")
-        if operation_status in {"verified_entry_only", "blocked_login", "blocked_quota", "blocked_permission"} and evidence_binding == "real_result":
+        if operation_status in {"verified_entry_only", "blocked_login", "blocked_permission"} and evidence_binding == "real_result":
             raise ValueError(f"{seg_id} cannot bind to real_result when operation_status is {operation_status}")
         if evidence_binding == "packaging_only" and any(token in text for token in ("生成结果", "效果图", "出图", "成品")):
             raise ValueError(f"{seg_id} uses packaging_only but contains product-result language")

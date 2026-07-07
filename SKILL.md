@@ -32,7 +32,7 @@ Use this skill when the user provides a target website or asks for a short featu
 ## Execution
 
 1. Initialize the case with `scripts/init_case.py`.
-2. Gather real website/material evidence with CDP capture. For 柯幻熊猫, use the fixed `kehuanxiongmao` profile and capture entry, form, generation/loading, and final result states when credits and permissions allow. Use CDP recording for the visible entry path when available.
+2. Gather real website/material evidence with CDP capture. For 柯幻熊猫, use the fixed `kehuanxiongmao` profile and capture entry, form, generation/loading, and final result states when logged in. Use CDP recording for the visible entry path when available.
 3. Build or update `image_resources.json`; every visual must say what it proves and how it should be framed in 9:16.
 4. Plan visually before writing narration. Decide whether each beat uses a website screenshot, operation state, or generated result image, then write the matching `video_script.json`.
 5. Generate voice and native timing with `scripts/generate_voice_minimax.py`. The Minimax key stays local in `config/minimax.local.json` or `MINIMAX_API_KEY`.
@@ -44,7 +44,7 @@ Use this skill when the user provides a target website or asks for a short featu
 9. Render with `scripts/render_simple_ffmpeg.py`; it produces the main FFmpeg video and appends the configured outro.
    - Subtitles are burned through ASS using the `douyin-live-smartclip` style: bottom centered, bold white text, black outline, height-based font size, and two-line wrapping.
    - Each `visual_track` event may carry `motion` (`hold` / `push_in` / `pull_out`, amount capped at `0.06`, anchor fixed at `center`) and `transition_in` (`cut` / `crossfade`). `build_video_project.py` fills conservative defaults automatically; do not hand-author values outside the whitelist. See `docs/pipeline_v2_refactor.md` §4.
-   - Browser recordings use `layout=browser-recording-fit-width`: normal landscape recording, fitted to 1080px width, vertically centered, no crop, no extra motion.
+   - Browser recordings use `layout=browser-recording-fit-width`: normal landscape recording, fitted to 1080px width, vertically centered. When `recording_camera_track.json` is registered, the renderer uses it for a virtual camera across `full_page`, `left_nav`, `feature_menu`, `left_form`, `generate_button`, and `result_area`.
 10. Run contact-sheet and render QA before presenting a final video.
 
 ## Non-Negotiable Rules
@@ -53,11 +53,13 @@ Use this skill when the user provides a target website or asks for a short featu
 - V2 uses `minimax_t2a` only. Do not route to voice clone or FunASR.
 - `video_project.json` is the source of truth after it is built.
 - Do not invent website states or generated results. Show only captured or supplied evidence.
-- Do not press costly, publishing, deleting, payment, or account-mutating actions without explicit user approval.
-- For 柯幻熊猫, do not press `开始生成` unless logged-in state and enough points are visible, or the user has explicitly approved the action.
-- For 柯幻熊猫, write login proof to `browser_materials.auth_state.logged_in=true` and `points_balance>100`; V2 build/render refuses to continue without it.
+- Do not press publishing, deleting, payment, or account-mutating actions without explicit user approval.
+- For 柯幻熊猫, do not press `开始生成` unless logged-in state is verified and the user requested the generation workflow.
+- For 柯幻熊猫, write login proof to `browser_materials.auth_state.logged_in=true`; V2 build/render refuses to continue without it.
 - For 柯幻熊猫 feature seeding, show the entry path. Prefer a short CDP browser recording; if recording is unavailable, use sequential red-callout screenshots from home/`文生图` menu to the target feature and destination page.
-- CDP recording must use the fixed `kehuanxiongmao` profile. Record only meaningful actions from entry to the real `开始生成` click, with all required inputs actually filled. Put `stopRecordingAfter: true` on that click; the same CDP task must continue after recording stops to wait for and save/export/crop the real result. Show final results from saved result images, not from a waiting result page recording.
+- CDP recording must use the fixed `kehuanxiongmao` profile. Record only meaningful actions from entry to the real `开始生成` click, with all required inputs actually filled by `required: true` actions. Put `stopRecordingAfter: true` on that click; this only stops recording, and the same CDP task must continue after recording stops to wait for and save/export/crop the real result. Show final results from saved result images, not from a waiting result page recording.
+- Register generation-trigger recordings with `scripts/register_cdp_recording.py --ends-after-generation-trigger` only when `metadata.json` proves post-recording actions ran and `results/` contains real result images from the same CDP chain. The registration step must update `assets/results/`, `image_resources.json`, and `generation_receipts.json`.
+- Use CDP action semantics for short-video structure: `narration` for matched voice beats, `cameraFocus` for virtual camera targets, `required` for every mandatory field/control, and `stopRecordingAfter` only on the real generate trigger.
 - Final visuals must already be prepared and AI-verified. Function/process screenshots should be 9:16 captures; generated results must be saved images/crops/exports under `assets/results/`. The renderer width-fits images and does not perform local crop/zoom repair.
 - The renderer merges consecutive `visual_track` events that share the same `layout`+`asset_ids` into one continuous shot with one uninterrupted motion sweep. Do not declare `crossfade` or a different `motion` between two such events; the validator rejects it.
 - GPT image edits are for format, ratio, and layout optimization only. Prompts must preserve the original screenshot/result content and must not invent new UI, generated results, text, logos, or product details.

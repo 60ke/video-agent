@@ -12,16 +12,28 @@
 const DEFAULT_OVERLAY_CONFIG = {
   cursor: {
     color: '#ffffff',
-    size: 24,
-    showTrail: false,
+    fill: 'rgba(255,255,255,0.18)',
+    haloColor: 'rgba(0,198,255,0.55)',
+    size: 34,
+    showTrail: true,
   },
   ripple: {
-    color: '#ffffff',
-    duration: 600,
+    color: '#ffd84d',
+    duration: 720,
+    sizeMultiplier: 4,
   },
   highlight: {
-    color: '#ffeb3b',
-    duration: 1000,
+    color: '#00c6ff',
+    duration: 900,
+    borderWidth: 3,
+  },
+  focus: {
+    color: '#00c6ff',
+    duration: 650,
+  },
+  generatePulse: {
+    color: '#ffd84d',
+    duration: 900,
   },
 };
 
@@ -31,6 +43,8 @@ function mergeOverlayConfig(config = {}) {
     cursor: { ...DEFAULT_OVERLAY_CONFIG.cursor, ...(config.cursor || {}) },
     ripple: { ...DEFAULT_OVERLAY_CONFIG.ripple, ...(config.ripple || {}) },
     highlight: { ...DEFAULT_OVERLAY_CONFIG.highlight, ...(config.highlight || {}) },
+    focus: { ...DEFAULT_OVERLAY_CONFIG.focus, ...(config.focus || {}) },
+    generatePulse: { ...DEFAULT_OVERLAY_CONFIG.generatePulse, ...(config.generatePulse || {}) },
   };
 }
 
@@ -51,11 +65,19 @@ function buildOverlayScript(config) {
   const shadow = host.attachShadow({ mode: 'open' });
 
   const cursorColor = config.cursor.color;
+  const cursorFill = config.cursor.fill;
+  const haloColor = config.cursor.haloColor;
   const cursorSize = config.cursor.size;
   const rippleColor = config.ripple.color;
   const rippleDuration = config.ripple.duration;
+  const rippleSizeMultiplier = config.ripple.sizeMultiplier;
   const highlightColor = config.highlight.color;
   const highlightDuration = config.highlight.duration;
+  const highlightBorderWidth = config.highlight.borderWidth;
+  const focusColor = config.focus.color;
+  const focusDuration = config.focus.duration;
+  const generatePulseColor = config.generatePulse.color;
+  const generatePulseDuration = config.generatePulse.duration;
   const showTrail = config.cursor.showTrail;
 
   shadow.innerHTML = \`
@@ -64,10 +86,10 @@ function buildOverlayScript(config) {
         position: fixed;
         width: \${cursorSize}px;
         height: \${cursorSize}px;
-        border: 2px solid \${cursorColor};
+        border: 3px solid \${cursorColor};
         border-radius: 50%;
-        background: rgba(255,255,255,0.12);
-        box-shadow: 0 0 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.3);
+        background: \${cursorFill};
+        box-shadow: 0 0 10px rgba(0,0,0,0.65), 0 0 0 8px \${haloColor}, 0 0 22px \${haloColor};
         transform: translate(-50%, -50%);
         transition: left 0ms linear, top 0ms linear, width 0.15s ease, height 0.15s ease, background 0.15s ease;
         pointer-events: none;
@@ -76,27 +98,53 @@ function buildOverlayScript(config) {
       .cdp-cursor.clicking {
         width: \${cursorSize + 8}px;
         height: \${cursorSize + 8}px;
-        background: rgba(255,255,255,0.35);
+        background: rgba(255,216,77,0.35);
+        box-shadow: 0 0 10px rgba(0,0,0,0.65), 0 0 0 10px rgba(255,216,77,0.55), 0 0 30px rgba(255,216,77,0.7);
       }
       .cdp-ripple {
         position: fixed;
         border-radius: 50%;
-        border: 2px solid \${rippleColor};
+        border: 3px solid \${rippleColor};
         transform: translate(-50%, -50%);
         pointer-events: none;
         animation: cdp-ripple-expand \${rippleDuration}ms ease-out forwards;
       }
       @keyframes cdp-ripple-expand {
         0% { width: 0; height: 0; opacity: 1; }
-        100% { width: \${cursorSize * 3}px; height: \${cursorSize * 3}px; opacity: 0; }
+        100% { width: \${cursorSize * rippleSizeMultiplier}px; height: \${cursorSize * rippleSizeMultiplier}px; opacity: 0; }
       }
       .cdp-highlight {
         position: fixed;
-        border: 2px solid \${highlightColor};
-        border-radius: 4px;
+        border: \${highlightBorderWidth}px solid \${highlightColor};
+        border-radius: 6px;
         pointer-events: none;
-        box-shadow: 0 0 12px \${highlightColor}80;
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.45), 0 0 16px \${highlightColor}cc;
         transition: opacity 0.3s ease;
+      }
+      .cdp-focus-ring {
+        position: fixed;
+        border: 3px solid \${focusColor};
+        border-radius: 8px;
+        pointer-events: none;
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.45), 0 0 20px \${focusColor}cc;
+        animation: cdp-focus-pulse \${focusDuration}ms ease-out forwards;
+      }
+      @keyframes cdp-focus-pulse {
+        0% { opacity: 0; transform: scale(0.98); }
+        20% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.03); }
+      }
+      .cdp-generate-pulse {
+        position: fixed;
+        border: 4px solid \${generatePulseColor};
+        border-radius: 10px;
+        pointer-events: none;
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.55), 0 0 28px \${generatePulseColor};
+        animation: cdp-generate-pulse \${generatePulseDuration}ms ease-out forwards;
+      }
+      @keyframes cdp-generate-pulse {
+        0% { opacity: 1; transform: scale(0.98); }
+        100% { opacity: 0; transform: scale(1.08); }
       }
       .cdp-trail-dot {
         position: fixed;
@@ -216,6 +264,28 @@ function buildOverlayScript(config) {
       }, duration || highlightDuration);
     },
 
+    focusInput(rect, duration) {
+      const ring = document.createElement('div');
+      ring.className = 'cdp-focus-ring';
+      ring.style.left = rect.x + 'px';
+      ring.style.top = rect.y + 'px';
+      ring.style.width = rect.width + 'px';
+      ring.style.height = rect.height + 'px';
+      shadow.appendChild(ring);
+      setTimeout(() => ring.remove(), duration || focusDuration);
+    },
+
+    pulseGenerate(rect, duration) {
+      const pulse = document.createElement('div');
+      pulse.className = 'cdp-generate-pulse';
+      pulse.style.left = rect.x + 'px';
+      pulse.style.top = rect.y + 'px';
+      pulse.style.width = rect.width + 'px';
+      pulse.style.height = rect.height + 'px';
+      shadow.appendChild(pulse);
+      setTimeout(() => pulse.remove(), duration || generatePulseDuration);
+    },
+
     clickAt(x, y) {
       cursor.classList.add('clicking');
       this.showRipple(x, y);
@@ -294,6 +364,20 @@ async function highlightElement(client, rect, duration) {
   });
 }
 
+async function focusInput(client, rect, duration) {
+  await client.send('Runtime.evaluate', {
+    expression: `window.__cdpCaptureOverlay && window.__cdpCaptureOverlay.focusInput(${JSON.stringify(rect)}, ${duration || 650})`,
+    returnByValue: true,
+  });
+}
+
+async function pulseGenerate(client, rect, duration) {
+  await client.send('Runtime.evaluate', {
+    expression: `window.__cdpCaptureOverlay && window.__cdpCaptureOverlay.pulseGenerate(${JSON.stringify(rect)}, ${duration || 900})`,
+    returnByValue: true,
+  });
+}
+
 /**
  * Animate a click at (x, y): cursor click + ripple.
  */
@@ -343,6 +427,8 @@ module.exports = {
   moveCursor,
   showRipple,
   highlightElement,
+  focusInput,
+  pulseGenerate,
   clickAt,
   getElementRect,
   showCursor,

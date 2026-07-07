@@ -47,7 +47,6 @@ PLACEHOLDER_JSON = {
         "status": "pending",
         "auth_state": {
             "logged_in": None,
-            "points_balance": None,
             "evidence_asset_id": None,
         },
         "materials": [],

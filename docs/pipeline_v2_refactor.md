@@ -64,7 +64,11 @@
 
 ### 4.1.1 浏览器录屏布局
 
-CDP 操作录屏使用 `layout=browser-recording-fit-width`。录屏保持正常横屏浏览器尺寸，渲染时按 1080px 宽度等比缩放并在 1080x1920 画布内上下居中，不裁切、不做额外 push-in。录屏只展示进入功能、真实填写必填参数、点击 `开始生成` 的动作；点击生成 action 上设置 `stopRecordingAfter: true` 后停止录屏。注意这不是自动化任务结束点：同一个 CDP task 必须继续等待/获取真实生成结果，并把结果保存到 `assets/results/`，最终结果展示仍使用这些真实结果图。
+CDP 操作录屏使用 `layout=browser-recording-fit-width`。录屏保持正常横屏浏览器尺寸，渲染时按 1080px 宽度等比缩放并在 1080x1920 画布内上下居中。若录屏注册了 `recording_camera_track.json`，渲染器会基于真实 action 时间做虚拟镜头：先展示全页面，再平滑聚焦到左侧导航、功能菜单、表单区域、开始生成按钮或结果区域。
+
+录屏只展示进入功能、真实填写必填参数、点击 `开始生成` 的动作；每个必填字段和关键按钮都必须由 `required: true` action 真实执行，selector 不存在、输入失败、按钮不可点时直接中止，不允许跳过或伪造状态。点击生成 action 上设置 `stopRecordingAfter: true` 后停止录屏。注意这不是自动化任务结束点：同一个 CDP task 必须继续等待/获取真实生成结果，并把结果保存到 `assets/results/`，最终结果展示仍使用这些真实结果图。
+
+`scripts/register_cdp_recording.py --ends-after-generation-trigger` 是真实链路注册门槛：它会要求 CDP `metadata.json` 证明录屏停止后继续执行了后置动作，并要求 `results/` 中存在同一次链路裁剪/导出的真实结果图。注册成功后，结果图会同步写入 `assets/results/`、`image_resources.json` 和 `generation_receipts.json`。
 
 ### 4.2 防闪屏是结构性强制，不是靠人工审片
 

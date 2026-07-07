@@ -68,15 +68,18 @@ async function runTask(rawTask, rootDir) {
   const outputDir = path.resolve(task.outputDir || path.join(rootDir, 'output'), taskId);
   const logsDir = path.join(outputDir, 'logs');
   const screenshotsDir = path.join(outputDir, 'screenshots');
+  const resultsDir = path.join(outputDir, 'results');
   const framesDir = path.join(outputDir, 'frames');
   const cfrDir = path.join(outputDir, 'cfr_frames');
   const videoPath = path.join(outputDir, 'video.mp4');
   const narrationTrackPath = path.join(outputDir, 'recording_narration_track.json');
+  const cameraTrackPath = path.join(outputDir, 'recording_camera_track.json');
 
   // Create directories
   await ensureDir(outputDir);
   await ensureDir(logsDir);
   await ensureDir(screenshotsDir);
+  await ensureDir(resultsDir);
 
   // Save task.json
   await fsp.writeFile(
@@ -244,6 +247,7 @@ async function runTask(rawTask, rootDir) {
       viewport: task.viewport,
       overlayConfig: task.overlay.enabled ? task.overlay : null,
       screenshotsDir,
+      resultsDir,
       log,
     };
 
@@ -307,6 +311,14 @@ async function runTask(rawTask, rootDir) {
       throw new Error('Recording did not produce metadata');
     }
 
+    const resultProof = timeline.postRecordingResultProof(recordingStop);
+    if (recordingStop && resultProof.hasResultCapture !== true) {
+      throw new Error(
+        'Recording stopped before task end, but no post-recording real result capture was found. ' +
+        'Add a required capture_element action with resultAsset=true after stopRecordingAfter.'
+      );
+    }
+
     // ── Write metadata ───────────────────────────────────────────────────────
     const metadata = {
       taskId,
@@ -322,6 +334,8 @@ async function runTask(rawTask, rootDir) {
       authStateRestored,
       recordingStop,
       postRecordingActionsExecuted: Boolean(recordingStop && recordingStop.actionIndex !== null && recordingStop.actionIndex < task.actions.length - 1),
+      postRecordingResultCaptured: resultProof.hasResultCapture,
+      postRecordingResultActions: resultProof.resultActions,
       chromeMode: task.chrome.mode,
       overlayEnabled: task.overlay.enabled,
       videoPath,
@@ -334,6 +348,8 @@ async function runTask(rawTask, rootDir) {
     await timeline.save(path.join(outputDir, 'timeline.json'));
     const narrationTrack = timeline.narrationTrack({ maxEndMs: recordingMeta.durationMs });
     await fsp.writeFile(narrationTrackPath, JSON.stringify(narrationTrack, null, 2), 'utf8');
+    const cameraTrack = timeline.cameraTrack({ maxEndMs: recordingMeta.durationMs });
+    await fsp.writeFile(cameraTrackPath, JSON.stringify(cameraTrack, null, 2), 'utf8');
 
     // ── Verify ───────────────────────────────────────────────────────────────
     log('Verifying video');
@@ -353,6 +369,7 @@ async function runTask(rawTask, rootDir) {
       taskId,
       videoPath,
       narrationTrackPath,
+      cameraTrackPath,
       outputDir,
       durationMs: recordingMeta.durationMs,
       metadata,

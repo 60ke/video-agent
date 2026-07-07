@@ -14,9 +14,8 @@ The goal is to capture a complete, auditable product flow that can support futur
 - Access and operate the website only through CDP capture.
 - Use the user's already logged-in browser session. Do not ask for passwords or handle credentials.
 - CDP automation and recording must use the fixed local profile `kehuanxiongmao`; if the profile/auth state is unavailable or the page is not logged in, refuse execution instead of recording an anonymous flow.
-- Before generation, capture visible evidence that the account is logged in and the points/credits balance is greater than 100.
-- If the balance is 100 or lower, or the balance cannot be read, do not press `开始生成`; capture the blocker and stop for approval or supplied result material.
-- If the user explicitly asked for the full generation flow and the balance is greater than 100, pressing the generation button is allowed for this site.
+- Before generation, capture visible evidence that the account is logged in.
+- Pressing the generation button is allowed for this site when login is verified and the user requested the generation workflow.
 - Every screenshot used in the video must be copied into the case directory. Do not leave final assets in temp folders.
 - Generated-result visuals used in the final video must be saved images/crops/exports under `assets/results/`. A website result page screenshot is evidence only and must not be used as the result image in the final video.
 - Function/process visuals used in the final video must be captured or prepared as AI-verified 9:16 screenshots. The renderer will place images by width-fit and will not perform local crop/zoom repair.
@@ -55,19 +54,22 @@ Keep the filename short. Put Chinese details, prompt text, visible text, and usa
 
 ## Fixed Capture Sequence
 
-Before sequence capture, use `references/site_profiles/kehuanxiongmao.json` when available. The profile stores stable frontend-derived facts such as routes, component names, form fields, charge config defaults, API names, and expected capture steps. This reduces repeated browser exploration.
+Before sequence capture, use `references/site_profiles/kehuanxiongmao.json` when available. The profile stores stable frontend-derived facts such as routes, component names, form fields, API names, and expected capture steps. This reduces repeated browser exploration.
 
-The profile is a shortcut, not proof. CDP must still verify live page state, login state, points balance, screenshots, and generated results.
+The profile is a shortcut, not proof. CDP must still verify live page state, login state, screenshots, and generated results.
 
 1. Open `https://kehuanxiongmao.com` with CDP using the fixed `kehuanxiongmao` profile.
 2. Capture the home page or dashboard state.
    - Save a clean screenshot.
-   - Record page URL, page title, visible navigation labels, avatar/login indicator, and points balance.
+   - Record page URL, page title, visible navigation labels, and avatar/login indicator.
 3. Capture the feature entry path.
    - Show the left navigation or top feature card.
    - Prefer a short CDP recording that starts before the first useful click and ends immediately after the `开始生成` trigger if generation is part of the demo.
    - The recording must include real required-field input and the real generation click. Do not use mock UI, skipped fields, pre-filled fake states, or a video that only pretends to click generation.
    - In the CDP task, put `stopRecordingAfter: true` on the real `开始生成` click action. Continue the remaining task actions after that point to wait for the real result and save/export/crop it.
+   - Mark every mandatory input/select/click action as `required: true`. If a selector is missing, input verification fails, or the generation button cannot be clicked, abort the task instead of substituting a fake state.
+   - Add `cameraFocus` to key actions so the renderer can build a virtual camera track: `full_page`, `left_nav`, `feature_menu`, `left_form`, `generate_button`, `result_area`.
+   - Add `emphasis: "generate"` to the real generate click when possible so the recording has an obvious button pulse.
    - Keep the recording landscape/normal browser size. In final video use `browser-recording-fit-width`, which fills the 1080px width and centers the recording vertically without crop.
    - Add concise `narration` text to key CDP actions, such as opening `文生图`, selecting `VI`, filling fields, and clicking `开始生成`; `recording_narration_track.json` will use actual action timestamps.
    - If recording is unavailable, save a sequential screenshot set with red callouts:
@@ -93,7 +95,6 @@ The profile is a shortcut, not proof. CDP must still verify live page state, log
    - The screenshot must show enough of the form to prove the inputs and selected controls.
    - Include a callout overlay for `开始生成` in the video plan or annotated image.
 7. Generate.
-   - Re-check that points balance is greater than 100 if the page shows a cost near the button.
    - Click `开始生成`.
    - For CDP recording, stop the recording immediately after this real click, but keep the browser automation running.
    - Capture loading/generation state when visible as evidence after the recording boundary if useful.
@@ -104,15 +105,16 @@ The profile is a shortcut, not proof. CDP must still verify live page state, log
    - If no export is available, crop the result area from the browser screenshot and save it under `assets/results/`.
    - If multiple results are produced, save at least 2 and preferably 4 result crops or exports.
    - Mark the result image resources as `workflow_step: result_crop`, `result_export`, or `result_gallery`; do not mark the webpage screenshot as the final result visual.
+   - The result images must come from the same CDP chain that filled the form and clicked generate. Do not reuse older case results, static webpage examples, or manually prepared stand-ins.
 9. Write metadata.
    - Update `browser_materials.json` for browser evidence.
    - Record machine-checkable login proof in `browser_materials.auth_state`:
      - `logged_in: true`
-     - `points_balance: <number greater than 100>`
-     - `evidence_asset_id: <screenshot asset id showing avatar/balance>`
+     - `evidence_asset_id: <screenshot asset id showing avatar/login state>`
    - Update `image_resources.json` for every clean, annotated, and result image.
-   - Update `generation_receipts.json` with before/after points, feature id, generation cost when visible, input summary, result assets, and any errors.
+   - Update `generation_receipts.json` with feature id, input summary, result assets, recording boundary, post-recording result actions, and any errors.
    - For CDP tasks, include the recording boundary action index and the post-recording result capture action(s) so reviewers can verify that the video stopped waiting but the real generation chain continued.
+   - Register CDP recordings that end after the generation trigger with `scripts/register_cdp_recording.py --ends-after-generation-trigger`; registration is valid only when post-recording result actions and result images are present.
 
 ## Red Callout Policy
 
@@ -129,8 +131,8 @@ Allowed callouts:
 
 - red rectangle around a clicked function entry
 - red circle around a selected menu item
-- red arrow pointing to points balance, avatar, or `开始生成`
-- short label such as `功能项`, `积分`, `登录后的头像`
+- red arrow pointing to the avatar/login state or `开始生成`
+- short label such as `功能项`, `登录后的头像`
 
 Do not burn private information into annotated assets. Crop, mask, or omit it.
 
@@ -138,7 +140,7 @@ Do not burn private information into annotated assets. Crop, mask, or omit it.
 
 Separate evidence from storytelling:
 
-- `evidence_only`: login proof, points balance, raw route proof, repeated intermediate screenshots, call-chain traces.
+- `evidence_only`: login proof, raw route proof, repeated intermediate screenshots, call-chain traces.
 - `candidate_video_visual`: feature entry, filled form, loading state, result page, red-callout images.
 - `final_video_visual`: only the visuals selected for the requested hook, claim, or user-approved demo narrative.
 
@@ -167,7 +169,6 @@ Use these statuses consistently:
 - `verified_result`: feature entry, filled input, generation action, and real result were captured.
 - `verified_entry_only`: only the entry or form page was captured.
 - `blocked_login`: logged-in state is unavailable.
-- `blocked_quota`: account is logged in but points/credits are 100 or lower, or generation is blocked by quota.
 - `blocked_permission`: account or browser permission blocks generation/export.
 - `unsafe_action`: action would pay, publish, delete, change account settings, or otherwise alter state beyond generation.
 - `unavailable`: the requested feature cannot be found.
@@ -179,13 +180,13 @@ Do not upgrade a feature to `verified_result` until at least one real generated 
 Default run:
 
 1. Apply `references/site_profiles/kehuanxiongmao.json` into the case with `scripts/apply_site_profile.py`.
-2. Use CDP to verify only the minimum live state: route/page title, expected labels, logged-in account, points balance, and generate button.
+2. Use CDP to verify only the minimum live state: route/page title, expected labels, logged-in account, and generate button.
 3. Continue with screenshot/result capture.
 
 Manual refresh:
 
 1. Re-read the frontend code for the target feature.
-2. Use CDP to capture fresh snapshots of the home page, feature entry, form, cost display, and result list/history state.
+2. Use CDP to capture fresh snapshots of the home page, feature entry, form, login indicator, and result list/history state.
 3. Update `references/site_profiles/kehuanxiongmao.json`.
 4. Run `scripts/apply_site_profile.py --refresh-needed --force` on an existing case to mark stale artifacts, then re-apply without `--refresh-needed` after the profile is reviewed.
 
@@ -195,4 +196,4 @@ Refresh when:
 - `src/router/index.js` maps the route to a different component.
 - `src/views/textToSvg/components/LeftFormPanel.vue` changes required fields, option lists, quality values, or submit payload.
 - `src/api/textToSvg.js` changes generation or task-list API names.
-- CDP snapshots cannot find the expected page title, `开始生成`, or points display.
+- CDP snapshots cannot find the expected page title or `开始生成`.

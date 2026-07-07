@@ -11,6 +11,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
+
 
 def load_json(path: Path, default: Any = None) -> Any:
     if not path.is_file():
@@ -90,6 +92,23 @@ def copy_if_exists(src: Path, dst: Path) -> str | None:
     return dst.name
 
 
+def copy_tree_files(src_dir: Path, dst_dir: Path, suffixes: set[str] | None = None) -> list[Path]:
+    if not src_dir.is_dir():
+        return []
+    copied: list[Path] = []
+    for src in sorted(src_dir.rglob("*")):
+        if not src.is_file():
+            continue
+        if suffixes and src.suffix.lower() not in suffixes:
+            continue
+        rel = src.relative_to(src_dir)
+        dst = dst_dir / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
+        copied.append(dst)
+    return copied
+
+
 def upsert_by_id(items: list[dict[str, Any]], item: dict[str, Any]) -> None:
     for idx, existing in enumerate(items):
         if isinstance(existing, dict) and existing.get("id") == item.get("id"):
@@ -118,21 +137,31 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     shutil.copy2(src_video, frozen_video)
 
     companion_files: dict[str, str] = {}
-    for name in ("task.json", "timeline.json", "metadata.json", "verify.json", "recording_narration_track.json"):
+    for name in ("task.json", "timeline.json", "metadata.json", "verify.json", "recording_narration_track.json", "recording_camera_track.json"):
         copied = copy_if_exists(recording_dir / name, frozen_dir / name)
         if copied:
             key = Path(name).stem
             companion_files[key] = case_relative(case_dir, frozen_dir / copied)
+    copied_result_files = copy_tree_files(recording_dir / "results", frozen_dir / "results", IMAGE_SUFFIXES)
+    if copied_result_files:
+        companion_files["results_dir"] = case_relative(case_dir, frozen_dir / "results")
 
     cdp_metadata = load_json(frozen_dir / "metadata.json", {})
     narration_track = load_json(frozen_dir / "recording_narration_track.json", {"segments": []})
+    camera_track = load_json(frozen_dir / "recording_camera_track.json", {"segments": []})
     if args.ends_after_generation_trigger:
-        if not isinstance(cdp_metadata, dict) or cdp_metadata.get("postRecordingActionsExecuted") is not True:
+        if (
+            not isinstance(cdp_metadata, dict)
+            or cdp_metadata.get("postRecordingActionsExecuted") is not True
+            or cdp_metadata.get("postRecordingResultCaptured") is not True
+        ):
             raise ValueError(
                 "recording marked as ending after generation trigger, but metadata does not prove "
                 "that post-recording actions continued to capture the real result. Use stopRecordingAfter "
-                "on the real generate click and keep wait/result capture actions after it."
+                "on the real generate click and keep a required capture_element resultAsset=true action after it."
             )
+        if not copied_result_files:
+            raise ValueError("post-recording result capture was reported, but no result images exist in recording output/results")
     probe = ffprobe_metadata(frozen_video)
     metadata = dict(probe)
     if isinstance(cdp_metadata, dict):
@@ -175,9 +204,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "profile_id": metadata.get("profile_id") or "kehuanxiongmao",
             "companion_files": companion_files,
             "narration_segment_count": len(narration_track.get("segments", [])) if isinstance(narration_track, dict) else 0,
+            "camera_segment_count": len(camera_track.get("segments", [])) if isinstance(camera_track, dict) else 0,
             "ends_after_generation_trigger": bool(args.ends_after_generation_trigger),
             "post_recording_actions_executed": bool(
                 isinstance(cdp_metadata, dict) and cdp_metadata.get("postRecordingActionsExecuted") is True
+            ),
+            "post_recording_result_captured": bool(
+                isinstance(cdp_metadata, dict) and cdp_metadata.get("postRecordingResultCaptured") is True
             ),
         },
         "quality": {
@@ -193,6 +226,48 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         manifest["assets"] = []
     manifest["status"] = "registered"
     upsert_by_id(manifest["assets"], asset)
+
+    result_assets: list[dict[str, Any]] = []
+    case_result_dir = case_dir / "assets" / "results" / label
+    copied_case_results: list[Path] = []
+    for idx, frozen_result in enumerate(copied_result_files, start=1):
+        case_result = case_result_dir / frozen_result.name
+        case_result.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(frozen_result, case_result)
+        result_asset_id = f"{asset_id}_result_{idx:03d}"
+        result_asset = {
+            "id": result_asset_id,
+            "type": "image",
+            "source": case_relative(case_dir, case_result),
+            "relative_source": f"results/{label}/{case_result.name}",
+            "filename": case_result.name,
+            "mime_type": mimetypes.guess_type(str(case_result))[0] or "image/png",
+            "size_bytes": case_result.stat().st_size,
+            "sha256": sha256_file(case_result),
+            "origin": "cdp_result_capture",
+            "source_policy": "frozen_into_case",
+            "role": "generated_result",
+            "description": "Real generated result captured after the CDP recording boundary in the same browser task.",
+            "visible_text": [],
+            "supported_claims": ["real_generated_result"],
+            "metadata": ffprobe_metadata(case_result),
+            "display_risk": [],
+            "layout_plan": {
+                "primary_display_mode": "result-showcase",
+                "fill_strategy": "fit_full_result",
+                "preserve_entire_result": True,
+                "allow_detail_crop": False,
+            },
+            "quality": {
+                "readable": None,
+                "contains_private_info": None,
+                "needs_review": True,
+            },
+            "source_recording_asset_id": asset_id,
+        }
+        upsert_by_id(manifest["assets"], result_asset)
+        result_assets.append(result_asset)
+        copied_case_results.append(case_result)
     manifest["asset_count"] = len(manifest["assets"])
     write_json(manifest_path, manifest)
 
@@ -216,6 +291,65 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     )
     write_json(browser_path, browser_materials)
 
+    if result_assets:
+        image_resources_path = case_dir / "image_resources.json"
+        image_resources = load_json(image_resources_path, {"schema_version": 1, "status": "ready", "resources": []})
+        if not isinstance(image_resources.get("resources"), list):
+            image_resources["resources"] = []
+        image_resources["status"] = "ready"
+        for idx, result_asset in enumerate(result_assets, start=1):
+            upsert_by_id(
+                image_resources["resources"],
+                {
+                    "id": f"img_{label}_result_{idx:03d}",
+                    "asset_id": result_asset["id"],
+                    "filename": result_asset["filename"],
+                    "source": result_asset["source"],
+                    "type": "image",
+                    "feature_id": args.feature_id or label,
+                    "workflow_step": "result_crop",
+                    "variant": "result",
+                    "origin": "cdp_result_capture",
+                    "capture_method": "cdp_result_crop",
+                    "page_url": "",
+                    "title": "真实生成结果",
+                    "description": result_asset["description"],
+                    "visible_text": [],
+                    "prompt_inputs": {},
+                    "callouts": [],
+                    "relations": {
+                        "source_recording_asset_id": asset_id,
+                        "result_group_id": f"{label}_generation",
+                    },
+                    "supported_claims": ["同一次 CDP 真实生成链路获得的结果图"],
+                    "recommended_usage": ["result_showcase", "hook_visual", "gallery"],
+                    "quality": result_asset["quality"],
+                    "layout_plan": result_asset["layout_plan"],
+                },
+            )
+        write_json(image_resources_path, image_resources)
+
+        receipts_path = case_dir / "generation_receipts.json"
+        receipts_payload = load_json(receipts_path, {"schema_version": 1, "status": "ready", "receipts": []})
+        if not isinstance(receipts_payload.get("receipts"), list):
+            receipts_payload["receipts"] = []
+        receipts_payload["status"] = "ready"
+        upsert_by_id(
+            receipts_payload["receipts"],
+            {
+                "id": f"receipt_{label}",
+                "status": "verified_result",
+                "source": "cdp_capture",
+                "recording_asset_id": asset_id,
+                "recording_boundary": cdp_metadata.get("recordingStop") if isinstance(cdp_metadata, dict) else {},
+                "post_recording_result_actions": cdp_metadata.get("postRecordingResultActions", []) if isinstance(cdp_metadata, dict) else [],
+                "result_asset_ids": [item["id"] for item in result_assets],
+                "result_sources": [item["source"] for item in result_assets],
+                "notes": "Recording stops at the generate click; real result capture continues in the same CDP task.",
+            },
+        )
+        write_json(receipts_path, receipts_payload)
+
     return {
         "ok": True,
         "code": "ok",
@@ -228,6 +362,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "asset_manifest": str(manifest_path),
             "browser_materials": str(browser_path),
             "narration_segments": asset["recording"]["narration_segment_count"],
+            "camera_segments": asset["recording"]["camera_segment_count"],
+            "result_asset_count": len(result_assets),
         },
     }
 
@@ -239,6 +375,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--label", help="Stable recording label, e.g. kx_vi_entry_recording.")
     parser.add_argument("--asset-id", help="Asset id to write into asset_manifest.json.")
     parser.add_argument("--description", help="Human-readable recording description.")
+    parser.add_argument("--feature-id", help="Feature id for generated image_resources entries.")
     parser.add_argument("--ends-after-generation-trigger", action="store_true")
     parser.add_argument("--json", action="store_true")
     return parser

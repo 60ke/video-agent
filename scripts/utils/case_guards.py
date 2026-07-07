@@ -38,19 +38,6 @@ def _truthy_login(value: Any) -> bool:
     return False
 
 
-def _numeric(value: Any) -> float | None:
-    if isinstance(value, (int, float)):
-        return float(value)
-    if isinstance(value, str):
-        digits = "".join(ch for ch in value if ch.isdigit() or ch == ".")
-        if digits:
-            try:
-                return float(digits)
-            except ValueError:
-                return None
-    return None
-
-
 def find_kehuanxiongmao_auth_proof(case_dir: Path) -> dict[str, Any]:
     candidates: list[dict[str, Any]] = []
     for rel in ("browser_materials.json", "generation_receipts.json", "website_knowledge.json"):
@@ -61,29 +48,18 @@ def find_kehuanxiongmao_auth_proof(case_dir: Path) -> dict[str, Any]:
 
     logged_in = False
     login_source: str | None = None
-    points: float | None = None
-    points_source: str | None = None
 
     login_keys = ("logged_in", "is_logged_in", "authenticated", "login_state", "auth_state", "account_logged_in")
-    point_keys = ("points_balance", "credit_balance", "credits_balance", "balance", "points", "credits")
 
     for item in candidates:
         for key in login_keys:
             if key in item and _truthy_login(item.get(key)):
                 logged_in = True
                 login_source = item.get("_source_file")
-        for key in point_keys:
-            if key in item:
-                value = _numeric(item.get(key))
-                if value is not None and (points is None or value > points):
-                    points = value
-                    points_source = item.get("_source_file")
 
     return {
         "logged_in": logged_in,
         "login_source": login_source,
-        "points_balance": points,
-        "points_source": points_source,
     }
 
 
@@ -94,8 +70,4 @@ def kehuanxiongmao_auth_errors(case_dir: Path, input_data: dict[str, Any]) -> li
     errors: list[str] = []
     if proof["logged_in"] is not True:
         errors.append("kehuanxiongmao.com requires captured logged-in evidence before execution")
-    if proof["points_balance"] is None:
-        errors.append("kehuanxiongmao.com requires captured points/credits balance before generation")
-    elif float(proof["points_balance"]) <= 100:
-        errors.append(f"kehuanxiongmao.com points/credits balance must be > 100, got {proof['points_balance']}")
     return errors

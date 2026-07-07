@@ -27,7 +27,7 @@ WORKFLOW_STEPS = (
     "result_export",
     "result_gallery",
     "operation_recording",
-    "quota_or_error",
+    "error_state",
     "packaging",
 )
 
@@ -88,7 +88,7 @@ def infer_step(asset: dict[str, Any], insight: dict[str, Any], existing: dict[st
         )
     )
     checks = (
-        ("quota_or_error", ("quota", "error", "积分", "余额", "报错", "失败")),
+        ("error_state", ("error", "报错", "失败")),
         ("result_export", ("export", "download", "导出", "下载")),
         ("result_crop", ("result_crop", "crop", "结果裁切", "效果图")),
         ("result_page", ("result_page", "result", "结果页")),

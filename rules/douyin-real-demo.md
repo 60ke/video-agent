@@ -38,7 +38,7 @@ Before script planning, classify each requested feature:
 {
   "feature_id": "ecommerce_text_to_image",
   "requested_claim": "select ecommerce and generate product image",
-  "operation_status": "verified_result | verified_entry_only | blocked_login | blocked_quota | blocked_permission | unsafe_action | unavailable",
+  "operation_status": "verified_result | verified_entry_only | blocked_login | blocked_permission | unsafe_action | unavailable",
   "evidence_assets": [],
   "missing_evidence": [],
   "allowed_claims": [],
@@ -50,9 +50,8 @@ Rules:
 
 - `verified_result`: input, generation, and result are captured. A full demo video may claim real generation.
 - `verified_entry_only`: only the entry/category is visible. The video may claim the entry exists, but may not show or imply generated results.
-- `blocked_quota`: logged in but no credits/points. Capture the category/input screen and quota/error state. The video may explain the workflow or ask for credits/materials, but may not invent a generated result.
 - `blocked_login`: stop and ask for login or supplied materials.
-- `unsafe_action`: stop before payment, publishing, deletion, account changes, or quota-consuming actions unless the user explicitly allows that action.
+- `unsafe_action`: stop before payment, publishing, deletion, or account changes unless the user explicitly allows that action.
 
 If a result is not captured, do not write narration such as "生成高质量主图" unless it is clearly framed as a capability stated by the website and backed by page text. Prefer "进入电商分类" or "准备输入产品、风格、场景".
 
@@ -76,22 +75,9 @@ Required:
 - if selection has no visible state change, record that as `verified_entry_only`
 - narration must match the actual evidence: "文生图里有电商分类入口" is allowed; "进入电商结果页" is not allowed unless a result page exists
 
-## Quota And Login Handling
+## Login And Result Handling
 
-If the user is logged in but lacks credits/points:
-
-- capture the logged-in UI state that proves the blocker
-- capture the prompt/input setup if reachable without spending credits
-- do not press final generation buttons that consume quota unless the user explicitly approves
-- do not create fake generated results
-- build a workflow preview only if the user asks for it, and mark it as preview, not final
-
-The preferred next step is to ask the user for one of:
-
-- permission to spend credits
-- a supplied product result image
-- a supplied previous generation result
-- approval to make a workflow-only video without showing final generated output
+If the user is not logged in, stop before generation and capture the blocker. If generation is requested and login is verified, proceed through the real interaction chain. Do not create fake generated results; if a real result cannot be captured, make a workflow-only video only with explicit approval.
 
 ## Douyin Layout Rules
 
@@ -135,7 +121,7 @@ Each script segment must bind to one of:
 - `real_recording`
 - `real_screenshot`
 - `real_result`
-- `quota_or_error_state`
+- `error_state`
 - `evidence_cover`
 - `packaging_only`
 
@@ -154,7 +140,7 @@ If the answer is no, rewrite the segment or recapture evidence.
 
 Do not call a render final unless the report states:
 
-- `real_demo_status`: `verified_result` or an approved non-result state such as `blocked_quota_workflow_preview`
+- `real_demo_status`: `verified_result` or an approved non-result workflow preview state
 - no generated imagery is used as product evidence
 - category crops focus only the requested category
 - no arbitrary motion failures
