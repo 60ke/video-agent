@@ -65,6 +65,14 @@ Return JSON:
 - Bind each segment to real evidence. Use one of: `real_recording`, `real_screenshot`, `real_result`, `error_state`, `evidence_cover`, or `packaging_only`.
 - For website/product tasks, real evidence means CDP browser capture by default. Use static material assets as the primary evidence only when the user explicitly requested static resources/material folders/supplied assets.
 - Use `preferred_asset_ids` only when the material is visually verified.
+- When `site_asset_pool` is present, select website screenshots from that structured pool instead of guessing from filenames.
+- If the same feature has `AI优化关键帧` or assets with `workflow_step=prepared_site_keyframe`, use those prepared 9:16 keyframes first. Fall back to raw `功能入口截图` / `参数面板截图` only when no prepared keyframe exists.
+- For each feature video, prefer assets whose `feature_id` or `feature_key` exactly matches the segment feature. Do not mix screenshots from another 文生图 feature just because the UI looks similar.
+- For 图文广告 children, the effective path is `文生图 -> 图文广告 -> 子功能`. A 车贴 video may use only the 车贴 entry/parameter screenshots, not 贴纸、灯箱、菜单 or the parent 图文广告 item as a substitute.
+- Process/path beats should use the same feature's `功能入口截图` and `参数面板截图`. Result-showcase beats must use real result assets, not website screenshots.
+- For `功能入口截图`, the visual target is the opened hover/dropdown child item for the feature, not a top-level card pill/chip with the same label. Put this distinction in `camera_note`.
+- Result/gallery narration must be derived from the selected assets' `visible_text`, `supported_claims`, `feature_label`, and `prompt_inputs`. Do not name industries/scenes that are not visible or registered on the selected result images.
+- Parameter-panel narration must match required fields visible in the screenshot. If exact filled values are unknown, use generic wording such as "按必填项填好行业、场景和描述", not specific upload/theme/style claims that the screenshot does not prove.
 - Include `layout_intent` only for already prepared assets, such as `result-showcase`, `full-width`, `grid-rebuild`, `main-plus-reference`, or `browser-recording`.
 - Website/app screenshots used in final video must already be AI-verified 9:16 screenshots. Generated result visuals must be saved result crops/exports under `assets/results/`, not website result-page screenshots.
 - Do not select multiple images for one segment unless the layout can keep them readable in 9:16. Use sequential close-ups if equal-width comparison would be too narrow.
@@ -78,3 +86,5 @@ Return JSON:
 - For 柯幻熊猫 generated-result demos, a preferred hook is `生成这样的一张效果图要多久？先看结果，再用真实截图证明它怎么来的。` The "result" must be a saved result image/crop/export, while website screenshots may only prove the operation path.
 - For 柯幻熊猫 feature seeding, include at least one process segment that *shows* the entry path (首页 → `文生图` → target feature such as `VI` → feature page) via the recording or sequential callouts. Put the path description in that segment's `camera_note`; the spoken `text` stays benefit-focused and must not recite the clicks. Do not jump straight from result to form.
 - If multiple generated result assets share a result group, add one short gallery segment instead of repeating the same screenshot.
+- For single-feature seeding videos, follow the material sequence unless the case lacks assets: `网站主页截图` -> same-feature `功能入口截图` -> same-feature `参数面板截图` -> same-feature saved `结果图`. Prefer multiple result images when the copy says 多场景/多行业/多风格.
+- Put feature path details in `feature_id`, `camera_note`, `visual_intent`, and `material_task` so the builder can map segments to site screenshots and result galleries. Do not rely on filename guessing.

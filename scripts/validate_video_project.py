@@ -442,10 +442,14 @@ def validate_visual_asset_policy(event: dict[str, Any], idx: int, assets: dict[s
             )
 
         is_function_screenshot = workflow_step in {"menu_select", "feature_page_empty", "form_filled", "generate_callout", "generating"} or "browser" in origin
+        is_function_screenshot = is_function_screenshot or workflow_step in {"home_entry", "feature_menu_select", "prepared_site_keyframe"}
+        source_workflow_step = str(image_resource.get("source_workflow_step") or "").lower()
+        is_function_screenshot = is_function_screenshot or source_workflow_step in {"home_entry", "feature_menu_select", "feature_page_empty"}
         if is_function_screenshot and aspect and aspect > 1.2:
             if not (is_recording_layout and asset_type == "video"):
-                ctx.error(
-                    f"visual_track[{idx}] uses a wide function screenshot: {asset_id}; capture/verify a 9:16 screenshot before rendering"
+                ctx.warn(
+                    f"visual_track[{idx}] uses a wide function screenshot: {asset_id}; "
+                    "prepare_gpt_image_keyframes.py should replace it with prepared_site_keyframe before final rendering when available"
                 )
 
 
@@ -476,13 +480,23 @@ def workflow_steps_for_event(event: dict[str, Any], assets: dict[str, dict[str, 
                 steps.add("form_filled")
             if any(token in value for token in ("recording", "录屏", "screen_record")):
                 steps.add("operation_recording")
-        source_asset_id = str(asset.get("source_asset_id") or image_resource.get("source_asset_id") or "")
+        relations = image_resource.get("relations", {}) if isinstance(image_resource.get("relations"), dict) else {}
+        source_asset_id = str(
+            asset.get("source_asset_id")
+            or image_resource.get("source_asset_id")
+            or image_resource.get("origin_asset_id")
+            or relations.get("source_asset_id")
+            or ""
+        )
         source_asset = assets.get(source_asset_id, {}) if source_asset_id else {}
         if isinstance(source_asset, dict):
             source_resource = source_asset.get("image_resource", {}) if isinstance(source_asset.get("image_resource"), dict) else {}
             source_step = str(source_resource.get("workflow_step") or "").strip().lower()
             if source_step:
                 steps.add(source_step)
+        source_workflow_step = str(image_resource.get("source_workflow_step") or "").strip().lower()
+        if source_workflow_step:
+            steps.add(source_workflow_step)
     if str(event.get("evidence_binding") or "").lower() == "real_recording":
         steps.add("operation_recording")
     if str(event.get("layout") or event.get("display_mode") or "").lower() in {"browser-recording", "browser-recording-fit-width"}:
@@ -538,9 +552,25 @@ def validate_overlay_track(track: Any, asset_ids: set[str], ctx: ValidationConte
             ctx.error(f"overlay_track[{idx}] must be an object")
             continue
         _validate_timed_event(event, f"overlay_track[{idx}]", ctx)
+        overlay_type = event.get("type")
+        if overlay_type not in {"highlight_box", "arrow_callout", "pulse_ring", "label_tag"}:
+            ctx.error(f"overlay_track[{idx}].type must be highlight_box/arrow_callout/pulse_ring/label_tag")
         asset_id = event.get("asset_id")
         if asset_id and asset_id not in asset_ids:
             ctx.error(f"overlay_track[{idx}] references missing asset: {asset_id}")
+        box = event.get("box")
+        if box is not None:
+            if not isinstance(box, dict):
+                ctx.error(f"overlay_track[{idx}].box must be an object")
+            else:
+                for key in ("x", "y", "w", "h"):
+                    value = box.get(key)
+                    if not isinstance(value, (int, float)):
+                        ctx.error(f"overlay_track[{idx}].box.{key} must be numeric")
+                if isinstance(box.get("w"), (int, float)) and box["w"] <= 0:
+                    ctx.error(f"overlay_track[{idx}].box.w must be > 0")
+                if isinstance(box.get("h"), (int, float)) and box["h"] <= 0:
+                    ctx.error(f"overlay_track[{idx}].box.h must be > 0")
 
 
 def validate_audio_tracks(track: Any, ctx: ValidationContext) -> None:

@@ -80,6 +80,161 @@ def material_insights(case_dir: Path) -> dict[str, dict[str, Any]]:
     }
 
 
+def compact_pool_resource(item: dict[str, Any]) -> dict[str, Any]:
+    layout_plan = item.get("layout_plan", {}) if isinstance(item.get("layout_plan"), dict) else {}
+    quality = item.get("quality", {}) if isinstance(item.get("quality"), dict) else {}
+    return {
+        "resource_id": item.get("id"),
+        "asset_id": item.get("asset_id"),
+        "filename": item.get("filename"),
+        "source": item.get("source"),
+        "capture_type": item.get("capture_type"),
+        "workflow_step": item.get("workflow_step"),
+        "source_workflow_step": item.get("source_workflow_step"),
+        "title": item.get("title"),
+        "recommended_usage": item.get("recommended_usage", []),
+        "layout": layout_plan.get("primary_display_mode"),
+        "must_be_visible": layout_plan.get("must_be_visible", []),
+        "origin": item.get("origin"),
+        "ai_verified": quality.get("ai_verified"),
+        "needs_review": quality.get("needs_review"),
+        "source_asset_id": item.get("relations", {}).get("source_asset_id") if isinstance(item.get("relations"), dict) else "",
+    }
+
+
+def sort_pool_resources(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return sorted(
+        items,
+        key=lambda item: (
+            0 if item.get("workflow_step") == "prepared_site_keyframe" else 1,
+            0 if item.get("ai_verified") is True else 1,
+            str(item.get("filename") or ""),
+        ),
+    )
+
+
+def site_asset_pool(case_dir: Path) -> dict[str, Any]:
+    payload = load_json(case_dir / "image_resources.json", {"resources": []})
+    resources = payload.get("resources", []) if isinstance(payload, dict) else []
+    features: dict[str, dict[str, Any]] = {}
+    site_home: list[dict[str, Any]] = []
+
+    for item in resources:
+        if not isinstance(item, dict):
+            continue
+        origin = str(item.get("origin") or "")
+        workflow_step = str(item.get("workflow_step") or "")
+        source = str(item.get("source") or "").replace("\\", "/")
+        is_site_screenshot = origin in {"site_screenshot_library", "gpt_image_site_keyframe"} or "assets/sites/" in source
+        is_result = workflow_step in {"result_crop", "result_export", "result_gallery", "result_page"}
+        if not is_site_screenshot and not is_result:
+            continue
+
+        if workflow_step == "home_entry":
+            site_home.append(compact_pool_resource(item))
+            continue
+
+        feature_id = str(item.get("feature_id") or "").strip()
+        if not feature_id:
+            continue
+        parent_id = str(item.get("parent_feature_id") or "").strip()
+        feature_key = f"{parent_id}/{feature_id}" if parent_id else feature_id
+        bucket = features.setdefault(
+            feature_key,
+            {
+                "feature_key": feature_key,
+                "feature_id": feature_id,
+                "feature_label": item.get("feature_label") or "",
+                "feature_path": item.get("feature_path") or [],
+                "source_module_id": item.get("source_module_id") or "",
+                "source_module_label": item.get("source_module_label") or "",
+                "parent_feature_id": item.get("parent_feature_id") or "",
+                "parent_feature_label": item.get("parent_feature_label") or "",
+                "assets_by_role": {
+                    "功能入口截图": [],
+                    "参数面板截图": [],
+                    "AI优化关键帧": [],
+                    "结果图": [],
+                    "其他": [],
+                },
+            },
+        )
+        capture_type = str(item.get("capture_type") or "")
+        if workflow_step == "prepared_site_keyframe":
+            role = "AI优化关键帧"
+        elif capture_type in {"功能入口截图", "参数面板截图"}:
+            role = capture_type
+        elif is_result:
+            role = "结果图"
+        else:
+            role = "其他"
+        bucket["assets_by_role"].setdefault(role, []).append(compact_pool_resource(item))
+
+    for bucket in features.values():
+        for role, items in list(bucket["assets_by_role"].items()):
+            bucket["assets_by_role"][role] = sort_pool_resources(items)
+
+    ordered_features = sorted(
+        features.values(),
+        key=lambda item: " / ".join(str(value) for value in item.get("feature_path", [])) or item["feature_key"],
+    )
+    return {
+        "status": "ready" if site_home or ordered_features else "empty",
+        "source": "image_resources.json",
+        "site_home": site_home,
+        "features": ordered_features,
+        "storyboard_templates": {
+            "single_feature_seed": {
+                "required_beats": [
+                    {
+                        "beat": "platform_home",
+                        "use_role": "网站主页截图 / AI优化关键帧",
+                        "purpose": "建立平台真实入口，突出文生图入口。",
+                        "evidence_binding": "real_screenshot",
+                    },
+                    {
+                        "beat": "feature_entry_path",
+                        "use_role": "同功能 功能入口截图 / AI优化关键帧",
+                        "purpose": "展示从文生图入口进入目标功能的路径，红框/引导标记只用于镜头，不写进旁白。",
+                        "evidence_binding": "real_screenshot",
+                    },
+                    {
+                        "beat": "feature_params",
+                        "use_role": "同功能 参数面板截图 / AI优化关键帧",
+                        "purpose": "展示输入项、上传区、开始生成入口，保持 UI 完整可读。",
+                        "evidence_binding": "real_screenshot",
+                    },
+                    {
+                        "beat": "result_showcase",
+                        "use_role": "同功能 结果图 / AI优化关键帧",
+                        "purpose": "展示真实保存的结果图；如果有多张，优先快切或 gallery，而不是反复展示一张。",
+                        "evidence_binding": "real_result",
+                    },
+                ],
+                "minimum_materials": {
+                    "site_home": 1,
+                    "feature_entry": 1,
+                    "feature_form_params": 1,
+                    "result_images_recommended": 3,
+                },
+                "timing_guidance": [
+                    "路径和参数图每张至少 1.2s，便于看清 UI。",
+                    "结果图快切每张 0.8s-1.6s，重点结果可 1.8s-3.0s。",
+                    "字幕描述多场景、多行业、多风格时必须绑定多张结果图或降级文案。",
+                ],
+            }
+        },
+        "selection_policy": [
+            "同一功能视频优先选择 feature_id 或 feature_key 完全一致的素材。",
+            "如果同一功能存在 workflow_step=prepared_site_keyframe 或 quality.ai_verified=true 的 AI优化关键帧，优先选择该素材。",
+            "普通文生图功能使用 文生图/<功能> 下的 功能入口截图 和 参数面板截图。",
+            "图文广告子功能使用 文生图/图文广告/<子功能> 下的素材，不要把不同子功能互相混用。",
+            "只有 workflow_step 为 result_crop/result_export/result_gallery/result_page 的素材可作为结果图。",
+            "网站截图只证明流程和界面，不能当作真实生成结果展示。",
+        ],
+    }
+
+
 def copywriting_context(skill_root: Path, input_data: dict[str, Any]) -> dict[str, Any]:
     request = input_data.get("request", {}) if isinstance(input_data.get("request"), dict) else {}
     brand_profile = str(request.get("brand_profile") or "")
@@ -128,6 +283,7 @@ def build_context(case_dir: Path, skill_root: Path, stage: str) -> dict[str, Any
         "feature_cards": load_json(case_dir / "feature_cards.json", {}),
         "browser_materials": load_json(case_dir / "browser_materials.json", {}),
         "image_resources": load_json(case_dir / "image_resources.json", {}),
+        "site_asset_pool": site_asset_pool(case_dir),
         "operation_recipes": load_json(case_dir / "operation_recipes.json", {}),
         "material_understanding": load_json(case_dir / "material_understanding.json", {}),
         "video_script": load_json(case_dir / "video_script.json", {}),
@@ -140,6 +296,8 @@ def build_context(case_dir: Path, skill_root: Path, stage: str) -> dict[str, Any
         "non_negotiable_rules": [
             "Do not rely on filenames alone for visual decisions.",
             "Use image_resources.json for screenshot/result meaning when available.",
+            "Use site_asset_pool for website screenshot selection; prefer assets from the same feature_id or feature_key.",
+            "For 图文广告 children, keep selection under 文生图/图文广告/<子功能>; do not mix child feature screenshots.",
             "Use asset IDs exactly as listed in asset_manifest.json.",
             "Do not include the fixed outro in script or visual planning.",
             "Do not invent product claims unsupported by material evidence.",

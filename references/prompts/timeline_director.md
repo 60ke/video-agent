@@ -20,11 +20,21 @@ Return JSON fields that can be merged into `video_project.json`:
       "script_segment_ids": ["seg_001"],
       "start": 0.0,
       "end": 3.2,
+      "clip_type": "image",
       "asset_ids": ["asset_003"],
       "evidence_binding": "real_result",
       "operation_status": "verified_result",
       "layout": "result-showcase",
       "display_mode": "result-showcase",
+      "display_rule": "prepared_9x16",
+      "sequence": null,
+      "semantic_binding": {
+        "feature_id": "activity_decoration",
+        "feature_key": "activity_decoration",
+        "step_kind": "result",
+        "visual_subject": "show_result_quality",
+        "result_claim_allowed": true
+      },
       "framing": {
         "focus_region": "main_result_area",
         "subject_min_frame_ratio": 0.45,
@@ -59,7 +69,17 @@ Return JSON fields that can be merged into `video_project.json`:
       "layout_reason": "The subtitle talks about result quality, and this asset is a verified result preview."
     }
   ],
-  "overlay_track": []
+  "overlay_track": [
+    {
+      "id": "ov_001",
+      "start": 3.35,
+      "end": 4.85,
+      "type": "pulse_ring",
+      "target_visual_id": "vis_002",
+      "box": {"x": 0.18, "y": 0.28, "w": 0.28, "h": 0.08},
+      "text": "文生图入口"
+    }
+  ]
 }
 ```
 
@@ -75,6 +95,10 @@ Return JSON fields that can be merged into `video_project.json`:
 - `layout` is the renderer authority. If `display_mode` is present, it must exactly equal `layout`.
 - Use only controlled `motion.name` values: `hold`, `push_in`, `pull_out`. Use `hold` with `amount=0` for dense UI/multi-image scenes; use small `push_in`/`pull_out` values up to `0.06` for single-result scenes.
 - Use only `transition_in.name` values: `cut`, `crossfade`. Use `crossfade` only when `layout + asset_ids` changes; identical consecutive visuals must use `cut`.
+- Set `clip_type` explicitly. Use `image` for one prepared keyframe, `site_flow_steps` for homepage/entry/params sequences, `result_gallery` for multiple saved result images, and `image_sequence` for other fast cuts.
+- Set `display_rule` explicitly. Use `prepared_9x16` for GPT image prepared frames, `portrait_full_width` for clean vertical result images, and `landscape_full_width_center` for clean landscape result images.
+- For multi-image clips, include `sequence` with mode `step_cut` for site flow and `result_carousel` or `quick_cut` for result galleries. Each item must be readable for at least 0.75s.
+- Use `overlay_track` only for dynamic cues such as pulse rings/click emphasis. Static red boxes/arrows may already be baked into GPT image prepared keyframes.
 - Dual panels must not have large empty lower areas.
 - Do not include the fixed panda outro in `visual_track`.
 - Do not add arbitrary zoompan, breathing, jitter, local crop, or floating motion.

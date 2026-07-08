@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageDraw, ImageOps
 
 from utils.case_guards import kehuanxiongmao_auth_errors
 
@@ -326,6 +326,7 @@ def open_visual_asset(src: Path, temp_dir: Path, idx: int) -> Image.Image:
 
 
 RECORDING_LAYOUTS = {"browser-recording", "browser-recording-fit-width"}
+SEQUENCE_CLIP_TYPES = {"image_sequence", "site_flow_steps", "result_gallery"}
 
 
 def ffprobe_video_duration(path: Path) -> float:
@@ -503,6 +504,31 @@ def grid_on_canvas(images: list[Image.Image], width: int, height: int) -> Image.
     return canvas
 
 
+def compose_single_image(image: Image.Image, layout: str, width: int, height: int) -> Image.Image:
+    layout = layout.lower()
+    if layout in {"grid-rebuild", "main-plus-reference"}:
+        return fit_width_on_canvas(image, width, height)
+    return fit_width_on_canvas(image, width, height)
+
+
+def sequence_frame_index(group: dict[str, Any], progress: float) -> int:
+    count = max(1, len(group.get("asset_ids", [])))
+    sequence = group.get("sequence", {}) if isinstance(group.get("sequence"), dict) else {}
+    min_item = float(sequence.get("min_item_duration") or 0.8)
+    duration = max(group["end"] - group["start"], 0.001)
+    if duration / count < min_item:
+        return min(count - 1, max(0, int(progress * count)))
+    return min(count - 1, max(0, int(progress * count)))
+
+
+def slide_transition_progress(sequence: dict[str, Any], item_progress: float) -> float:
+    if str(sequence.get("transition") or "") not in {"slide_left", "slide_right"}:
+        return 0.0
+    if item_progress < 0.82:
+        return 0.0
+    return smoothstep((item_progress - 0.82) / 0.18)
+
+
 MOTION_NAMES = {"hold", "push_in", "pull_out"}
 MOTION_MAX_AMOUNT = 0.06
 TRANSITION_NAMES = {"cut", "crossfade"}
@@ -634,6 +660,8 @@ def build_visual_groups(track: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "events": [event],
                 "asset_ids": [str(asset_id) for asset_id in event.get("asset_ids", [])],
                 "layout": key[0],
+                "clip_type": str(event.get("clip_type") or "image"),
+                "sequence": event.get("sequence") if isinstance(event.get("sequence"), dict) else {},
                 "motion": motion,
                 "transition_in": transition_in,
             }
@@ -670,11 +698,15 @@ def compose_group_frame(
     layout = group["layout"].lower()
     if len(images) > 1 or layout in {"grid-rebuild", "main-plus-reference"}:
         return grid_on_canvas(images, width, height)
-    return fit_width_on_canvas(images[0], width, height)
+    return compose_single_image(images[0], layout, width, height)
 
 
 def is_recording_group(group: dict[str, Any]) -> bool:
     return str(group.get("layout") or "").lower() in RECORDING_LAYOUTS
+
+
+def is_sequence_group(group: dict[str, Any]) -> bool:
+    return str(group.get("clip_type") or "").lower() in SEQUENCE_CLIP_TYPES and len(group.get("asset_ids", [])) > 1
 
 
 def apply_motion(base: Image.Image, motion: dict[str, Any], progress: float, width: int, height: int) -> Image.Image:
@@ -701,6 +733,92 @@ def apply_motion(base: Image.Image, motion: dict[str, Any], progress: float, wid
     return resized.crop((left, top, left + width, top + height))
 
 
+def overlay_targets_group(overlay: dict[str, Any], group: dict[str, Any]) -> bool:
+    target = str(overlay.get("target_visual_id") or "").strip()
+    if not target:
+        return True
+    return any(str(event.get("id") or "") == target for event in group.get("events", []))
+
+
+def normalized_overlay_box(overlay: dict[str, Any], width: int, height: int) -> tuple[int, int, int, int] | None:
+    box = overlay.get("box")
+    if not isinstance(box, dict):
+        return None
+    try:
+        x = float(box["x"])
+        y = float(box["y"])
+        w = float(box["w"])
+        h = float(box["h"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    left = int(round(max(0.0, min(1.0, x)) * width))
+    top = int(round(max(0.0, min(1.0, y)) * height))
+    right = int(round(max(0.0, min(1.0, x + w)) * width))
+    bottom = int(round(max(0.0, min(1.0, y + h)) * height))
+    if right <= left or bottom <= top:
+        return None
+    return left, top, right, bottom
+
+
+def draw_label(draw: ImageDraw.ImageDraw, text: str, xy: tuple[int, int], color: tuple[int, int, int]) -> None:
+    if not text:
+        return
+    x, y = xy
+    padding_x = 12
+    padding_y = 8
+    bbox = draw.textbbox((x, y), text)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+    rect = (x, y, x + text_w + padding_x * 2, y + text_h + padding_y * 2)
+    draw.rounded_rectangle(rect, radius=8, fill=(18, 18, 18), outline=color, width=2)
+    draw.text((x + padding_x, y + padding_y), text, fill=(255, 255, 255))
+
+
+def apply_overlays(image: Image.Image, overlays: list[dict[str, Any]], group: dict[str, Any], t: float, width: int, height: int) -> Image.Image:
+    active = [
+        overlay
+        for overlay in overlays
+        if isinstance(overlay.get("start"), (int, float))
+        and isinstance(overlay.get("end"), (int, float))
+        and float(overlay["start"]) <= t <= float(overlay["end"])
+        and overlay_targets_group(overlay, group)
+    ]
+    if not active:
+        return image
+    frame = image.copy()
+    draw = ImageDraw.Draw(frame, "RGBA")
+    for overlay in active:
+        box = normalized_overlay_box(overlay, width, height)
+        if not box:
+            continue
+        start = float(overlay["start"])
+        end = float(overlay["end"])
+        progress = min(1.0, max(0.0, (t - start) / max(end - start, 0.001)))
+        style = overlay.get("style", {}) if isinstance(overlay.get("style"), dict) else {}
+        stroke_width = int(style.get("stroke_width") or 7)
+        color = (255, 43, 43)
+        left, top, right, bottom = box
+        overlay_type = str(overlay.get("type") or "highlight_box")
+        if overlay_type == "pulse_ring":
+            pulse = 0.5 + 0.5 * smoothstep(progress)
+            expand = int(round(22 * pulse))
+            alpha = int(round(230 * (1.0 - 0.45 * progress)))
+            ring_box = (left - expand, top - expand, right + expand, bottom + expand)
+            draw.rounded_rectangle(ring_box, radius=20 + expand, outline=color + (alpha,), width=stroke_width)
+            draw.rounded_rectangle(box, radius=18, outline=color + (210,), width=max(3, stroke_width - 2))
+        elif overlay_type == "label_tag":
+            draw_label(draw, str(overlay.get("text") or ""), (left, max(0, top - 44)), color)
+        else:
+            draw.rounded_rectangle(box, radius=18, outline=color + (230,), width=stroke_width)
+            if overlay_type == "arrow_callout":
+                cx = (left + right) // 2
+                draw.line((cx, max(0, top - 72), cx, top), fill=color + (230,), width=stroke_width)
+                draw.polygon([(cx, top), (cx - 14, top - 22), (cx + 14, top - 22)], fill=color + (230,))
+            if overlay.get("text"):
+                draw_label(draw, str(overlay.get("text") or ""), (left, max(0, top - 54)), color)
+    return frame
+
+
 class VisualGroupRenderer:
     """Streams deterministic frames for the merged visual groups: static hold,
     or a small bounded push_in/pull_out, with a crossfade only at boundaries
@@ -724,8 +842,10 @@ class VisualGroupRenderer:
         if not self.groups:
             raise ValueError("visual_track produced no renderable groups")
         self.group_starts = [group["start"] for group in self.groups]
+        self.overlays = [item for item in project.get("overlay_track", []) if isinstance(item, dict)]
         self.temp_dir = temp_dir
         self._base_cache: dict[int, Image.Image] = {}
+        self._sequence_cache: dict[tuple[int, str], Image.Image] = {}
         self._recording_cache: dict[int, RecordingClip] = {}
 
     def base_frame(self, group_idx: int) -> Image.Image:
@@ -760,12 +880,57 @@ class VisualGroupRenderer:
             )
         return self._recording_cache[group_idx]
 
+    def sequence_base_frame(self, group_idx: int, asset_id: str) -> Image.Image:
+        cache_key = (group_idx, asset_id)
+        if cache_key in self._sequence_cache:
+            return self._sequence_cache[cache_key]
+        group = self.groups[group_idx]
+        asset = self.assets.get(asset_id)
+        if not asset:
+            raise FileNotFoundError(f"sequence asset missing: {asset_id}")
+        src = resolve_case_path(self.case_dir, asset.get("source"))
+        if not src or not src.is_file():
+            raise FileNotFoundError(f"sequence asset source missing: {asset.get('source')}")
+        image = open_visual_asset(src, self.temp_dir, group_idx)
+        frame = compose_single_image(image, str(group.get("layout") or ""), self.width, self.height)
+        self._sequence_cache[cache_key] = frame
+        return frame
+
+    def sequence_frame(self, group_idx: int, t: float) -> Image.Image:
+        group = self.groups[group_idx]
+        asset_ids = [str(value) for value in group.get("asset_ids", [])]
+        if not asset_ids:
+            raise ValueError(f"sequence visual group missing asset_ids: {group['events'][0].get('id') or group_idx}")
+        duration = max(group["end"] - group["start"], 0.001)
+        progress = min(1.0, max(0.0, (t - group["start"]) / duration))
+        raw_position = progress * len(asset_ids)
+        idx = min(len(asset_ids) - 1, max(0, int(raw_position)))
+        item_progress = raw_position - idx
+        frame = self.sequence_base_frame(group_idx, asset_ids[idx])
+        sequence = group.get("sequence", {}) if isinstance(group.get("sequence"), dict) else {}
+        slide_progress = slide_transition_progress(sequence, item_progress)
+        if slide_progress > 0 and idx < len(asset_ids) - 1:
+            next_frame = self.sequence_base_frame(group_idx, asset_ids[idx + 1])
+            direction = str(sequence.get("transition") or "slide_left")
+            offset = int(round(self.width * slide_progress))
+            canvas = Image.new("RGB", (self.width, self.height), (8, 10, 12))
+            if direction == "slide_right":
+                canvas.paste(frame, (offset, 0))
+                canvas.paste(next_frame, (offset - self.width, 0))
+            else:
+                canvas.paste(frame, (-offset, 0))
+                canvas.paste(next_frame, (self.width - offset, 0))
+            frame = canvas
+        return apply_motion(frame, group["motion"], progress, self.width, self.height)
+
     def frame_for_group(self, group_idx: int, t: float) -> Image.Image:
         group = self.groups[group_idx]
         duration = max(group["end"] - group["start"], 0.001)
         progress = (t - group["start"]) / duration
         if is_recording_group(group):
             return self.recording_clip(group_idx).frame_at(progress, t - group["start"])
+        if is_sequence_group(group):
+            return self.sequence_frame(group_idx, t)
         return apply_motion(self.base_frame(group_idx), group["motion"], progress, self.width, self.height)
 
     def active_group_index(self, t: float) -> int:
@@ -786,7 +951,7 @@ class VisualGroupRenderer:
                 previous_group = self.groups[idx - 1]
                 previous_frame = self.frame_for_group(idx - 1, previous_group["end"] - 1e-4)
                 frame = Image.blend(previous_frame, frame, alpha)
-        return frame
+        return apply_overlays(frame, self.overlays, group, t, self.width, self.height)
 
     def render_report(self) -> list[dict[str, Any]]:
         return [
@@ -796,6 +961,8 @@ class VisualGroupRenderer:
                 "start": round(group["start"], 3),
                 "end": round(group["end"], 3),
                 "layout": group["layout"],
+                "clip_type": group.get("clip_type"),
+                "sequence": group.get("sequence"),
                 "asset_ids": group["asset_ids"],
                 "motion": group["motion"],
                 "transition_in": group["transition_in"],

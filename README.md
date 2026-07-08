@@ -51,6 +51,7 @@ Record only the useful operation path and stop right after the real generation t
 
 - `scripts/init_case.py` - create a V2 case scaffold
 - `scripts/register_materials.py` - freeze static media into a case
+- `scripts/register_site_assets.py` - register reusable `assets/sites` website screenshots into a case
 - `scripts/register_cdp_recording.py` - freeze a `cdp-capture` output directory into `assets/recordings/`
 - `scripts/apply_site_profile.py` - seed website knowledge from profiles
 - `scripts/build_image_resources.py` - merge browser/material evidence into reusable image resources
@@ -105,8 +106,15 @@ python scripts\run_pipeline_mode.py --case cases\<new_case> --mode strict --rece
 ```powershell
 python scripts\init_case.py --case cases\<new_case> --target-url "https://kehuanxiongmao.com/" --preferred-feature "活动美陈" --json
 python scripts\apply_site_profile.py --case cases\<new_case> --profile kehuanxiongmao --json
+python scripts\register_site_assets.py --case cases\<new_case> --feature 活动美陈 --json
 node cdp-capture\bin\cdp-capture.js run cdp-capture\examples\task_activity_meichen.json
 python scripts\register_cdp_recording.py --case cases\<new_case> --recording-dir cdp-capture\output\<task-id> --label <capture_label> --feature-id activity_meichen --ends-after-generation-trigger --json
 # capture/register any extra materials, then produce reviewed video_script.json
 python scripts\run_pipeline_mode.py --case cases\<new_case> --mode standard --label demo_v1 --receipt-id receipt_<capture_label> --json
+```
+
+For manual project builds, after `video_project.json` exists:
+
+```powershell
+python scripts\prepare_gpt_image_keyframes.py --case cases\<new_case> --project cases\<new_case>\video_project.json --json
 ```

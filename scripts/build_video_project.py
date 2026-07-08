@@ -83,10 +83,18 @@ def material_map(case_dir: Path) -> dict[str, dict[str, Any]]:
             merged["image_resource"] = {
                 "id": image_resource.get("id"),
                 "feature_id": image_resource.get("feature_id"),
+                "feature_label": image_resource.get("feature_label"),
+                "feature_path": image_resource.get("feature_path", []),
+                "source_module_id": image_resource.get("source_module_id"),
+                "source_module_label": image_resource.get("source_module_label"),
+                "parent_feature_id": image_resource.get("parent_feature_id"),
+                "parent_feature_label": image_resource.get("parent_feature_label"),
                 "workflow_step": image_resource.get("workflow_step"),
                 "source_workflow_step": image_resource.get("source_workflow_step"),
                 "operation_step": image_resource.get("operation_step"),
+                "capture_type": image_resource.get("capture_type"),
                 "variant": image_resource.get("variant"),
+                "origin": image_resource.get("origin"),
                 "capture_method": image_resource.get("capture_method"),
                 "page_url": image_resource.get("page_url"),
                 "title": image_resource.get("title"),
@@ -104,18 +112,216 @@ def material_map(case_dir: Path) -> dict[str, dict[str, Any]]:
     return assets
 
 
+def asset_feature_keys(asset: dict[str, Any]) -> set[str]:
+    image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+    site_asset = asset.get("site_asset", {}) if isinstance(asset.get("site_asset"), dict) else {}
+    keys = {
+        str(image_resource.get("feature_id") or "").lower(),
+        str(site_asset.get("feature_id") or "").lower(),
+    }
+    parent = str(image_resource.get("parent_feature_id") or site_asset.get("parent_feature_id") or "").lower()
+    feature = str(image_resource.get("feature_id") or site_asset.get("feature_id") or "").lower()
+    if parent and feature:
+        keys.add(f"{parent}/{feature}")
+    return {key for key in keys if key}
+
+
+def workflow_step_for(asset: dict[str, Any]) -> str:
+    image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+    site_asset = asset.get("site_asset", {}) if isinstance(asset.get("site_asset"), dict) else {}
+    return str(
+        image_resource.get("workflow_step")
+        or image_resource.get("source_workflow_step")
+        or site_asset.get("asset_kind")
+        or ""
+    ).lower()
+
+
+def is_prepared_keyframe(asset: dict[str, Any]) -> bool:
+    origin = str(asset.get("origin") or "").lower()
+    image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+    quality = asset.get("quality", {}) if isinstance(asset.get("quality"), dict) else {}
+    workflow_step = str(image_resource.get("workflow_step") or "").lower()
+    return (
+        origin in {"gpt_image_site_keyframe", "gpt_image_layout_optimization"}
+        or workflow_step in {"prepared_site_keyframe", "prepared_9x16"}
+        or quality.get("ai_verified") is True
+    )
+
+
+def prepared_replacement_for(asset_id: str, assets: list[dict[str, Any]]) -> str | None:
+    def source_ids_for(candidate: dict[str, Any]) -> set[str]:
+        image_resource = candidate.get("image_resource", {}) if isinstance(candidate.get("image_resource"), dict) else {}
+        relations = image_resource.get("relations", {}) if isinstance(image_resource.get("relations"), dict) else {}
+        values = {
+            str(candidate.get("source_asset_id") or ""),
+            str(image_resource.get("source_asset_id") or ""),
+            str(image_resource.get("origin_asset_id") or ""),
+            str(relations.get("source_asset_id") or ""),
+        }
+        return {value for value in values if value}
+
+    candidates = [
+        asset
+        for asset in assets
+        if asset_id in source_ids_for(asset) and is_prepared_keyframe(asset)
+    ]
+    if not candidates:
+        return None
+    def prepared_origin_rank(asset: dict[str, Any]) -> int:
+        origin = str(asset.get("origin") or "")
+        if origin == "programmatic_site_keyframe":
+            return 0
+        if origin == "gpt_image_site_keyframe":
+            return 1
+        return 2
+
+    candidates.sort(
+        key=lambda asset: (
+            prepared_origin_rank(asset),
+            0 if asset.get("quality", {}).get("ai_verified") is True else 1,
+            str(asset.get("id") or ""),
+        )
+    )
+    return str(candidates[0].get("id"))
+
+
+def score_asset_for_segment(asset: dict[str, Any], segment: dict[str, Any]) -> int:
+    text = " ".join(
+        str(segment.get(key) or "").lower()
+        for key in ("visual_intent", "material_task", "layout_intent", "focus_region", "evidence_binding")
+    )
+    step = workflow_step_for(asset)
+    score = 0
+    if is_prepared_keyframe(asset):
+        score += 20
+    image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+    capture_type = str(image_resource.get("capture_type") or "").lower()
+    source_step = str(image_resource.get("source_workflow_step") or "").lower()
+    if any(token in text for token in ("result", "结果", "效果图", "gallery")):
+        if step in {"result_crop", "result_export", "result_gallery", "result_page"} or is_generated_result_asset(asset):
+            score += 8
+    if any(token in text for token in ("entry", "path", "menu", "入口", "路径", "菜单")):
+        if step in {"feature_menu_select", "feature_entry"} or source_step in {"feature_menu_select", "feature_entry"} or capture_type == "功能入口截图":
+            score += 6
+    if any(token in text for token in ("form", "param", "参数", "表单", "输入")):
+        if step in {"feature_page_empty", "feature_form_params"} or source_step in {"feature_page_empty", "feature_form_params"} or capture_type == "参数面板截图":
+            score += 6
+    if step == "home_entry":
+        score += 1
+    return score
+
+
+def feature_key_for_segment(segment: dict[str, Any]) -> str:
+    return str(segment.get("feature_key") or segment.get("feature_id") or "").lower().strip()
+
+
+def step_kind_for_segment(segment: dict[str, Any]) -> str:
+    text = " ".join(
+        str(segment.get(key) or "").lower()
+        for key in ("stage", "visual_intent", "material_task", "layout_intent", "camera_note", "evidence_binding")
+    )
+    if any(token in text for token in ("result", "结果", "效果图", "gallery", "多图", "多场景", "多行业")):
+        return "result"
+    if any(token in text for token in ("param", "form", "参数", "表单", "输入", "feature_demo", "function_params")):
+        return "params"
+    if any(token in text for token in ("home", "首页", "site_intro", "site_value")):
+        return "home"
+    if any(token in text for token in ("entry", "path", "menu", "入口", "路径", "菜单", "feature_entry")):
+        return "entry"
+    return ""
+
+
+def asset_step_kind(asset: dict[str, Any]) -> str:
+    image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+    workflow = str(image_resource.get("workflow_step") or "").lower()
+    source_workflow = str(image_resource.get("source_workflow_step") or "").lower()
+    capture_type = str(image_resource.get("capture_type") or "")
+    source = str(asset.get("source") or "").replace("\\", "/").lower()
+    if workflow == "home_entry" or source_workflow == "home_entry":
+        return "home"
+    if workflow in {"result_crop", "result_export", "result_gallery", "result_page"} or is_generated_result_asset(asset):
+        return "result"
+    if capture_type == "功能入口截图" or workflow in {"feature_menu_select", "feature_entry"} or source_workflow in {"feature_menu_select", "feature_entry"}:
+        return "entry"
+    if capture_type == "参数面板截图" or workflow in {"feature_page_empty", "feature_form_params"} or source_workflow in {"feature_page_empty", "feature_form_params"}:
+        return "params"
+    if "assets/sites/" in source and "主页" in source:
+        return "home"
+    return ""
+
+
 def choose_asset_ids(segment: dict[str, Any], assets: list[dict[str, Any]], idx: int) -> list[str]:
     preferred = segment.get("preferred_asset_ids") or segment.get("asset_ids") or []
     if preferred:
+        mapped_preferred = [prepared_replacement_for(str(asset_id), assets) or str(asset_id) for asset_id in preferred]
         task = str(segment.get("material_task") or "").lower()
         intent = str(segment.get("visual_intent") or "").lower()
         multi_tokens = ("grid", "gallery", "module", "模块", "对比", "comparison")
-        if len(preferred) > 1 and any(token in task or token in intent for token in multi_tokens):
-            return [str(asset_id) for asset_id in preferred[:4]]
-        return [str(preferred[0])]
+        if len(mapped_preferred) > 1 and any(token in task or token in intent for token in multi_tokens):
+            return mapped_preferred[:4]
+        return [mapped_preferred[0]]
     if not assets:
         raise ValueError("no assets available for visual track")
-    return [str(assets[min(idx, len(assets) - 1)]["id"])]
+    feature_id = str(segment.get("feature_id") or "").lower().strip()
+    candidates = assets
+    if feature_id:
+        same_feature = [asset for asset in assets if feature_id in asset_feature_keys(asset)]
+        if same_feature:
+            candidates = same_feature
+    step_kind = step_kind_for_segment(segment)
+    if step_kind:
+        same_step = [asset for asset in candidates if asset_step_kind(asset) == step_kind]
+        if same_step:
+            candidates = same_step
+    ranked = sorted(
+        enumerate(candidates),
+        key=lambda item: (-score_asset_for_segment(item[1], segment), item[0]),
+    )
+    if ranked and score_asset_for_segment(ranked[0][1], segment) > 0:
+        return [str(ranked[0][1]["id"])]
+    return [str(candidates[min(idx, len(candidates) - 1)]["id"])]
+
+
+def clip_type_for(segment: dict[str, Any], asset_ids: list[str], assets_by_id: dict[str, dict[str, Any]]) -> str:
+    if len(asset_ids) <= 1:
+        return "image"
+    step_kind = step_kind_for_segment(segment)
+    if step_kind in {"entry", "home", "params"}:
+        return "site_flow_steps"
+    if step_kind == "result":
+        return "result_gallery"
+    if any(is_generated_result_asset(assets_by_id.get(asset_id, {})) for asset_id in asset_ids):
+        return "result_gallery"
+    return "image_sequence"
+
+
+def sequence_for(clip_type: str, duration: float, asset_count: int) -> dict[str, Any] | None:
+    if clip_type == "image":
+        return None
+    if asset_count <= 0:
+        asset_count = 1
+    item_duration = max(0.75, min(1.6, duration / asset_count))
+    if clip_type == "site_flow_steps":
+        return {
+            "mode": "step_cut",
+            "min_item_duration": round(item_duration, 3),
+            "max_item_duration": round(max(item_duration, 1.2), 3),
+            "transition": "quick_cut",
+        }
+    if clip_type == "result_gallery":
+        return {
+            "mode": "result_carousel",
+            "min_item_duration": round(item_duration, 3),
+            "max_item_duration": round(max(item_duration, 1.4), 3),
+            "transition": "slide_left",
+        }
+    return {
+        "mode": "quick_cut",
+        "min_item_duration": round(item_duration, 3),
+        "max_item_duration": round(max(item_duration, 1.2), 3),
+        "transition": "crossfade",
+    }
 
 
 def asset_aspect(asset: dict[str, Any]) -> float | None:
@@ -357,9 +563,13 @@ def build_visual_track(script_segments: list[dict[str, Any]], subtitles: list[di
         motion = motion_for(layout, asset)
         transition_in = transition_for(previous_key, current_key)
         previous_key = current_key
+        clip_type = clip_type_for(segment, asset_ids, asset_by_id)
+        sequence = sequence_for(clip_type, end - start, len(asset_ids))
+        step_kind = step_kind_for_segment(segment) or asset_step_kind(asset)
         visuals.append(
             {
                 "id": f"vis_{idx + 1:03d}",
+                "clip_type": clip_type,
                 "script_segment_ids": [segment.get("id")],
                 "start": round(max(start, 0), 3),
                 "end": round(end, 3),
@@ -368,6 +578,17 @@ def build_visual_track(script_segments: list[dict[str, Any]], subtitles: list[di
                 "operation_status": segment.get("operation_status", ""),
                 "layout": layout,
                 "display_mode": layout,
+                "display_rule": "prepared_9x16" if is_prepared_keyframe(asset) else (
+                    "landscape_full_width_center" if asset_aspect(asset) and asset_aspect(asset) > 1.2 else "portrait_full_width"
+                ),
+                "sequence": sequence,
+                "semantic_binding": {
+                    "feature_id": segment.get("feature_id") or "",
+                    "feature_key": feature_key_for_segment(segment),
+                    "step_kind": step_kind,
+                    "visual_subject": segment.get("visual_intent") or segment.get("material_task") or "",
+                    "result_claim_allowed": step_kind == "result" and is_generated_result_asset(asset),
+                },
                 "framing": {
                     "focus_region": focus_region_for(segment, asset),
                     "subject_min_frame_ratio": float(plan.get("min_subject_frame_ratio") or 0.45),
@@ -394,6 +615,76 @@ def build_visual_track(script_segments: list[dict[str, Any]], subtitles: list[di
             }
         )
     return visuals
+
+
+def callout_box(item: dict[str, Any]) -> dict[str, float] | None:
+    box = item.get("box")
+    if not isinstance(box, dict):
+        return None
+    try:
+        x = float(box["x"])
+        y = float(box["y"])
+        w = float(box["w"])
+        h = float(box["h"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if w <= 0 or h <= 0:
+        return None
+    return {
+        "x": max(0.0, min(1.0, x)),
+        "y": max(0.0, min(1.0, y)),
+        "w": max(0.01, min(1.0, w)),
+        "h": max(0.01, min(1.0, h)),
+    }
+
+
+def overlay_type_for(callout: dict[str, Any], step_kind: str) -> str:
+    requested = str(callout.get("type") or "").strip()
+    if requested in {"highlight_box", "arrow_callout", "pulse_ring", "label_tag"}:
+        return requested
+    if step_kind in {"entry", "params", "home"}:
+        return "pulse_ring"
+    return "highlight_box"
+
+
+def build_overlay_track(visuals: list[dict[str, Any]], assets_by_id: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    overlays: list[dict[str, Any]] = []
+    for visual in visuals:
+        if not isinstance(visual, dict):
+            continue
+        asset_id = str((visual.get("asset_ids") or [""])[0])
+        asset = assets_by_id.get(asset_id, {})
+        image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+        callouts = image_resource.get("callouts") if isinstance(image_resource.get("callouts"), list) else []
+        semantic = visual.get("semantic_binding", {}) if isinstance(visual.get("semantic_binding"), dict) else {}
+        step_kind = str(semantic.get("step_kind") or asset_step_kind(asset))
+        for callout_index, callout in enumerate(callouts[:3]):
+            if not isinstance(callout, dict):
+                continue
+            box = callout_box(callout)
+            if not box:
+                continue
+            start = float(visual.get("start", 0))
+            end = float(visual.get("end", start + 1))
+            overlay_type = overlay_type_for(callout, step_kind)
+            overlays.append(
+                {
+                    "id": f"ov_{len(overlays) + 1:03d}",
+                    "start": round(start + 0.12, 3),
+                    "end": round(min(end, start + 1.65), 3),
+                    "type": overlay_type,
+                    "target_visual_id": visual.get("id"),
+                    "asset_id": asset_id,
+                    "box": box,
+                    "text": str(callout.get("text") or callout.get("target_label") or ""),
+                    "style": {
+                        "color": "#ff2b2b",
+                        "stroke_width": 7,
+                        "pulse": overlay_type == "pulse_ring",
+                    },
+                }
+            )
+    return overlays
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
@@ -429,6 +720,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 "display_risk": asset.get("display_risk", []),
                 "layout_plan": asset.get("layout_plan", {}),
                 "image_resource": asset.get("image_resource", {}),
+                "source_asset_id": (
+                    asset.get("source_asset_id")
+                    or (
+                        asset.get("image_resource", {}).get("relations", {}).get("source_asset_id")
+                        if isinstance(asset.get("image_resource", {}).get("relations"), dict)
+                        else ""
+                    )
+                ),
                 "quality": asset.get("quality", {}),
             }
         )
@@ -437,6 +736,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     duration = voice_report.get("duration")
     if duration is None and subtitles:
         duration = max(float(sub.get("end", 0)) for sub in subtitles if isinstance(sub, dict))
+
+    visual_track = build_visual_track(script_segments, subtitles, assets)
+    overlay_track = build_overlay_track(visual_track, assets_map)
 
     project = {
         "schema_version": 1,
@@ -450,6 +752,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "target_duration": input_data.get("request", {}).get("duration", duration),
             "language": "zh-CN",
             "safe_area": {"top": 120, "bottom": 260, "left": 60, "right": 60},
+            "video_type": input_data.get("request", {}).get("video_type", "single_feature_seed"),
         },
         "inputs": input_data,
         "assets": project_assets,
@@ -469,10 +772,20 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "format": "minimax_aligned_reviewed_text",
             "segments": subtitles,
         },
-        "visual_track": build_visual_track(script_segments, subtitles, assets),
-        "overlay_track": [],
+        "visual_track": visual_track,
+        "overlay_track": overlay_track,
         "audio_tracks": [],
         "ending_track": ending_track,
+        "storyboard_requirements": {
+            "template": "single_feature_seed",
+            "preferred_sequence": ["site_home", "feature_entry", "feature_form_params", "result_gallery"],
+            "material_policy": [
+                "首页和入口素材只证明路径，不能冒充最终生成结果。",
+                "功能入口、参数面板、结果图优先来自同一 feature_id/feature_key。",
+                "prepared_site_keyframe 优先于原始网站截图。",
+                "结果展示必须使用保存下来的结果图或其 GPT keyframe 衍生图。",
+            ],
+        },
         "renderer_plan": {
             "renderer": "simple_ffmpeg",
             "composition_dir": None,

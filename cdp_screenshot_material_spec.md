@@ -4,7 +4,7 @@
 
 ## 一、固定截图结构
 
-每个站点只保留一张网站主页截图；每个功能模块保留一组“入口点击截图 + 参数面板截图”。
+每个站点只保留一张网站主页截图；每个功能模块保留一组“入口点击截图 + 参数面板截图”。所有网站截图素材直接扁平存放在 `assets/sites/`，不再为网站截图额外建立分类目录或 sidecar JSON 文件。
 
 | 类型 | 数量 | 作用 | 推荐截图范围 |
 | --- | --- | --- | --- |
@@ -16,32 +16,40 @@
 
 ## 二、文件命名
 
-截图文件名采用中文优先，避免网站中文信息在英文映射中丢失；程序侧稳定引用使用 `asset_id`。功能入口截图、参数面板截图是固定槽位，不加 `001`。只有结果图、案例图、同类多张展示图这类序列素材才加序号。
+截图文件名采用中文优先，避免网站中文信息在英文映射中丢失。网站截图素材不写独立 JSON 信息，站点、模块、功能、截图类型直接从文件名解析。功能入口截图、参数面板截图是固定槽位，不加 `001`。只有结果图、案例图、同类多张展示图这类序列素材才加序号。
 
 示例：
 
 ```text
-柯幻熊猫_网站_主页_001_原始桌面截图.png
-柯幻熊猫_文生图_活动美陈_功能入口截图.png
-柯幻熊猫_文生图_活动美陈_参数面板截图.png
+assets/sites/柯幻熊猫_网站_主页_原始桌面截图.jpg
+assets/sites/柯幻熊猫_文生图_活动美陈_功能入口截图.png
+assets/sites/柯幻熊猫_文生图_活动美陈_参数面板截图.png
+assets/sites/柯幻熊猫_文生图_图文广告_车贴_功能入口截图.png
+assets/sites/柯幻熊猫_文生图_图文广告_车贴_参数面板截图.png
 ```
 
-Manifest 中同时保存中文文件名和稳定 ID：
+命名解析规则：
 
-```json
-{
-  "asset_id": "site_flow.text_to_image.activity_decoration.params.001",
-  "filename": "柯幻熊猫_文生图_活动美陈_参数面板截图.png",
-  "site_label": "柯幻熊猫",
-  "module_label": "文生图",
-  "feature_label": "活动美陈",
-  "capture_type": "参数面板截图"
-}
+- `柯幻熊猫`：站点名
+- `网站` / `文生图`：顶层素材类型或一级业务模块
+- `图文广告`：文生图下的一级入口，路径上比普通文生图功能多一层
+- `车贴`、`活动美陈`：最终功能项
+- `功能入口截图`、`参数面板截图`、`原始桌面截图`：截图类型
+
+CDP 运行时可以在内存中保留坐标、字段信息、callouts 等临时元数据，但采集完成后不为这些网站截图生成额外 JSON 文件。
+
+当某个视频 case 需要使用这些网站截图时，再通过注册入口把筛选后的图片写入该 case 的上下文：
+
+```powershell
+python scripts\register_site_assets.py --case cases\<case_name> --feature 活动美陈 --json
+python scripts\register_site_assets.py --case cases\<case_name> --feature 图文广告/车贴 --json
 ```
+
+注册脚本会复制命中的截图到 `cases/<case_name>/assets/sites/`，并写入该 case 的 `asset_manifest.json` 和 `image_resources.json`。全局 `assets/sites/` 仍然只保存图片，不保存 sidecar JSON。
 
 ## 三、前端功能范围
 
-当前前端路由中，`文生图`主功能位于 `/textToImage` 下。一级功能模块如下：
+当前前端路由中，`文生图`主功能位于 `/textToImage` 下。一级子功能共 18 个；其中 `图文广告`展开后有 15 个二级子功能。因此按最终可点击功能项统计为 `17 + 15 = 32` 个。
 
 | 功能名称 | 路由 | 页面组件 | 参数截图标题 |
 | --- | --- | --- | --- |
@@ -62,8 +70,31 @@ Manifest 中同时保存中文文件名和稳定 ID：
 | VI | `/textToImage/vi-design` | `views/viDesign/index` | 以页面实际 `.label-active` 为准 |
 | 海报 | `/textToImage/poster` | `views/textToImagePoster/index` | 以页面实际 `.label-active` 为准 |
 | 活动物料 | `/textToImage/main-kv` | `views/textToImageMainKV/index` | 以页面实际 `.label-active` 为准 |
+| 图文广告 | `/graphic-ad` | `views/graphic-ad/index` | 父级模块，展开后见子功能 |
 
-`图文广告`是 hover 菜单里的二级入口，属于 `/graphic-ad/*` 隐藏路由，可作为第二阶段单独扩展。它需要额外捕获父菜单项和子菜单项，不混入第一阶段文生图主链路。
+### 3.1 图文广告二级子功能（15 个）
+
+`图文广告`是文生图一级菜单中的特殊模块，hover 后会展开二级子菜单。它在 URL 和素材命名上多一个层级，但整体仍归属到 `文生图` 下面。当前可见 15 个子功能：
+
+| 功能名称 | 路由 | 参数截图标题 |
+| --- | --- | --- |
+| 车贴 | `/graphic-ad/car-sticker` | `图文广告-车贴` |
+| 贴纸 | `/graphic-ad/sticker` | `图文广告-贴纸` |
+| 灯箱 | `/graphic-ad/light-box` | `图文广告-灯箱` |
+| 菜单 | `/graphic-ad/menu` | `图文广告-菜单` |
+| 展板 | `/graphic-ad/board` | `图文广告-展板` |
+| 直播背景 | `/graphic-ad/live-background` | `图文广告-直播背景` |
+| banner | `/graphic-ad/banner` | `图文广告-banner` |
+| 朋友圈海报 | `/graphic-ad/moments-poster` | `图文广告-朋友圈海报` |
+| 单页 | `/graphic-ad/flyer` | `图文广告-单页` |
+| 台历 | `/graphic-ad/calendar` | `图文广告-台历` |
+| 名片 | `/graphic-ad/business-card` | `图文广告-名片` |
+| 高炮 | `/graphic-ad/billboard` | `图文广告-高炮` |
+| 易拉宝/展架 | `/graphic-ad/rollup-banner` | `图文广告-易拉宝/展架` |
+| 电梯广告 | `/graphic-ad/elevator-ad` | `图文广告-电梯广告` |
+| 胸卡&工牌 | `/graphic-ad/badge` | `图文广告-胸卡&工牌` |
+
+图文广告采集流程：hover `文生图` → 展开 hover 菜单 → hover `图文广告` → 展开子菜单 → 截取包含子菜单的入口截图 → 点击子功能项进入参数页 → 截取参数面板。素材命名采用 `柯幻熊猫_文生图_图文广告_子功能_截图类型.png`。
 
 ## 四、各类截图的精确流程
 
@@ -225,6 +256,6 @@ CDP 原图保持干净，不直接画红框。后续分两类处理：
    - hover `文生图`并采集功能入口截图；
    - 点击目标功能并采集参数面板截图；
    - 从 DOM 中提取标题、字段、必填项、按钮坐标。
-4. 写入截图 manifest。
+4. 采集完成，截图文件直接存入 `assets/sites/` 目录，不写 sidecar JSON。
 5. 将干净截图 + callouts 交给 GPT image 生成 9:16 视频关键帧。
-6. 视频生成阶段只消费素材 manifest，不再实时依赖网站截图。
+6. 视频生成阶段只消费由截图文件注册得到的 case 素材上下文，不再实时依赖网站截图。

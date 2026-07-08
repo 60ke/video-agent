@@ -8,8 +8,7 @@ const { loginProfile } = require('../lib/profile-auth');
 const { runTask } = require('../lib/task-runner');
 const { verifyAndSave } = require('../lib/verifier');
 const { findFfmpeg } = require('../lib/utils');
-const { validateModules, loadModuleRegistry } = require('../lib/validator');
-const { buildTask, listModules } = require('../lib/nav-task-builder');
+const { captureMaterials } = require('../lib/material-capture');
 
 const ROOT = path.resolve(__dirname, '..');
 
@@ -22,17 +21,13 @@ Usage:
   cdp-capture profile login <profile-id> [options]
   cdp-capture run <task.json> [options]
   cdp-capture verify <output-dir>
-  cdp-capture validate <module-id|*> [options]
-  cdp-capture generate-task <module-id> [options]
-  cdp-capture list-modules
+  cdp-capture capture-material <module-id|*> [options]
 
 Commands:
   profile login    Launch visible Chrome for manual login, save auth_state.json
   run              Execute a capture task from a task JSON file
   verify           Verify video output in an output directory
-  validate         Validate module navigation, auth state, and form structure
-  generate-task    Generate a task JSON for a module from the registry
-  list-modules     List all available modules from the registry
+  capture-material Capture clean screenshots (no video recording)
 
 Options for 'profile login':
   --url <url>           URL to open (default: https://www.kehuanxiongmao.com)
@@ -43,33 +38,25 @@ Options for 'profile login':
 Options for 'run':
   --output <dir>        Override output directory (default: ./output/<task-id>)
 
-Options for 'validate':
+Options for 'capture-material':
   --profile <id>        Chrome profile id (default: kehuanxiongmao)
-  --port <port>         CDP port (default: 9340)
+  --port <port>         CDP port (default: 9342)
   --mode <mode>         'headless' or 'visible' (default: headless)
   --width <px>          Viewport width (default: 1920)
   --height <px>         Viewport height (default: 1080)
-  --output <dir>        Output directory for report + screenshots
-  --no-form             Skip form structure inspection
-  --no-screenshot       Skip screenshots
-
-Options for 'generate-task':
-  --output <file>       Write task JSON to file (default: stdout)
-  --direct              Navigate directly to module URL (skip menu clicks)
-  --profile <id>        Chrome profile id (default: kehuanxiongmao)
-  --demo-json <file>    JSON file with demo field value overrides
-  --result-timeout <ms> Max wait for result (default: 180000)
-  --task-name <name>    Task name for identification
+  --output <dir>        Assets output directory (default: ../assets/sites)
+  --callouts <file>     Optional callout registry path (default: <output>/_callouts.json)
+  --no-homepage         Skip homepage capture
+  --no-entry            Skip feature entry capture
+  --no-params           Skip feature params capture
+  --children <ids>      Comma-separated child ids to capture (e.g. rollup_banner,elevator_ad)
 
 Examples:
   cdp-capture profile login myprofile --url https://example.com
   cdp-capture run ./tasks/my-task.json
   cdp-capture verify ./output/task-2026-01-01_00-00-00-000
-  cdp-capture validate poster
-  cdp-capture validate '*' --mode visible
-  cdp-capture generate-task poster --output ./tasks/poster.json
-  cdp-capture generate-task ecommerce --direct --demo-json ./demo.json
-  cdp-capture list-modules
+  cdp-capture capture-material poster
+  cdp-capture capture-material '*' --mode visible
 `;
 
 // ── Parse args ───────────────────────────────────────────────────────────────
@@ -171,92 +158,49 @@ async function cmdVerify(args) {
   }
 }
 
-async function cmdValidate(args) {
+async function cmdCaptureMaterial(args) {
   const moduleId = args._[0];
   if (!moduleId) {
     console.error('Error: module id is required');
-    console.error('Usage: cdp-capture validate <module-id|*> [options]');
-    console.error('  Use * to validate all modules');
+    console.error('Usage: cdp-capture capture-material <module-id|*> [options]');
+    console.error('  Use * to capture all modules');
     process.exit(1);
   }
 
-  const report = await validateModules({
+  // Parse --children option (comma-separated list of child ids)
+  let children = undefined;
+  if (args.options.children && typeof args.options.children === 'string') {
+    children = args.options.children.split(',').map((s) => s.trim()).filter(Boolean);
+  }
+
+  const result = await captureMaterials({
     rootDir: ROOT,
     modules: moduleId,
     profileId: args.options.profile || 'kehuanxiongmao',
-    port: parseInt(args.options.port || '9340', 10),
+    port: parseInt(args.options.port || '9342', 10),
     mode: args.options.mode || 'headless',
     width: parseInt(args.options.width || '1920', 10),
     height: parseInt(args.options.height || '1080', 10),
     outputDir: args.options.output ? path.resolve(args.options.output) : undefined,
-    inspectForm: args.options['no-form'] !== true,
-    screenshot: args.options['no-screenshot'] !== true,
+    calloutRegistry: args.options.callouts ? path.resolve(args.options.callouts) : undefined,
+    captureHomepage: args.options['no-homepage'] !== true,
+    captureEntry: args.options['no-entry'] !== true,
+    captureParams: args.options['no-params'] !== true,
+    children,
   });
 
-  // Print report to stdout as JSON
-  console.log(JSON.stringify(report, null, 2));
-
-  if (report.failed > 0) {
-    process.exitCode = 1;
-  }
-}
-
-async function cmdGenerateTask(args) {
-  const moduleId = args._[0];
-  if (!moduleId) {
-    console.error('Error: module id is required');
-    console.error('Usage: cdp-capture generate-task <module-id> [options]');
-    console.error('  Available modules: cdp-capture list-modules');
-    process.exit(1);
-  }
-
-  // Load demo values from file if specified
-  let demoValues = {};
-  if (args.options['demo-json']) {
-    const demoPath = path.resolve(args.options['demo-json']);
-    if (!fs.existsSync(demoPath)) {
-      console.error(`Error: demo JSON file not found: ${demoPath}`);
-      process.exit(1);
-    }
-    demoValues = JSON.parse(await fsp.readFile(demoPath, 'utf8'));
-  }
-
-  const task = buildTask({
-    rootDir: ROOT,
-    moduleId,
-    demoValues,
-    profileId: args.options.profile || undefined,
-    directNavigation: args.options.direct === true,
-    resultTimeoutMs: args.options['result-timeout']
-      ? parseInt(args.options['result-timeout'], 10)
-      : undefined,
-    taskName: args.options['task-name'] || undefined,
-    outputDir: args.options.outputDir || undefined,
-  });
-
-  const json = JSON.stringify(task, null, 2);
-
-  if (args.options.output) {
-    const outputPath = path.resolve(args.options.output);
-    const outputDir = path.dirname(outputPath);
-    if (!fs.existsSync(outputDir)) {
-      await fsp.mkdir(outputDir, { recursive: true });
-    }
-    await fsp.writeFile(outputPath, json, 'utf8');
-    console.error(`Task JSON written: ${outputPath}`);
-  } else {
-    console.log(json);
-  }
-}
-
-async function cmdListModules() {
-  const modules = listModules(ROOT);
-  console.log('Available modules:');
-  for (const mod of modules) {
-    const aliases = mod.aliases.length > 0 ? ` (aliases: ${mod.aliases.join(', ')})` : '';
-    console.log(`  ${mod.id.padEnd(20)} ${mod.label.padEnd(10)} ${mod.route}${aliases}`);
-  }
-  console.log(`\nTotal: ${modules.length} modules`);
+  // Print summary to stdout
+  console.log(JSON.stringify({
+    total_assets: result.assets.length,
+    site: result.site,
+    callout_registry: result.callout_registry,
+    assets: result.assets.map(a => ({
+      asset_id: a.asset_id,
+      filename: a.filename,
+      asset_kind: a.asset_kind,
+      module: a.module || null,
+    })),
+  }, null, 2));
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -289,14 +233,8 @@ async function main() {
       case 'verify':
         await cmdVerify(args);
         break;
-      case 'validate':
-        await cmdValidate(args);
-        break;
-      case 'generate-task':
-        await cmdGenerateTask(args);
-        break;
-      case 'list-modules':
-        await cmdListModules();
+      case 'capture-material':
+        await cmdCaptureMaterial(args);
         break;
       default:
         console.error(`Unknown command: ${command}`);

@@ -68,9 +68,6 @@ GPT image 配置
 输入参数截图
 真实结果图
 GPT 9:16 关键帧
-material_manifest.json
-material_groups.json
-素材 QA 报告
 ```
 
 ### 3.2 视频生产层
@@ -80,7 +77,7 @@ material_groups.json
 输入：
 
 ```text
-素材 manifest
+截图素材文件
 素材 groups
 视频目标
 文案模板
@@ -104,38 +101,21 @@ render_qa.json
 建议新增素材库目录：
 
 ```text
-materials/
+assets/
   sites/
-    kehuanxiongmao/
-      site_profile.json
-      material_manifest.json
-      material_groups.json
-      modules/
-        text_to_image/
-          signboard/
-            screenshots/
-              raw/
-              callout/
-              gpt_9x16/
-            results/
-              raw/
-              gpt_9x16/
-            qa/
-          activity_decoration/
-            screenshots/
-            results/
-            qa/
-      shared/
-        homepage/
-        navigation/
-        outro/
+    柯幻熊猫_网站_主页_原始桌面截图.jpg
+    柯幻熊猫_文生图_门头招牌_功能入口截图.png
+    柯幻熊猫_文生图_门头招牌_参数面板截图.png
+    柯幻熊猫_文生图_活动美陈_功能入口截图.png
+    柯幻熊猫_文生图_活动美陈_参数面板截图.png
+    ...
 ```
 
 `cases/` 只用于一次具体视频项目，不再承载长期素材沉淀。
 
 ## 5. 素材命名规范
 
-素材命名要支持文件名快速检索，同时用 manifest 存完整元数据。
+素材命名要支持文件名快速检索。
 
 网站和功能模块本身是中文语义，素材文件名应采用中文优先，避免“活动美陈 -> activity_decoration -> 活动美陈”的来回转换造成信息损耗。英文 slug 只作为 `asset_id`、脚本字段、跨系统稳定键使用；人直接浏览文件夹和图片文件时，应能从中文文件名看懂素材内容。
 
@@ -181,7 +161,7 @@ v1                  版本
 示例：
 
 ```text
-柯幻熊猫_网站_主页_001_原始桌面截图.png
+柯幻熊猫_网站_主页_原始桌面截图.jpg
 柯幻熊猫_网站_主页_002_入口标记.png
 柯幻熊猫_文生图_门头招牌_功能页_001_空表单.png
 柯幻熊猫_文生图_门头招牌_输入参数_001_干净版.png
@@ -203,7 +183,7 @@ gpt_9x16            已经由 GPT image 处理为视频关键帧
 
 ### 5.3 文件名与稳定键的关系
 
-文件名中文优先，但 manifest 仍必须保留稳定英文键，方便脚本检索：
+文件名中文优先，但程序内部仍保留稳定英文键（asset_id），方便脚本检索：
 
 ```json
 {
@@ -221,12 +201,12 @@ gpt_9x16            已经由 GPT image 处理为视频关键帧
 
 - 文件名给人看，中文优先。
 - `asset_id` 给程序用，ASCII 稳定。
-- 中文 label 必须保存在 manifest，不允许只保存英文 slug。
-- 后续按文件名检索时，优先匹配中文 tokens；按脚本自动筛选时，使用 manifest 字段。
+- 中文 label 必须保留在程序内存对象中，不允许只保存英文 slug。
+- 后续按文件名检索时，优先匹配中文 tokens；按脚本自动筛选时，使用内存对象字段。
 
-## 6. Material Manifest Schema
+## 6. 素材元数据结构（内存对象）
 
-`material_manifest.json` 是素材检索的主数据源。
+采集过程中的元数据（坐标、字段、按钮位置等）以内存对象形式返回给调用方，不再写入 JSON 文件。结构示例如下：
 
 示例：
 
@@ -250,8 +230,8 @@ gpt_9x16            已经由 GPT image 处理为视频关键帧
       "asset_kind": "result_image",
       "visual_state": "gpt_9x16",
       "aspect": "landscape",
-      "path": "modules/text_to_image/signboard/results/gpt_9x16/kx_tti_signboard_food_hotpot_001_result_landscape_v1.png",
-      "source_path": "modules/text_to_image/signboard/results/raw/kx_tti_signboard_food_hotpot_001_result_landscape_v1.png",
+      "path": "柯幻熊猫_文生图_门头招牌_结果图_横图_v1.png",
+      "source_path": "柯幻熊猫_文生图_门头招牌_结果图_横图_v1_raw.png",
       "display_rule": "landscape_full_width_center",
       "usage": ["hook", "fast_cut", "result_showcase", "gallery"],
       "claims": ["门头招牌效果图", "餐饮行业", "真实生成结果"],
@@ -395,7 +375,6 @@ CDP 输出：
 ```text
 screenshots/
 results/
-metadata.json
 timeline.json
 generation_receipts.json
 ```
@@ -411,7 +390,7 @@ CDP 应输出两类内容：
 2. 标记规划：目标元素坐标、标记类型、文字说明、语义用途。
 ```
 
-推荐在 manifest 中记录 `callouts`：
+推荐在内存对象中记录 `callouts`：
 
 ```json
 {
@@ -818,7 +797,7 @@ contact sheet 信息密度足够
 
 ### 阶段一：定 schema
 
-- 定稿 `material_manifest.json`
+- 定稿素材内存对象结构
 - 定稿 `material_groups.json`
 - 定稿 `video_project.schema_version=2`
 - 定稿 display/motion 白名单
@@ -828,14 +807,12 @@ contact sheet 信息密度足够
 - 移除标准链路里的录屏依赖。
 - `cdp-capture` 支持 `recording.enabled=false`。
 - 新增素材采集任务生成器。
-- 输出 screenshots、results、metadata、receipts。
+- 输出 screenshots、results、receipts。
 
 ### 阶段三：素材注册与 GPT keyframe
 
 - 新增素材包注册脚本。
-- 生成长期素材库 manifest。
 - GPT image 批量生成 9:16 keyframe。
-- 素材 QA 报告写入 manifest。
 
 ### 阶段四：升级视频 planner
 

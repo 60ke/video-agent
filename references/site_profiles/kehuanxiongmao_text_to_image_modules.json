@@ -234,6 +234,18 @@
       "page_title": "文生图-活动物料",
       "source_type": "main_kv",
       "primary_task_type": "main_kv"
+    },
+    {
+      "id": "graphic_ad",
+      "label": "图文广告",
+      "route": "/graphic-ad",
+      "route_name": "graphicAd",
+      "component": "@/views/graphic-ad/index",
+      "page_title": "图文广告",
+      "source_type": "graphic_ad",
+      "primary_task_type": "graphic_ad",
+      "has_children": true,
+      "children_ref": "graphic_ad_submenu"
     }
   ],
   "graphic_ad_submenu": {
@@ -245,21 +257,21 @@
       "Child item text must exactly match the target label."
     ],
     "children": [
-      {"id": "car_sticker", "label": "车贴", "route": "/graphic-ad/car-sticker"},
-      {"id": "sticker", "label": "贴纸", "route": "/graphic-ad/sticker"},
-      {"id": "light_box", "label": "灯箱", "route": "/graphic-ad/light-box"},
-      {"id": "menu", "label": "菜单", "route": "/graphic-ad/menu"},
-      {"id": "board", "label": "展板", "route": "/graphic-ad/board"},
-      {"id": "live_background", "label": "直播背景", "route": "/graphic-ad/live-background"},
-      {"id": "banner", "label": "banner", "route": "/graphic-ad/banner"},
-      {"id": "moments_poster", "label": "朋友圈海报", "route": "/graphic-ad/moments-poster"},
-      {"id": "flyer", "label": "单页", "route": "/graphic-ad/flyer"},
-      {"id": "calendar", "label": "台历", "route": "/graphic-ad/calendar"},
-      {"id": "business_card", "label": "名片", "route": "/graphic-ad/business-card"},
-      {"id": "billboard", "label": "高炮", "route": "/graphic-ad/billboard"},
-      {"id": "rollup_banner", "label": "易拉宝/展架", "route": "/graphic-ad/rollup-banner"},
-      {"id": "elevator_ad", "label": "电梯广告", "route": "/graphic-ad/elevator-ad"},
-      {"id": "badge", "label": "胸卡&工牌", "route": "/graphic-ad/badge"}
+      {"id": "car_sticker", "label": "车贴", "route": "/graphic-ad/car-sticker", "page_title": "图文广告-车贴"},
+      {"id": "sticker", "label": "贴纸", "route": "/graphic-ad/sticker", "page_title": "图文广告-贴纸"},
+      {"id": "light_box", "label": "灯箱", "route": "/graphic-ad/light-box", "page_title": "图文广告-灯箱"},
+      {"id": "menu", "label": "菜单", "route": "/graphic-ad/menu", "page_title": "图文广告-菜单"},
+      {"id": "board", "label": "展板", "route": "/graphic-ad/board", "page_title": "图文广告-展板"},
+      {"id": "live_background", "label": "直播背景", "route": "/graphic-ad/live-background", "page_title": "图文广告-直播背景"},
+      {"id": "banner", "label": "banner", "route": "/graphic-ad/banner", "page_title": "图文广告-banner"},
+      {"id": "moments_poster", "label": "朋友圈海报", "route": "/graphic-ad/moments-poster", "page_title": "图文广告-朋友圈海报"},
+      {"id": "flyer", "label": "单页", "route": "/graphic-ad/flyer", "page_title": "图文广告-单页"},
+      {"id": "calendar", "label": "台历", "route": "/graphic-ad/calendar", "page_title": "图文广告-台历"},
+      {"id": "business_card", "label": "名片", "route": "/graphic-ad/business-card", "page_title": "图文广告-名片"},
+      {"id": "billboard", "label": "高炮", "route": "/graphic-ad/billboard", "page_title": "图文广告-高炮"},
+      {"id": "rollup_banner", "label": "易拉宝/展架", "route": "/graphic-ad/rollup-banner", "page_title": "图文广告-易拉宝/展架"},
+      {"id": "elevator_ad", "label": "电梯广告", "route": "/graphic-ad/elevator-ad", "page_title": "图文广告-电梯广告"},
+      {"id": "badge", "label": "胸卡&工牌", "route": "/graphic-ad/badge", "page_title": "图文广告-胸卡&工牌"}
     ]
   }
 }

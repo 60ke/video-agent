@@ -64,7 +64,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "high_risk_terms": high_risk,
         "char_count": len("".join(text.split())),
         "speed_policy": {
-            "minimum_units_per_second": 6.0
+            "minimum_units_per_second": 5.0
         }
     }
     output_path = case_dir / "voice_plan.json"

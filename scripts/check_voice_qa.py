@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 
-MIN_SPEECH_UNITS_PER_SECOND = 6.0
+DEFAULT_MIN_SPEECH_UNITS_PER_SECOND = 5.0
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -100,6 +100,17 @@ def extract_asr_text(alignment: dict[str, Any]) -> str:
     return re.sub(r"<\|[^<>\s]*\|>?", "", text).strip()
 
 
+def minimum_units_per_second(case_dir: Path) -> float:
+    voice_plan = load_json(case_dir / "voice_plan.json")
+    policy = voice_plan.get("speed_policy", {}) if isinstance(voice_plan.get("speed_policy"), dict) else {}
+    value = policy.get("minimum_units_per_second")
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        parsed = DEFAULT_MIN_SPEECH_UNITS_PER_SECOND
+    return max(4.6, min(6.2, parsed))
+
+
 def run(args: argparse.Namespace) -> dict[str, Any]:
     case_dir = Path(args.case).expanduser().resolve(strict=False)
     audio_path = Path(args.audio).expanduser().resolve(strict=False) if args.audio else case_dir / "audio" / "voice.mp3"
@@ -124,9 +135,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     asr_text = extract_asr_text(alignment)
     chars = len(normalized_text(script_text))
     cps = round(chars / duration, 3) if duration and chars else None
+    min_units_per_second = minimum_units_per_second(case_dir)
 
     if cps is not None:
-        if cps < MIN_SPEECH_UNITS_PER_SECOND:
+        if cps < min_units_per_second:
             errors.append(f"speech density below minimum policy: {cps} chars/sec")
 
     high_risk_terms = list(args.high_risk_term or [])
@@ -167,7 +179,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "asr_text": asr_text,
         "chars": chars,
         "chars_per_second": cps,
-        "minimum_units_per_second": MIN_SPEECH_UNITS_PER_SECOND,
+        "minimum_units_per_second": min_units_per_second,
         "high_risk_terms": high_risk_terms,
         "missing_terms": missing_terms,
         "silence_events": silence,
