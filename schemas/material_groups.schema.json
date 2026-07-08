@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://video-agent.local/schemas/material_groups.schema.json",
+  "title": "Video Agent Material Groups",
+  "description": "Reusable groups of material assets. Planners should prefer groups over one-off asset picking when building fast cuts, galleries, feature collections, or industry videos.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "library_id", "site", "generated_at", "groups"],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "library_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "site": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "groups": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/material_group"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "$defs": {
+    "material_group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group_id",
+        "site",
+        "source_level_1",
+        "group_kind",
+        "asset_ids",
+        "usage",
+        "recommended_clip_type",
+        "minimum_asset_count"
+      ],
+      "properties": {
+        "group_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "site": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "source_level_1": {
+          "enum": ["site", "text_to_image", "graphic_ad", "ai_tool", "rendered_effects", "static_case", "shared"]
+        },
+        "module": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "module_label": {
+          "type": "string"
+        },
+        "industry": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "industry_label": {
+          "type": "string"
+        },
+        "scene": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "scene_label": {
+          "type": "string"
+        },
+        "group_kind": {
+          "enum": [
+            "site_flow",
+            "module_flow",
+            "result_gallery",
+            "industry_gallery",
+            "multi_feature_gallery",
+            "hook_fast_cut",
+            "cover_set",
+            "evidence_set"
+          ]
+        },
+        "asset_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]*$"
+          },
+          "uniqueItems": true
+        },
+        "usage": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/usage"
+          },
+          "uniqueItems": true
+        },
+        "recommended_clip_type": {
+          "$ref": "#/$defs/clip_type"
+        },
+        "display_rule": {
+          "$ref": "#/$defs/display_rule"
+        },
+        "minimum_asset_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_asset_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "min_video_duration": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_video_duration": {
+          "type": "number",
+          "minimum": 0
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "default": []
+        },
+        "selection_tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "default": []
+        },
+        "quality": {
+          "$ref": "#/$defs/group_quality"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "group_kind": {
+                "enum": ["result_gallery", "industry_gallery", "multi_feature_gallery", "hook_fast_cut"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "minimum_asset_count": {
+                "minimum": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "group_kind": {
+                "const": "site_flow"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "recommended_clip_type": {
+                "const": "site_flow_steps"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "clip_type": {
+      "enum": [
+        "image",
+        "image_sequence",
+        "image_grid",
+        "site_flow_steps",
+        "result_gallery",
+        "before_after",
+        "cover_frame"
+      ]
+    },
+    "display_rule": {
+      "enum": [
+        "prepared_9x16",
+        "portrait_full_width",
+        "landscape_full_width_center",
+        "grid_showcase",
+        "split_compare"
+      ]
+    },
+    "usage": {
+      "enum": [
+        "hook_fast_cut",
+        "site_intro",
+        "feature_entry",
+        "process_proof",
+        "result_showcase",
+        "gallery",
+        "industry_showcase",
+        "multi_feature_showcase",
+        "cover",
+        "evidence_only"
+      ]
+    },
+    "group_quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["usable_for_video", "asset_count_ok"],
+      "properties": {
+        "usable_for_video": {
+          "type": "boolean"
+        },
+        "asset_count_ok": {
+          "type": "boolean"
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    }
+  }
+}

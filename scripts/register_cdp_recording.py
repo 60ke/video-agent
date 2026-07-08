@@ -13,6 +13,56 @@ from typing import Any
 
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
 
+DEFAULT_MIN_RESULT_WIDTH = 240
+DEFAULT_MIN_RESULT_HEIGHT = 240
+
+
+def validate_result_image(
+    path: Path,
+    min_width: int,
+    min_height: int,
+    existing_hashes: dict[str, str],
+) -> str | None:
+    """Return a human-readable rejection reason if this file is not a
+    plausible fresh generated result, else None.
+
+    Guards against the recurring failure where a broad selector captured a
+    logo/icon/thumbnail, a blank placeholder, or a pre-existing sample image and
+    the pipeline still stamped it as a "verified_result".
+    """
+    try:
+        from PIL import Image, ImageStat
+    except ImportError:
+        return None  # Pillow unavailable: skip content checks rather than block.
+
+    try:
+        with Image.open(path) as img:
+            width, height = img.size
+            if width < min_width or height < min_height:
+                return (
+                    f"result image {path.name} is only {width}x{height}px, below the minimum "
+                    f"{min_width}x{min_height}px — this looks like a logo/icon/thumbnail rather than a "
+                    "real generated result"
+                )
+            sample = img.convert("RGB").resize((64, 64))
+            stddev = ImageStat.Stat(sample).stddev
+            if stddev and max(stddev) < 3.0:
+                return (
+                    f"result image {path.name} is near-solid-color (max channel stddev {max(stddev):.2f}) — "
+                    "likely a blank/placeholder or empty state, not a real generated result"
+                )
+    except Exception as exc:  # noqa: BLE001
+        return f"result image {path.name} could not be opened for validation: {exc}"
+
+    digest = sha256_file(path)
+    if digest in existing_hashes:
+        return (
+            f"result image {path.name} is byte-identical to already-registered asset "
+            f"'{existing_hashes[digest]}' — this reuses an existing material instead of the fresh "
+            "generated result from this run"
+        )
+    return None
+
 
 def load_json(path: Path, default: Any = None) -> Any:
     if not path.is_file():
@@ -173,6 +223,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 "profile_id": cdp_metadata.get("profileId"),
                 "auth_state_restored": cdp_metadata.get("authStateRestored"),
                 "overlay_enabled": cdp_metadata.get("overlayEnabled"),
+                "generation_triggered_at_ms": cdp_metadata.get("generationTriggeredAtMs"),
+                "generation_triggered_at_second_ms": cdp_metadata.get("generationTriggeredAtSecondMs"),
+                "generation_triggered_at_iso": cdp_metadata.get("generationTriggeredAtIso"),
             }
         )
 
@@ -230,6 +283,31 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     result_assets: list[dict[str, Any]] = []
     case_result_dir = case_dir / "assets" / "results" / label
     copied_case_results: list[Path] = []
+
+    # Content-level truth gate: reject logos/blank placeholders/reused materials
+    # before anything gets stamped as a verified result. Hashes of already-known
+    # assets let us detect a "result" that is really a pre-existing material.
+    min_result_width = int(getattr(args, "min_result_width", DEFAULT_MIN_RESULT_WIDTH))
+    min_result_height = int(getattr(args, "min_result_height", DEFAULT_MIN_RESULT_HEIGHT))
+    existing_hashes: dict[str, str] = {}
+    for existing_asset in manifest.get("assets", []):
+        if isinstance(existing_asset, dict) and existing_asset.get("sha256"):
+            existing_hashes.setdefault(str(existing_asset["sha256"]), str(existing_asset.get("id", "")))
+    if copied_result_files and not getattr(args, "allow_weak_result", False):
+        rejections = [
+            reason
+            for frozen_result in copied_result_files
+            if (reason := validate_result_image(frozen_result, min_result_width, min_result_height, existing_hashes))
+        ]
+        if rejections:
+            raise ValueError(
+                "refusing to register these captures as verified results: "
+                + "; ".join(rejections)
+                + ". Fix the CDP task (precise result selector + wait_for_selector on the real result, "
+                "real upload via upload_file) and recapture, or pass --allow-weak-result only if you have "
+                "manually confirmed the images are genuine."
+            )
+
     for idx, frozen_result in enumerate(copied_result_files, start=1):
         case_result = case_result_dir / frozen_result.name
         case_result.parent.mkdir(parents=True, exist_ok=True)
@@ -342,6 +420,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 "source": "cdp_capture",
                 "recording_asset_id": asset_id,
                 "recording_boundary": cdp_metadata.get("recordingStop") if isinstance(cdp_metadata, dict) else {},
+                "generation_triggered_at_ms": cdp_metadata.get("generationTriggeredAtMs") if isinstance(cdp_metadata, dict) else None,
+                "generation_triggered_at_second_ms": cdp_metadata.get("generationTriggeredAtSecondMs") if isinstance(cdp_metadata, dict) else None,
+                "generation_triggered_at_iso": cdp_metadata.get("generationTriggeredAtIso") if isinstance(cdp_metadata, dict) else None,
                 "post_recording_result_actions": cdp_metadata.get("postRecordingResultActions", []) if isinstance(cdp_metadata, dict) else [],
                 "result_asset_ids": [item["id"] for item in result_assets],
                 "result_sources": [item["source"] for item in result_assets],
@@ -357,6 +438,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "data": {
             "case_dir": str(case_dir),
             "asset_id": asset_id,
+            "receipt_id": f"receipt_{label}" if result_assets else "",
             "recording_dir": str(frozen_dir),
             "video": str(frozen_video),
             "asset_manifest": str(manifest_path),
@@ -377,6 +459,23 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--description", help="Human-readable recording description.")
     parser.add_argument("--feature-id", help="Feature id for generated image_resources entries.")
     parser.add_argument("--ends-after-generation-trigger", action="store_true")
+    parser.add_argument(
+        "--min-result-width",
+        type=int,
+        default=DEFAULT_MIN_RESULT_WIDTH,
+        help="Minimum width (px) a captured result image must have to be trusted as a real result.",
+    )
+    parser.add_argument(
+        "--min-result-height",
+        type=int,
+        default=DEFAULT_MIN_RESULT_HEIGHT,
+        help="Minimum height (px) a captured result image must have to be trusted as a real result.",
+    )
+    parser.add_argument(
+        "--allow-weak-result",
+        action="store_true",
+        help="Skip result-image content validation (use only after manually verifying the captures).",
+    )
     parser.add_argument("--json", action="store_true")
     return parser
 

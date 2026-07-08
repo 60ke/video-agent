@@ -1,0 +1,154 @@
+{
+  "profileId": "kehuanxiongmao",
+  "url": "https://www.kehuanxiongmao.com",
+  "viewport": { "width": 1920, "height": 1080 },
+  "recording": {
+    "fps": 30,
+    "jpegQuality": 78,
+    "videoCodec": "libx264",
+    "pixelFormat": "yuv420p",
+    "crf": "20",
+    "preset": "veryfast"
+  },
+  "chrome": {
+    "mode": "headless",
+    "port": 9341,
+    "extraArgs": []
+  },
+  "overlay": {
+    "enabled": true,
+    "cursor": { "color": "#ffffff", "size": 34, "showTrail": true },
+    "ripple": { "color": "#ffd84d", "duration": 720 },
+    "highlight": { "color": "#00c6ff", "duration": 900 }
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "duration": 2000,
+      "narration": "打开柯幻熊猫首页"
+    },
+    {
+      "type": "screenshot",
+      "name": "home_logged_in",
+      "workflowStep": "home_entry"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const els = [...document.querySelectorAll('*')]; const target = els.find(el => el.children.length === 0 && el.textContent.trim() === '文生图'); if (target) { target.click(); return 'clicked 文生图'; } const link = [...document.querySelectorAll('a,span,div,li')].find(el => el.textContent.trim() === '文生图' && el.offsetParent !== null); if (link) { link.click(); return 'clicked 文生图 via link'; } return '文生图 not found'; })()",
+      "narration": "进入文生图模块",
+      "cameraFocus": "left_nav",
+      "required": true,
+      "expectIncludes": "clicked"
+    },
+    {
+      "type": "wait",
+      "duration": 1500,
+      "narration": "展开功能菜单"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const els = [...document.querySelectorAll('a,span,div,li,p,h1,h2,h3,h4')]; const target = els.find(el => el.textContent.trim() === '电商' && el.offsetParent !== null); if (target) { target.click(); return 'clicked 电商'; } return '电商 not found'; })()",
+      "narration": "选择电商设计功能",
+      "cameraFocus": "feature_menu",
+      "required": true,
+      "expectIncludes": "clicked"
+    },
+    {
+      "type": "wait",
+      "duration": 2500,
+      "narration": "加载电商设计页面"
+    },
+    {
+      "type": "screenshot",
+      "name": "ecommerce_page_empty",
+      "workflowStep": "feature_page_empty"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const els = [...document.querySelectorAll('*')]; const target = els.find(el => el.textContent.trim() === '商品图上传(最多3张，建议上传主图或细节清晰的商品图)' && el.offsetParent !== null); if (!target) return '商品图上传 label not found'; let uploadArea = target.closest('.upload-area') || target.parentElement?.querySelector('.upload-area'); if (!uploadArea) uploadArea = target.nextElementSibling?.querySelector('.upload-area'); if (!uploadArea) uploadArea = document.querySelector('.upload-area'); if (uploadArea) { const fileInput = uploadArea.querySelector('input[type=\"file\"]'); if (fileInput) { const file = new File([''], 'demo_product.jpg', { type: 'image/jpeg' }); const dataTransfer = new DataTransfer(); dataTransfer.items.add(file); fileInput.files = dataTransfer.files; fileInput.dispatchEvent(new Event('change', { bubbles: true })); fileInput.dispatchEvent(new Event('input', { bubbles: true })); return 'uploaded demo product image'; } } return 'upload area or file input not found'; })()",
+      "narration": "上传商品图",
+      "cameraFocus": "left_form",
+      "required": true,
+      "expectIncludes": "uploaded"
+    },
+    {
+      "type": "wait",
+      "duration": 1500,
+      "narration": "等待图片上传"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const els = [...document.querySelectorAll('*')]; const target = els.find(el => el.textContent.trim() === '产品名称' && el.offsetParent !== null); if (!target) return '产品名称 not found'; let input = target.parentElement?.querySelector('input'); if (!input) { input = target.closest('.el-form-item')?.querySelector('input'); } if (!input) { const next = target.nextElementSibling; if (next && next.tagName === 'INPUT') input = next; } if (input) { const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set; if (nativeSetter) nativeSetter.call(input, '速溶黑咖啡'); else input.value = '速溶黑咖啡'; input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true })); return 'set 产品名称'; } return 'no input for 产品名称'; })()",
+      "narration": "输入产品名称",
+      "cameraFocus": "left_form",
+      "required": true,
+      "expectIncludes": "set"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const els = [...document.querySelectorAll('*')]; const target = els.find(el => el.textContent.trim() === '产品品类' && el.offsetParent !== null); if (!target) return '产品品类 not found'; let select = target.parentElement?.querySelector('.el-select, select'); if (!select) { select = target.closest('.el-form-item')?.querySelector('.el-select, select'); } if (!select) { const next = target.nextElementSibling; if (next && next.tagName === 'SELECT') select = next; if (!select) { const selectWrapper = target.nextElementSibling?.querySelector('.el-select'); if (selectWrapper) select = selectWrapper; } } if (select) { if (select.tagName === 'SELECT') { select.value = '咖啡冲饮'; select.dispatchEvent(new Event('change', { bubbles: true })); return 'selected 咖啡冲饮'; } else if (select.classList.contains('el-select')) { const trigger = select.querySelector('.el-select__input, .el-select__placeholder'); if (trigger) { trigger.click(); setTimeout(() => { const options = document.querySelectorAll('.el-select-dropdown__item span'); const coffeeOption = Array.from(options).find(opt => opt.textContent.includes('咖啡')); if (coffeeOption) { coffeeOption.click(); return 'selected coffee option'; } }, 100); return 'opened dropdown for 产品品类'; } } } return 'no select for 产品品类'; })()",
+      "narration": "选择产品品类",
+      "cameraFocus": "left_form",
+      "required": true
+    },
+    {
+      "type": "wait",
+      "duration": 1500,
+      "narration": "确认表单内容"
+    },
+    {
+      "type": "screenshot",
+      "name": "form_filled",
+      "workflowStep": "form_filled"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const els = [...document.querySelectorAll('*')]; const target = els.find(el => el.textContent.includes('开始生成') && el.offsetParent !== null && (el.tagName === 'BUTTON' || el.tagName === 'SPAN' || el.tagName === 'A' || el.tagName === 'DIV')); if (target) { const btn = target.closest('button') || target; btn.click(); return 'clicked 开始生成'; } return '开始生成 not found'; })()",
+      "narration": "点击开始生成",
+      "cameraFocus": "generate_button",
+      "required": true,
+      "emphasis": "generate",
+      "stopRecordingAfter": true,
+      "expectIncludes": "clicked"
+    },
+    {
+      "type": "wait",
+      "duration": 20000,
+      "narration": "等待生成中"
+    },
+    {
+      "type": "screenshot",
+      "name": "generating_state",
+      "workflowStep": "generating"
+    },
+    {
+      "type": "wait",
+      "duration": 30000,
+      "narration": "继续等待生成结果"
+    },
+    {
+      "type": "screenshot",
+      "name": "result_page",
+      "workflowStep": "result_page"
+    },
+    {
+      "type": "capture_element",
+      "selector": "img[src*='txt2img'], img[src*='result'], img[src*='generate'], .result-image img, .gallery-image img, .product-image img, .ecommerce-result img",
+      "name": "ecommerce_result_01",
+      "workflowStep": "result_crop",
+      "resultAsset": true,
+      "required": true,
+      "cameraFocus": "result_area"
+    },
+    {
+      "type": "capture_element",
+      "selector": "img[src*='txt2img']:nth-child(2), img[src*='result']:nth-child(2), .result-image:nth-child(2) img, .gallery-image:nth-child(2) img, .product-image:nth-child(2) img, .ecommerce-result:nth-child(2) img",
+      "name": "ecommerce_result_02",
+      "workflowStep": "result_crop",
+      "resultAsset": true,
+      "required": false,
+      "cameraFocus": "result_area"
+    }
+  ],
+  "outputDir": "C:\\Users\\CNGG\\Documents\\video_generate\\video-agent\\cdp-capture\\output"
+}

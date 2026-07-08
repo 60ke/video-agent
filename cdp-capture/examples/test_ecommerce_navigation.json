@@ -1,0 +1,58 @@
+{
+  "profileId": "kehuanxiongmao",
+  "url": "https://www.kehuanxiongmao.com",
+  "viewport": { "width": 1920, "height": 1080 },
+  "recording": {
+    "fps": 30,
+    "jpegQuality": 78,
+    "videoCodec": "libx264",
+    "pixelFormat": "yuv420p",
+    "crf": "20",
+    "preset": "veryfast"
+  },
+  "chrome": {
+    "mode": "headless",
+    "port": 9342,
+    "extraArgs": []
+  },
+  "overlay": {
+    "enabled": false
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "duration": 3000,
+      "narration": "打开柯幻熊猫首页"
+    },
+    {
+      "type": "screenshot",
+      "name": "home_page",
+      "workflowStep": "home_entry"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const els = [...document.querySelectorAll('*')]; const target = els.find(el => el.children.length === 0 && el.textContent.trim() === '文生图'); if (target) { target.click(); return 'clicked 文生图'; } const link = [...document.querySelectorAll('a,span,div,li')].find(el => el.textContent.trim() === '文生图' && el.offsetParent !== null); if (link) { link.click(); return 'clicked 文生图 via link'; } return '文生图 not found'; })()",
+      "narration": "进入文生图模块",
+      "cameraFocus": "left_nav",
+      "required": true,
+      "expectIncludes": "clicked"
+    },
+    {
+      "type": "wait",
+      "duration": 2000,
+      "narration": "等待页面加载"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { return JSON.stringify(Array.from(document.querySelectorAll('a,span,div,li,p,h1,h2,h3,h4')).map(el => el.textContent.trim()).filter(t => t.length > 0 && t.length < 50).slice(0, 30), null, 2); })()",
+      "narration": "获取页面文本",
+      "required": false
+    },
+    {
+      "type": "screenshot",
+      "name": "text_to_image_page",
+      "workflowStep": "feature_menu"
+    }
+  ],
+  "outputDir": "C:\\Users\\CNGG\\Documents\\video_generate\\video-agent\\cdp-capture\\output"
+}

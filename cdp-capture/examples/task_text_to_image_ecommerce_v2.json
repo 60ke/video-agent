@@ -1,0 +1,89 @@
+{
+  "profileId": "kehuanxiongmao",
+  "url": "https://www.kehuanxiongmao.com",
+  "viewport": { "width": 1920, "height": 1080 },
+  "recording": {
+    "fps": 30,
+    "jpegQuality": 78,
+    "videoCodec": "libx264",
+    "pixelFormat": "yuv420p",
+    "crf": "20",
+    "preset": "veryfast"
+  },
+  "chrome": {
+    "mode": "headless",
+    "port": 9343,
+    "extraArgs": []
+  },
+  "overlay": {
+    "enabled": true,
+    "cursor": { "color": "#ffffff", "size": 34, "showTrail": true },
+    "ripple": { "color": "#ffd84d", "duration": 720 },
+    "highlight": { "color": "#00c6ff", "duration": 900 }
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "duration": 2000,
+      "narration": "打开柯幻熊猫首页"
+    },
+    {
+      "type": "screenshot",
+      "name": "home_logged_in",
+      "workflowStep": "home_entry"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const els = [...document.querySelectorAll('*')]; const target = els.find(el => el.children.length === 0 && el.textContent.trim() === '文生图'); if (target) { target.click(); return 'clicked 文生图'; } const link = [...document.querySelectorAll('a,span,div,li')].find(el => el.textContent.trim() === '文生图' && el.offsetParent !== null); if (link) { link.click(); return 'clicked 文生图 via link'; } return '文生图 not found'; })()",
+      "narration": "进入文生图模块",
+      "cameraFocus": "left_nav",
+      "required": true,
+      "expectIncludes": "clicked"
+    },
+    {
+      "type": "wait",
+      "duration": 1500,
+      "narration": "展开功能菜单"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const els = [...document.querySelectorAll('a,span,div,li,p,h1,h2,h3,h4')]; const target = els.find(el => el.textContent.trim() === '电商' && el.offsetParent !== null); if (target) { target.click(); return 'clicked 电商'; } return '电商 not found'; })()",
+      "narration": "选择电商设计功能",
+      "cameraFocus": "feature_menu",
+      "required": true,
+      "expectIncludes": "clicked"
+    },
+    {
+      "type": "wait",
+      "duration": 3000,
+      "narration": "加载电商设计页面"
+    },
+    {
+      "type": "screenshot",
+      "name": "ecommerce_page_empty",
+      "workflowStep": "feature_page_empty"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const pageText = Array.from(document.querySelectorAll('*')).map(el => el.textContent.trim()).filter(t => t.length > 0 && t.length < 100).join(' | '); return 'Page contains: ' + pageText.substring(0, 500); })()",
+      "narration": "检查电商页面内容",
+      "required": false
+    },
+    {
+      "type": "wait",
+      "duration": 1000
+    },
+    {
+      "type": "screenshot",
+      "name": "ecommerce_form_fields",
+      "workflowStep": "form_fields"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const labels = Array.from(document.querySelectorAll('label, .el-form-item__label, .form-label, .label')).map(el => el.textContent.trim()).filter(t => t.length > 0); return 'Form labels: ' + JSON.stringify(labels); })()",
+      "narration": "获取表单标签",
+      "required": false
+    }
+  ],
+  "outputDir": "C:\\Users\\CNGG\\Documents\\video_generate\\video-agent\\cdp-capture\\output"
+}

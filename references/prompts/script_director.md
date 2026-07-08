@@ -25,6 +25,7 @@ Return JSON:
       "id": "seg_001",
       "stage": "hook",
       "text": "做一套品牌视觉，不用从零开始。",
+      "camera_note": "从首页进入文生图，再点进 VI 功能页；此路径靠录屏/镜头体现，不要念出来。",
       "feature_id": "vi_design",
       "visual_intent": "show_result_quality",
       "material_task": "use_result_or_before_after",
@@ -42,6 +43,19 @@ Return JSON:
 ```
 
 ## Rules
+
+### Narration vs camera notes (critical)
+
+`text` is the spoken voiceover, and it is also used verbatim as the on-screen subtitle. It must read as natural, benefit-first marketing copy for a viewer.
+
+`text` must NOT contain operation instructions, UI step recitation, or production/meta commentary. These belong in `camera_note`, which is planning metadata only and is never voiced or captioned.
+
+- Forbidden in `text` (put in `camera_note` instead, or drop): "点击/点开/点一下…", "选择/选…（某功能）", "上传…", "填写/输入…", "打开某菜单", and production meta such as "真实录屏", "一秒不剪", "没有剪辑", "这是录屏/演示".
+- The entry path (首页 → 文生图 → 具体功能) is shown by the recording or callout screenshots and may be described in `camera_note`. Do not narrate the click steps.
+- Describing the *content* the user provides (e.g. "用大白话写清风格：简约时尚、突出新鲜感") is allowed, because it is about the creative input, not about which button to press.
+- Prefer outcome/benefit phrasing: say what the viewer gets ("一句话描述就能出整套效果图"), not what the automation did ("点开始生成马上出图").
+
+### General
 
 - Each segment must be short enough for subtitles.
 - Prefer 8-18 Chinese characters per subtitle line, but segment text can be longer if semantically needed.
@@ -62,5 +76,5 @@ Return JSON:
 - If a feature is `blocked_login`, `blocked_permission`, or `verified_entry_only`, write a workflow/entry-point script only, or stop for user approval/materials.
 - For category features such as `电商`, the script must name only the verified category state. Do not write copy that suggests unrelated categories or an opened result page unless captured evidence proves it.
 - For 柯幻熊猫 generated-result demos, a preferred hook is `生成这样的一张效果图要多久？先看结果，再用真实截图证明它怎么来的。` The "result" must be a saved result image/crop/export, while website screenshots may only prove the operation path.
-- For 柯幻熊猫 feature seeding, include at least one process segment that explains the entry path unless a real browser recording is used: from `文生图`, click into the target feature such as `VI`, then arrive at the feature page. Do not jump straight from result to form.
+- For 柯幻熊猫 feature seeding, include at least one process segment that *shows* the entry path (首页 → `文生图` → target feature such as `VI` → feature page) via the recording or sequential callouts. Put the path description in that segment's `camera_note`; the spoken `text` stays benefit-focused and must not recite the clicks. Do not jump straight from result to form.
 - If multiple generated result assets share a result group, add one short gallery segment instead of repeating the same screenshot.

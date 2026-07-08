@@ -193,6 +193,10 @@ class Timeline {
         workflow_step: workflowStep || 'result_capture',
         path: result.path || null,
         selector: params.selector || null,
+        timestamp_text: result.timestamp_text || null,
+        timestamp_ms: result.timestamp_ms || null,
+        generation_triggered_at_ms: result.generation_triggered_at_ms || null,
+        matched_src: result.matched_src || null,
       });
     }
     return {

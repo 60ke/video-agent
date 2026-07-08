@@ -1,0 +1,171 @@
+{
+  "profileId": "kehuanxiongmao",
+  "url": "https://www.kehuanxiongmao.com/textToImage/ecommerce",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "recording": {
+    "fps": 30,
+    "jpegQuality": 78,
+    "videoCodec": "libx264",
+    "pixelFormat": "yuv420p",
+    "crf": "20",
+    "preset": "veryfast"
+  },
+  "chrome": {
+    "mode": "headless",
+    "port": 9335,
+    "extraArgs": []
+  },
+  "overlay": {
+    "enabled": true,
+    "cursor": {
+      "color": "#ffffff",
+      "size": 34,
+      "showTrail": true
+    },
+    "ripple": {
+      "color": "#ffd84d",
+      "duration": 720
+    },
+    "highlight": {
+      "color": "#00c6ff",
+      "duration": 900
+    }
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "duration": 2000,
+      "narration": "打开电商页面"
+    },
+    {
+      "type": "screenshot",
+      "name": "page_entry"
+    },
+    {
+      "type": "inspect_required_form",
+      "stateKey": "ecommerce_required_form",
+      "includeOptional": true,
+      "cameraFocus": "left_form",
+      "required": true
+    },
+    {
+      "type": "fill_required_form",
+      "stateKey": "ecommerce_required_form",
+      "includeOptional": true,
+      "values": {
+        "描述": "高清精美的设计效果图，现代简约风格，专业商业用途，细节丰富，色彩搭配和谐。",
+        "补充描述": "画面应包含品牌名称、主题文字和装饰元素，整体构图饱满、层次分明。",
+        "图片比例": "竖版",
+        "海报尺寸": "竖版",
+        "尺寸": "竖版",
+        "图片质量": "普通：速度快、费用低，小文字有乱码概率",
+        "主题": "商业场景设计",
+        "名称": "示例品牌",
+        "商品描述": "高端无线蓝牙耳机，白色简约设计，产品图展示正面和侧面角度，背景为浅灰色渐变。",
+        "商品名称": "无线蓝牙耳机",
+        "商品主图": "高端无线蓝牙耳机，白色简约设计"
+      },
+      "narration": "填写电商表单",
+      "cameraFocus": "left_form",
+      "required": true
+    },
+    {
+      "type": "validate_required_form",
+      "stateKey": "ecommerce_required_form",
+      "includeOptional": true,
+      "generateButtonText": "开始生成",
+      "requireGenerateButton": true,
+      "cameraFocus": "generate_button",
+      "required": true
+    },
+    {
+      "type": "wait",
+      "duration": 1500,
+      "narration": "确认表单内容"
+    },
+    {
+      "type": "screenshot",
+      "name": "form_filled",
+      "workflowStep": "form_filled"
+    },
+    {
+      "type": "mark_result_baseline",
+      "cardSelector": "*",
+      "imageSelector": "img",
+      "stateKey": "ecommerce_result_baseline",
+      "minWidth": 240,
+      "minHeight": 240,
+      "required": true
+    },
+    {
+      "type": "evaluate_js",
+      "script": "\n    (() => {\n      const normalize = (v) => String(v || '').replace(/\\s+/g, ' ').trim();\n      const visible = (el) => {\n        if (!el) return false;\n        const style = getComputedStyle(el);\n        const r = el.getBoundingClientRect();\n        return style.display !== 'none' && style.visibility !== 'hidden' &&\n          Number(style.opacity) !== 0 && r.width > 0 && r.height > 0;\n      };\n      const candidates = [...document.querySelectorAll('button, [role=\"button\"], a, div, span')]\n        .filter((el) => visible(el) &&\n          normalize(el.textContent).includes(\"开始生成\") &&\n          normalize(el.textContent).length <= 20)\n        .map((el) => {\n          const btn = el.closest('button') || el;\n          const r = btn.getBoundingClientRect();\n          return {\n            el: btn,\n            area: r.width * r.height,\n            disabled: Boolean(btn.disabled ||\n              btn.getAttribute('aria-disabled') === 'true' ||\n              /disabled|is-disabled/.test(String(btn.className))),\n          };\n        })\n        .filter((item) => !item.disabled && item.area > 0)\n        .sort((a, b) => a.area - b.area);\n      const target = candidates[0] && candidates[0].el;\n      if (!target) return \"开始生成\" + ' not found or disabled';\n      target.scrollIntoView({ block: 'center', inline: 'nearest' });\n      target.focus?.({ preventScroll: true });\n      target.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, cancelable: true, view: window }));\n      target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));\n      target.dispatchEvent(new MouseEvent('pointerup', { bubbles: true, cancelable: true, view: window }));\n      target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));\n      target.click();\n      const r = target.getBoundingClientRect();\n      return 'clicked ' + \"开始生成\" + ' ' +\n        Math.round(r.x) + ',' + Math.round(r.y) + ',' + Math.round(r.width) + 'x' + Math.round(r.height);\n    })()\n  ",
+      "narration": "点击开始生成",
+      "cameraFocus": "generate_button",
+      "required": true,
+      "emphasis": "generate",
+      "stopRecordingAfter": true,
+      "expectIncludes": "clicked",
+      "failIfIncludes": "disabled"
+    },
+    {
+      "type": "wait_for_result_after_time",
+      "cardSelector": "*",
+      "imageSelector": "img",
+      "baselineStateKey": "ecommerce_result_baseline",
+      "afterTimeStateKey": "generationTriggeredAtSecondMs",
+      "toleranceMs": 0,
+      "stateKey": "ecommerce_fresh_card",
+      "timeout": 45000,
+      "pollInterval": 1500,
+      "minWidth": 240,
+      "minHeight": 240,
+      "required": true,
+      "narration": "等待本次电商任务出现"
+    },
+    {
+      "type": "screenshot",
+      "name": "generating_state",
+      "workflowStep": "generating"
+    },
+    {
+      "type": "screenshot",
+      "name": "result_page",
+      "workflowStep": "result_page"
+    },
+    {
+      "type": "capture_result_after_time",
+      "cardSelector": "*",
+      "imageSelector": "img",
+      "name": "real_ecommerce_result",
+      "workflowStep": "result_crop",
+      "resultAsset": true,
+      "required": true,
+      "cameraFocus": "result_area",
+      "baselineStateKey": "ecommerce_result_baseline",
+      "afterTimeStateKey": "generationTriggeredAtSecondMs",
+      "toleranceMs": 0,
+      "timeout": 180000,
+      "pollInterval": 30000,
+      "loadingSrcIncludes": [
+        "generate-loading.a5374121.webp",
+        "/static/img/generate-loading"
+      ],
+      "minWidth": 240,
+      "minHeight": 240
+    }
+  ],
+  "_meta": {
+    "taskName": "auto_ecommerce",
+    "moduleId": "ecommerce",
+    "moduleLabel": "电商",
+    "moduleRoute": "/textToImage/ecommerce",
+    "sourceType": "ecommerce_image",
+    "primaryTaskType": "ecommerce_image",
+    "generatedAt": "2026-07-08T03:32:10.596Z",
+    "generator": "nav-task-builder"
+  }
+}

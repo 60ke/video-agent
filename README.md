@@ -66,23 +66,47 @@ Record only the useful operation path and stop right after the real generation t
 - `scripts/render_simple_ffmpeg.py` - render the final MP4 with FFmpeg and smartclip-style ASS subtitles
 - `scripts/make_contact_sheet.py` - extract QA frames and contact sheet
 - `scripts/render_qa.py` - run machine-checkable render QA
+- `scripts/run_pipeline_mode.py` - run post-script production in `draft`, `standard`, or `strict` mode with cache reuse
 - `scripts/check_case_hygiene.py` - check case and package hygiene
+
+## Production Modes
+
+After CDP/material capture and reviewed `video_script.json`, prefer the mode runner:
+
+```powershell
+# Fast preview: hard gates + voice/project/render; skips GPT image, contact sheet, and render QA.
+python scripts\run_pipeline_mode.py --case cases\<new_case> --mode draft --label demo_draft --receipt-id receipt_<capture_label> --json
+
+# Daily default: reuses cached voice/GPT/render outputs when inputs are unchanged; runs basic QA.
+python scripts\run_pipeline_mode.py --case cases\<new_case> --mode standard --label demo_v1 --receipt-id receipt_<capture_label> --json
+
+# Delivery gate: standard checks plus case hygiene and a denser contact sheet.
+python scripts\run_pipeline_mode.py --case cases\<new_case> --mode strict --label demo_final --receipt-id receipt_<capture_label> --json
+```
+
+Always create a fresh case directory for a new video request. Do not build new videos from demo cases or existing case assets unless the user explicitly asks to reuse that case. For website result videos, `--receipt-id` is mandatory: it binds every real-result visual to the current CDP generation receipt, so old demo images cannot be silently reused as the result.
+
+Truth gates stay early and mandatory: logged-in proof, reviewed script/project structure, current-generation result receipts, and renderable assets are still validated. Slower polish gates are mode-controlled:
+
+- `draft`: no GPT image layout optimization by default, no contact sheet, no render QA.
+- `standard`: GPT image optimization, voice QA, contact sheet, render QA.
+- `strict`: standard plus case hygiene and more QA frames.
+
+Useful overrides:
+
+```powershell
+python scripts\run_pipeline_mode.py --case cases\<new_case> --mode draft --receipt-id receipt_<capture_label> --gpt-image always --gpt-dry-run --label quick_layout --json
+python scripts\run_pipeline_mode.py --case cases\<new_case> --mode standard --receipt-id receipt_<capture_label> --force-render --label demo_rerender --json
+python scripts\run_pipeline_mode.py --case cases\<new_case> --mode strict --receipt-id receipt_<capture_label> --force-gpt --label demo_regen_keyframes --json
+```
 
 ## Minimal Command Flow
 
 ```powershell
-python scripts\init_case.py --case cases\demo --target-url "https://kehuanxiongmao.com/" --preferred-feature "活动美陈" --json
-python scripts\apply_site_profile.py --case cases\demo --profile kehuanxiongmao --json
+python scripts\init_case.py --case cases\<new_case> --target-url "https://kehuanxiongmao.com/" --preferred-feature "活动美陈" --json
+python scripts\apply_site_profile.py --case cases\<new_case> --profile kehuanxiongmao --json
 node cdp-capture\bin\cdp-capture.js run cdp-capture\examples\task_activity_meichen.json
-python scripts\register_cdp_recording.py --case cases\demo --recording-dir cdp-capture\output\<task-id> --label activity_meichen --feature-id activity_meichen --ends-after-generation-trigger --json
+python scripts\register_cdp_recording.py --case cases\<new_case> --recording-dir cdp-capture\output\<task-id> --label <capture_label> --feature-id activity_meichen --ends-after-generation-trigger --json
 # capture/register any extra materials, then produce reviewed video_script.json
-python scripts\create_voice_plan.py --case cases\demo --json
-python scripts\generate_voice_minimax.py --case cases\demo --json
-python scripts\apply_asr_alignment.py --case cases\demo --json
-python scripts\build_video_project.py --case cases\demo --json
-python scripts\prepare_gpt_image_keyframes.py --case cases\demo --json
-python scripts\validate_video_project.py --case cases\demo --project cases\demo\video_project.gpt_image.json --strict --json
-python scripts\render_simple_ffmpeg.py --case cases\demo --project cases\demo\video_project.gpt_image.json --label demo_v1 --json
-python scripts\make_contact_sheet.py --case cases\demo --video cases\demo\output\versions\demo_v1.mp4 --json
-python scripts\render_qa.py --case cases\demo --project cases\demo\video_project.gpt_image.json --video cases\demo\output\versions\demo_v1.mp4 --json
+python scripts\run_pipeline_mode.py --case cases\<new_case> --mode standard --label demo_v1 --receipt-id receipt_<capture_label> --json
 ```

@@ -4,7 +4,7 @@
   "site_name": "柯幻熊猫",
   "canonical_url": "https://kehuanxiongmao.com",
   "status": "ready",
-  "last_reviewed": "2026-07-06",
+  "last_reviewed": "2026-07-08",
   "refresh_policy": {
     "default_mode": "use_profile_then_verify",
     "manual_refresh_command": "python scripts/apply_site_profile.py --case <CASE_DIR> --profile kehuanxiongmao --refresh-needed --json",
@@ -23,7 +23,13 @@
   },
   "frontend_code_evidence": {
     "project_root_hint": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend",
+    "required_branch": "master-prod2",
+    "required_node_version": "18.20.8",
     "router_file": "src/router/index.js",
+    "hover_submenu_component": "src/layout/components/Sidebar/HoverSubmenuItem.vue",
+    "text_to_image_module_registry": "references/site_profiles/kehuanxiongmao_text_to_image_modules.json",
+    "text_to_image_route_block": "src/router/index.js:317",
+    "text_to_image_menu_source": "文生图 floating menu is generated from /textToImage route children meta.title; 图文广告 is appended in HoverSubmenuItem.vue.",
     "signboard_route": {
       "path": "/textToImage/signboard",
       "component": "@/views/textToSvg/index",
@@ -57,6 +63,16 @@
     "profile_id": "kehuanxiongmao",
     "group_title": "柯幻熊猫素材采集",
     "recording_layout": "browser-recording-fit-width",
+    "source_first_navigation": {
+      "module_registry": "references/site_profiles/kehuanxiongmao_text_to_image_modules.json",
+      "strategy": "Use source-derived route/page_title/menu label first, then verify live DOM with CDP. Do not let the model infer module identity from historical result images.",
+      "required_assertions": [
+        "location.pathname equals module.route",
+        ".label-active text equals module.page_title",
+        "visible generate button text includes 开始生成",
+        ".hover-submenu-item exact text exists when recording the entry path"
+      ]
+    },
     "required_actions": [
       "open_url",
       "click_selector",
@@ -163,6 +179,83 @@
       "video_hooks": [
         "生成这样的一张门头效果图要多久？我从选功能开始，直接录完整流程。",
         "店铺门头不用先找设计师试稿，先用AI跑几个方向看看。"
+      ]
+    },
+    {
+      "id": "activity_meichen",
+      "name": "活动美陈",
+      "category": "文生图",
+      "route": "/textToImage/activity-decoration",
+      "url": "https://kehuanxiongmao.com/textToImage/activity-decoration",
+      "entry_path": [
+        {"action": "open", "target": "https://kehuanxiongmao.com"},
+        {"action": "click", "target_text": "文生图"},
+        {"action": "click", "target_text": "活动美陈"}
+      ],
+      "operation_status_policy": "verified_result_requires_form_generation_and_result_asset",
+      "form_fields": [
+        {"id": "activity_name", "label": "活动名称", "type": "text_input", "required": true},
+        {"id": "activity_theme", "label": "活动主题", "type": "text_input", "required": true},
+        {"id": "activity_type", "label": "活动类型", "type": "select", "required": true},
+        {"id": "activity_tone", "label": "活动调性", "type": "select", "required": false},
+        {"id": "visual_style", "label": "视觉风格", "type": "select", "required": false},
+        {"id": "scene", "label": "场景选择", "type": "select", "required": true},
+        {"id": "space_type", "label": "空间类型", "type": "select", "required": true},
+        {"id": "description", "label": "补充描述", "api_key": "additional_prompt", "type": "textarea", "required": false}
+      ],
+      "default_demo_inputs": {
+        "activity_name": "春日咖啡快闪节",
+        "activity_theme": "城市露营打卡季",
+        "activity_type": "消费/快闪类",
+        "activity_tone": "年轻潮酷",
+        "visual_style": "自然营地风",
+        "scene": "市集摊位/快闪展位",
+        "space_type": "室外",
+        "description": "需要入口拱门、中心打卡装置、咖啡摊位和赞助商露出，整体年轻潮酷，适合商场中庭拍照传播。"
+      },
+      "api_payload_template": {
+        "activity_name": "<activity_name>",
+        "activity_theme": "<activity_theme>",
+        "activity_type": "<activity_type>",
+        "activity_tone": "<activity_tone>",
+        "visual_style": "<visual_style>",
+        "scene": "<scene>",
+        "space_type": "<space_type>",
+        "additional_prompt": "<description>"
+      },
+      "required_capture_steps": [
+        "home_logged_in",
+        "home_entry",
+        "text_to_image_entry",
+        "feature_menu_select",
+        "feature_entry_callout",
+        "feature_page_empty",
+        "form_filled",
+        "generate_button_callout",
+        "generating",
+        "result_page",
+        "result_crop_or_export"
+      ],
+      "expected_visible_text": [
+        "活动美陈",
+        "活动名称",
+        "活动主题",
+        "活动类型",
+        "活动调性",
+        "视觉风格",
+        "场景选择",
+        "空间类型",
+        "补充描述",
+        "开始生成"
+      ],
+      "supported_claims": [
+        "活动美陈是文生图子功能",
+        "可以填写活动名称、活动主题、活动类型、场景、空间类型和补充描述",
+        "生成结果 claim 必须由真实结果图支持"
+      ],
+      "video_hooks": [
+        "一面商场美陈，从想法到效果图要多久？先看结果。",
+        "商场活动美陈不用先找设计师出方案，用AI一句话描述就出图。"
       ]
     }
   ],

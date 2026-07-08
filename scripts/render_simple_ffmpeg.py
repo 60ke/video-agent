@@ -368,14 +368,23 @@ class RecordingClip:
         return apply_recording_camera(raw, self.camera_track, t if t is not None else progress * self.duration, self.width, self.height)
 
 
+# The whole operation (nav -> feature menu -> form -> generate button) happens
+# in the left column of the wide desktop UI. Framing each step with a different
+# box made the virtual camera jump around and, worst of all, blew up a tiny
+# bottom-left "generate_button" strip so the button/content landed in a weird
+# spot. Instead, every operation-phase focus maps to one stable, full-height
+# left-panel box: the camera settles on the left menu/form once and holds there
+# through "开始生成". Result shots are handled by the result assets themselves
+# (full-width). Only the recording's own result_area (if any) uses the right box.
+LEFT_PANEL_BOX = (0.0, 0.0, 0.34, 1.0)
 CAMERA_FOCUS_BOXES: dict[str, tuple[float, float, float, float]] = {
     "full_page": (0.0, 0.0, 1.0, 1.0),
-    "left_nav": (0.0, 0.0, 0.16, 1.0),
-    "feature_menu": (0.0, 0.0, 0.34, 1.0),
-    "left_form": (0.0, 0.0, 0.36, 1.0),
-    "input_area": (0.0, 0.12, 0.38, 0.68),
-    "generate_button": (0.0, 0.66, 0.38, 0.30),
-    "result_area": (0.30, 0.08, 0.66, 0.62),
+    "left_nav": LEFT_PANEL_BOX,
+    "feature_menu": LEFT_PANEL_BOX,
+    "left_form": LEFT_PANEL_BOX,
+    "input_area": LEFT_PANEL_BOX,
+    "generate_button": LEFT_PANEL_BOX,
+    "result_area": (0.30, 0.0, 0.66, 1.0),
 }
 
 
@@ -442,7 +451,13 @@ def apply_recording_camera(image: Image.Image, camera_track: dict[str, Any], t: 
         box = active_box
     if active_focus == "full_page":
         return fit_width_on_canvas(image, width, height)
-    box = expand_box_to_aspect(box, width / height)
+    # The focus box is expressed as fractions of the source image, but its real
+    # pixel aspect is (w*image_w)/(h*image_h). To make the crop match the video's
+    # portrait aspect we compare against the video aspect scaled by the source
+    # image aspect; otherwise a "full-height left column" box would be cropped
+    # into the wrong shape and re-zoomed by ImageOps.fit.
+    target_ratio = (width / height) * (image.height / image.width)
+    box = expand_box_to_aspect(box, target_ratio)
     x, y, w, h = box
     left = int(round(x * image.width))
     top = int(round(y * image.height))

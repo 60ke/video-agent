@@ -248,11 +248,13 @@ async function runTask(rawTask, rootDir) {
       overlayConfig: task.overlay.enabled ? task.overlay : null,
       screenshotsDir,
       resultsDir,
+      state: {},
       log,
     };
 
     for (let i = 0; i < task.actions.length; i++) {
       const action = task.actions[i];
+      const actionStartedAtMs = Date.now();
       const entry = timeline.startAction(action, i);
       events.emit('action.started', { actionIndex: i, actionType: action.type, params: entry.params });
 
@@ -273,6 +275,9 @@ async function runTask(rawTask, rootDir) {
           await injectOverlay(client, task.overlay);
         }
         if (shouldStopRecordingAfter(action)) {
+          ctx.state.generationTriggeredAtMs = actionStartedAtMs;
+          ctx.state.generationTriggeredAtSecondMs = Math.floor(ctx.state.generationTriggeredAtMs / 1000) * 1000;
+          ctx.state.generationTriggeredAtIso = new Date(ctx.state.generationTriggeredAtMs).toISOString();
           await finishRecording('action_boundary', i);
         }
       } catch (err) {
@@ -333,6 +338,9 @@ async function runTask(rawTask, rootDir) {
       profileId: task.profileId || 'default',
       authStateRestored,
       recordingStop,
+      generationTriggeredAtMs: ctx.state.generationTriggeredAtMs || null,
+      generationTriggeredAtSecondMs: ctx.state.generationTriggeredAtSecondMs || null,
+      generationTriggeredAtIso: ctx.state.generationTriggeredAtIso || null,
       postRecordingActionsExecuted: Boolean(recordingStop && recordingStop.actionIndex !== null && recordingStop.actionIndex < task.actions.length - 1),
       postRecordingResultCaptured: resultProof.hasResultCapture,
       postRecordingResultActions: resultProof.resultActions,

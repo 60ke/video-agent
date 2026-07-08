@@ -12,3 +12,5 @@ cdp-poc/profiles/*
 cdp-capture/output/*
 cdp-capture/profiles/*
 cdp-capture/node_modules/*
+output/
+wanxiang-frontend/

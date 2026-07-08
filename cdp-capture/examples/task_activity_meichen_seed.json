@@ -1,0 +1,137 @@
+{
+  "profileId": "kehuanxiongmao",
+  "url": "https://www.kehuanxiongmao.com",
+  "viewport": { "width": 1920, "height": 1080 },
+  "recording": {
+    "fps": 30,
+    "jpegQuality": 78,
+    "videoCodec": "libx264",
+    "pixelFormat": "yuv420p",
+    "crf": "20",
+    "preset": "veryfast"
+  },
+  "chrome": {
+    "mode": "headless",
+    "port": 9337,
+    "extraArgs": []
+  },
+  "overlay": {
+    "enabled": true,
+    "cursor": { "color": "#ffffff", "size": 34, "showTrail": true },
+    "ripple": { "color": "#ffd84d", "duration": 720 },
+    "highlight": { "color": "#00c6ff", "duration": 900 }
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "duration": 2000,
+      "narration": "打开柯幻熊猫首页"
+    },
+    {
+      "type": "screenshot",
+      "name": "home_logged_in",
+      "workflowStep": "home_entry"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const els = [...document.querySelectorAll('*')]; const target = els.find(el => el.children.length === 0 && el.textContent.trim() === '文生图'); if (target) { target.click(); return 'clicked 文生图'; } const link = [...document.querySelectorAll('a,span,div,li')].find(el => el.textContent.trim() === '文生图' && el.offsetParent !== null); if (link) { link.click(); return 'clicked 文生图 via link'; } return '文生图 not found'; })()",
+      "narration": "进入文生图模块",
+      "cameraFocus": "left_nav",
+      "required": true,
+      "expectIncludes": "clicked"
+    },
+    {
+      "type": "wait",
+      "duration": 1500,
+      "narration": "展开功能菜单"
+    },
+    {
+      "type": "screenshot",
+      "name": "menu_expanded",
+      "workflowStep": "text_to_image_entry"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const els = [...document.querySelectorAll('a,span,div,li,p,h1,h2,h3,h4')]; const target = els.find(el => el.textContent.trim() === '活动美陈' && el.offsetParent !== null); if (target) { target.click(); return 'clicked 活动美陈'; } return '活动美陈 not found'; })()",
+      "narration": "选择活动美陈功能",
+      "cameraFocus": "feature_menu",
+      "required": true,
+      "expectIncludes": "clicked"
+    },
+    {
+      "type": "wait",
+      "duration": 2500,
+      "narration": "加载活动美陈页面"
+    },
+    {
+      "type": "screenshot",
+      "name": "feature_page_empty",
+      "workflowStep": "feature_page_empty"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const setVal = (labels, value) => { const els = [...document.querySelectorAll('*')]; for (const label of labels) { const labelEl = els.find(el => el.textContent.trim() === label && el.offsetParent !== null); if (!labelEl) continue; let input = labelEl.parentElement?.querySelector('input, textarea, select'); if (!input) { input = labelEl.closest('.el-form-item')?.querySelector('input, textarea, select'); } if (!input) { const next = labelEl.nextElementSibling; if (next && (next.tagName === 'INPUT' || next.tagName === 'TEXTAREA' || next.tagName === 'SELECT')) input = next; } if (input) { const nativeSetter = Object.getOwnPropertyDescriptor(window[input.tagName === 'TEXTAREA' ? 'HTMLTextAreaElement' : input.tagName === 'SELECT' ? 'HTMLSelectElement' : 'HTMLInputElement'], 'value')?.set; if (nativeSetter) nativeSetter.call(input, value); else input.value = value; input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true })); return `set ${label}=${value}`; } } return `no input for ${labels.join('/')}`; }; const results = []; results.push(setVal(['活动名称'], '春日咖啡快闪节')); results.push(setVal(['活动主题'], '城市露营打卡季')); results.push(setVal(['补充描述'], '需要入口拱门、中心打卡装置、咖啡摊位和赞助商露出，整体年轻潮酷，适合商场中庭拍照传播。')); return results.join('; '); })()",
+      "narration": "填写活动名称、主题和补充描述",
+      "cameraFocus": "left_form",
+      "required": true,
+      "expectIncludes": "set",
+      "failIfIncludes": "no input"
+    },
+    {
+      "type": "wait",
+      "duration": 1500,
+      "narration": "确认表单内容"
+    },
+    {
+      "type": "screenshot",
+      "name": "form_filled",
+      "workflowStep": "form_filled"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const els = [...document.querySelectorAll('*')]; const target = els.find(el => el.textContent.includes('开始生成') && el.offsetParent !== null && (el.tagName === 'BUTTON' || el.tagName === 'SPAN' || el.tagName === 'A' || el.tagName === 'DIV')); if (target) { const btn = target.closest('button') || target; btn.click(); return 'clicked 开始生成'; } return '开始生成 not found'; })()",
+      "narration": "点击开始生成",
+      "cameraFocus": "generate_button",
+      "required": true,
+      "emphasis": "generate",
+      "stopRecordingAfter": true,
+      "expectIncludes": "clicked"
+    },
+    {
+      "type": "wait",
+      "duration": 30000,
+      "narration": "等待生成结果"
+    },
+    {
+      "type": "screenshot",
+      "name": "generating_state",
+      "workflowStep": "generating"
+    },
+    {
+      "type": "wait",
+      "duration": 30000,
+      "narration": "继续等待结果"
+    },
+    {
+      "type": "screenshot",
+      "name": "result_page",
+      "workflowStep": "result_page"
+    },
+    {
+      "type": "capture_element",
+      "selector": ".result img, .image-result img, .preview img, .gallery img, img[src*='result'], img[src*='generate']",
+      "name": "real_activity_meichen_result_01",
+      "workflowStep": "result_crop",
+      "resultAsset": true,
+      "required": true,
+      "cameraFocus": "result_area"
+    },
+    {
+      "type": "evaluate_js",
+      "script": "(() => { const imgs = document.querySelectorAll('.result img, .image-result img, .preview img, .gallery img, img[src*=\"result\"], img[src*=\"generate\"]'); return `found ${imgs.length} result images`; })()",
+      "narration": "检查生成结果数量",
+      "cameraFocus": "result_area"
+    }
+  ],
+  "outputDir": "./output"
+}

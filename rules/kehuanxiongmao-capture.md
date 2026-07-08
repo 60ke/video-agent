@@ -58,6 +58,25 @@ Before sequence capture, use `references/site_profiles/kehuanxiongmao.json` when
 
 The profile is a shortcut, not proof. CDP must still verify live page state, login state, screenshots, and generated results.
 
+For any `文生图` module, first read `references/site_profiles/kehuanxiongmao_text_to_image_modules.json`. It is generated from the `wanxiang-frontend` source structure and records the exact menu label, route, route name, page title, component, `source_type`, and primary `task_type` for every visible module under `文生图`. Use it as the navigation source of truth before touching the browser.
+
+Source-first navigation rules:
+
+- Before refreshing the module registry, update the frontend repo from remote on `master-prod2` and use Node 18:
+
+```powershell
+cd C:\Users\CNGG\Documents\video_generate\wanxiang-frontend
+git fetch origin
+git switch master-prod2
+git pull --ff-only origin master-prod2
+nvm use 18.20.8
+```
+
+- Prefer direct module URL navigation for speed, then record the visible menu path only when video evidence needs it.
+- Assert live state with CDP after navigation: `location.pathname` equals the registry route, `.label-active` equals `文生图-<模块名>`, and `开始生成` is visible.
+- When recording the menu path, click or hover the exact visible text in `.hover-submenu-item`; never infer the module from a historical image card, OCR-like guess, or broad visual similarity.
+- For result capture, filter by the registry `source_type` / `primary_task_type` where the DOM exposes it, then still apply the click-time freshness gate.
+
 1. Open `https://kehuanxiongmao.com` with CDP using the fixed `kehuanxiongmao` profile.
 2. Capture the home page or dashboard state.
    - Save a clean screenshot.
@@ -100,6 +119,7 @@ The profile is a shortcut, not proof. CDP must still verify live page state, log
    - Capture loading/generation state when visible as evidence after the recording boundary if useful.
 8. Capture the result.
    - Continue in the same authenticated browser session until a real generated result is visible or a timeout/error is captured.
+   - If the page shows historical generated results, record a baseline before clicking generate, then accept only a result card whose visible timestamp is greater than or equal to this run's `开始生成` click time. Historical cards that existed before the click must be ignored even if they contain large images.
    - Save the result page screenshot.
    - Export/download the generated image if the site provides an action.
    - If no export is available, crop the result area from the browser screenshot and save it under `assets/results/`.
