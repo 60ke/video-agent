@@ -164,14 +164,14 @@ def event_claims_real_result(event: dict[str, Any], assets: dict[str, dict[str, 
         role = str(asset.get("role") or "").lower()
         if asset_workflow_step(asset) in RESULT_STEPS:
             return True
-        if "assets/results/" in source and "recording" not in role:
+        if "assets/results/" in source:
             return True
     return False
 
 
 def source_asset_ids(asset: dict[str, Any]) -> list[str]:
     values: list[str] = []
-    for key in ("source_asset_id", "source_recording_asset_id"):
+    for key in ("source_asset_id",):
         value = str(asset.get(key) or "").strip()
         if value:
             values.append(value)
@@ -365,8 +365,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     )
     steps.append(
         step(
-            name="apply_asr_alignment",
-            cmd=script_cmd("apply_asr_alignment.py", "--case", rel(case_dir), "--json"),
+            name="build_subtitle_track",
+            cmd=script_cmd("build_subtitle_track.py", "--case", rel(case_dir), "--json"),
             cwd=root,
             outputs=[paths["subtitle_track"]],
             deps=[paths["script"], paths["minimax_alignment"]],

@@ -20,13 +20,6 @@ def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def load_optional_json(path: Path | None) -> dict[str, Any]:
-    if not path or not path.is_file():
-        return {}
-    data = json.loads(path.read_text(encoding="utf-8"))
-    return data if isinstance(data, dict) else {}
-
-
 def resolve_case_path(case_dir: Path, value: str | None) -> Path | None:
     if not value:
         return None
@@ -309,163 +302,13 @@ def asset_index(project: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return result
 
 
-def extract_video_frame(src: Path, dst: Path) -> Path:
-    proc = run_command(
-        ["ffmpeg", "-y", "-i", str(src), "-frames:v", "1", str(dst)],
-        dst.parent,
-    )
-    if proc.returncode != 0:
-        raise RuntimeError(f"failed to extract video frame from {src}:\n{proc.stderr[-2000:]}")
-    return dst
-
-
 def open_visual_asset(src: Path, temp_dir: Path, idx: int) -> Image.Image:
     if src.suffix.lower() in {".mp4", ".mov", ".webm", ".mkv", ".avi"}:
-        src = extract_video_frame(src, temp_dir / f"video_asset_{idx:03d}.png")
+        raise ValueError(f"visual assets must be prepared images, not browser recordings: {src}")
     return Image.open(src).convert("RGB")
 
 
-RECORDING_LAYOUTS = {"browser-recording", "browser-recording-fit-width"}
 SEQUENCE_CLIP_TYPES = {"image_sequence", "site_flow_steps", "result_gallery"}
-
-
-def ffprobe_video_duration(path: Path) -> float:
-    duration = ffprobe_duration(path)
-    return duration if duration and duration > 0 else 0.001
-
-
-def extract_recording_frames(src: Path, dst_dir: Path, fps: int) -> list[Path]:
-    dst_dir.mkdir(parents=True, exist_ok=True)
-    for existing in dst_dir.glob("frame_*.jpg"):
-        existing.unlink()
-
-    vf = f"setsar=1,fps={fps}"
-    output_pattern = dst_dir / "frame_%06d.jpg"
-    proc = run_command(
-        ["ffmpeg", "-y", "-i", str(src), "-vf", vf, "-q:v", "3", str(output_pattern)],
-        dst_dir,
-    )
-    if proc.returncode != 0:
-        raise RuntimeError(f"failed to extract browser recording frames from {src}:\n{proc.stderr[-4000:]}")
-    frames = sorted(dst_dir.glob("frame_*.jpg"))
-    if not frames:
-        raise RuntimeError(f"browser recording produced no frames: {src}")
-    return frames
-
-
-class RecordingClip:
-    def __init__(self, src: Path, frame_dir: Path, width: int, height: int, fps: int, camera_track: dict[str, Any] | None = None) -> None:
-        self.src = src
-        self.width = width
-        self.height = height
-        self.duration = ffprobe_video_duration(src)
-        self.frames = extract_recording_frames(src, frame_dir, fps)
-        self.camera_track = camera_track if isinstance(camera_track, dict) else {}
-
-    def frame_at(self, progress: float, t: float | None = None) -> Image.Image:
-        progress = min(1.0, max(0.0, progress))
-        index = min(len(self.frames) - 1, max(0, int(round(progress * (len(self.frames) - 1)))))
-        raw = Image.open(self.frames[index]).convert("RGB")
-        return apply_recording_camera(raw, self.camera_track, t if t is not None else progress * self.duration, self.width, self.height)
-
-
-# The whole operation (nav -> feature menu -> form -> generate button) happens
-# in the left column of the wide desktop UI. Framing each step with a different
-# box made the virtual camera jump around and, worst of all, blew up a tiny
-# bottom-left "generate_button" strip so the button/content landed in a weird
-# spot. Instead, every operation-phase focus maps to one stable, full-height
-# left-panel box: the camera settles on the left menu/form once and holds there
-# through "开始生成". Result shots are handled by the result assets themselves
-# (full-width). Only the recording's own result_area (if any) uses the right box.
-LEFT_PANEL_BOX = (0.0, 0.0, 0.34, 1.0)
-CAMERA_FOCUS_BOXES: dict[str, tuple[float, float, float, float]] = {
-    "full_page": (0.0, 0.0, 1.0, 1.0),
-    "left_nav": LEFT_PANEL_BOX,
-    "feature_menu": LEFT_PANEL_BOX,
-    "left_form": LEFT_PANEL_BOX,
-    "input_area": LEFT_PANEL_BOX,
-    "generate_button": LEFT_PANEL_BOX,
-    "result_area": (0.30, 0.0, 0.66, 1.0),
-}
-
-
-def normalized_focus_box(name: str) -> tuple[float, float, float, float]:
-    return CAMERA_FOCUS_BOXES.get(name, CAMERA_FOCUS_BOXES["full_page"])
-
-
-def lerp_box(a: tuple[float, float, float, float], b: tuple[float, float, float, float], value: float) -> tuple[float, float, float, float]:
-    eased = smoothstep(value)
-    return tuple(a[i] + (b[i] - a[i]) * eased for i in range(4))  # type: ignore[return-value]
-
-
-def active_camera_segment(camera_track: dict[str, Any], t: float) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
-    segments = camera_track.get("segments", []) if isinstance(camera_track, dict) else []
-    if not isinstance(segments, list) or not segments:
-        return None, None
-    ordered = [segment for segment in segments if isinstance(segment, dict)]
-    ordered.sort(key=lambda segment: float(segment.get("start", 0)))
-    active = ordered[0]
-    previous = ordered[0]
-    for segment in ordered:
-        if float(segment.get("start", 0)) <= t:
-            previous = active
-            active = segment
-        else:
-            break
-    return previous, active
-
-
-def expand_box_to_aspect(box: tuple[float, float, float, float], aspect: float) -> tuple[float, float, float, float]:
-    x, y, w, h = box
-    current = w / h if h > 0 else aspect
-    if current > aspect:
-        new_h = w / aspect
-        y -= (new_h - h) / 2
-        h = new_h
-    else:
-        new_w = h * aspect
-        x -= (new_w - w) / 2
-        w = new_w
-    if x < 0:
-        x = 0
-    if y < 0:
-        y = 0
-    if x + w > 1:
-        x = max(0, 1 - w)
-    if y + h > 1:
-        y = max(0, 1 - h)
-    return (x, y, min(w, 1), min(h, 1))
-
-
-def apply_recording_camera(image: Image.Image, camera_track: dict[str, Any], t: float, width: int, height: int) -> Image.Image:
-    previous, active = active_camera_segment(camera_track, t)
-    if not active:
-        return fit_width_on_canvas(image, width, height)
-    active_focus = str(active.get("focus") or "full_page")
-    active_box = normalized_focus_box(active_focus)
-    previous_box = normalized_focus_box(str(previous.get("focus") or "full_page")) if previous else active_box
-    transition_seconds = 0.45 if str(active.get("transition") or "smooth") == "smooth" else 0.0
-    elapsed = max(0.0, t - float(active.get("start", 0)))
-    if transition_seconds > 0 and elapsed < transition_seconds:
-        box = lerp_box(previous_box, active_box, elapsed / transition_seconds)
-    else:
-        box = active_box
-    if active_focus == "full_page":
-        return fit_width_on_canvas(image, width, height)
-    # The focus box is expressed as fractions of the source image, but its real
-    # pixel aspect is (w*image_w)/(h*image_h). To make the crop match the video's
-    # portrait aspect we compare against the video aspect scaled by the source
-    # image aspect; otherwise a "full-height left column" box would be cropped
-    # into the wrong shape and re-zoomed by ImageOps.fit.
-    target_ratio = (width / height) * (image.height / image.width)
-    box = expand_box_to_aspect(box, target_ratio)
-    x, y, w, h = box
-    left = int(round(x * image.width))
-    top = int(round(y * image.height))
-    right = int(round((x + w) * image.width))
-    bottom = int(round((y + h) * image.height))
-    cropped = image.crop((left, top, max(left + 1, right), max(top + 1, bottom)))
-    return ImageOps.fit(cropped, (width, height), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
 
 
 def fit_width_on_canvas(image: Image.Image, width: int, height: int, *, color: tuple[int, int, int] = (8, 10, 12)) -> Image.Image:
@@ -701,10 +544,6 @@ def compose_group_frame(
     return compose_single_image(images[0], layout, width, height)
 
 
-def is_recording_group(group: dict[str, Any]) -> bool:
-    return str(group.get("layout") or "").lower() in RECORDING_LAYOUTS
-
-
 def is_sequence_group(group: dict[str, Any]) -> bool:
     return str(group.get("clip_type") or "").lower() in SEQUENCE_CLIP_TYPES and len(group.get("asset_ids", [])) > 1
 
@@ -846,7 +685,6 @@ class VisualGroupRenderer:
         self.temp_dir = temp_dir
         self._base_cache: dict[int, Image.Image] = {}
         self._sequence_cache: dict[tuple[int, str], Image.Image] = {}
-        self._recording_cache: dict[int, RecordingClip] = {}
 
     def base_frame(self, group_idx: int) -> Image.Image:
         if group_idx not in self._base_cache:
@@ -854,31 +692,6 @@ class VisualGroupRenderer:
                 self.case_dir, self.groups[group_idx], self.assets, self.temp_dir, self.width, self.height, group_idx
             )
         return self._base_cache[group_idx]
-
-    def recording_clip(self, group_idx: int) -> RecordingClip:
-        if group_idx not in self._recording_cache:
-            group = self.groups[group_idx]
-            if not group["asset_ids"]:
-                raise ValueError(f"browser recording group missing asset_ids: {group['events'][0].get('id') or group_idx}")
-            asset_id = group["asset_ids"][0]
-            asset = self.assets.get(asset_id)
-            if not asset:
-                raise FileNotFoundError(f"browser recording asset missing: {asset_id}")
-            src = resolve_case_path(self.case_dir, asset.get("source"))
-            if not src or not src.is_file():
-                raise FileNotFoundError(f"browser recording source missing: {asset.get('source')}")
-            recording_meta = asset.get("recording", {}) if isinstance(asset.get("recording"), dict) else {}
-            companions = recording_meta.get("companion_files", {}) if isinstance(recording_meta.get("companion_files"), dict) else {}
-            camera_track = load_optional_json(resolve_case_path(self.case_dir, companions.get("recording_camera_track")))
-            self._recording_cache[group_idx] = RecordingClip(
-                src,
-                self.temp_dir / "recording_frames" / f"group_{group_idx:03d}_{src.stem}",
-                self.width,
-                self.height,
-                self.fps,
-                camera_track,
-            )
-        return self._recording_cache[group_idx]
 
     def sequence_base_frame(self, group_idx: int, asset_id: str) -> Image.Image:
         cache_key = (group_idx, asset_id)
@@ -927,8 +740,6 @@ class VisualGroupRenderer:
         group = self.groups[group_idx]
         duration = max(group["end"] - group["start"], 0.001)
         progress = (t - group["start"]) / duration
-        if is_recording_group(group):
-            return self.recording_clip(group_idx).frame_at(progress, t - group["start"])
         if is_sequence_group(group):
             return self.sequence_frame(group_idx, t)
         return apply_motion(self.base_frame(group_idx), group["motion"], progress, self.width, self.height)

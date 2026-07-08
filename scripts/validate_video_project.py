@@ -412,11 +412,8 @@ def asset_aspect(asset: dict[str, Any]) -> float | None:
 
 def validate_visual_asset_policy(event: dict[str, Any], idx: int, assets: dict[str, dict[str, Any]], ctx: ValidationContext) -> None:
     evidence = str(event.get("evidence_binding") or "").lower()
-    layout = str(event.get("layout") or event.get("display_mode") or "").lower()
-    is_recording_layout = layout in {"browser-recording", "browser-recording-fit-width"}
     for asset_id in event.get("asset_ids", []):
         asset = assets.get(asset_id, {})
-        asset_type = str(asset.get("type") or "").lower()
         aspect = asset_aspect(asset)
         image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
         workflow_step = str(image_resource.get("workflow_step") or "").lower()
@@ -446,11 +443,10 @@ def validate_visual_asset_policy(event: dict[str, Any], idx: int, assets: dict[s
         source_workflow_step = str(image_resource.get("source_workflow_step") or "").lower()
         is_function_screenshot = is_function_screenshot or source_workflow_step in {"home_entry", "feature_menu_select", "feature_page_empty"}
         if is_function_screenshot and aspect and aspect > 1.2:
-            if not (is_recording_layout and asset_type == "video"):
-                ctx.warn(
-                    f"visual_track[{idx}] uses a wide function screenshot: {asset_id}; "
-                    "prepare_gpt_image_keyframes.py should replace it with prepared_site_keyframe before final rendering when available"
-                )
+            ctx.warn(
+                f"visual_track[{idx}] uses a wide function screenshot: {asset_id}; "
+                "prepare_gpt_image_keyframes.py should replace it with prepared_site_keyframe before final rendering when available"
+            )
 
 
 def workflow_steps_for_event(event: dict[str, Any], assets: dict[str, dict[str, Any]]) -> set[str]:
@@ -478,8 +474,6 @@ def workflow_steps_for_event(event: dict[str, Any], assets: dict[str, dict[str, 
                 steps.add("feature_page_empty")
             if any(token in value for token in ("form_filled", "filled", "表单")):
                 steps.add("form_filled")
-            if any(token in value for token in ("recording", "录屏", "screen_record")):
-                steps.add("operation_recording")
         relations = image_resource.get("relations", {}) if isinstance(image_resource.get("relations"), dict) else {}
         source_asset_id = str(
             asset.get("source_asset_id")
@@ -497,10 +491,6 @@ def workflow_steps_for_event(event: dict[str, Any], assets: dict[str, dict[str, 
         source_workflow_step = str(image_resource.get("source_workflow_step") or "").strip().lower()
         if source_workflow_step:
             steps.add(source_workflow_step)
-    if str(event.get("evidence_binding") or "").lower() == "real_recording":
-        steps.add("operation_recording")
-    if str(event.get("layout") or event.get("display_mode") or "").lower() in {"browser-recording", "browser-recording-fit-width"}:
-        steps.add("operation_recording")
     return steps
 
 
@@ -530,16 +520,13 @@ def validate_operation_path(project: dict[str, Any], assets: dict[str, dict[str,
         if isinstance(event, dict):
             all_steps.update(workflow_steps_for_event(event, assets))
 
-    if "operation_recording" in all_steps:
-        return
-
     has_entry = bool(all_steps & {"home_entry", "feature_card", "navigation_callout", "text_to_image_entry"})
     has_selection = bool(all_steps & {"menu_select", "feature_menu_select", "vi_menu_select"})
     has_destination = bool(all_steps & {"feature_page_empty", "form_filled", "generate_callout"})
     if not (has_entry and has_selection and has_destination):
         ctx.error(
             "kehuanxiongmao verified-result video must show the stepwise entry path. "
-            "Use a browser recording, or include annotated 9:16 screenshots for entry/text-to-image menu, VI/menu selection, and the destination feature page."
+            "Include annotated 9:16 screenshots for entry/text-to-image menu, target feature selection, and the destination feature page."
         )
 
 

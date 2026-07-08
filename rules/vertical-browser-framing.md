@@ -5,7 +5,7 @@ description: Rules for turning wide desktop browser evidence into readable 9:16 
 
 # Vertical Browser Framing Rules
 
-Use these rules for website/app screenshots and recordings that will appear in a vertical `1080x1920` video. Generated effect/result images are different: save the actual result image/crop/export and preserve it whenever possible.
+Use these rules for website/app screenshots that will appear in a vertical `1080x1920` video. Generated effect/result images are different: save the actual result image/crop/export and preserve it whenever possible.
 
 The browser captures evidence. The render uses prepared vertical shots. A wide desktop page is not a finished shot.
 
@@ -25,7 +25,6 @@ Every narration-bearing scene must use one of:
 - a result export/crop
 - a sequential close-up
 - a split into readable sections
-- a browser recording that is already framed around the active region
 
 ## Required Functional Regions
 

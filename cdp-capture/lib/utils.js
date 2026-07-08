@@ -3,7 +3,6 @@
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const http = require('node:http');
-const path = require('node:path');
 
 // ── sleep ────────────────────────────────────────────────────────────────────
 function sleep(ms) {
@@ -29,24 +28,6 @@ function findChrome() {
   throw new Error(
     'Chrome or Edge executable not found. Set CHROME_PATH env or install Chrome.'
   );
-}
-
-// ── findFfmpeg ───────────────────────────────────────────────────────────────
-function findFfmpeg() {
-  // 1) Try local require
-  try {
-    return require('ffmpeg-static');
-  } catch (_e) {
-    // fall through
-  }
-  // 2) Try openbridge-desktop
-  try {
-    return require('../../openbridge-desktop/node_modules/ffmpeg-static');
-  } catch (_e2) {
-    // fall through
-  }
-  // 3) Try system ffmpeg
-  return 'ffmpeg';
 }
 
 // ── HTTP JSON helper ─────────────────────────────────────────────────────────
@@ -100,29 +81,15 @@ async function getPageWebSocketUrl(port) {
   return page.webSocketDebuggerUrl;
 }
 
-// ── generateTaskId ───────────────────────────────────────────────────────────
-function generateTaskId() {
-  const now = new Date();
-  return `task-${now
-    .toISOString()
-    .replace(/[:.]/g, '-')
-    .replace('T', '_')
-    .slice(0, 23)}`;
-}
-
 // ── ensureDir ────────────────────────────────────────────────────────────────
 async function ensureDir(dir) {
   await fsp.mkdir(dir, { recursive: true });
   return dir;
 }
 
-// ── resolveModule (try local, fallback to openbridge-desktop) ────────────────
+// ── resolveModule ────────────────────────────────────────────────────────────
 function resolveModule(name) {
-  try {
-    return require(name);
-  } catch (_e) {
-    return require(path.join(__dirname, '..', '..', 'openbridge-desktop', 'node_modules', name));
-  }
+  return require(name);
 }
 
 // ── toCookieParam ────────────────────────────────────────────────────────────
@@ -147,11 +114,9 @@ function toCookieParam(cookie) {
 module.exports = {
   sleep,
   findChrome,
-  findFfmpeg,
   requestJson,
   waitForChrome,
   getPageWebSocketUrl,
-  generateTaskId,
   ensureDir,
   resolveModule,
   toCookieParam,

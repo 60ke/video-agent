@@ -28,7 +28,7 @@
 
 ## 3. 全新极简流水线总览
 
-1. **Material Gathering**: CDP 抓取网站实况、截图及生成结果（`image_resources.json`）。需要展示真实操作路径时，使用 CDP 录制一段短的横屏操作素材，并通过 `scripts/register_cdp_recording.py` 注册为 `assets/recordings/` 资产。
+1. **Material Gathering**: CDP 抓取网站截图、登录证明、功能入口、参数面板和坐标元数据（`image_resources.json`）。需要展示真实操作路径时，使用多张 prepared 9:16 截图和 `overlay_track` 动态标记串联入口路径。
 2. **Visual Planning & Scripting**: 大模型先行决定图片来源与骨架，再填充旁白文案（`video_script.json`）。
 3. **Voice & Subtitle Sync**: 运行 `generate_voice_minimax.py`，一键调用 Minimax 接口，秒级输出 `audio/voice.mp3` 与原生的 `output/minimax/minimax_alignment.json`。
 4. **Project Assembly**: 构建 `video_project.json` 和 `subtitle_track.json`，把“声、文、图”精准锁定。
@@ -62,13 +62,13 @@
 - `cut`：硬切（默认）。
 - `crossfade`：`duration` 0-0.6s 之间的交叉淡入淡出，仅在画面（`layout` + `asset_ids`）真正发生变化时才允许使用。
 
-### 4.1.1 浏览器录屏布局
+### 4.1.1 网站截图关键帧布局
 
-CDP 操作录屏使用 `layout=browser-recording-fit-width`。录屏保持正常横屏浏览器尺寸，渲染时按 1080px 宽度等比缩放并在 1080x1920 画布内上下居中。若录屏注册了 `recording_camera_track.json`，渲染器会基于真实 action 时间做虚拟镜头：先展示全页面，再平滑聚焦到左侧导航、功能菜单、表单区域、开始生成按钮或结果区域。
+CDP 不再生成浏览器录屏素材。它只负责捕获干净截图和目标 DOM 坐标，随后由 `scripts/prepare_gpt_image_keyframes.py` 把网站主页、功能入口、参数面板等截图优化成 1080x1920 prepared keyframe。
 
-录屏只展示进入功能、真实填写必填参数、点击 `开始生成` 的动作；每个必填字段和关键按钮都必须由 `required: true` action 真实执行，selector 不存在、输入失败、按钮不可点时直接中止，不允许跳过或伪造状态。点击生成 action 上设置 `stopRecordingAfter: true` 后停止录屏。注意这不是自动化任务结束点：同一个 CDP task 必须继续等待/获取真实生成结果，并把结果保存到 `assets/results/`，最终结果展示仍使用这些真实结果图。
+动态引导效果不提前烧进截图：红框、箭头、鼠标圆圈、点击脉冲等都通过 `image_resources.json.callouts` 进入 `overlay_track`，由渲染器在正确的字幕时间段叠加。这样可以避免横屏截图在转成竖屏后红框错位，也避免局部放大不可控。
 
-`scripts/register_cdp_recording.py --ends-after-generation-trigger` 是真实链路注册门槛：它会要求 CDP `metadata.json` 证明录屏停止后继续执行了后置动作，并要求 `results/` 中存在同一次链路裁剪/导出的真实结果图。注册成功后，结果图会同步写入 `assets/results/`、`image_resources.json` 和 `generation_receipts.json`。
+生成结果仍必须保存为图片、裁剪或导出到 `assets/results/`。网站结果页截图只能作为证据，不能作为最终结果展示图。
 
 ### 4.2 防闪屏是结构性强制，不是靠人工审片
 

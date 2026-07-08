@@ -13,11 +13,10 @@ The video must be a short film assembled from real product evidence. It must not
 
 Use visual evidence in this priority order:
 
-1. Real browser recording of the user flow.
-2. Real screenshots of the input state, selected feature/category, generation/loading state, and result state.
-3. Real exported result assets from the product.
-4. Cropped website screenshots that support a specific claim.
-5. Designed cover/title frames based on captured evidence.
+1. Prepared 9:16 screenshots of the entry path, selected feature/category, parameter state, and generation/loading state.
+2. Real exported/saved result assets from the product.
+3. Cropped website screenshots that support a specific claim.
+4. Designed cover/title frames based on captured evidence.
 
 Do not use generated product photos, generic ecommerce mockups, emoji, stock-like illustrations, or invented UI as a substitute for missing website output.
 
@@ -91,7 +90,7 @@ Every frame must pass a mobile squint test:
 - subtitles must not cover the active input, result, category, or CTA area
 - cover frame must be designed from actual captured evidence or explicitly marked packaging
 
-Use large focus crops, screen recordings, and result close-ups. Split dense UI into sequential close-ups instead of showing the whole page. For feature-entry demos, prefer a short recording of the click path; when recording is unavailable, use multiple red-callout screenshots so the viewer can follow each click.
+Use prepared 9:16 UI keyframes, overlay callouts, and result close-ups. Split dense UI into sequential close-ups instead of showing the whole page. For feature-entry demos, use multiple red-callout screenshots so the viewer can follow each click.
 
 ## Motion Rules
 
@@ -108,7 +107,7 @@ Allowed:
 
 - click-to-focus
 - crop push into a selected category/input/result
-- screen-recording playback
+- overlay callouts tied to selected category/input/result
 - one deliberate transition between evidence states
 - still holds when the user needs to read the UI
 
@@ -118,7 +117,6 @@ If there is no useful motion, hold still. Stillness is better than artificial mo
 
 Each script segment must bind to one of:
 
-- `real_recording`
 - `real_screenshot`
 - `real_result`
 - `error_state`

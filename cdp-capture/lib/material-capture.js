@@ -26,7 +26,7 @@ const path = require('node:path');
 
 const { launchChrome, closeChrome } = require('./chrome-launcher');
 const { restoreAuthState, getProfileDir, getAuthStatePath } = require('./profile-auth');
-const { requiredFormScript } = require('./actions');
+const { requiredFormScript } = require('./form-inspector');
 const { sleep, ensureDir } = require('./utils');
 
 // ── Constants ────────────────────────────────────────────────────────────────

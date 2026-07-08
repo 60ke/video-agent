@@ -10,14 +10,11 @@ const path = require('node:path');
  * Writes progress events to stdout (one JSON per line) and to `logs/events.ndjson`.
  *
  * Events:
- *  - task.started
+ *  - capture.started
  *  - page.loaded
- *  - action.started
- *  - action.finished
- *  - recording.started
- *  - recording.finished
- *  - task.finished
- *  - task.failed
+ *  - screenshot.saved
+ *  - capture.finished
+ *  - capture.failed
  */
 class EventEmitter {
   constructor(ndjsonLogPath) {

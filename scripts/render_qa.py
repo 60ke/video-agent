@@ -67,7 +67,7 @@ def is_wide_ui_asset(asset: dict[str, Any]) -> bool:
     role = str(asset.get("role") or "").lower()
     source = str(asset.get("source") or "").lower()
     aspect = asset_aspect(asset)
-    capture_origin = origin in {"browser_capture", "frontend_capture", "cdp_capture", "cdp_browser_recording"}
+    capture_origin = origin in {"browser_capture", "frontend_capture", "cdp_capture"}
     source_looks_like_ui = any(
         token in source
         for token in ("homepage", "signboard", "workbench", "dropdown", "browser", "page", "kehuan")
@@ -123,12 +123,8 @@ def check_visual_asset_readiness(project: dict[str, Any]) -> tuple[list[str], li
             elif is_generated_claim and aspect and aspect > 1.2 and not is_saved_result:
                 errors.append(f"{label}: generated result uses wide webpage screenshot `{asset_id}`; save/crop the result image first")
             is_function_screenshot = workflow_step in {"menu_select", "feature_page_empty", "form_filled", "generate_callout", "generating"} or "browser" in origin
-            layout = str(event.get("layout") or event.get("display_mode") or "").lower()
-            is_recording_layout = layout in {"browser-recording", "browser-recording-fit-width"}
-            asset_type = str(asset.get("type") or "").lower()
             if is_function_screenshot and aspect and aspect > 1.2:
-                if not (is_recording_layout and asset_type == "video"):
-                    errors.append(f"{label}: function screenshot `{asset_id}` is wide; capture an AI-verified 9:16 screenshot first")
+                errors.append(f"{label}: function screenshot `{asset_id}` is wide; capture an AI-verified 9:16 screenshot first")
     return errors, warnings
 
 
@@ -157,12 +153,6 @@ def workflow_steps_for_event(event: dict[str, Any], assets: dict[str, dict[str, 
             steps.add("feature_page_empty")
         if any(token in combined for token in ("form_filled", "filled", "表单")):
             steps.add("form_filled")
-        if any(token in combined for token in ("recording", "录屏", "screen_record")):
-            steps.add("operation_recording")
-    if str(event.get("evidence_binding") or "").lower() == "real_recording":
-        steps.add("operation_recording")
-    if str(event.get("layout") or event.get("display_mode") or "").lower() == "browser-recording":
-        steps.add("operation_recording")
     return steps
 
 
@@ -187,11 +177,9 @@ def check_operation_path(project: dict[str, Any]) -> list[str]:
     steps: set[str] = set()
     for event in events:
         steps.update(workflow_steps_for_event(event, assets))
-    if "operation_recording" in steps:
-        return []
     if steps & {"home_entry", "feature_card", "navigation_callout", "text_to_image_entry"} and steps & {"menu_select", "feature_menu_select", "vi_menu_select"} and steps & {"feature_page_empty", "form_filled", "generate_callout"}:
         return []
-    return ["missing stepwise entry path: include browser recording or annotated screenshots for 文生图 entry, target feature selection, and destination feature page"]
+    return ["missing stepwise entry path: include annotated screenshots for 文生图 entry, target feature selection, and destination feature page"]
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:

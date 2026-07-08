@@ -36,7 +36,6 @@ ALLOWED_DISPLAY_MODES = {
     "dual-preview",
     "main-plus-reference",
     "grid-rebuild",
-    "browser-recording",
     "full-width",
     "result-showcase",
 }
@@ -51,7 +50,6 @@ ALLOWED_OPERATION_STATUS = {
 }
 
 ALLOWED_EVIDENCE_BINDINGS = {
-    "real_recording",
     "real_screenshot",
     "real_result",
     "error_state",
@@ -177,7 +175,7 @@ def normalize_material(payload: dict[str, Any], case_dir: Path) -> tuple[dict[st
             focus_region = str(plan.get("focus_region") or "").lower()
             if mode == "full-preview":
                 raise ValueError(f"materials[{idx}] wide desktop UI cannot use full-preview as primary display mode")
-            if mode not in {"portrait-showcase", "full-width", "main-plus-reference", "browser-recording", "result-showcase"}:
+            if mode not in {"portrait-showcase", "full-width", "main-plus-reference", "result-showcase"}:
                 raise ValueError(f"materials[{idx}] wide desktop UI must use a prepared 9:16/width-fit display mode, got: {mode or 'missing'}")
             if focus_region in {"", "auto", "center", "whole_page", "whole-page"}:
                 warnings.append(f"materials[{idx}] wide desktop UI should be a prepared 9:16 capture and declare a named functional focus_region")

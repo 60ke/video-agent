@@ -1,16 +1,8 @@
 # Agent Notes
 
-## CDP web recording direction
+## Current Direction
 
-- The previous Electron MVP implementation is paused/abandoned for now because its recording quality and behavior were not satisfactory.
-- Do not continue optimizing the Electron `openbridge-desktop` capturePage-based recorder unless explicitly requested.
-- New quick validations should live in a separate CDP-focused subdirectory and use an external Chromium/Chrome process controlled through Chrome DevTools Protocol.
-- The target validation path is:
-  1. launch Chrome with `--remote-debugging-port`
-  2. connect through CDP
-  3. navigate to the target URL
-  4. perform page actions through CDP
-  5. capture frames with `Page.startScreencast`
-  6. encode frames with FFmpeg
-  7. output a small artifact package for manual review
-
+- The previous Electron recorder and CDP video capture experiments are abandoned.
+- CDP is used for login reuse, navigation, screenshot capture, form inspection, and coordinate metadata only.
+- Video visuals are built from registered images, GPT image prepared 9:16 keyframes, and renderer-side `overlay_track` callouts.
+- Do not add a new browser video recording path unless the user explicitly reopens that experiment.

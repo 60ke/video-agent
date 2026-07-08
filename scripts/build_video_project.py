@@ -13,8 +13,6 @@ READABLE_WIDE_UI_LAYOUTS = {
     "main-plus-reference",
     "portrait-showcase",
     "result-showcase",
-    "browser-recording",
-    "browser-recording-fit-width",
 }
 DEFAULT_CENTER_SAFE_REGION = {"x": 0.18, "y": 0.12, "w": 0.64, "h": 0.68}
 
@@ -339,8 +337,6 @@ def asset_aspect(asset: dict[str, Any]) -> float | None:
 
 
 def is_wide_ui_asset(asset: dict[str, Any]) -> bool:
-    if str(asset.get("type") or "").lower() == "video" and str(asset.get("origin") or "").lower() == "cdp_browser_recording":
-        return False
     risks = {str(v).lower() for v in asset.get("display_risk", []) if isinstance(v, str)}
     if risks & {"wide_desktop_ui", "dense_desktop_ui"}:
         return True
@@ -348,7 +344,7 @@ def is_wide_ui_asset(asset: dict[str, Any]) -> bool:
     role = str(asset.get("role") or "").lower()
     source = str(asset.get("source") or "").lower()
     aspect = asset_aspect(asset)
-    capture_origin = origin in {"browser_capture", "frontend_capture", "cdp_capture", "cdp_browser_recording"}
+    capture_origin = origin in {"browser_capture", "frontend_capture", "cdp_capture"}
     source_looks_like_ui = any(
         token in source
         for token in ("homepage", "signboard", "workbench", "dropdown", "browser", "page", "kehuan")
@@ -390,8 +386,6 @@ def layout_for(segment: dict[str, Any], asset: dict[str, Any], asset_count: int)
         raise ValueError("layout_intent=crop-focus is no longer supported; prepare a 9:16 asset or saved result image first")
     if segment_layout:
         return segment_layout
-    if str(asset.get("type") or "").lower() == "video" and str(asset.get("origin") or "").lower() == "cdp_browser_recording":
-        return "browser-recording-fit-width"
     if asset_count >= 3:
         return "grid-rebuild"
     if asset_count == 2:
@@ -500,7 +494,6 @@ def forbidden_motion_for(asset: dict[str, Any]) -> list[str]:
 
 DEFAULT_PUSH_IN_AMOUNT = 0.028
 MOTION_HOLD_LAYOUTS = {"grid-rebuild", "main-plus-reference", "full-preview"}
-MOTION_HOLD_LAYOUTS.update({"browser-recording", "browser-recording-fit-width"})
 
 
 def motion_for(layout: str, asset: dict[str, Any]) -> dict[str, Any]:

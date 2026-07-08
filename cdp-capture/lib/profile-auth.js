@@ -153,7 +153,7 @@ async function restoreAuthState(client, options) {
   const authStatePath = getAuthStatePath(rootDir, profileId);
 
   if (!fs.existsSync(authStatePath)) {
-    log(`No auth_state.json found at ${authStatePath}; recording as anonymous session`);
+    log(`No auth_state.json found at ${authStatePath}; continuing without saved login state`);
     return { authState: null, cookiesRestored: 0, storageRestored: false };
   }
 

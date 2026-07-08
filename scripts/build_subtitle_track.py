@@ -200,7 +200,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Apply Minimax timing to reviewed script subtitles.")
+    parser = argparse.ArgumentParser(description="Build subtitle_track.json from Minimax timing and reviewed script text.")
     parser.add_argument("--case", required=True)
     parser.add_argument("--alignment")
     parser.add_argument("--update-project", action="store_true")
