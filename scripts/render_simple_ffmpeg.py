@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import json
 import subprocess
@@ -5,13 +7,24 @@ import sys
 from bisect import bisect_right
 from datetime import datetime
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from typing import Any
 
 from PIL import Image, ImageDraw, ImageOps
 
 from utils.case_guards import kehuanxiongmao_auth_errors
+from utils.effects.registry import effect_aux_asset_ids, normalize_effect_config, render_effect_frame
 
 DEFAULT_SUBTITLE_FONT_NAME = "Noto Sans CJK SC"
+SEQUENCE_CLIP_TYPES = {"image_sequence", "site_flow_steps", "result_gallery"}
+MOTION_NAMES = {"hold", "push_in", "pull_out"}
+MOTION_MAX_AMOUNT = 0.06
+TRANSITION_NAMES = {"cut", "crossfade"}
+TRANSITION_MAX_DURATION = 0.6
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -24,35 +37,16 @@ def resolve_case_path(case_dir: Path, value: str | None) -> Path | None:
     if not value:
         return None
     path = Path(value)
-    if path.is_absolute():
-        return path
-    return case_dir / path
+    return path if path.is_absolute() else case_dir / path
 
 
 def run_command(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        cmd,
-        cwd=str(cwd),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
+    return subprocess.run(cmd, cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace")
 
 
 def ffprobe_duration(path: Path) -> float | None:
     proc = subprocess.run(
-        [
-            "ffprobe",
-            "-v",
-            "error",
-            "-show_entries",
-            "format=duration",
-            "-of",
-            "default=noprint_wrappers=1:nokey=1",
-            str(path),
-        ],
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -70,55 +64,35 @@ def append_outro(case_dir: Path, main_output: Path, final_output: Path, ending_t
         if main_output != final_output:
             final_output.write_bytes(main_output.read_bytes())
         return False
-
     outro = resolve_case_path(case_dir, ending_track.get("source"))
     if not outro or not outro.is_file():
         raise FileNotFoundError(f"ending video missing: {ending_track.get('source')}")
-
     temp_dir = final_output.parent / "_concat"
     temp_dir.mkdir(parents=True, exist_ok=True)
     main_norm = temp_dir / f"{final_output.stem}_main_norm.mp4"
     outro_norm = temp_dir / f"{final_output.stem}_outro_norm.mp4"
     concat_list = temp_dir / f"{final_output.stem}_concat.txt"
-
     for src, dst in ((main_output, main_norm), (outro, outro_norm)):
         proc = run_command(
             [
-                "ffmpeg",
-                "-y",
-                "-i",
-                str(src),
-                "-vf",
-                "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30",
-                "-c:v",
-                "libx264",
-                "-pix_fmt",
-                "yuv420p",
-                "-c:a",
-                "aac",
-                "-ar",
-                "48000",
-                "-ac",
-                "2",
-                "-shortest",
-                str(dst),
+                "ffmpeg", "-y", "-i", str(src),
+                "-vf", "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", "-shortest", str(dst),
             ],
             case_dir,
         )
         if proc.returncode != 0:
             raise RuntimeError(f"FFmpeg normalize failed:\n{proc.stderr[-4000:]}")
-
-    concat_list.write_text(
-        f"file '{main_norm.as_posix()}'\nfile '{outro_norm.as_posix()}'\n",
-        encoding="utf-8",
-    )
-    proc = run_command(
-        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_list), "-c", "copy", "-movflags", "+faststart", str(final_output)],
-        case_dir,
-    )
+    concat_list.write_text(f"file '{main_norm.as_posix()}'\nfile '{outro_norm.as_posix()}'\n", encoding="utf-8")
+    proc = run_command(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_list), "-c", "copy", "-movflags", "+faststart", str(final_output)], case_dir)
     if proc.returncode != 0:
         raise RuntimeError(f"FFmpeg outro concat failed:\n{proc.stderr[-4000:]}")
     return True
+
+
+def smoothstep(value: float) -> float:
+    value = min(1.0, max(0.0, float(value)))
+    return value * value * (3.0 - 2.0 * value)
 
 
 def ass_time(seconds: float) -> str:
@@ -134,11 +108,11 @@ def ass_time(seconds: float) -> str:
 
 
 def escape_ass_text(text: str) -> str:
-    return text.replace("{", r"\{").replace("}", r"\}")
+    return str(text).replace("{", r"\{").replace("}", r"\}")
 
 
 def escape_filter_path(path: Path) -> str:
-    return path.as_posix().replace("\\", "\\\\").replace("'", r"\\'")
+    return path.as_posix().replace("\\", "\\\\").replace("'", r"\'")
 
 
 def text_units(text: str) -> int:
@@ -151,7 +125,6 @@ def split_subtitle_text(text: str, max_chars: int) -> list[str]:
         return []
     if len(compact) <= max_chars:
         return [compact]
-
     chunks: list[str] = []
     current = ""
     break_chars = set("，。！？；、,.!?; ")
@@ -176,7 +149,6 @@ def split_subtitle_segment(seg: dict[str, Any], max_chars: int) -> list[dict[str
         return []
     if len(chunks) == 1:
         return [{"start": start, "end": end, "text": chunks[0]}]
-
     duration = max(end - start, 0.001)
     total_weight = sum(text_units(chunk) for chunk in chunks)
     cursor = start
@@ -207,10 +179,7 @@ def wrap_ass_subtitle_text(text: str, max_chars_per_line: int) -> str:
     normalized = " ".join(str(text).replace("\n", " ").split())
     if len(normalized) <= max_chars_per_line:
         return normalized
-    lines = [
-        normalized[start : start + max_chars_per_line]
-        for start in range(0, len(normalized), max_chars_per_line)
-    ]
+    lines = [normalized[start : start + max_chars_per_line] for start in range(0, len(normalized), max_chars_per_line)]
     lines = fix_cjk_punctuation_wrap(lines)
     if len(lines) > 2:
         lines = lines[:2]
@@ -226,30 +195,13 @@ def subtitle_style(width: int, height: int, font_size_override: int | None) -> d
     shadow = max(1, int(font_size * 0.018))
     safe_text_width = width - margin_h * 2
     max_chars_per_line = max(7, min(11, int(safe_text_width / max(30, font_size * 0.95))))
-    return {
-        "font_size": font_size,
-        "margin_h": margin_h,
-        "margin_v": margin_v,
-        "outline": outline,
-        "shadow": shadow,
-        "max_chars_per_line": max_chars_per_line,
-        "cue_max_chars": max_chars_per_line * 2,
-    }
+    return {"font_size": font_size, "margin_h": margin_h, "margin_v": margin_v, "outline": outline, "shadow": shadow, "max_chars_per_line": max_chars_per_line, "cue_max_chars": max_chars_per_line * 2}
 
 
-def build_ass(
-    project: dict[str, Any],
-    ass_path: Path,
-    *,
-    width: int,
-    height: int,
-    font_name: str,
-    font_size_override: int | None,
-) -> dict[str, Any]:
+def build_ass(project: dict[str, Any], ass_path: Path, *, width: int, height: int, font_name: str, font_size_override: int | None) -> dict[str, Any]:
     style = subtitle_style(width, height, font_size_override)
-    track = project.get("subtitle_track", {})
+    track = project.get("subtitle_track", {}) if isinstance(project.get("subtitle_track"), dict) else {}
     segments = track.get("segments", []) if isinstance(track, dict) else []
-
     lines = [
         "[Script Info]",
         "ScriptType: v4.00+",
@@ -259,17 +211,8 @@ def build_ass(
         f"PlayResY: {height}",
         "",
         "[V4+ Styles]",
-        (
-            "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, "
-            "OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, "
-            "ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
-            "Alignment, MarginL, MarginR, MarginV, Encoding"
-        ),
-        (
-            f"Style: Default,{font_name},{style['font_size']},&H00FFFFFF,&H000000FF,"
-            f"&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,{style['outline']},{style['shadow']},"
-            f"2,{style['margin_h']},{style['margin_h']},{style['margin_v']},1"
-        ),
+        "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
+        f"Style: Default,{font_name},{style['font_size']},&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,{style['outline']},{style['shadow']},2,{style['margin_h']},{style['margin_h']},{style['margin_v']},1",
         "",
         "[Events]",
         "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
@@ -280,13 +223,8 @@ def build_ass(
             continue
         for cue in split_subtitle_segment(seg, style["cue_max_chars"]):
             wrapped = wrap_ass_subtitle_text(cue["text"], style["max_chars_per_line"])
-            lines.append(
-                "Dialogue: 0,"
-                f"{ass_time(cue['start'])},{ass_time(cue['end'])},"
-                f"Default,,0,0,0,,{escape_ass_text(wrapped)}"
-            )
+            lines.append(f"Dialogue: 0,{ass_time(cue['start'])},{ass_time(cue['end'])},Default,,0,0,0,,{escape_ass_text(wrapped)}")
             cue_count += 1
-
     ass_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return style | {"cue_count": cue_count, "font_name": font_name}
 
@@ -295,20 +233,13 @@ def asset_index(project: dict[str, Any]) -> dict[str, dict[str, Any]]:
     assets = project.get("assets", [])
     if not isinstance(assets, list):
         raise ValueError("project.assets must be a list")
-    result: dict[str, dict[str, Any]] = {}
-    for asset in assets:
-        if isinstance(asset, dict) and asset.get("id"):
-            result[str(asset["id"])] = asset
-    return result
+    return {str(asset["id"]): asset for asset in assets if isinstance(asset, dict) and asset.get("id")}
 
 
 def open_visual_asset(src: Path, temp_dir: Path, idx: int) -> Image.Image:
     if src.suffix.lower() in {".mp4", ".mov", ".webm", ".mkv", ".avi"}:
         raise ValueError(f"visual assets must be prepared images, not browser recordings: {src}")
     return Image.open(src).convert("RGB")
-
-
-SEQUENCE_CLIP_TYPES = {"image_sequence", "site_flow_steps", "result_gallery"}
 
 
 def fit_width_on_canvas(image: Image.Image, width: int, height: int, *, color: tuple[int, int, int] = (8, 10, 12)) -> Image.Image:
@@ -348,19 +279,11 @@ def grid_on_canvas(images: list[Image.Image], width: int, height: int) -> Image.
 
 
 def compose_single_image(image: Image.Image, layout: str, width: int, height: int) -> Image.Image:
-    layout = layout.lower()
-    if layout in {"grid-rebuild", "main-plus-reference"}:
-        return fit_width_on_canvas(image, width, height)
     return fit_width_on_canvas(image, width, height)
 
 
 def sequence_frame_index(group: dict[str, Any], progress: float) -> int:
     count = max(1, len(group.get("asset_ids", [])))
-    sequence = group.get("sequence", {}) if isinstance(group.get("sequence"), dict) else {}
-    min_item = float(sequence.get("min_item_duration") or 0.8)
-    duration = max(group["end"] - group["start"], 0.001)
-    if duration / count < min_item:
-        return min(count - 1, max(0, int(progress * count)))
     return min(count - 1, max(0, int(progress * count)))
 
 
@@ -370,17 +293,6 @@ def slide_transition_progress(sequence: dict[str, Any], item_progress: float) ->
     if item_progress < 0.82:
         return 0.0
     return smoothstep((item_progress - 0.82) / 0.18)
-
-
-MOTION_NAMES = {"hold", "push_in", "pull_out"}
-MOTION_MAX_AMOUNT = 0.06
-TRANSITION_NAMES = {"cut", "crossfade"}
-TRANSITION_MAX_DURATION = 0.6
-
-
-def smoothstep(value: float) -> float:
-    value = min(1.0, max(0.0, value))
-    return value * value * (3.0 - 2.0 * value)
 
 
 def event_label(event: dict[str, Any], idx: int | None = None) -> str:
@@ -409,11 +321,8 @@ def visual_group_key(event: dict[str, Any], label: str | None = None) -> tuple:
 
 def normalize_motion(event: dict[str, Any], label: str) -> dict[str, Any]:
     raw_motion = event.get("motion")
-    if raw_motion is None:
-        motion: dict[str, Any] = {}
-    elif isinstance(raw_motion, dict):
-        motion = raw_motion
-    else:
+    motion = raw_motion if isinstance(raw_motion, dict) else {}
+    if raw_motion is not None and not isinstance(raw_motion, dict):
         raise ValueError(f"{label}.motion must be an object")
     name = motion.get("name", "hold")
     if name not in MOTION_NAMES:
@@ -434,36 +343,28 @@ def normalize_motion(event: dict[str, Any], label: str) -> dict[str, Any]:
 
 def normalize_transition(event: dict[str, Any], label: str) -> dict[str, Any]:
     raw_transition = event.get("transition_in")
-    if raw_transition is None:
-        transition: dict[str, Any] = {}
-    elif isinstance(raw_transition, dict):
-        transition = raw_transition
-    else:
+    transition = raw_transition if isinstance(raw_transition, dict) else {}
+    if raw_transition is not None and not isinstance(raw_transition, dict):
         raise ValueError(f"{label}.transition_in must be an object")
     name = transition.get("name", "cut")
     if name not in TRANSITION_NAMES:
         raise ValueError(f"{label}.transition_in.name must be one of {sorted(TRANSITION_NAMES)}, got: {name!r}")
     duration = transition.get("duration", 0.0)
     if not is_number(duration) or duration < 0 or duration > TRANSITION_MAX_DURATION:
-        raise ValueError(
-            f"{label}.transition_in.duration must be a number in [0, {TRANSITION_MAX_DURATION}], got: {duration!r}"
-        )
+        raise ValueError(f"{label}.transition_in.duration must be a number in [0, {TRANSITION_MAX_DURATION}], got: {duration!r}")
     duration = float(duration)
     if name == "crossfade" and duration <= 0:
         raise ValueError(f"{label}.transition_in.name=crossfade requires duration > 0")
-    if name == "cut":
-        if duration != 0:
-            raise ValueError(f"{label}.transition_in.name=cut requires duration=0, got: {duration!r}")
-        duration = 0.0
-    return {"name": name, "duration": duration}
+    if name == "cut" and duration != 0:
+        raise ValueError(f"{label}.transition_in.name=cut requires duration=0, got: {duration!r}")
+    return {"name": name, "duration": 0.0 if name == "cut" else duration}
+
+
+def effect_key(effect: dict[str, Any] | None) -> str:
+    return json.dumps(effect or {}, ensure_ascii=False, sort_keys=True)
 
 
 def build_visual_groups(track: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Merge consecutive visual_track events that share the exact same visual
-    (layout + asset_ids) into one continuous shot. This is the core anti-flicker
-    measure: motion runs once across the whole merged span instead of restarting
-    per caption change, and no transition is ever drawn between two slices of the
-    same visual."""
     events = sorted(
         (
             (idx, event)
@@ -479,27 +380,27 @@ def build_visual_groups(track: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for idx, event in events:
         label = event_label(event, idx)
         key = visual_group_key(event, label)
+        start = float(event["start"])
+        end = float(event["end"])
         motion = normalize_motion(event, label)
         transition_in = normalize_transition(event, label)
+        effect = normalize_effect_config(event.get("effect"), group_duration=end - start)
         if groups and groups[-1]["key"] == key:
             group = groups[-1]
             if transition_in["name"] != "cut":
-                raise ValueError(
-                    f"{label} reuses the same visual as the previous event but declares "
-                    f"{transition_in['name']} transition; use transition_in.name=cut"
-                )
+                raise ValueError(f"{label} reuses the same visual as the previous event but declares {transition_in['name']} transition; use transition_in.name=cut")
             if motion != group["motion"]:
-                raise ValueError(
-                    f"{label} reuses the same visual as the previous event but declares different motion"
-                )
-            group["end"] = max(group["end"], float(event["end"]))
+                raise ValueError(f"{label} reuses the same visual as the previous event but declares different motion")
+            if effect_key(effect) != effect_key(group.get("effect")):
+                raise ValueError(f"{label} reuses the same visual as the previous event but declares a different effect")
+            group["end"] = max(group["end"], end)
             group["events"].append(event)
             continue
         groups.append(
             {
                 "key": key,
-                "start": float(event["start"]),
-                "end": float(event["end"]),
+                "start": start,
+                "end": end,
                 "events": [event],
                 "asset_ids": [str(asset_id) for asset_id in event.get("asset_ids", [])],
                 "layout": key[0],
@@ -507,6 +408,7 @@ def build_visual_groups(track: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "sequence": event.get("sequence") if isinstance(event.get("sequence"), dict) else {},
                 "motion": motion,
                 "transition_in": transition_in,
+                "effect": effect,
             }
         )
     if groups:
@@ -514,19 +416,10 @@ def build_visual_groups(track: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return groups
 
 
-def compose_group_frame(
-    case_dir: Path,
-    group: dict[str, Any],
-    assets: dict[str, dict[str, Any]],
-    temp_dir: Path,
-    width: int,
-    height: int,
-    idx: int,
-) -> Image.Image:
+def compose_group_frame(case_dir: Path, group: dict[str, Any], assets: dict[str, dict[str, Any]], temp_dir: Path, width: int, height: int, idx: int) -> Image.Image:
     asset_ids = group["asset_ids"]
     if not asset_ids:
         raise ValueError(f"visual group missing asset_ids: {group['events'][0].get('id') or idx}")
-
     images: list[Image.Image] = []
     for asset_id in asset_ids[:4]:
         asset = assets.get(asset_id)
@@ -537,7 +430,6 @@ def compose_group_frame(
             images.append(open_visual_asset(src, temp_dir, idx))
     if not images:
         raise FileNotFoundError(f"no renderable asset for visual group: {group['events'][0].get('id') or idx}")
-
     layout = group["layout"].lower()
     if len(images) > 1 or layout in {"grid-rebuild", "main-plus-reference"}:
         return grid_on_canvas(images, width, height)
@@ -549,10 +441,6 @@ def is_sequence_group(group: dict[str, Any]) -> bool:
 
 
 def apply_motion(base: Image.Image, motion: dict[str, Any], progress: float, width: int, height: int) -> Image.Image:
-    """Whole-frame, center-anchored, amount-capped, monotonic scale. This never
-    crops into an arbitrary local region of the source image; it always zooms
-    the entire composed canvas, which is what keeps the motion from reading as
-    an unpredictable local zoom."""
     name = motion.get("name", "hold")
     amount = float(motion.get("amount", 0.0))
     if name == "hold" or amount <= 0:
@@ -614,14 +502,7 @@ def draw_label(draw: ImageDraw.ImageDraw, text: str, xy: tuple[int, int], color:
 
 
 def apply_overlays(image: Image.Image, overlays: list[dict[str, Any]], group: dict[str, Any], t: float, width: int, height: int) -> Image.Image:
-    active = [
-        overlay
-        for overlay in overlays
-        if isinstance(overlay.get("start"), (int, float))
-        and isinstance(overlay.get("end"), (int, float))
-        and float(overlay["start"]) <= t <= float(overlay["end"])
-        and overlay_targets_group(overlay, group)
-    ]
+    active = [overlay for overlay in overlays if isinstance(overlay.get("start"), (int, float)) and isinstance(overlay.get("end"), (int, float)) and float(overlay["start"]) <= t <= float(overlay["end"]) and overlay_targets_group(overlay, group)]
     if not active:
         return image
     frame = image.copy()
@@ -659,18 +540,7 @@ def apply_overlays(image: Image.Image, overlays: list[dict[str, Any]], group: di
 
 
 class VisualGroupRenderer:
-    """Streams deterministic frames for the merged visual groups: static hold,
-    or a small bounded push_in/pull_out, with a crossfade only at boundaries
-    where the visual actually changes. No per-frame improvisation."""
-
-    def __init__(
-        self,
-        case_dir: Path,
-        project: dict[str, Any],
-        temp_dir: Path,
-        width: int,
-        height: int,
-    ) -> None:
+    def __init__(self, case_dir: Path, project: dict[str, Any], temp_dir: Path, width: int, height: int) -> None:
         self.case_dir = case_dir
         self.width = width
         self.height = height
@@ -685,19 +555,17 @@ class VisualGroupRenderer:
         self.temp_dir = temp_dir
         self._base_cache: dict[int, Image.Image] = {}
         self._sequence_cache: dict[tuple[int, str], Image.Image] = {}
+        self._aux_cache: dict[str, Image.Image] = {}
 
     def base_frame(self, group_idx: int) -> Image.Image:
         if group_idx not in self._base_cache:
-            self._base_cache[group_idx] = compose_group_frame(
-                self.case_dir, self.groups[group_idx], self.assets, self.temp_dir, self.width, self.height, group_idx
-            )
+            self._base_cache[group_idx] = compose_group_frame(self.case_dir, self.groups[group_idx], self.assets, self.temp_dir, self.width, self.height, group_idx)
         return self._base_cache[group_idx]
 
     def sequence_base_frame(self, group_idx: int, asset_id: str) -> Image.Image:
         cache_key = (group_idx, asset_id)
         if cache_key in self._sequence_cache:
             return self._sequence_cache[cache_key]
-        group = self.groups[group_idx]
         asset = self.assets.get(asset_id)
         if not asset:
             raise FileNotFoundError(f"sequence asset missing: {asset_id}")
@@ -705,7 +573,7 @@ class VisualGroupRenderer:
         if not src or not src.is_file():
             raise FileNotFoundError(f"sequence asset source missing: {asset.get('source')}")
         image = open_visual_asset(src, self.temp_dir, group_idx)
-        frame = compose_single_image(image, str(group.get("layout") or ""), self.width, self.height)
+        frame = compose_single_image(image, str(self.groups[group_idx].get("layout") or ""), self.width, self.height)
         self._sequence_cache[cache_key] = frame
         return frame
 
@@ -734,15 +602,36 @@ class VisualGroupRenderer:
                 canvas.paste(frame, (-offset, 0))
                 canvas.paste(next_frame, (self.width - offset, 0))
             frame = canvas
-        return apply_motion(frame, group["motion"], progress, self.width, self.height)
+        return frame
+
+    def effect_aux_assets(self, group: dict[str, Any]) -> dict[str, Image.Image]:
+        effect = group.get("effect") if isinstance(group.get("effect"), dict) else None
+        ids = effect_aux_asset_ids(effect)
+        if not ids:
+            return {}
+        result: dict[str, Image.Image] = {}
+        for idx, asset_id in enumerate(ids):
+            if asset_id not in self._aux_cache:
+                asset = self.assets.get(asset_id)
+                if not asset:
+                    continue
+                src = resolve_case_path(self.case_dir, asset.get("source"))
+                if not src or not src.is_file():
+                    continue
+                self._aux_cache[asset_id] = open_visual_asset(src, self.temp_dir, idx).resize((self.width, self.height), Image.Resampling.LANCZOS)
+            if asset_id in self._aux_cache:
+                key = "highlight_overlay" if idx == 0 else f"aux_{idx}"
+                result[key] = self._aux_cache[asset_id]
+        return result
 
     def frame_for_group(self, group_idx: int, t: float) -> Image.Image:
         group = self.groups[group_idx]
         duration = max(group["end"] - group["start"], 0.001)
-        progress = (t - group["start"]) / duration
-        if is_sequence_group(group):
-            return self.sequence_frame(group_idx, t)
-        return apply_motion(self.base_frame(group_idx), group["motion"], progress, self.width, self.height)
+        progress = min(1.0, max(0.0, (t - group["start"]) / duration))
+        frame = self.sequence_frame(group_idx, t) if is_sequence_group(group) else self.base_frame(group_idx)
+        if group.get("effect"):
+            frame = render_effect_frame(frame, group.get("effect"), group_progress=progress, group_duration=duration, aux_assets=self.effect_aux_assets(group))
+        return apply_motion(frame, group["motion"], progress, self.width, self.height)
 
     def active_group_index(self, t: float) -> int:
         index = bisect_right(self.group_starts, t) - 1
@@ -753,7 +642,6 @@ class VisualGroupRenderer:
         group = self.groups[idx]
         clamped_t = min(max(t, group["start"]), group["end"] - 1e-4)
         frame = self.frame_for_group(idx, clamped_t)
-
         transition = group["transition_in"]
         if idx > 0 and transition["name"] == "crossfade" and transition["duration"] > 0:
             elapsed = t - group["start"]
@@ -777,6 +665,7 @@ class VisualGroupRenderer:
                 "asset_ids": group["asset_ids"],
                 "motion": group["motion"],
                 "transition_in": group["transition_in"],
+                "effect": group.get("effect"),
             }
             for i, group in enumerate(self.groups)
         ]
@@ -790,7 +679,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     auth_errors = kehuanxiongmao_auth_errors(case_dir, input_data if isinstance(input_data, dict) else {})
     if auth_errors:
         raise ValueError("; ".join(auth_errors))
-    
+
     label = args.label or datetime.now().strftime("simple_%Y%m%d_%H%M%S")
     versions_dir = case_dir / "output" / "versions"
     temp_dir = case_dir / "output" / "ffmpeg_temp"
@@ -798,36 +687,24 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     versions_dir.mkdir(parents=True, exist_ok=True)
     temp_dir.mkdir(parents=True, exist_ok=True)
     reports_dir.mkdir(parents=True, exist_ok=True)
-    
+
     final_output = versions_dir / f"{label}.mp4"
     main_output = versions_dir / f"{label}_main.mp4"
     ass_path = temp_dir / "subs.ass"
     ffmpeg_log_path = temp_dir / f"{label}_ffmpeg.log"
 
-    meta = project.get("meta", {})
-    width = int(meta.get("width", 1080)) if isinstance(meta, dict) else 1080
-    height = int(meta.get("height", 1920)) if isinstance(meta, dict) else 1920
-    fps = int(meta.get("fps", 30)) if isinstance(meta, dict) else 30
+    meta = project.get("meta", {}) if isinstance(project.get("meta"), dict) else {}
+    width = int(meta.get("width", 1080))
+    height = int(meta.get("height", 1920))
+    fps = int(meta.get("fps", 30))
 
-    # 1. Build ASS subtitles and the deterministic motion/transition timeline.
-    subtitle_style_report = build_ass(
-        project,
-        ass_path,
-        width=width,
-        height=height,
-        font_name=args.subtitle_font_name,
-        font_size_override=args.subtitle_font_size,
-    )
+    subtitle_style_report = build_ass(project, ass_path, width=width, height=height, font_name=args.subtitle_font_name, font_size_override=args.subtitle_font_size)
     renderer = VisualGroupRenderer(case_dir, project, temp_dir, width, height)
-    duration = max(
-        float(meta.get("target_duration") or 0) if isinstance(meta, dict) else 0,
-        renderer.groups[-1]["end"],
-    )
+    duration = max(float(meta.get("target_duration") or 0), renderer.groups[-1]["end"])
     frame_count = max(1, int(round(duration * fps)))
 
-    # 2. Get Voice Audio
-    voice = project.get("voice_track", {})
-    audio_path = voice.get("audio_path") if isinstance(voice, dict) else None
+    voice = project.get("voice_track", {}) if isinstance(project.get("voice_track"), dict) else {}
+    audio_path = voice.get("audio_path")
     audio_src = resolve_case_path(case_dir, audio_path)
     if not audio_src or not audio_src.is_file():
         audio_src = case_dir / "audio" / "voice.mp3"
@@ -837,56 +714,22 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     rel_audio_src = audio_src.relative_to(case_dir).as_posix()
     rel_ass = ass_path.relative_to(case_dir)
     rel_main_output = main_output.relative_to(case_dir).as_posix()
-
-    # Subtitles escaping in FFmpeg can be tricky on Windows.
-    # For Windows ffmpeg, colon in paths within filters is extremely problematic,
-    # so running from case_dir with pure relative paths is safest.
     filter_complex = f"[0:v]ass='{escape_filter_path(rel_ass)}'[vout]"
-
     cmd = [
-        "ffmpeg",
-        "-y",
-        "-f", "rawvideo",
-        "-pix_fmt", "rgb24",
-        "-s", f"{width}x{height}",
-        "-r", str(fps),
-        "-i", "-",
-        "-i", rel_audio_src,
-        "-filter_complex", filter_complex,
-        "-map", "[vout]",
-        "-map", "1:a",
-        "-t", f"{duration:.3f}",
-        "-c:v", "libx264",
-        "-pix_fmt", "yuv420p",
-        "-c:a", "aac",
-        "-shortest",
-        "-movflags", "+faststart",
-        rel_main_output,
+        "ffmpeg", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}", "-r", str(fps), "-i", "-",
+        "-i", rel_audio_src, "-filter_complex", filter_complex, "-map", "[vout]", "-map", "1:a", "-t", f"{duration:.3f}",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", "-movflags", "+faststart", rel_main_output,
     ]
-
     print(f"Running FFmpeg (streaming {frame_count} frames): {' '.join(cmd)}", file=sys.stderr)
-
-    # Frames are piped in as raw RGB24 rather than written through the concat
-    # demuxer, so every frame comes from one deterministic per-group render
-    # function (hold / push_in / pull_out + crossfade) instead of a single
-    # static PNG per timeline event. stderr goes to a log file, not a pipe,
-    # so a full ffmpeg log buffer can never deadlock against us still writing
-    # frames to stdin.
     with open(ffmpeg_log_path, "wb") as log_file:
-        proc = subprocess.Popen(
-            cmd,
-            cwd=str(case_dir),
-            stdin=subprocess.PIPE,
-            stdout=log_file,
-            stderr=subprocess.STDOUT,
-        )
+        proc = subprocess.Popen(cmd, cwd=str(case_dir), stdin=subprocess.PIPE, stdout=log_file, stderr=subprocess.STDOUT)
         try:
             if proc.stdin is None:
                 raise RuntimeError("FFmpeg stdin pipe was not created")
             for frame_index in range(frame_count):
                 t = frame_index / fps
                 frame = renderer.render_frame(t)
-                proc.stdin.write(frame.tobytes())
+                proc.stdin.write(frame.convert("RGB").tobytes())
             proc.stdin.close()
         except BrokenPipeError:
             pass
@@ -900,7 +743,6 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             proc.wait()
             raise
         returncode = proc.wait()
-
     if returncode != 0:
         log_text = ffmpeg_log_path.read_text(encoding="utf-8", errors="replace")
         raise RuntimeError(f"FFmpeg failed:\n{log_text[-4000:]}")
@@ -911,10 +753,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     else:
         ending_track = project.get("ending_track", {})
         appended_outro = append_outro(case_dir, main_output, final_output, ending_track if isinstance(ending_track, dict) else {})
-
     report = {
         "schema_version": 1,
         "renderer": "simple_ffmpeg",
+        "effect_renderer": "programmatic_image_effects_v1",
         "label": label,
         "case_dir": str(case_dir),
         "project": str(project_path),
@@ -932,22 +774,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     }
     report_path = reports_dir / f"{label}_render_report.json"
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        
-    return {
-        "ok": True,
-        "code": "ok",
-        "reason": "",
-        "data": {
-            "case_dir": str(case_dir),
-            "main_output": str(main_output),
-            "final_output": str(final_output),
-            "report": str(report_path),
-        }
-    }
+    return {"ok": True, "code": "ok", "reason": "", "data": {"case_dir": str(case_dir), "main_output": str(main_output), "final_output": str(final_output), "report": str(report_path)}}
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Render a Pipeline V2 video with FFmpeg.")
+    parser = argparse.ArgumentParser(description="Render a Pipeline V2 video with FFmpeg and registered programmatic image effects.")
     parser.add_argument("--case", required=True)
     parser.add_argument("--project", help="Project JSON path. Defaults to <case>/video_project.json.")
     parser.add_argument("--label")
@@ -964,13 +795,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         output = run(args)
     except Exception as exc:  # noqa: BLE001
-        output = {
-            "ok": False,
-            "code": exc.__class__.__name__,
-            "reason": str(exc),
-            "data": {},
-        }
-
+        output = {"ok": False, "code": exc.__class__.__name__, "reason": str(exc), "data": {}}
     if args.json:
         sys.stdout.buffer.write((json.dumps(output, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
     elif output["ok"]:
