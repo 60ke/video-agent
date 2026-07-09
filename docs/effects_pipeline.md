@@ -4,6 +4,8 @@
 
 Add controlled short-video motion to Pipeline V2 without returning to browser-heavy or unstable animation stacks. Effects are deterministic Pillow compositions driven by `video_project.json` and rendered through the existing rawvideo-to-FFmpeg path.
 
+For the effect planning policy and future LLM planner design, see `docs/effect_planning_strategy.md`.
+
 ## Effect field
 
 Each `visual_track` event may include:
@@ -114,6 +116,20 @@ python scripts\render_with_effects.py `
   --skip-outro `
   --json
 ```
+
+## Planning model
+
+Current first-pass planning is programmatic and conservative:
+
+```text
+LLM produces script, visual plan, semantic fields, and optional hint text.
+apply_effect_plan.py maps those fields to the effect whitelist.
+normalize_effect_config() validates and clips duration.
+prepare_effect_assets.py generates required auxiliary overlays.
+render_simple_ffmpeg.py renders only normalized effects.
+```
+
+Future LLM planning should stay bounded by the same whitelist and validation path. A recommended upgrade is to add `scripts/plan_effects_llm.py`, output `visual_track[].effect_candidate`, and let `apply_effect_plan.py` run in `hybrid` mode to accept valid candidates or fall back to rule-based `suggested_effect()`.
 
 ## Safety constraints
 
