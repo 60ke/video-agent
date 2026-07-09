@@ -34,6 +34,7 @@ MIN_EFFECT_DURATION = {
     "wipe_reveal": 0.55,
     "scan_overlay": 1.00,
 }
+EFFECT_DURATION_EPSILON = 1e-6
 
 
 def clamp(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
@@ -113,11 +114,15 @@ def normalize_effect_config(raw: Any, *, group_duration: float | None = None) ->
     duration = max(0.0, duration)
     # If the group's safety budget clips the effect to zero, or below the
     # minimum readable effect duration, disable it instead of falling back to
-    # the default. Short visual slices should stay as stable stills.
+    # the default. Short visual slices should stay as stable stills. Use a
+    # small epsilon so exact threshold values are not lost to float rounding.
     if duration <= 0:
         return None
-    if duration < MIN_EFFECT_DURATION[name]:
+    min_duration = MIN_EFFECT_DURATION[name]
+    if duration + EFFECT_DURATION_EPSILON < min_duration:
         return None
+    if duration < min_duration:
+        duration = min_duration
     effect = {"name": name, "duration": round(duration, 3), "params": dict(params)}
     for key in ("aux_asset_id", "aux_asset_ids", "needs_aux_asset", "aux_asset_kind"):
         if key in raw:
