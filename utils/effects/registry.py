@@ -111,9 +111,14 @@ def normalize_effect_config(raw: Any, *, group_duration: float | None = None) ->
     if group_duration is not None and group_duration > 0:
         duration = min(duration, max(0.0, group_duration - 0.55), max(0.0, group_duration * 0.55))
     duration = max(0.0, duration)
-    if duration and duration < MIN_EFFECT_DURATION[name]:
+    # If the group's safety budget clips the effect to zero, or below the
+    # minimum readable effect duration, disable it instead of falling back to
+    # the default. Short visual slices should stay as stable stills.
+    if duration <= 0:
         return None
-    effect = {"name": name, "duration": round(duration or DEFAULT_EFFECT_DURATION[name], 3), "params": dict(params)}
+    if duration < MIN_EFFECT_DURATION[name]:
+        return None
+    effect = {"name": name, "duration": round(duration, 3), "params": dict(params)}
     for key in ("aux_asset_id", "aux_asset_ids", "needs_aux_asset", "aux_asset_kind"):
         if key in raw:
             effect[key] = raw[key]
