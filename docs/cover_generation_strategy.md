@@ -6,17 +6,18 @@
 - 当前视频的字幕内容 / 文案主题
 - 当前视频已引用的参考图（结果图、网站截图、功能页截图等）
 
-生成一张适合短视频平台使用的竖屏封面图。
+生成一张适合短视频平台使用的竖屏封面图，并默认把该封面作为最终视频的第 1 帧。
 
 ## 1. 基本原则
 
-推荐把封面图生成作为独立步骤接入，而不是混入视频渲染：
+推荐把封面图生成作为独立步骤接入，而不是混入视频主体编排：
 
 ```text
 video_project.json / subtitle_track / cover input
   -> build_cover_plan.py
   -> render_cover_image.py
-  -> output/cover/cover_main.png
+  -> prepend_cover_frame.py
+  -> output/cover/cover_main.png + output/versions/<label>.mp4
 ```
 
 也可以使用一键包装脚本：
@@ -25,13 +26,15 @@ video_project.json / subtitle_track / cover input
 render_with_cover.py
   -> build_cover_plan.py
   -> render_cover_image.py
+  -> prepend_cover_frame.py   # 默认开启
 ```
 
 其中：
 
 - `build_cover_plan.py`：根据字幕内容、项目素材和前端入参生成 `cover_plan.json`
 - `render_cover_image.py`：调用 GPT Image 生成最终封面图
-- `render_with_cover.py`：串联封面规划和封面渲染，适合常规调用
+- `prepend_cover_frame.py`：把封面图插入目标视频第 1 帧
+- `render_with_cover.py`：串联封面规划、封面渲染和首帧插入，适合常规调用
 
 ## 2. 输入约定
 
@@ -91,7 +94,42 @@ render_with_cover.py
 - 补充短句必须在中央安全区内
 - 安全区外不放关键文案
 
-## 4. 素材选择策略
+## 4. 首帧插入策略
+
+默认把 `cover_main.png` 插入到目标视频最前面，作为第 1 帧。
+
+默认参数：
+
+```text
+prepend_cover: true
+cover_frame_count: 1
+fps: 30
+cover_duration = 1 / 30 = 0.033333s
+```
+
+这不是片头标题卡，而是一个极短的首帧补充：
+
+```text
+封面图独立存在：output/cover/cover_main.png
+视频第 1 帧也是该封面图
+用户点开视频时，感知上与平台封面一致
+```
+
+如果不需要修改视频，可以关闭：
+
+```bash
+--no-prepend-cover
+```
+
+如果需要更多帧，可显式设置：
+
+```bash
+--cover-frame-count 2
+```
+
+但默认只允许 1 帧，避免变成多秒静态片头。
+
+## 5. 素材选择策略
 
 封面不应堆太多图，建议只使用 1~3 张最有效的参考图。
 
@@ -109,7 +147,7 @@ render_with_cover.py
 3. 与字幕主题最匹配的单张功能截图
 ```
 
-## 5. 文案提炼策略
+## 6. 文案提炼策略
 
 封面图文字建议分两层：
 
@@ -135,7 +173,7 @@ cover.title
 上传描述就能出图
 ```
 
-## 6. 视觉构图建议
+## 7. 视觉构图建议
 
 推荐三类封面构图：
 
@@ -165,7 +203,7 @@ cover.title
 
 适用于人物或商品导向内容，但主体仍必须落在中央安全区内。
 
-## 7. GPT Image 提示词要求
+## 8. GPT Image 提示词要求
 
 封面图应走独立 GPT Image 任务，不用程序最终拼图。
 
@@ -179,7 +217,7 @@ Prompt 必须包含这些硬约束：
 5. 参考图仅用于主体内容、结果展示和风格参考，不得引入无关事实
 ```
 
-## 8. 新增脚本
+## 9. 新增脚本
 
 ### `scripts/build_cover_plan.py`
 
@@ -221,17 +259,35 @@ output/reports/cover_generation_report.json
 
 `cover_main_3x4_crop_preview.png` 用于人工快速检查裁剪后的中央安全区效果。
 
+### `scripts/prepend_cover_frame.py`
+
+职责：
+
+```text
+读取 cover_main.png
+生成 1 帧封面视频片段
+给封面片段补等长静音音频
+与目标视频 concat
+默认可替换原视频
+```
+
+默认输出报告：
+
+```text
+output/reports/prepend_cover_report.json
+```
+
 ### `scripts/render_with_cover.py`
 
 职责：
 
 ```text
-一条命令完成 cover_plan 构建和 cover image 渲染
+一条命令完成 cover_plan 构建、cover image 渲染、cover 首帧插入
 ```
 
 适合前端/后端在已有 `video_project.json` 或 `video_project.effects.json` 后直接调用。
 
-## 9. QA 建议
+## 10. QA 建议
 
 至少检查：
 
@@ -242,6 +298,8 @@ output/reports/cover_generation_report.json
 [ ] 安全区外没有关键信息
 [ ] 无乱码、无错误文案
 [ ] 参考图主体被正确使用，无无关新增内容
+[ ] 视频第 1 帧为 cover_main.png
+[ ] 首帧时长为 1/30s，没有形成明显静态片头
 ```
 
 推荐增加 OCR 校验：
@@ -252,9 +310,9 @@ OCR 提取封面主标题
 不一致则标记 review_required
 ```
 
-## 10. 命令示例
+## 11. 命令示例
 
-一键生成：
+一键生成，并默认插入到最新渲染视频第 1 帧：
 
 ```bash
 python scripts/render_with_cover.py \
@@ -265,22 +323,30 @@ python scripts/render_with_cover.py \
   --json
 ```
 
-分步执行：
+指定目标视频：
 
 ```bash
-python scripts/build_cover_plan.py \
+python scripts/render_with_cover.py \
   --case cases/<case> \
   --project cases/<case>/video_project.effects.json \
+  --video cases/<case>/output/versions/final.mp4 \
   --title "封面主标题" \
-  --json
-
-python scripts/render_cover_image.py \
-  --case cases/<case> \
   --config config/gpt_image.local.json \
   --json
 ```
 
-本地 dry-run 不调用 GPT Image：
+只生成独立封面，不修改视频：
+
+```bash
+python scripts/render_with_cover.py \
+  --case cases/<case> \
+  --project cases/<case>/video_project.effects.json \
+  --title "封面主标题" \
+  --no-prepend-cover \
+  --json
+```
+
+本地 dry-run 不调用 GPT Image，但仍默认把 dry-run 封面插入视频首帧：
 
 ```bash
 python scripts/render_with_cover.py \
@@ -288,5 +354,18 @@ python scripts/render_with_cover.py \
   --project cases/<case>/video_project.effects.json \
   --title "封面主标题" \
   --dry-run \
+  --json
+```
+
+单独执行首帧插入：
+
+```bash
+python scripts/prepend_cover_frame.py \
+  --case cases/<case> \
+  --video output/versions/final.mp4 \
+  --cover output/cover/cover_main.png \
+  --cover-frame-count 1 \
+  --fps 30 \
+  --replace \
   --json
 ```
