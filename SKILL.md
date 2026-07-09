@@ -1,22 +1,23 @@
 ---
 name: video-agent
-description: Generate a vertical product/demo video from a target website using CDP screenshot capture or frozen materials, visual-first planning, Minimax T2A voice/timing, video_project.json, registered programmatic image effects, FFmpeg rendering, and QA.
+description: Generate a vertical product/demo video and platform-safe cover image from a target website using CDP screenshot capture or frozen materials, visual-first planning, Minimax T2A voice/timing, video_project.json, registered programmatic image effects, GPT Image cover generation, FFmpeg rendering, and QA.
 ---
 
 # Video Agent
 
-Use this skill when the user provides a target website or asks for a short feature seeding, product demo, website showcase, or social media promo video from real website/material evidence.
+Use this skill when the user provides a target website or asks for a short feature seeding, product demo, website showcase, social media promo video, or short-video cover image from real website/material evidence.
 
 ## Required Reading
 
 1. `docs/pipeline_v2_refactor.md`
 2. `docs/effects_pipeline.md`
-3. `cdp_screenshot_material_spec.md`
-4. `cdp-capture/README.md` when browser login or screenshot material capture is required
-5. `rules/kehuanxiongmao-capture.md` for `https://kehuanxiongmao.com` or 柯幻熊猫
-6. `rules/douyin-real-demo.md` for Douyin/Kuaishou/Reels/Shorts style output
-7. `rules/vertical-browser-framing.md` for 9:16 website screenshots or result images
-8. `references/copywriting-rules.md` and `references/copywriting-options.md` for 柯幻熊猫 copy
+3. `docs/cover_generation_strategy.md`
+4. `cdp_screenshot_material_spec.md`
+5. `cdp-capture/README.md` when browser login or screenshot material capture is required
+6. `rules/kehuanxiongmao-capture.md` for `https://kehuanxiongmao.com` or 柯幻熊猫
+7. `rules/douyin-real-demo.md` for Douyin/Kuaishou/Reels/Shorts style output
+8. `rules/vertical-browser-framing.md` for 9:16 website screenshots or result images
+9. `references/copywriting-rules.md` and `references/copywriting-options.md` for 柯幻熊猫 copy
 
 ## V2 Outputs
 
@@ -30,8 +31,12 @@ Use this skill when the user provides a target website or asks for a short featu
 - `video_project.effects.json` when registered image effects are applied
 - `effect_asset_manifest.json` when GPT Image auxiliary effect assets are generated
 - `output/versions/<label>.mp4`
+- `output/cover/cover_plan.json` when a platform cover is planned
+- `output/cover/cover_main.png` when a platform cover is generated
+- `output/cover/cover_main_3x4_crop_preview.png` for cover safe-zone QA
 - `output/qa/contact_sheet.jpg`
 - `output/reports/<label>_render_report.json`
+- `output/reports/cover_generation_report.json` when a cover is generated
 
 ## Execution
 
@@ -58,7 +63,10 @@ Use this skill when the user provides a target website or asks for a short featu
     - Each `visual_track` event may carry `motion` (`hold` / `push_in` / `pull_out`, amount capped at `0.06`, anchor fixed at `center`) and `transition_in` (`cut` / `crossfade`). `build_video_project.py` fills conservative defaults automatically.
     - Each `visual_track` event may also carry a registered `effect`: `drop_bounce`, `pop_in`, `zoom_pulse`, `tile_drop`, `radial_unfurl`, `wipe_reveal`, or `scan_overlay`.
     - Website screenshot highlights are baked into GPT image prepared keyframes. Use `overlay_track` only for non-website dynamic cues when explicitly needed.
-14. Run contact-sheet and render QA before presenting a final video; `standard` and `strict` do this through the mode runner.
+14. For a platform cover, build a cover plan with `scripts/build_cover_plan.py --title <front-end-cover-title>` and generate the image with `scripts/render_cover_image.py`.
+    - Cover titles must exactly match the front-end supplied `cover.title`; do not rewrite, shorten, translate, or invent title text.
+    - Core cover content must stay inside the central 3:4 safe region. `output/cover/cover_main_3x4_crop_preview.png` is the required quick QA artifact.
+15. Run contact-sheet, cover safe-zone QA, and render QA before presenting a final video; `standard` and `strict` do video QA through the mode runner.
 
 ## Non-Negotiable Rules
 
@@ -75,9 +83,11 @@ Use this skill when the user provides a target website or asks for a short featu
 - `run_pipeline_mode.py` must receive the current run's `--receipt-id` for any website video that claims or shows a real generated result. Without it, the runner refuses to render so old/demo result images cannot masquerade as fresh results.
 - Final visuals must already be prepared and AI-verified. Function/process screenshots should be 9:16 captures; generated results must be saved images/crops/exports under `assets/results/`. The renderer width-fits images and does not perform local crop/zoom repair.
 - The renderer merges consecutive `visual_track` events that share the same `layout`+`asset_ids` into one continuous shot with one uninterrupted motion/effect sweep. Do not declare `crossfade`, a different `motion`, or a different `effect` between two such events; the renderer rejects it.
-- GPT image edits are for format, ratio, layout optimization, and effect auxiliary overlays only. Prompts must preserve the original screenshot/result content and must not invent new UI, generated results, text, logos, or product details.
+- GPT image edits are for format, ratio, layout optimization, effect auxiliary overlays, and platform cover generation only. Prompts must preserve the original screenshot/result content and must not invent new UI, generated results, text, logos, or product details.
 - Effect auxiliary GPT Image output is not a new evidence image; it is an overlay derived from the approved source asset.
+- Cover generation must use the front-end supplied title exactly. If title accuracy cannot be verified, mark the cover as `review_required` instead of treating it as final.
+- Cover main title, subject, product/person/result, and supporting subtitle must fit inside the central 3:4 safe region; outside that region only background extension, glow, gradient, outline, and decoration are allowed.
 - Do not include the fixed outro in script, voice, subtitles, or visual beat planning; append it after the main video.
-- Do not present a video as final if voice, subtitle timing, visual readability, or render QA fails.
+- Do not present a video as final if voice, subtitle timing, visual readability, cover safe-zone/title accuracy, or render QA fails.
 - Use `draft` only for fast creative preview. Use `standard` for normal review and `strict` before treating a render as deliverable.
 - Keep older output versions; use labels instead of overwriting accepted renders.
