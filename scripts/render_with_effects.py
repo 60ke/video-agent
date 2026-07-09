@@ -37,7 +37,20 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     effects_project = case_dir / "video_project.effects.json"
     steps: list[dict[str, Any]] = []
 
-    apply_cmd = script_cmd("apply_effect_plan.py", "--case", str(case_dir), "--project", str(base_project), "--output-project", str(effects_project), "--preset", args.preset, "--json")
+    apply_cmd = script_cmd(
+        "apply_effect_plan.py",
+        "--case",
+        str(case_dir),
+        "--project",
+        str(base_project),
+        "--output-project",
+        str(effects_project),
+        "--preset",
+        args.preset,
+        "--freeze-motion",
+        args.freeze_motion,
+        "--json",
+    )
     if args.force_effect_plan:
         apply_cmd.append("--force")
     steps.append({"name": "apply_effect_plan", **run_command(apply_cmd, ROOT)})
@@ -64,6 +77,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--project", help="Input project. Defaults to video_project.gpt_image.json if present, otherwise video_project.json.")
     parser.add_argument("--label", default="effects_preview")
     parser.add_argument("--preset", choices=("none", "minimal", "balanced"), default="balanced")
+    parser.add_argument("--freeze-motion", choices=("auto", "always", "never"), default="auto")
     parser.add_argument("--config", help="GPT image config path for auxiliary effect assets.")
     parser.add_argument("--force-effect-plan", action="store_true")
     parser.add_argument("--force-effect-assets", action="store_true")
