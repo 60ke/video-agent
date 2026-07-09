@@ -72,6 +72,8 @@ Adds default effect choices to `visual_track` based on existing project evidence
 
 It writes `video_project.effects.json` and `output/reports/effect_plan_report.json`.
 
+Motion handling defaults to `--freeze-motion auto`: only strong entrance/assembly effects (`drop_bounce`, `tile_drop`, `radial_unfurl`) replace existing push/pull motion with `hold`. Softer effects keep existing motion unless the caller explicitly passes `--freeze-motion always`. Use `--freeze-motion never` for experiments that should preserve all existing motion.
+
 ### `scripts/prepare_effect_assets.py`
 
 Finds `scan_overlay` events that still need `highlight_overlay`, calls the existing GPT Image edit API, writes generated overlays into `assets/effects/`, appends them to `project.assets`, and writes `effect_asset_manifest.json` plus `output/reports/effect_assets_report.json`.
@@ -118,7 +120,8 @@ python scripts\render_with_effects.py `
 - Effects do not change audio, subtitles, or event timing.
 - Same visual groups must keep the same effect across adjacent subtitle slices.
 - Effects are bounded to the first part of a group, then the source image remains stable.
-- Entrance effects set motion to `hold` during planning to avoid compounded zoom/drop movement.
+- Effect duration is clipped to the visual group safety budget; if the clipped duration is zero or below the effect's minimum duration, the effect is disabled instead of falling back to its default duration.
+- Strong entrance/assembly effects set motion to `hold` by default to avoid compounded movement; soft effects preserve existing motion by default.
 - `scan_overlay` is the only first-pass effect that depends on GPT Image.
 
 ## Current whitelist
