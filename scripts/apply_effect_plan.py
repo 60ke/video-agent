@@ -14,6 +14,7 @@ from utils.effects.registry import EffectSuggestionInput, normalize_effect_confi
 
 RESULT_STEPS = {"result_crop", "result_export", "result_gallery", "result_page"}
 SEQUENCE_TYPES = {"image_sequence", "site_flow_steps", "result_gallery"}
+MOTION_FREEZE_EFFECTS = {"drop_bounce", "tile_drop", "radial_unfurl"}
 
 
 def load_json(path: Path, default: Any = None) -> Any:
@@ -125,7 +126,24 @@ def default_effect_for_event(event: dict[str, Any], asset: dict[str, Any], prese
         return None
 
 
-def apply_effects(project: dict[str, Any], *, preset: str, force: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def should_freeze_motion(effect_name: str, mode: str) -> bool:
+    if mode == "always":
+        return True
+    if mode == "never":
+        return False
+    return effect_name in MOTION_FREEZE_EFFECTS
+
+
+def hold_motion_preserving_flags(raw_motion: Any) -> dict[str, Any]:
+    motion = raw_motion if isinstance(raw_motion, dict) else {}
+    result: dict[str, Any] = {"name": "hold", "amount": 0.0, "anchor": "center", "avoid_flicker": True}
+    for key in ("forbidden_motion", "notes", "reason"):
+        if key in motion:
+            result[key] = motion[key]
+    return result
+
+
+def apply_effects(project: dict[str, Any], *, preset: str, force: bool, freeze_motion: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     assets = asset_index(project)
     changed: list[dict[str, Any]] = []
     for idx, event in enumerate(project.get("visual_track", [])):
@@ -138,12 +156,25 @@ def apply_effects(project: dict[str, Any], *, preset: str, force: bool) -> tuple
         effect = default_effect_for_event(event, asset, preset)
         if not effect:
             continue
+        previous_motion = event.get("motion") if isinstance(event.get("motion"), dict) else None
         event["effect"] = effect
-        forbidden = event.get("motion", {}).get("forbidden_motion", []) if isinstance(event.get("motion"), dict) else []
-        event["motion"] = {"name": "hold", "amount": 0.0, "anchor": "center", "avoid_flicker": True, "forbidden_motion": forbidden}
+        motion_frozen = should_freeze_motion(str(effect.get("name") or ""), freeze_motion)
+        if motion_frozen:
+            event["motion"] = hold_motion_preserving_flags(previous_motion)
+        elif isinstance(previous_motion, dict):
+            previous_motion.setdefault("avoid_flicker", True)
+            event["motion"] = previous_motion
         event.setdefault("qa_expectations", {})["effect_stable_tail"] = True
-        changed.append({"visual_index": idx, "visual_id": event.get("id"), "effect": effect})
-    project.setdefault("renderer_plan", {})["effect_policy"] = {"preset": preset, "applied_count": len(changed)}
+        changed.append(
+            {
+                "visual_index": idx,
+                "visual_id": event.get("id"),
+                "effect": effect,
+                "motion_frozen": motion_frozen,
+                "freeze_motion_policy": freeze_motion,
+            }
+        )
+    project.setdefault("renderer_plan", {})["effect_policy"] = {"preset": preset, "applied_count": len(changed), "freeze_motion": freeze_motion}
     return project, changed
 
 
@@ -153,11 +184,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     project = load_json(project_path, {})
     if not isinstance(project, dict):
         raise ValueError(f"project JSON is invalid: {project_path}")
-    project, changed = apply_effects(project, preset=args.preset, force=args.force)
+    project, changed = apply_effects(project, preset=args.preset, force=args.force, freeze_motion=args.freeze_motion)
     output_project = Path(args.output_project).expanduser().resolve(strict=False) if args.output_project else case_dir / "video_project.effects.json"
     write_json(output_project, project)
     report_path = case_dir / "output" / "reports" / "effect_plan_report.json"
-    write_json(report_path, {"schema_version": 1, "project": str(output_project), "preset": args.preset, "force": bool(args.force), "items": changed, "count": len(changed)})
+    write_json(report_path, {"schema_version": 1, "project": str(output_project), "preset": args.preset, "force": bool(args.force), "freeze_motion": args.freeze_motion, "items": changed, "count": len(changed)})
     return {"ok": True, "code": "ok", "reason": "", "data": {"project": str(output_project), "report": str(report_path), "count": len(changed)}}
 
 
@@ -168,6 +199,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-project")
     parser.add_argument("--preset", choices=("none", "minimal", "balanced"), default="balanced")
     parser.add_argument("--force", action="store_true", help="Replace existing visual_track[].effect values.")
+    parser.add_argument(
+        "--freeze-motion",
+        choices=("auto", "always", "never"),
+        default="auto",
+        help="Whether to replace existing push/pull motion with hold when adding effects. auto freezes only strong entrance/assembly effects.",
+    )
     parser.add_argument("--json", action="store_true")
     return parser
 
