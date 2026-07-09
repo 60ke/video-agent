@@ -52,8 +52,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         build_cmd.extend(["--subtitle-hint", args.subtitle_hint])
     if args.style_hint:
         build_cmd.extend(["--style-hint", args.style_hint])
-    for asset_id in args.reference_asset_ids or []:
-        build_cmd.extend(["--reference-asset-ids", asset_id])
+    if args.reference_asset_ids:
+        build_cmd.append("--reference-asset-ids")
+        build_cmd.extend(args.reference_asset_ids)
     steps.append({"name": "build_cover_plan", **run_command(build_cmd, ROOT)})
 
     render_cmd = script_cmd("render_cover_image.py", "--case", str(case_dir), "--json")
