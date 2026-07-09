@@ -19,10 +19,19 @@ video_project.json / subtitle_track / cover input
   -> output/cover/cover_main.png
 ```
 
+也可以使用一键包装脚本：
+
+```text
+render_with_cover.py
+  -> build_cover_plan.py
+  -> render_cover_image.py
+```
+
 其中：
 
 - `build_cover_plan.py`：根据字幕内容、项目素材和前端入参生成 `cover_plan.json`
 - `render_cover_image.py`：调用 GPT Image 生成最终封面图
+- `render_with_cover.py`：串联封面规划和封面渲染，适合常规调用
 
 ## 2. 输入约定
 
@@ -212,6 +221,16 @@ output/reports/cover_generation_report.json
 
 `cover_main_3x4_crop_preview.png` 用于人工快速检查裁剪后的中央安全区效果。
 
+### `scripts/render_with_cover.py`
+
+职责：
+
+```text
+一条命令完成 cover_plan 构建和 cover image 渲染
+```
+
+适合前端/后端在已有 `video_project.json` 或 `video_project.effects.json` 后直接调用。
+
 ## 9. QA 建议
 
 至少检查：
@@ -235,6 +254,19 @@ OCR 提取封面主标题
 
 ## 10. 命令示例
 
+一键生成：
+
+```bash
+python scripts/render_with_cover.py \
+  --case cases/<case> \
+  --project cases/<case>/video_project.effects.json \
+  --title "封面主标题" \
+  --config config/gpt_image.local.json \
+  --json
+```
+
+分步执行：
+
 ```bash
 python scripts/build_cover_plan.py \
   --case cases/<case> \
@@ -251,8 +283,10 @@ python scripts/render_cover_image.py \
 本地 dry-run 不调用 GPT Image：
 
 ```bash
-python scripts/render_cover_image.py \
+python scripts/render_with_cover.py \
   --case cases/<case> \
+  --project cases/<case>/video_project.effects.json \
+  --title "封面主标题" \
   --dry-run \
   --json
 ```
