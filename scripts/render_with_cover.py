@@ -27,6 +27,23 @@ def script_cmd(script: str, *args: str) -> list[str]:
     return [sys.executable, str(Path("scripts") / script), *args]
 
 
+def latest_rendered_video(case_dir: Path) -> Path | None:
+    versions_dir = case_dir / "output" / "versions"
+    if not versions_dir.is_dir():
+        return None
+    candidates = [
+        path
+        for path in versions_dir.glob("*.mp4")
+        if path.is_file()
+        and not path.stem.endswith("_main")
+        and not path.stem.endswith("_without_cover")
+        and not path.stem.endswith("_with_cover")
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda path: path.stat().st_mtime)
+
+
 def run(args: argparse.Namespace) -> dict[str, Any]:
     case_dir = Path(args.case).expanduser().resolve(strict=False)
     if not case_dir.is_dir():
@@ -67,6 +84,31 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     steps.append({"name": "render_cover_image", **run_command(render_cmd, ROOT)})
 
     render_data = steps[-1].get("data", {}) if isinstance(steps[-1].get("data"), dict) else {}
+    target_video = Path(args.video).expanduser().resolve(strict=False) if args.video else latest_rendered_video(case_dir)
+    if args.prepend_cover:
+        if target_video and target_video.is_file():
+            prepend_cmd = script_cmd(
+                "prepend_cover_frame.py",
+                "--case",
+                str(case_dir),
+                "--video",
+                str(target_video),
+                "--cover",
+                str(render_data.get("cover") or case_dir / "output" / "cover" / "cover_main.png"),
+                "--cover-frame-count",
+                str(args.cover_frame_count),
+                "--fps",
+                str(args.fps),
+                "--replace",
+                "--json",
+            )
+            if args.keep_video_backup:
+                prepend_cmd.append("--keep-backup")
+            steps.append({"name": "prepend_cover_frame", **run_command(prepend_cmd, ROOT)})
+        else:
+            steps.append({"name": "prepend_cover_frame", "ok": True, "code": "skipped", "reason": "target video not found", "data": {"skipped": True, "skip_reason": "video_missing"}})
+
+    prepend_data = steps[-1].get("data", {}) if steps and steps[-1].get("name") == "prepend_cover_frame" and isinstance(steps[-1].get("data"), dict) else {}
     return {
         "ok": True,
         "code": "ok",
@@ -76,14 +118,18 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "project": str(project_path),
             "cover": render_data.get("cover"),
             "crop_preview": render_data.get("crop_preview"),
-            "report": render_data.get("report"),
+            "cover_report": render_data.get("report"),
+            "video": str(target_video) if target_video else None,
+            "prepend_cover": bool(args.prepend_cover),
+            "prepend_skipped": bool(prepend_data.get("skipped")) if prepend_data else not bool(target_video),
+            "prepend_report": prepend_data.get("report") if prepend_data else None,
             "steps": steps,
         },
     }
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Build and render a platform-safe short-video cover image in one command.")
+    parser = argparse.ArgumentParser(description="Build, render, and optionally prepend a platform-safe short-video cover image in one command.")
     parser.add_argument("--case", required=True)
     parser.add_argument("--project", help="Defaults to video_project.effects.json if present, otherwise video_project.json.")
     parser.add_argument("--title", required=True, help="Exact front-end supplied cover title. This must be rendered verbatim.")
@@ -94,6 +140,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", help="GPT image config path for non-dry runs.")
     parser.add_argument("--output")
     parser.add_argument("--dry-run", action="store_true", help="Use local Pillow rendering instead of GPT Image.")
+    parser.add_argument("--video", help="Rendered video to receive the cover first frame. Defaults to newest output/versions/*.mp4.")
+    prepend_group = parser.add_mutually_exclusive_group()
+    prepend_group.add_argument("--prepend-cover", dest="prepend_cover", action="store_true", default=True, help="Prepend cover_main.png as the first video frame. Default: on.")
+    prepend_group.add_argument("--no-prepend-cover", dest="prepend_cover", action="store_false", help="Do not modify the rendered video.")
+    parser.add_argument("--cover-frame-count", type=int, default=1, help="Number of cover frames to prepend. Default: 1 frame.")
+    parser.add_argument("--fps", type=int, default=30, help="Frame rate used to calculate cover duration. Default: 30fps.")
+    parser.add_argument("--keep-video-backup", action="store_true", help="When prepending, keep <video>_without_cover.mp4 backup.")
     parser.add_argument("--json", action="store_true")
     return parser
 
