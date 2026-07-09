@@ -98,7 +98,7 @@ Return JSON fields that can be merged into `video_project.json`:
 - Set `clip_type` explicitly. Use `image` for one prepared keyframe, `site_flow_steps` for homepage/entry/params sequences, `result_gallery` for multiple saved result images, and `image_sequence` for other fast cuts.
 - Set `display_rule` explicitly. Use `prepared_9x16` for GPT image prepared frames, `portrait_full_width` for clean vertical result images, and `landscape_full_width_center` for clean landscape result images.
 - For multi-image clips, include `sequence` with mode `step_cut` for site flow and `result_carousel` or `quick_cut` for result galleries. Each item must be readable for at least 0.75s.
-- Use `overlay_track` only for dynamic cues such as pulse rings/click emphasis. Static red boxes/arrows may already be baked into GPT image prepared keyframes.
+- Use `overlay_track` only for non-website dynamic cues when explicitly needed. Website screenshot highlights should already be baked into GPT image prepared keyframes with a polished demo style, not generated as renderer-side red boxes.
 - Dual panels must not have large empty lower areas.
 - Do not include the fixed panda outro in `visual_track`.
 - Do not add arbitrary zoompan, breathing, jitter, local crop, or floating motion.

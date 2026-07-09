@@ -39,7 +39,20 @@ Use Chinese filenames because the website labels are Chinese:
 
 For `图文广告`, keep the extra child level in the filename path: `柯幻熊猫_文生图_图文广告_<子功能>_<截图类型>.png`.
 
-CDP may also write `_callouts.json` beside screenshots. It should contain normalized target boxes, labels, and step semantics. Do not burn red boxes, cursor circles, or click pulses into the raw CDP screenshot; pass those as metadata for GPT image or `overlay_track`.
+Reusable result images live under:
+
+```text
+assets/results/
+```
+
+Result filenames must include feature path and industry/scene:
+
+```text
+柯幻熊猫_文生图_文化墙_企业展厅_结果图_01.png
+柯幻熊猫_文生图_图文广告_车贴_汽车服务_结果图_01.png
+```
+
+CDP may also write `_callouts.json` beside screenshots. It should contain normalized target boxes, labels, and step semantics as evidence only. Website screenshot presentation should be prepared by GPT image using filename/feature-path semantics, not by renderer-side programmatic red boxes.
 
 ## Fixed Capture Scope
 
@@ -103,8 +116,8 @@ Use red callouts to show the operation path, but preserve clean source screensho
 Required:
 
 - A clean raw screenshot for evidence.
-- Callout metadata in `image_resources.json` or `_callouts.json` with target label and normalized box coordinates.
-- `overlay_track` for dynamic markers such as pulse rings, click emphasis, arrows, and labels.
+- Callout metadata in `image_resources.json` or `_callouts.json` with target label and normalized box coordinates for audit/reference.
+- GPT image prepared keyframes for website screenshot highlights. Use designed cyan/blue highlight regions instead of raw red rectangles.
 - Precise workflow steps: `home_entry`, `text_to_image_entry`, `feature_menu_select`, `feature_page_empty`, `feature_form_params`, `result_crop`, `result_export`, or `result_gallery`.
 
 Allowed callouts:

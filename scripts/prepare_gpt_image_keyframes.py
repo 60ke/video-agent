@@ -7,6 +7,7 @@ import json
 import mimetypes
 import os
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,8 @@ TARGET_WIDTH = 1080
 TARGET_HEIGHT = 1920
 RESULT_STEPS = {"result_crop", "result_export", "result_gallery", "result_page"}
 SITE_CAPTURE_TYPES = {"网站主页截图", "功能入口截图", "参数面板截图"}
+GPT_IMAGE_MAX_ATTEMPTS = 6
+GPT_IMAGE_RETRY_INTERVAL_SECONDS = 20
 
 
 @dataclass(frozen=True)
@@ -111,15 +114,67 @@ def decode_image_response(response: httpx.Response) -> bytes:
     raise RuntimeError("GPT image response has no b64_json or url")
 
 
+def is_retryable_gpt_image_error(exc: BaseException, status_code: int | None = None) -> bool:
+    if isinstance(exc, (httpx.TimeoutException, httpx.NetworkError, httpx.ConnectError, httpx.ReadTimeout, httpx.WriteTimeout)):
+        return True
+    if status_code in {408, 425, 429, 500, 502, 503, 504}:
+        return True
+    message = str(exc).lower()
+    retry_tokens = (
+        "负载",
+        "饱和",
+        "rate limit",
+        "too many requests",
+        "temporarily unavailable",
+        "timeout",
+        "timed out",
+        "connection reset",
+        "connection aborted",
+        "service unavailable",
+        "bad gateway",
+        "gateway timeout",
+        "http 408",
+        "http 425",
+        "http 429",
+        "http 500",
+        "http 502",
+        "http 503",
+        "http 504",
+    )
+    return any(token in message for token in retry_tokens)
+
+
 def gpt_edit_image(config: GPTImageConfig, image_path: Path, prompt: str, raw_output: Path) -> None:
     data = {"model": config.model, "prompt": prompt, "quality": config.quality, "n": "1"}
     if config.size:
         data["size"] = config.size
-    files = {"image": (image_path.name, image_path.read_bytes(), content_type(image_path))}
-    with httpx.Client(timeout=config.timeout_seconds) as client:
-        response = client.post(edit_url(config), data=data, files=files, headers={"Authorization": bearer(config.api_key)})
-    raw_output.parent.mkdir(parents=True, exist_ok=True)
-    raw_output.write_bytes(decode_image_response(response))
+    image_bytes = image_path.read_bytes()
+    files = {"image": (image_path.name, image_bytes, content_type(image_path))}
+    headers = {"Authorization": bearer(config.api_key)}
+    url = edit_url(config)
+    last_exc: Exception | None = None
+    for attempt in range(1, GPT_IMAGE_MAX_ATTEMPTS + 1):
+        try:
+            with httpx.Client(timeout=config.timeout_seconds) as client:
+                response = client.post(url, data=data, files=files, headers=headers)
+            raw_output.parent.mkdir(parents=True, exist_ok=True)
+            raw_output.write_bytes(decode_image_response(response))
+            return
+        except Exception as exc:  # noqa: BLE001 - retry only on transient provider failures
+            last_exc = exc if isinstance(exc, Exception) else RuntimeError(str(exc))
+            status_code = None
+            if isinstance(exc, httpx.HTTPStatusError):
+                status_code = exc.response.status_code
+            if attempt >= GPT_IMAGE_MAX_ATTEMPTS or not is_retryable_gpt_image_error(last_exc, status_code):
+                raise last_exc from None
+            print(
+                f"GPT image request failed (attempt {attempt}/{GPT_IMAGE_MAX_ATTEMPTS}): {last_exc}; "
+                f"retrying in {GPT_IMAGE_RETRY_INTERVAL_SECONDS}s",
+                file=sys.stderr,
+            )
+            time.sleep(GPT_IMAGE_RETRY_INTERVAL_SECONDS)
+    if last_exc:
+        raise last_exc
 
 
 def preprocess_for_gpt(source_path: Path, output_path: Path, *, result: bool) -> Path:
@@ -165,96 +220,6 @@ def normalize_to_video_canvas(input_path: Path, output_path: Path) -> dict[str, 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     background.save(output_path, "PNG")
     return probe_image(output_path)
-
-
-def project_box(box: dict[str, Any], source_size: tuple[int, int], placement: dict[str, float]) -> dict[str, float] | None:
-    try:
-        src_w, src_h = source_size
-        x = float(box["x"]) * src_w
-        y = float(box["y"]) * src_h
-        w = float(box["w"]) * src_w
-        h = float(box["h"]) * src_h
-    except (KeyError, TypeError, ValueError):
-        return None
-    scale = placement["scale"]
-    canvas_x = placement["x"] + x * scale
-    canvas_y = placement["y"] + y * scale
-    canvas_w = w * scale
-    canvas_h = h * scale
-    left = max(0.0, min(float(TARGET_WIDTH), canvas_x))
-    top = max(0.0, min(float(TARGET_HEIGHT), canvas_y))
-    right = max(0.0, min(float(TARGET_WIDTH), canvas_x + canvas_w))
-    bottom = max(0.0, min(float(TARGET_HEIGHT), canvas_y + canvas_h))
-    if right <= left or bottom <= top:
-        return None
-    return {
-        "x": round(left / TARGET_WIDTH, 6),
-        "y": round(top / TARGET_HEIGHT, 6),
-        "w": round((right - left) / TARGET_WIDTH, 6),
-        "h": round((bottom - top) / TARGET_HEIGHT, 6),
-    }
-
-
-def transform_callouts_to_canvas(callouts: list[Any], source_size: tuple[int, int], placement: dict[str, float]) -> list[dict[str, Any]]:
-    transformed: list[dict[str, Any]] = []
-    for item in callouts:
-        if not isinstance(item, dict):
-            continue
-        box = item.get("box")
-        if not isinstance(box, dict):
-            continue
-        new_box = project_box(box, source_size, placement)
-        if not new_box:
-            continue
-        updated = dict(item)
-        updated["box"] = new_box
-        updated["coordinate_space"] = "prepared_9x16_normalized"
-        updated["source_coordinate_space"] = item.get("coordinate_space") or "source_image_normalized"
-        transformed.append(updated)
-    return transformed
-
-
-def prepare_site_keyframe(
-    source_path: Path,
-    output_path: Path,
-    capture_type: str,
-    callouts: list[Any],
-) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    with Image.open(source_path) as image:
-        source = image.convert("RGB")
-        source_w, source_h = source.size
-        canvas = Image.new("RGB", (TARGET_WIDTH, TARGET_HEIGHT), (8, 10, 12))
-        if capture_type == "参数面板截图":
-            scale = min(TARGET_WIDTH / source_w, TARGET_HEIGHT / source_h)
-            resized_w = max(1, int(round(source_w * scale)))
-            resized_h = max(1, int(round(source_h * scale)))
-            resized = source.resize((resized_w, resized_h), Image.Resampling.LANCZOS)
-            x = (TARGET_WIDTH - resized_w) // 2
-            y = (TARGET_HEIGHT - resized_h) // 2
-            canvas.paste(resized, (x, y))
-            placement = {"x": float(x), "y": float(y), "scale": float(scale)}
-        else:
-            scale = TARGET_WIDTH / source_w
-            resized_h = max(1, int(round(source_h * scale)))
-            resized = source.resize((TARGET_WIDTH, resized_h), Image.Resampling.LANCZOS)
-            if resized_h <= TARGET_HEIGHT:
-                y = (TARGET_HEIGHT - resized_h) // 2
-                canvas.paste(resized, (0, y))
-                placement = {"x": 0.0, "y": float(y), "scale": float(scale)}
-            else:
-                top = (resized_h - TARGET_HEIGHT) // 2
-                canvas.paste(resized.crop((0, top, TARGET_WIDTH, top + TARGET_HEIGHT)), (0, 0))
-                placement = {"x": 0.0, "y": float(-top), "scale": float(scale)}
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        canvas.save(output_path, "PNG")
-    metadata = probe_image(output_path)
-    metadata["prepared_by"] = "programmatic_site_layout"
-    metadata["source_width"] = source_w
-    metadata["source_height"] = source_h
-    metadata["placement"] = placement
-    transformed_callouts = transform_callouts_to_canvas(callouts, (source_w, source_h), placement)
-    metadata["callout_count"] = len(transformed_callouts)
-    return metadata, transformed_callouts
 
 
 def upsert_by_id(items: list[dict[str, Any]], item: dict[str, Any]) -> None:
@@ -330,6 +295,77 @@ def site_capture_type(source_asset: dict[str, Any], resource: dict[str, Any]) ->
     return str(resource.get("capture_type") or site_asset.get("capture_type") or "")
 
 
+def feature_context(source_asset: dict[str, Any], resource: dict[str, Any]) -> dict[str, Any]:
+    site_asset = source_asset.get("site_asset", {}) if isinstance(source_asset.get("site_asset"), dict) else {}
+    feature_path = resource.get("feature_path") or site_asset.get("feature_path") or []
+    feature_label = str(resource.get("feature_label") or site_asset.get("feature_label") or "")
+    parent_feature_label = str(resource.get("parent_feature_label") or site_asset.get("parent_feature_label") or "")
+    if not feature_label and isinstance(feature_path, list) and feature_path:
+        feature_label = str(feature_path[-1])
+    return {
+        "feature_path": [str(value) for value in feature_path if str(value).strip()] if isinstance(feature_path, list) else [],
+        "feature_label": feature_label,
+        "parent_feature_label": parent_feature_label,
+        "is_graphic_ad_child": parent_feature_label == "图文广告" or (isinstance(feature_path, list) and "图文广告" in feature_path),
+    }
+
+
+def annotation_style_prompt() -> str:
+    return (
+        "Use an elegant product-demo annotation style instead of plain red rectangles: a rounded cyan-blue luminous outline, "
+        "soft translucent spotlight wash, subtle corner ticks, and a tiny clean label tag when helpful. The annotation should feel like a polished SaaS demo callout. "
+        "Do not use thick red boxes, multiple tiny circles, rough hand-drawn marks, or clutter. Do not cover important Chinese UI text. "
+        "Use at most one primary highlight region, plus one tiny click dot if it helps show the action."
+    )
+
+
+def site_annotation_task(capture_type: str, source_asset: dict[str, Any], resource: dict[str, Any]) -> str:
+    context = feature_context(source_asset, resource)
+    feature_label = context["feature_label"]
+    path_text = " -> ".join(context["feature_path"])
+    style = annotation_style_prompt()
+    source_hint = " ".join(
+        str(value or "")
+        for value in (
+            capture_type,
+            source_asset.get("id"),
+            source_asset.get("source"),
+            source_asset.get("description"),
+            resource.get("description"),
+            path_text,
+        )
+    )
+    homepage_like = any(token in source_hint.lower() for token in ("主页", "首页", "home", "homepage"))
+    if capture_type == "功能入口截图" and context["is_graphic_ad_child"]:
+        return (
+            f"This is a feature-entry screenshot for the nested path {path_text}. The target is the 图文广告 child item named {feature_label} "
+            "inside the secondary submenu panel, not the parent 图文广告 row and not a homepage card. Preserve the UI exactly, fit the page into a vertical 9:16 keyframe, "
+            f"and add one tasteful designed callout around only that child submenu item. {style}"
+        )
+    if capture_type == "功能入口截图":
+        return (
+            f"This is a feature-entry screenshot for {path_text}. The target is the hover/dropdown menu item named {feature_label} inside the opened 文生图 menu, "
+            "not the top feature card pill/chip with the same label. Preserve the UI exactly, fit the page into a vertical 9:16 keyframe, "
+            f"and add one tasteful designed callout around the correct dropdown item. {style}"
+        )
+    if capture_type == "参数面板截图":
+        return (
+            f"This is the parameter-panel screenshot for {path_text}. Highlight the whole parameter section as one larger readable region: from the section title/属性 header "
+            "through the main required input rows, dropdown rows, and the core form card. Do not mark individual labels one by one. Do not make tiny circles. "
+            "The highlight should frame the complete parameter area similarly to a green review box, but in a polished cyan/blue demo style. "
+            "Keep upload boxes, field labels, dropdown controls, and the lower text area readable, with safe space for subtitles near the bottom. "
+            f"{style}"
+        )
+    if capture_type == "网站主页截图" or homepage_like:
+        return (
+            "This is the website homepage screenshot. Highlight the 文生图 entry/card area as the starting point of the workflow while keeping the homepage overview readable. "
+            f"{style}"
+        )
+    return (
+        f"This is a website screenshot for {path_text}. Preserve the UI exactly and add one tasteful designed callout to the main functional target implied by the filename. {style}"
+    )
+
+
 def prompt_for(
     event: dict[str, Any],
     source_asset: dict[str, Any],
@@ -340,7 +376,8 @@ def prompt_for(
     visible_text = ", ".join(str(v) for v in (source_asset.get("visible_text") or resource.get("visible_text") or []) if v)
     description = str(source_asset.get("description") or resource.get("description") or "").strip()
     capture_type = site_capture_type(source_asset, resource)
-    feature_path = resource.get("feature_path") or source_asset.get("site_asset", {}).get("feature_path") or []
+    feature_context_data = feature_context(source_asset, resource)
+    feature_path = feature_context_data["feature_path"]
     feature_path_text = " -> ".join(str(v) for v in feature_path if v)
     base = (
         "Use the uploaded image as the only source of truth. Create one vertical 9:16 keyframe for a 1080x1920 short video. "
@@ -349,24 +386,12 @@ def prompt_for(
         "Preserve the original Chinese text and visual meaning as much as possible. Keep the main subject centered and readable, "
         "with clean top and bottom safe space for subtitles. No decorative title cards and no marketing copy."
     )
-    if site_screenshot and capture_type == "功能入口截图":
+    if site_screenshot:
         task = (
-            "This is a website feature-entry screenshot. Preserve the website UI exactly, but compose it into a clean 9:16 process keyframe. "
-            "Keep the full visible flow from left navigation to the expanded 文生图 hover menu readable. The target feature is the child item inside the opened hover menu, "
-            "not the top card pill/chip with the same label. Do not draw red boxes, cursor circles, arrows, or explanatory text; target annotations are added later from CDP callout coordinates. "
-            "Do not crop into a local detail; fit the UI width and keep the menu visible."
-        )
-    elif site_screenshot and capture_type == "参数面板截图":
-        task = (
-            "This is a website parameter-panel screenshot. Preserve the original UI, field labels, upload boxes, dropdowns, and 开始生成 button exactly. "
-            "Make it a vertical 9:16 parameter display keyframe with the panel large and readable. Do not add red boxes, arrows, labels, or new text. "
-            "Do not locally zoom into one field; scale the whole panel so the viewer understands the complete input structure."
-        )
-    elif site_screenshot and capture_type == "网站主页截图":
-        task = (
-            "This is the website homepage screenshot. Preserve the homepage UI exactly and compose it as a 9:16 overview keyframe. "
-            "Fit the wide page by width, keep the left navigation and 文生图 card visible. Do not draw red boxes, cursor circles, arrows, or explanatory text; target annotations are added later from CDP callout coordinates. "
-            "Do not invent new text, cards, icons, or product elements."
+            "This is a real website screenshot. Preserve the website UI, Chinese text, menu structure, colors, and layout exactly. "
+            "Compose it into a vertical 9:16 keyframe for a product demo. Do not invent or rewrite website content. "
+            "Do not crop into a tiny local detail; keep enough surrounding context for the viewer to understand where they are. "
+            + site_annotation_task(capture_type, source_asset, resource)
         )
     elif result:
         task = (
@@ -434,16 +459,14 @@ def make_asset(
     metadata: dict[str, Any],
     result: bool,
     site_screenshot: bool,
-    prepared_by: str = "gpt_image",
 ) -> dict[str, Any]:
     old_id = str(source_asset.get("id"))
     workflow_step = "result_crop" if result else ("prepared_site_keyframe" if site_screenshot else "prepared_9x16")
     source_image_resource = source_asset.get("image_resource", {}) if isinstance(source_asset.get("image_resource"), dict) else {}
     source_workflow_step = str(source_image_resource.get("workflow_step") or "").strip()
-    programmatic_site = site_screenshot and prepared_by == "programmatic_site_layout"
-    origin = "programmatic_site_keyframe" if programmatic_site else ("gpt_image_site_keyframe" if site_screenshot else "gpt_image_layout_optimization")
-    role = "gpt_result_keyframe" if result else ("prepared_site_keyframe" if programmatic_site else ("gpt_site_keyframe" if site_screenshot else "gpt_function_keyframe"))
-    id_prefix = "prepared_site_keyframe" if programmatic_site else ("gpt_site_keyframe" if site_screenshot else "gpt_keyframe")
+    origin = "gpt_image_site_keyframe" if site_screenshot else "gpt_image_layout_optimization"
+    role = "gpt_result_keyframe" if result else ("gpt_site_keyframe" if site_screenshot else "gpt_function_keyframe")
+    id_prefix = "gpt_site_keyframe" if site_screenshot else "gpt_keyframe"
     return {
         "id": f"asset_{id_prefix}_{old_id}",
         "type": "image",
@@ -470,7 +493,7 @@ def make_asset(
         "image_resource": {
             "workflow_step": workflow_step,
             "source_workflow_step": source_workflow_step,
-            "variant": "programmatic_site_keyframe" if programmatic_site else ("gpt_image_site_keyframe" if site_screenshot else "gpt_image_layout_optimized"),
+            "variant": "gpt_image_site_keyframe" if site_screenshot else "gpt_image_layout_optimized",
             "source_asset_id": old_id,
             "ai_verified_for_video": True,
         },
@@ -510,9 +533,9 @@ def make_image_resource(
         "capture_type": source_resource.get("capture_type") or new_asset.get("site_asset", {}).get("capture_type") or "",
         "variant": new_asset.get("image_resource", {}).get("variant") or "gpt_image_layout_optimized",
         "origin": new_asset.get("origin"),
-        "capture_method": "programmatic_site_layout" if new_asset.get("origin") == "programmatic_site_keyframe" else "gpt_image_edit",
+        "capture_method": "gpt_image_edit",
         "page_url": source_resource.get("page_url") or new_asset.get("site_asset", {}).get("route") or "",
-        "title": f"{'程序化网站关键帧' if new_asset.get('origin') == 'programmatic_site_keyframe' else 'AI优化关键帧'}-{source_resource.get('title') or new_asset.get('filename')}",
+        "title": f"AI优化关键帧-{source_resource.get('title') or new_asset.get('filename')}",
         "description": new_asset.get("description") or source_resource.get("description") or "",
         "visible_text": new_asset.get("visible_text") or source_resource.get("visible_text") or [],
         "prompt_inputs": source_resource.get("prompt_inputs") if isinstance(source_resource.get("prompt_inputs"), dict) else {},
@@ -559,7 +582,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     requests = unique_keyframe_requests(project, case_dir)
     if args.limit:
         requests = requests[: args.limit]
-    needs_gpt_image = any(not bool(item.get("site_screenshot")) for item in requests)
+    needs_gpt_image = bool(requests)
     config = dry_run_config() if (args.dry_run or not needs_gpt_image) else load_config(Path(args.config).expanduser().resolve(strict=False))
     if not requests:
         output_project = Path(args.output_project).expanduser().resolve(strict=False) if args.output_project else case_dir / "video_project.gpt_image.json"
@@ -580,6 +603,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         return {"ok": True, "code": "ok", "reason": "", "data": {"project": str(output_project), "report": str(report_path), "count": 0}}
 
     replacement_by_source: dict[str, str] = {}
+    site_replaced_visual_ids: set[str] = set()
     new_assets: list[dict[str, Any]] = []
     new_resources: list[dict[str, Any]] = []
     report_items: list[dict[str, Any]] = []
@@ -610,17 +634,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         final_path = final_root / f"{stem}_{'site_9x16' if site_screenshot else 'gpt_9x16'}.png"
         prompt = prompt_for(event, source_asset, item["resource"], result, site_screenshot)
         transformed_callouts: list[dict[str, Any]] | None = None
-        prepared_by = "gpt_image"
-        if site_screenshot:
-            source_callouts = item["resource"].get("callouts") if isinstance(item["resource"].get("callouts"), list) else []
-            metadata, transformed_callouts = prepare_site_keyframe(
-                source_path,
-                final_path,
-                site_capture_type(source_asset, item["resource"]),
-                source_callouts,
-            )
-            prepared_by = "programmatic_site_layout"
-        elif args.force or not final_path.is_file():
+        if args.force or site_screenshot or not final_path.is_file():
             gpt_input = preprocess_for_gpt(source_path, preprocessed_path, result=result)
             if args.dry_run:
                 raw_path.parent.mkdir(parents=True, exist_ok=True)
@@ -630,7 +644,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             metadata = normalize_to_video_canvas(raw_path, final_path)
         else:
             metadata = probe_image(final_path)
-        new_asset = make_asset(case_dir, source_asset, event, final_path, metadata, result, site_screenshot, prepared_by=prepared_by)
+        if site_screenshot:
+            metadata["prepared_by"] = "gpt_image_site_annotation" if not args.dry_run else "dry_run_site_canvas"
+            metadata["annotation_policy"] = "baked_into_gpt_image_keyframe"
+            transformed_callouts = []
+        new_asset = make_asset(case_dir, source_asset, event, final_path, metadata, result, site_screenshot)
         new_resource = make_image_resource(new_asset, source_asset, item["resource"], result, site_screenshot, callouts=transformed_callouts)
         replacement_by_source[source_id] = new_asset["id"]
         new_assets.append(new_asset)
@@ -644,9 +662,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 "capture_type": site_capture_type(source_asset, item["resource"]),
                 "source": source_asset.get("source"),
                 "preprocessed_input": as_case_relative(case_dir, preprocessed_path) if result else source_asset.get("source"),
-                "raw_output": "" if site_screenshot else as_case_relative(case_dir, raw_path),
+                "raw_output": as_case_relative(case_dir, raw_path),
                 "prepared_output": new_asset["source"],
-                "prepared_by": prepared_by,
+                "prepared_by": "gpt_image",
                 "prompt": prompt,
                 "metadata": metadata,
             }
@@ -664,6 +682,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         mapped_asset_ids = [replacement_by_source.get(asset_id, asset_id) for asset_id in asset_ids]
         if mapped_asset_ids != asset_ids:
             first_replacement = mapped_asset_ids[0]
+            if any(asset_id in replacement_by_source and new_asset_by_id.get(replacement_by_source[asset_id], {}).get("origin") == "gpt_image_site_keyframe" for asset_id in asset_ids):
+                if event.get("id"):
+                    site_replaced_visual_ids.add(str(event["id"]))
             prepared_layout = (
                 "result-showcase"
                 if new_asset_by_id.get(first_replacement, {}).get("role") == "gpt_result_keyframe"
@@ -674,6 +695,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 event["layout"] = prepared_layout
                 event["display_mode"] = prepared_layout
             event.setdefault("qa_expectations", {})["uses_gpt_image_prepared_keyframe"] = True
+    if site_replaced_visual_ids and isinstance(project.get("overlay_track"), list):
+        project["overlay_track"] = [
+            overlay
+            for overlay in project["overlay_track"]
+            if not (isinstance(overlay, dict) and str(overlay.get("target_visual_id") or "") in site_replaced_visual_ids)
+        ]
 
     if not args.dry_run:
         register_prepared_assets(case_dir, new_assets, new_resources)

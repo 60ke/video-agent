@@ -10,9 +10,9 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_MODEL = "speech-01-turbo"
+DEFAULT_MODEL = "speech-2.8-turbo"
 DEFAULT_VOICE_ID = "male-qn-qingse"
-DEFAULT_SPEED = 1.2
+DEFAULT_SPEED = 1.5
 DEFAULT_ENDPOINT = "https://api.minimaxi.com/v1/t2a_v2"
 DEFAULT_SUBTITLE_TYPE = "word"
 
@@ -156,6 +156,32 @@ def normalize_minimax_subtitles(raw: Any) -> list[dict[str, Any]]:
     return segments
 
 
+def sanitize_subtitle_segments(
+    segments: list[dict[str, Any]],
+    *,
+    max_duration: float | None = None,
+) -> list[dict[str, Any]]:
+    cleaned: list[dict[str, Any]] = []
+    for segment in segments:
+        text = "".join(str(segment.get("text", "")).split())
+        if not text:
+            continue
+        start = float(segment.get("start", 0))
+        end = float(segment.get("end", start))
+        if end <= start:
+            continue
+        if max_duration is not None and start >= max_duration:
+            continue
+        if max_duration is not None and end > max_duration + 0.05:
+            end = max_duration
+        per_char = (end - start) / max(len(text), 1)
+        if per_char > 1.5:
+            continue
+        cleaned.append({"text": text, "start": round(start, 3), "end": round(end, 3)})
+    cleaned.sort(key=lambda item: (item["start"], item["end"], item["text"]))
+    return cleaned
+
+
 def fetch_subtitles(url: str | None) -> tuple[Any, list[dict[str, Any]]]:
     if not url:
         return [], []
@@ -216,6 +242,13 @@ def call_minimax_api(text: str, output_audio: Path, output_alignment: Path, raw_
     output_audio.write_bytes(bytes.fromhex(audio_hex))
 
     raw_subtitles, segments = fetch_subtitles(data.get("subtitle_file"))
+    probed_duration = media_duration(output_audio)
+    segments = sanitize_subtitle_segments(segments, max_duration=probed_duration)
+    if probed_duration:
+        duration = probed_duration
+    else:
+        duration = max((float(seg["end"]) for seg in segments), default=0.0)
+
     write_json(
         raw_subtitle_path,
         {
@@ -230,11 +263,6 @@ def call_minimax_api(text: str, output_audio: Path, output_alignment: Path, raw_
             "raw": raw_subtitles,
         },
     )
-
-    duration = max((float(seg["end"]) for seg in segments), default=0.0)
-    probed_duration = media_duration(output_audio)
-    if probed_duration:
-        duration = max(duration, probed_duration)
 
     alignment = {
         "schema_version": 1,
@@ -254,6 +282,7 @@ def call_minimax_api(text: str, output_audio: Path, output_alignment: Path, raw_
         "model": payload["model"],
         "voice_id": payload["voice_setting"]["voice_id"],
         "subtitle_type": payload["subtitle_type"],
+        "speed": payload["voice_setting"]["speed"],
     }
 
 
@@ -280,6 +309,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "model": result["model"],
         "voice_id": result["voice_id"],
         "subtitle_type": result["subtitle_type"],
+        "speed": result.get("speed"),
         "chars": len(text),
         "chars_per_second": round(len(text) / result["duration"], 3) if result["duration"] > 0 else None,
     }

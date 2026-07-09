@@ -43,18 +43,22 @@ def load_script_segments(case_dir: Path) -> list[dict[str, Any]]:
 
 
 def alignment_bounds(alignment: dict[str, Any]) -> tuple[float, float]:
+    probed = alignment.get("duration")
     segments = alignment.get("segments", [])
-    if not isinstance(segments, list) or not segments:
-        duration = alignment.get("duration")
-        if isinstance(duration, (int, float)) and duration > 0:
-            return 0.0, float(duration)
-        raise ValueError("alignment has no segments or duration")
+    if isinstance(segments, list) and segments:
+        sanitized = sanitize_alignment_segments([seg for seg in segments if isinstance(seg, dict)])
+        if sanitized:
+            start = min(float(seg["start"]) for seg in sanitized)
+            end = max(float(seg["end"]) for seg in sanitized)
+            if isinstance(probed, (int, float)) and probed > 0:
+                end = min(end, float(probed))
+            if end > start:
+                return start, end
 
-    starts = [float(seg.get("start", 0)) for seg in segments if isinstance(seg, dict)]
-    ends = [float(seg.get("end", 0)) for seg in segments if isinstance(seg, dict)]
-    if not starts or not ends or max(ends) <= min(starts):
-        raise ValueError("alignment has invalid start/end values")
-    return min(starts), max(ends)
+    if isinstance(probed, (int, float)) and probed > 0:
+        return 0.0, float(probed)
+
+    raise ValueError("alignment has no segments or duration")
 
 
 def allocate_subtitles(script_segments: list[dict[str, Any]], start: float, end: float) -> list[dict[str, Any]]:
@@ -84,6 +88,41 @@ def allocate_subtitles(script_segments: list[dict[str, Any]], start: float, end:
     return subtitles
 
 
+def sanitize_alignment_segments(segments: list[dict[str, Any]], *, max_duration: float | None = None) -> list[dict[str, Any]]:
+    cleaned: list[dict[str, Any]] = []
+    for segment in segments:
+        if not isinstance(segment, dict):
+            continue
+        text = normalized_chars(str(segment.get("text", "")))
+        if not text:
+            continue
+        start = float(segment.get("start", 0))
+        end = float(segment.get("end", start))
+        if end <= start:
+            continue
+        if max_duration is not None and start >= max_duration:
+            continue
+        if max_duration is not None and end > max_duration + 0.05:
+            end = max_duration
+        per_char = (end - start) / max(len(text), 1)
+        if per_char > 1.5:
+            continue
+        cleaned.append({"text": text, "start": round(start, 3), "end": round(end, 3)})
+    cleaned.sort(key=lambda item: (item["start"], item["end"], item["text"]))
+    return cleaned
+
+
+def subtitles_are_valid(subtitles: list[dict[str, Any]] | None) -> bool:
+    if not subtitles:
+        return False
+    for item in subtitles:
+        start = float(item.get("start", 0))
+        end = float(item.get("end", start))
+        if end <= start:
+            return False
+    return True
+
+
 def normalized_chars(text: str) -> str:
     return "".join(str(text).split())
 
@@ -92,12 +131,10 @@ def build_char_timeline(alignment_segments: list[dict[str, Any]]) -> tuple[str, 
     chars: list[str] = []
     starts: list[float] = []
     ends: list[float] = []
-    for segment in alignment_segments:
-        text = normalized_chars(str(segment.get("text", "")))
-        if not text:
-            continue
-        start = float(segment.get("start", 0))
-        end = float(segment.get("end", start))
+    for segment in sanitize_alignment_segments(alignment_segments):
+        text = segment["text"]
+        start = float(segment["start"])
+        end = float(segment["end"])
         duration = max(end - start, 0.001)
         count = len(text)
         for idx, char in enumerate(text):
@@ -164,10 +201,15 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     alignment = load_json(alignment_path)
     script_segments = load_script_segments(case_dir)
     start, end = alignment_bounds(alignment)
-    subtitles = allocate_from_alignment_text(script_segments, alignment)
+    alignment_segments = sanitize_alignment_segments(
+        [seg for seg in alignment.get("segments", []) if isinstance(seg, dict)],
+        max_duration=end,
+    )
+    alignment_for_match = {**alignment, "segments": alignment_segments}
+    subtitles = allocate_from_alignment_text(script_segments, alignment_for_match)
     allocation_format = "minimax_text_matched_reviewed_text"
     warnings: list[str] = []
-    if subtitles is None:
+    if subtitles is None or not subtitles_are_valid(subtitles):
         subtitles = allocate_subtitles(script_segments, start, end)
         allocation_format = "duration_allocated_reviewed_text"
         warnings.append("exact Minimax text matching failed; fell back to proportional duration allocation")

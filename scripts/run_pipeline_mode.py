@@ -137,6 +137,22 @@ def should_use_gpt(args: argparse.Namespace, policy: ModePolicy) -> bool:
     return policy.gpt_image
 
 
+def should_force_all(args: argparse.Namespace) -> bool:
+    if args.cache:
+        return False
+    if args.force or args.no_cache:
+        return True
+    return args.mode in ("standard", "strict")
+
+
+def should_force_gpt(args: argparse.Namespace, *, gpt_enabled: bool, force_all: bool) -> bool:
+    if not gpt_enabled:
+        return False
+    if args.reuse_gpt:
+        return False
+    return bool(args.force_gpt or force_all)
+
+
 RESULT_STEPS = {"result_crop", "result_export", "result_gallery"}
 
 
@@ -315,7 +331,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         raise FileNotFoundError(f"case directory not found: {case_dir}")
     policy = POLICIES[args.mode]
     label = args.label or f"{args.mode}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    force_all = args.no_cache or args.force
+    force_all = should_force_all(args)
 
     paths = {
         "input": case_dir / "input.json",
@@ -339,6 +355,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         raise FileNotFoundError(f"reviewed video_script.json is required before pipeline run: {paths['script']}")
 
     gpt_enabled = should_use_gpt(args, policy)
+    force_gpt = should_force_gpt(args, gpt_enabled=gpt_enabled, force_all=force_all)
     steps: list[dict[str, Any]] = []
 
     steps.append(
@@ -433,7 +450,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     render_project = paths["project"]
     if gpt_enabled:
         gpt_cmd = script_cmd("prepare_gpt_image_keyframes.py", "--case", rel(case_dir), "--project", rel(paths["project"]), "--json")
-        if args.force_gpt or force_all:
+        if force_gpt:
             gpt_cmd.append("--force")
         if args.gpt_dry_run:
             gpt_cmd.append("--dry-run")
@@ -444,7 +461,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 cwd=root,
                 outputs=[paths["gpt_project"]],
                 deps=[paths["project"]],
-                force=force_all or args.force_gpt,
+                force=force_all or force_gpt,
                 dry_run=args.dry_run,
             )
         )
@@ -559,6 +576,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "video": rel(paths["render"]),
             "policy": policy.__dict__,
             "gpt_image_enabled": gpt_enabled,
+            "force_all": force_all,
+            "force_gpt": force_gpt,
             "dry_run": bool(args.dry_run),
             "steps": steps,
         },
@@ -570,7 +589,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--case", required=True)
     parser.add_argument("--mode", choices=MODES, default="standard")
     parser.add_argument("--label")
-    parser.add_argument("--gpt-image", choices=("auto", "always", "never"), default="auto")
+    parser.add_argument("--gpt-image", choices=("auto", "always", "never"), default="always")
     parser.add_argument(
         "--receipt-id",
         action="append",
@@ -582,14 +601,26 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Allow old/demo result assets without a receipt id. Use only for explicit packaging tests.",
     )
+    parser.add_argument(
+        "--cache",
+        action="store_true",
+        help="Reuse unchanged voice/GPT/render outputs when deps are current. "
+        "Default in standard/strict is full regeneration (no cache).",
+    )
+    parser.add_argument(
+        "--reuse-gpt",
+        action="store_true",
+        help="Reuse existing GPT prepared keyframes when present. "
+        "Default in standard/strict is to call GPT image API again.",
+    )
     parser.add_argument("--gpt-dry-run", action="store_true", help="Use GPT image rewrite path without calling the image API.")
     parser.add_argument("--voice-qa", action="store_true", help="Run voice QA even when the mode would skip it.")
     parser.add_argument("--contact-sheet", action="store_true", help="Build contact sheet even when the mode would skip it.")
     parser.add_argument("--render-qa", action="store_true", help="Run render QA even when the mode would skip it.")
     parser.add_argument("--hygiene", action="store_true", help="Run case hygiene even when the mode would skip it.")
     parser.add_argument("--max-frames", type=int, help="Override contact-sheet frame count.")
-    parser.add_argument("--force", action="store_true", help="Re-run all cacheable stages.")
-    parser.add_argument("--no-cache", action="store_true", help="Alias for forceful re-run of cacheable stages.")
+    parser.add_argument("--force", action="store_true", help="Force re-run of cacheable stages (redundant in standard/strict).")
+    parser.add_argument("--no-cache", action="store_true", help="Alias for forcing cacheable stages to re-run.")
     parser.add_argument("--force-voice", action="store_true")
     parser.add_argument("--force-gpt", action="store_true")
     parser.add_argument("--force-render", action="store_true")

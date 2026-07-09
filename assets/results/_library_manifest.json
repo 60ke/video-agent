@@ -1,0 +1,785 @@
+{
+  "schema_version": 1,
+  "status": "ready",
+  "library": "assets/results",
+  "site_label": "柯幻熊猫",
+  "module_label": "文生图",
+  "feature_label": "LOGO",
+  "feature_id": "logo",
+  "feature_path": [
+    "文生图",
+    "LOGO"
+  ],
+  "origin": "result_asset_library",
+  "asset_count": 5,
+  "assets": [
+    {
+      "id": "result_kehuanxiongmao_text_to_image_logo_industry_f14a3b32f7_01",
+      "type": "image",
+      "source": "assets/results/柯幻熊猫_文生图_LOGO_交通出行_结果图_01.png",
+      "relative_source": "assets/results/柯幻熊猫_文生图_LOGO_交通出行_结果图_01.png",
+      "filename": "柯幻熊猫_文生图_LOGO_交通出行_结果图_01.png",
+      "mime_type": "image/png",
+      "size_bytes": 1045849,
+      "sha256": "680f0cc6f31233978b6e90360a8ebe8a53f93f1567a28959d8afac82f4e46600",
+      "origin": "result_asset_library",
+      "source_policy": "copied_from_assets_results",
+      "role": "generated_result",
+      "description": "文生图 -> LOGO 的可复用结果图素材，行业/场景为 交通出行。",
+      "visible_text": [
+        "文生图",
+        "LOGO",
+        "交通出行"
+      ],
+      "supported_claims": [
+        "curated_result_image",
+        "LOGO结果展示",
+        "交通出行场景"
+      ],
+      "metadata": {
+        "probe_ok": true,
+        "width": 2048,
+        "height": 1152,
+        "aspect_ratio": 1.777778,
+        "source_library_path": "C:\\Users\\CNGG\\Documents\\video_generate\\video-agent\\assets\\results\\柯幻熊猫_文生图_LOGO_交通出行_结果图_01.png"
+      },
+      "layout_plan": {
+        "primary_display_mode": "result-showcase",
+        "focus_region": "primary_result_image",
+        "fill_strategy": "fit_full_result_preserve_image",
+        "viewport_transform": {
+          "mode": "fit_full_result",
+          "fill_width_when_possible": true,
+          "preserve_entire_result": true,
+          "allow_detail_crop": false
+        },
+        "forbidden_treatments": [
+          "arbitrary_zoompan",
+          "local_crop",
+          "pan_subject_out_of_frame"
+        ]
+      },
+      "result_asset": {
+        "site_label": "柯幻熊猫",
+        "module_label": "文生图",
+        "module_id": "text_to_image",
+        "parent_feature_label": null,
+        "parent_feature_id": null,
+        "feature_label": "LOGO",
+        "feature_id": "logo",
+        "feature_path": [
+          "文生图",
+          "LOGO"
+        ],
+        "industry_label": "交通出行",
+        "industry_id": "industry_f14a3b32f7",
+        "capture_type": "结果图",
+        "sequence": "01",
+        "route": "/textToImage/logo",
+        "receipt_id": null
+      },
+      "quality": {
+        "readable": null,
+        "contains_private_info": null,
+        "needs_review": false,
+        "ai_verified": true
+      }
+    },
+    {
+      "id": "result_kehuanxiongmao_text_to_image_logo_industry_b8f4fce81a_01",
+      "type": "image",
+      "source": "assets/results/柯幻熊猫_文生图_LOGO_娱乐潮玩_结果图_01.png",
+      "relative_source": "assets/results/柯幻熊猫_文生图_LOGO_娱乐潮玩_结果图_01.png",
+      "filename": "柯幻熊猫_文生图_LOGO_娱乐潮玩_结果图_01.png",
+      "mime_type": "image/png",
+      "size_bytes": 670088,
+      "sha256": "042663588682ec016b0421f51e7897cab2ec3234fa042fed7d4f65deaede3702",
+      "origin": "result_asset_library",
+      "source_policy": "copied_from_assets_results",
+      "role": "generated_result",
+      "description": "文生图 -> LOGO 的可复用结果图素材，行业/场景为 娱乐潮玩。",
+      "visible_text": [
+        "文生图",
+        "LOGO",
+        "娱乐潮玩"
+      ],
+      "supported_claims": [
+        "curated_result_image",
+        "LOGO结果展示",
+        "娱乐潮玩场景"
+      ],
+      "metadata": {
+        "probe_ok": true,
+        "width": 1280,
+        "height": 720,
+        "aspect_ratio": 1.777778,
+        "source_library_path": "C:\\Users\\CNGG\\Documents\\video_generate\\video-agent\\assets\\results\\柯幻熊猫_文生图_LOGO_娱乐潮玩_结果图_01.png"
+      },
+      "layout_plan": {
+        "primary_display_mode": "result-showcase",
+        "focus_region": "primary_result_image",
+        "fill_strategy": "fit_full_result_preserve_image",
+        "viewport_transform": {
+          "mode": "fit_full_result",
+          "fill_width_when_possible": true,
+          "preserve_entire_result": true,
+          "allow_detail_crop": false
+        },
+        "forbidden_treatments": [
+          "arbitrary_zoompan",
+          "local_crop",
+          "pan_subject_out_of_frame"
+        ]
+      },
+      "result_asset": {
+        "site_label": "柯幻熊猫",
+        "module_label": "文生图",
+        "module_id": "text_to_image",
+        "parent_feature_label": null,
+        "parent_feature_id": null,
+        "feature_label": "LOGO",
+        "feature_id": "logo",
+        "feature_path": [
+          "文生图",
+          "LOGO"
+        ],
+        "industry_label": "娱乐潮玩",
+        "industry_id": "industry_b8f4fce81a",
+        "capture_type": "结果图",
+        "sequence": "01",
+        "route": "/textToImage/logo",
+        "receipt_id": null
+      },
+      "quality": {
+        "readable": null,
+        "contains_private_info": null,
+        "needs_review": false,
+        "ai_verified": true
+      }
+    },
+    {
+      "id": "result_kehuanxiongmao_text_to_image_logo_industry_601be258c1_01",
+      "type": "image",
+      "source": "assets/results/柯幻熊猫_文生图_LOGO_母婴服务_结果图_01.png",
+      "relative_source": "assets/results/柯幻熊猫_文生图_LOGO_母婴服务_结果图_01.png",
+      "filename": "柯幻熊猫_文生图_LOGO_母婴服务_结果图_01.png",
+      "mime_type": "image/png",
+      "size_bytes": 1900281,
+      "sha256": "c7d9c41fd2813ce4a8236ddb2f2ca39cdeafee0f998d27294b189d6b67c65b9d",
+      "origin": "result_asset_library",
+      "source_policy": "copied_from_assets_results",
+      "role": "generated_result",
+      "description": "文生图 -> LOGO 的可复用结果图素材，行业/场景为 母婴服务。",
+      "visible_text": [
+        "文生图",
+        "LOGO",
+        "母婴服务"
+      ],
+      "supported_claims": [
+        "curated_result_image",
+        "LOGO结果展示",
+        "母婴服务场景"
+      ],
+      "metadata": {
+        "probe_ok": true,
+        "width": 2048,
+        "height": 1152,
+        "aspect_ratio": 1.777778,
+        "source_library_path": "C:\\Users\\CNGG\\Documents\\video_generate\\video-agent\\assets\\results\\柯幻熊猫_文生图_LOGO_母婴服务_结果图_01.png"
+      },
+      "layout_plan": {
+        "primary_display_mode": "result-showcase",
+        "focus_region": "primary_result_image",
+        "fill_strategy": "fit_full_result_preserve_image",
+        "viewport_transform": {
+          "mode": "fit_full_result",
+          "fill_width_when_possible": true,
+          "preserve_entire_result": true,
+          "allow_detail_crop": false
+        },
+        "forbidden_treatments": [
+          "arbitrary_zoompan",
+          "local_crop",
+          "pan_subject_out_of_frame"
+        ]
+      },
+      "result_asset": {
+        "site_label": "柯幻熊猫",
+        "module_label": "文生图",
+        "module_id": "text_to_image",
+        "parent_feature_label": null,
+        "parent_feature_id": null,
+        "feature_label": "LOGO",
+        "feature_id": "logo",
+        "feature_path": [
+          "文生图",
+          "LOGO"
+        ],
+        "industry_label": "母婴服务",
+        "industry_id": "industry_601be258c1",
+        "capture_type": "结果图",
+        "sequence": "01",
+        "route": "/textToImage/logo",
+        "receipt_id": null
+      },
+      "quality": {
+        "readable": null,
+        "contains_private_info": null,
+        "needs_review": false,
+        "ai_verified": true
+      }
+    },
+    {
+      "id": "result_kehuanxiongmao_text_to_image_logo_industry_88733b63e6_01",
+      "type": "image",
+      "source": "assets/results/柯幻熊猫_文生图_LOGO_科技办公_结果图_01.png",
+      "relative_source": "assets/results/柯幻熊猫_文生图_LOGO_科技办公_结果图_01.png",
+      "filename": "柯幻熊猫_文生图_LOGO_科技办公_结果图_01.png",
+      "mime_type": "image/png",
+      "size_bytes": 461312,
+      "sha256": "30e41d8ee3a5dfb51af7ca1c9fdda18fe2a7cc64965a879f4eed8f81772d595f",
+      "origin": "result_asset_library",
+      "source_policy": "copied_from_assets_results",
+      "role": "generated_result",
+      "description": "文生图 -> LOGO 的可复用结果图素材，行业/场景为 科技办公。",
+      "visible_text": [
+        "文生图",
+        "LOGO",
+        "科技办公"
+      ],
+      "supported_claims": [
+        "curated_result_image",
+        "LOGO结果展示",
+        "科技办公场景"
+      ],
+      "metadata": {
+        "probe_ok": true,
+        "width": 1280,
+        "height": 720,
+        "aspect_ratio": 1.777778,
+        "source_library_path": "C:\\Users\\CNGG\\Documents\\video_generate\\video-agent\\assets\\results\\柯幻熊猫_文生图_LOGO_科技办公_结果图_01.png"
+      },
+      "layout_plan": {
+        "primary_display_mode": "result-showcase",
+        "focus_region": "primary_result_image",
+        "fill_strategy": "fit_full_result_preserve_image",
+        "viewport_transform": {
+          "mode": "fit_full_result",
+          "fill_width_when_possible": true,
+          "preserve_entire_result": true,
+          "allow_detail_crop": false
+        },
+        "forbidden_treatments": [
+          "arbitrary_zoompan",
+          "local_crop",
+          "pan_subject_out_of_frame"
+        ]
+      },
+      "result_asset": {
+        "site_label": "柯幻熊猫",
+        "module_label": "文生图",
+        "module_id": "text_to_image",
+        "parent_feature_label": null,
+        "parent_feature_id": null,
+        "feature_label": "LOGO",
+        "feature_id": "logo",
+        "feature_path": [
+          "文生图",
+          "LOGO"
+        ],
+        "industry_label": "科技办公",
+        "industry_id": "industry_88733b63e6",
+        "capture_type": "结果图",
+        "sequence": "01",
+        "route": "/textToImage/logo",
+        "receipt_id": null
+      },
+      "quality": {
+        "readable": null,
+        "contains_private_info": null,
+        "needs_review": false,
+        "ai_verified": true
+      }
+    },
+    {
+      "id": "result_kehuanxiongmao_text_to_image_logo_industry_647896b2c8_01",
+      "type": "image",
+      "source": "assets/results/柯幻熊猫_文生图_LOGO_餐饮美食_结果图_01.png",
+      "relative_source": "assets/results/柯幻熊猫_文生图_LOGO_餐饮美食_结果图_01.png",
+      "filename": "柯幻熊猫_文生图_LOGO_餐饮美食_结果图_01.png",
+      "mime_type": "image/png",
+      "size_bytes": 2774695,
+      "sha256": "f910222fcf42495897827efd52ee3d4398541937985d131dd117efbfa40bba64",
+      "origin": "result_asset_library",
+      "source_policy": "copied_from_assets_results",
+      "role": "generated_result",
+      "description": "文生图 -> LOGO 的可复用结果图素材，行业/场景为 餐饮美食。",
+      "visible_text": [
+        "文生图",
+        "LOGO",
+        "餐饮美食"
+      ],
+      "supported_claims": [
+        "curated_result_image",
+        "LOGO结果展示",
+        "餐饮美食场景"
+      ],
+      "metadata": {
+        "probe_ok": true,
+        "width": 2048,
+        "height": 1152,
+        "aspect_ratio": 1.777778,
+        "source_library_path": "C:\\Users\\CNGG\\Documents\\video_generate\\video-agent\\assets\\results\\柯幻熊猫_文生图_LOGO_餐饮美食_结果图_01.png"
+      },
+      "layout_plan": {
+        "primary_display_mode": "result-showcase",
+        "focus_region": "primary_result_image",
+        "fill_strategy": "fit_full_result_preserve_image",
+        "viewport_transform": {
+          "mode": "fit_full_result",
+          "fill_width_when_possible": true,
+          "preserve_entire_result": true,
+          "allow_detail_crop": false
+        },
+        "forbidden_treatments": [
+          "arbitrary_zoompan",
+          "local_crop",
+          "pan_subject_out_of_frame"
+        ]
+      },
+      "result_asset": {
+        "site_label": "柯幻熊猫",
+        "module_label": "文生图",
+        "module_id": "text_to_image",
+        "parent_feature_label": null,
+        "parent_feature_id": null,
+        "feature_label": "LOGO",
+        "feature_id": "logo",
+        "feature_path": [
+          "文生图",
+          "LOGO"
+        ],
+        "industry_label": "餐饮美食",
+        "industry_id": "industry_647896b2c8",
+        "capture_type": "结果图",
+        "sequence": "01",
+        "route": "/textToImage/logo",
+        "receipt_id": null
+      },
+      "quality": {
+        "readable": null,
+        "contains_private_info": null,
+        "needs_review": false,
+        "ai_verified": true
+      }
+    }
+  ],
+  "resources": [
+    {
+      "id": "img_text_to_image_logo_industry_f14a3b32f7_result_01",
+      "asset_id": "result_kehuanxiongmao_text_to_image_logo_industry_f14a3b32f7_01",
+      "filename": "柯幻熊猫_文生图_LOGO_交通出行_结果图_01.png",
+      "source": "assets/results/柯幻熊猫_文生图_LOGO_交通出行_结果图_01.png",
+      "type": "image",
+      "feature_id": "logo",
+      "feature_label": "LOGO",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "source_module_id": "text_to_image",
+      "source_module_label": "文生图",
+      "parent_feature_id": null,
+      "parent_feature_label": null,
+      "industry_id": "industry_f14a3b32f7",
+      "industry_label": "交通出行",
+      "scene_id": "industry_f14a3b32f7",
+      "scene_label": "交通出行",
+      "workflow_step": "result_gallery",
+      "source_workflow_step": "result_image",
+      "capture_type": "结果图",
+      "variant": "result_01",
+      "origin": "result_asset_library",
+      "capture_method": "saved_result_asset",
+      "page_url": "/textToImage/logo",
+      "title": "LOGO - 交通出行结果图",
+      "description": "文生图 -> LOGO 的可复用结果图素材，行业/场景为 交通出行。",
+      "visible_text": [
+        "文生图",
+        "LOGO",
+        "交通出行"
+      ],
+      "prompt_inputs": {
+        "industry": "交通出行",
+        "scene": "交通出行"
+      },
+      "callouts": [],
+      "relations": {
+        "site_label": "柯幻熊猫",
+        "module_path": [
+          "文生图"
+        ],
+        "same_feature_key": "logo",
+        "same_industry_key": "industry_f14a3b32f7",
+        "receipt_id": ""
+      },
+      "supported_claims": [
+        "curated_result_image",
+        "LOGO结果展示",
+        "交通出行场景"
+      ],
+      "recommended_usage": [
+        "result_showcase",
+        "result_gallery",
+        "industry_scene_result"
+      ],
+      "quality": {
+        "readable": null,
+        "contains_private_info": null,
+        "needs_review": false,
+        "ai_verified": true
+      },
+      "layout_plan": {
+        "primary_display_mode": "result-showcase",
+        "focus_region": "primary_result_image",
+        "fill_strategy": "fit_full_result_preserve_image",
+        "viewport_transform": {
+          "mode": "fit_full_result",
+          "fill_width_when_possible": true,
+          "preserve_entire_result": true,
+          "allow_detail_crop": false
+        },
+        "forbidden_treatments": [
+          "arbitrary_zoompan",
+          "local_crop",
+          "pan_subject_out_of_frame"
+        ]
+      }
+    },
+    {
+      "id": "img_text_to_image_logo_industry_b8f4fce81a_result_01",
+      "asset_id": "result_kehuanxiongmao_text_to_image_logo_industry_b8f4fce81a_01",
+      "filename": "柯幻熊猫_文生图_LOGO_娱乐潮玩_结果图_01.png",
+      "source": "assets/results/柯幻熊猫_文生图_LOGO_娱乐潮玩_结果图_01.png",
+      "type": "image",
+      "feature_id": "logo",
+      "feature_label": "LOGO",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "source_module_id": "text_to_image",
+      "source_module_label": "文生图",
+      "parent_feature_id": null,
+      "parent_feature_label": null,
+      "industry_id": "industry_b8f4fce81a",
+      "industry_label": "娱乐潮玩",
+      "scene_id": "industry_b8f4fce81a",
+      "scene_label": "娱乐潮玩",
+      "workflow_step": "result_gallery",
+      "source_workflow_step": "result_image",
+      "capture_type": "结果图",
+      "variant": "result_01",
+      "origin": "result_asset_library",
+      "capture_method": "saved_result_asset",
+      "page_url": "/textToImage/logo",
+      "title": "LOGO - 娱乐潮玩结果图",
+      "description": "文生图 -> LOGO 的可复用结果图素材，行业/场景为 娱乐潮玩。",
+      "visible_text": [
+        "文生图",
+        "LOGO",
+        "娱乐潮玩"
+      ],
+      "prompt_inputs": {
+        "industry": "娱乐潮玩",
+        "scene": "娱乐潮玩"
+      },
+      "callouts": [],
+      "relations": {
+        "site_label": "柯幻熊猫",
+        "module_path": [
+          "文生图"
+        ],
+        "same_feature_key": "logo",
+        "same_industry_key": "industry_b8f4fce81a",
+        "receipt_id": ""
+      },
+      "supported_claims": [
+        "curated_result_image",
+        "LOGO结果展示",
+        "娱乐潮玩场景"
+      ],
+      "recommended_usage": [
+        "result_showcase",
+        "result_gallery",
+        "industry_scene_result"
+      ],
+      "quality": {
+        "readable": null,
+        "contains_private_info": null,
+        "needs_review": false,
+        "ai_verified": true
+      },
+      "layout_plan": {
+        "primary_display_mode": "result-showcase",
+        "focus_region": "primary_result_image",
+        "fill_strategy": "fit_full_result_preserve_image",
+        "viewport_transform": {
+          "mode": "fit_full_result",
+          "fill_width_when_possible": true,
+          "preserve_entire_result": true,
+          "allow_detail_crop": false
+        },
+        "forbidden_treatments": [
+          "arbitrary_zoompan",
+          "local_crop",
+          "pan_subject_out_of_frame"
+        ]
+      }
+    },
+    {
+      "id": "img_text_to_image_logo_industry_601be258c1_result_01",
+      "asset_id": "result_kehuanxiongmao_text_to_image_logo_industry_601be258c1_01",
+      "filename": "柯幻熊猫_文生图_LOGO_母婴服务_结果图_01.png",
+      "source": "assets/results/柯幻熊猫_文生图_LOGO_母婴服务_结果图_01.png",
+      "type": "image",
+      "feature_id": "logo",
+      "feature_label": "LOGO",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "source_module_id": "text_to_image",
+      "source_module_label": "文生图",
+      "parent_feature_id": null,
+      "parent_feature_label": null,
+      "industry_id": "industry_601be258c1",
+      "industry_label": "母婴服务",
+      "scene_id": "industry_601be258c1",
+      "scene_label": "母婴服务",
+      "workflow_step": "result_gallery",
+      "source_workflow_step": "result_image",
+      "capture_type": "结果图",
+      "variant": "result_01",
+      "origin": "result_asset_library",
+      "capture_method": "saved_result_asset",
+      "page_url": "/textToImage/logo",
+      "title": "LOGO - 母婴服务结果图",
+      "description": "文生图 -> LOGO 的可复用结果图素材，行业/场景为 母婴服务。",
+      "visible_text": [
+        "文生图",
+        "LOGO",
+        "母婴服务"
+      ],
+      "prompt_inputs": {
+        "industry": "母婴服务",
+        "scene": "母婴服务"
+      },
+      "callouts": [],
+      "relations": {
+        "site_label": "柯幻熊猫",
+        "module_path": [
+          "文生图"
+        ],
+        "same_feature_key": "logo",
+        "same_industry_key": "industry_601be258c1",
+        "receipt_id": ""
+      },
+      "supported_claims": [
+        "curated_result_image",
+        "LOGO结果展示",
+        "母婴服务场景"
+      ],
+      "recommended_usage": [
+        "result_showcase",
+        "result_gallery",
+        "industry_scene_result"
+      ],
+      "quality": {
+        "readable": null,
+        "contains_private_info": null,
+        "needs_review": false,
+        "ai_verified": true
+      },
+      "layout_plan": {
+        "primary_display_mode": "result-showcase",
+        "focus_region": "primary_result_image",
+        "fill_strategy": "fit_full_result_preserve_image",
+        "viewport_transform": {
+          "mode": "fit_full_result",
+          "fill_width_when_possible": true,
+          "preserve_entire_result": true,
+          "allow_detail_crop": false
+        },
+        "forbidden_treatments": [
+          "arbitrary_zoompan",
+          "local_crop",
+          "pan_subject_out_of_frame"
+        ]
+      }
+    },
+    {
+      "id": "img_text_to_image_logo_industry_88733b63e6_result_01",
+      "asset_id": "result_kehuanxiongmao_text_to_image_logo_industry_88733b63e6_01",
+      "filename": "柯幻熊猫_文生图_LOGO_科技办公_结果图_01.png",
+      "source": "assets/results/柯幻熊猫_文生图_LOGO_科技办公_结果图_01.png",
+      "type": "image",
+      "feature_id": "logo",
+      "feature_label": "LOGO",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "source_module_id": "text_to_image",
+      "source_module_label": "文生图",
+      "parent_feature_id": null,
+      "parent_feature_label": null,
+      "industry_id": "industry_88733b63e6",
+      "industry_label": "科技办公",
+      "scene_id": "industry_88733b63e6",
+      "scene_label": "科技办公",
+      "workflow_step": "result_gallery",
+      "source_workflow_step": "result_image",
+      "capture_type": "结果图",
+      "variant": "result_01",
+      "origin": "result_asset_library",
+      "capture_method": "saved_result_asset",
+      "page_url": "/textToImage/logo",
+      "title": "LOGO - 科技办公结果图",
+      "description": "文生图 -> LOGO 的可复用结果图素材，行业/场景为 科技办公。",
+      "visible_text": [
+        "文生图",
+        "LOGO",
+        "科技办公"
+      ],
+      "prompt_inputs": {
+        "industry": "科技办公",
+        "scene": "科技办公"
+      },
+      "callouts": [],
+      "relations": {
+        "site_label": "柯幻熊猫",
+        "module_path": [
+          "文生图"
+        ],
+        "same_feature_key": "logo",
+        "same_industry_key": "industry_88733b63e6",
+        "receipt_id": ""
+      },
+      "supported_claims": [
+        "curated_result_image",
+        "LOGO结果展示",
+        "科技办公场景"
+      ],
+      "recommended_usage": [
+        "result_showcase",
+        "result_gallery",
+        "industry_scene_result"
+      ],
+      "quality": {
+        "readable": null,
+        "contains_private_info": null,
+        "needs_review": false,
+        "ai_verified": true
+      },
+      "layout_plan": {
+        "primary_display_mode": "result-showcase",
+        "focus_region": "primary_result_image",
+        "fill_strategy": "fit_full_result_preserve_image",
+        "viewport_transform": {
+          "mode": "fit_full_result",
+          "fill_width_when_possible": true,
+          "preserve_entire_result": true,
+          "allow_detail_crop": false
+        },
+        "forbidden_treatments": [
+          "arbitrary_zoompan",
+          "local_crop",
+          "pan_subject_out_of_frame"
+        ]
+      }
+    },
+    {
+      "id": "img_text_to_image_logo_industry_647896b2c8_result_01",
+      "asset_id": "result_kehuanxiongmao_text_to_image_logo_industry_647896b2c8_01",
+      "filename": "柯幻熊猫_文生图_LOGO_餐饮美食_结果图_01.png",
+      "source": "assets/results/柯幻熊猫_文生图_LOGO_餐饮美食_结果图_01.png",
+      "type": "image",
+      "feature_id": "logo",
+      "feature_label": "LOGO",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "source_module_id": "text_to_image",
+      "source_module_label": "文生图",
+      "parent_feature_id": null,
+      "parent_feature_label": null,
+      "industry_id": "industry_647896b2c8",
+      "industry_label": "餐饮美食",
+      "scene_id": "industry_647896b2c8",
+      "scene_label": "餐饮美食",
+      "workflow_step": "result_gallery",
+      "source_workflow_step": "result_image",
+      "capture_type": "结果图",
+      "variant": "result_01",
+      "origin": "result_asset_library",
+      "capture_method": "saved_result_asset",
+      "page_url": "/textToImage/logo",
+      "title": "LOGO - 餐饮美食结果图",
+      "description": "文生图 -> LOGO 的可复用结果图素材，行业/场景为 餐饮美食。",
+      "visible_text": [
+        "文生图",
+        "LOGO",
+        "餐饮美食"
+      ],
+      "prompt_inputs": {
+        "industry": "餐饮美食",
+        "scene": "餐饮美食"
+      },
+      "callouts": [],
+      "relations": {
+        "site_label": "柯幻熊猫",
+        "module_path": [
+          "文生图"
+        ],
+        "same_feature_key": "logo",
+        "same_industry_key": "industry_647896b2c8",
+        "receipt_id": ""
+      },
+      "supported_claims": [
+        "curated_result_image",
+        "LOGO结果展示",
+        "餐饮美食场景"
+      ],
+      "recommended_usage": [
+        "result_showcase",
+        "result_gallery",
+        "industry_scene_result"
+      ],
+      "quality": {
+        "readable": null,
+        "contains_private_info": null,
+        "needs_review": false,
+        "ai_verified": true
+      },
+      "layout_plan": {
+        "primary_display_mode": "result-showcase",
+        "focus_region": "primary_result_image",
+        "fill_strategy": "fit_full_result_preserve_image",
+        "viewport_transform": {
+          "mode": "fit_full_result",
+          "fill_width_when_possible": true,
+          "preserve_entire_result": true,
+          "allow_detail_crop": false
+        },
+        "forbidden_treatments": [
+          "arbitrary_zoompan",
+          "local_crop",
+          "pan_subject_out_of_frame"
+        ]
+      }
+    }
+  ],
+  "warnings": []
+}

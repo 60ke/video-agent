@@ -11,6 +11,7 @@ from utils.skill_path import require_skill_root
 
 PROMPTS = {
     "material": "references/prompts/material_understanding.md",
+    "visual_plan": "references/prompts/visual_plan_director.md",
     "script": "references/prompts/script_director.md",
     "timeline": "references/prompts/timeline_director.md",
 }
@@ -92,6 +93,16 @@ def compact_pool_resource(item: dict[str, Any]) -> dict[str, Any]:
         "workflow_step": item.get("workflow_step"),
         "source_workflow_step": item.get("source_workflow_step"),
         "title": item.get("title"),
+        "feature_id": item.get("feature_id"),
+        "feature_label": item.get("feature_label"),
+        "feature_path": item.get("feature_path", []),
+        "parent_feature_id": item.get("parent_feature_id"),
+        "parent_feature_label": item.get("parent_feature_label"),
+        "industry_id": item.get("industry_id"),
+        "industry_label": item.get("industry_label"),
+        "scene_id": item.get("scene_id"),
+        "scene_label": item.get("scene_label"),
+        "prompt_inputs": item.get("prompt_inputs", {}),
         "recommended_usage": item.get("recommended_usage", []),
         "layout": layout_plan.get("primary_display_mode"),
         "must_be_visible": layout_plan.get("must_be_visible", []),
@@ -195,7 +206,7 @@ def site_asset_pool(case_dir: Path) -> dict[str, Any]:
                     {
                         "beat": "feature_entry_path",
                         "use_role": "同功能 功能入口截图 / AI优化关键帧",
-                        "purpose": "展示从文生图入口进入目标功能的路径，红框/引导标记只用于镜头，不写进旁白。",
+                        "purpose": "展示从文生图入口进入目标功能的路径，设计化高亮只用于镜头，不写进旁白。",
                         "evidence_binding": "real_screenshot",
                     },
                     {
@@ -230,6 +241,7 @@ def site_asset_pool(case_dir: Path) -> dict[str, Any]:
             "普通文生图功能使用 文生图/<功能> 下的 功能入口截图 和 参数面板截图。",
             "图文广告子功能使用 文生图/图文广告/<子功能> 下的素材，不要把不同子功能互相混用。",
             "只有 workflow_step 为 result_crop/result_export/result_gallery/result_page 的素材可作为结果图。",
+            "结果图必须优先匹配同 feature_key 和同 industry_label/scene_label；字幕提到具体行业/场景时不要使用不匹配的结果图。",
             "网站截图只证明流程和界面，不能当作真实生成结果展示。",
         ],
     }
@@ -286,12 +298,14 @@ def build_context(case_dir: Path, skill_root: Path, stage: str) -> dict[str, Any
         "site_asset_pool": site_asset_pool(case_dir),
         "operation_recipes": load_json(case_dir / "operation_recipes.json", {}),
         "material_understanding": load_json(case_dir / "material_understanding.json", {}),
+        "visual_plan": load_json(case_dir / "visual_plan.json", {}),
         "video_script": load_json(case_dir / "video_script.json", {}),
         "copywriting_context": copywriting_context(skill_root, input_data),
         "output_contract": {
             "material_output": "material_understanding.json",
+            "visual_plan_output": "visual_plan.json",
             "script_output": "video_script.json",
-            "accept_command": "python scripts/accept_planner_output.py --case <CASE_DIR> --kind <material|script> --input <MODEL_OUTPUT_JSON> --json",
+            "accept_command": "python scripts/accept_planner_output.py --case <CASE_DIR> --kind <material|visual_plan|script> --input <MODEL_OUTPUT_JSON> --json",
         },
         "non_negotiable_rules": [
             "Do not rely on filenames alone for visual decisions.",
@@ -299,6 +313,7 @@ def build_context(case_dir: Path, skill_root: Path, stage: str) -> dict[str, Any
             "Use site_asset_pool for website screenshot selection; prefer assets from the same feature_id or feature_key.",
             "For 图文广告 children, keep selection under 文生图/图文广告/<子功能>; do not mix child feature screenshots.",
             "Use asset IDs exactly as listed in asset_manifest.json.",
+            "When visual_plan.status=reviewed, script segments must reference visual_beat_id and reuse locked_asset_ids; do not choose new assets in script writing.",
             "Do not include the fixed outro in script or visual planning.",
             "Do not invent product claims unsupported by material evidence.",
             "Return JSON only for planner outputs.",
@@ -333,7 +348,7 @@ def write_brief(context: dict[str, Any], path: Path) -> None:
             "Use the prompt contract embedded in `planner_context.json`. Return JSON only, then pass it through:",
             "",
             "```powershell",
-            "python scripts\\accept_planner_output.py --case <CASE_DIR> --kind <material|script> --input <MODEL_OUTPUT_JSON> --json",
+            "python scripts\\accept_planner_output.py --case <CASE_DIR> --kind <material|visual_plan|script> --input <MODEL_OUTPUT_JSON> --json",
             "```",
         ]
     )
@@ -374,7 +389,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Prepare model-ready planner context for video-agent cases.")
     parser.add_argument("--case", required=True)
-    parser.add_argument("--stage", choices=("all", "material", "script", "timeline"), default="all")
+    parser.add_argument("--stage", choices=("all", "material", "visual_plan", "script", "timeline"), default="all")
     parser.add_argument("--json", action="store_true")
     return parser
 

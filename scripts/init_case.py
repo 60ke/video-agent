@@ -71,6 +71,11 @@ PLACEHOLDER_JSON = {
         "status": "pending",
         "materials": [],
     },
+    "visual_plan.json": {
+        "schema_version": 1,
+        "status": "pending",
+        "beats": [],
+    },
     "video_script.json": {
         "schema_version": 1,
         "status": "pending",

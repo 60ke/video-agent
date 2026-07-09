@@ -20,6 +20,7 @@ Use this skill when the user provides a target website or asks for a short featu
 ## V2 Outputs
 
 - `image_resources.json`
+- `visual_plan.json`
 - `video_script.json`
 - `audio/voice.mp3`
 - `output/minimax/minimax_alignment.json`
@@ -33,23 +34,25 @@ Use this skill when the user provides a target website or asks for a short featu
 
 1. Initialize the case with `scripts/init_case.py`.
 2. Gather real website/material evidence. For 柯幻熊猫, use the fixed `kehuanxiongmao` CDP profile and refuse generation workflows when the logged-in state is unavailable.
-3. Register site screenshots with `scripts/register_site_assets.py`; every visual must say what it proves and how it should be framed in 9:16.
-4. Plan visually before writing narration. Decide whether each beat uses a homepage keyframe, feature-entry keyframe, parameter keyframe, generated result image, or result gallery, then write matching `video_script.json`.
-5. Generate voice and native timing with `scripts/generate_voice_minimax.py`. The Minimax key stays local in `config/minimax.local.json` or `MINIMAX_API_KEY`.
-   - Default Minimax speed is `1.2` unless local config overrides it.
+3. Register site screenshots with `scripts/register_site_assets.py`; register saved result images with `scripts/register_result_assets.py` so each result carries feature and industry/scene labels.
+4. Plan visuals before writing narration. Produce reviewed `visual_plan.json` first: each beat locks exact asset IDs, evidence binding, allowed claims, and forbidden claims.
+5. Write `video_script.json` from the reviewed visual plan. Each script segment must reference `visual_beat_id`; its `preferred_asset_ids` must match that beat's `locked_asset_ids`.
+6. Generate voice and native timing with `scripts/generate_voice_minimax.py`. The Minimax key stays local in `config/minimax.local.json` or `MINIMAX_API_KEY`.
+   - Default Minimax speed is `1.5` unless local config overrides it.
    - Request `subtitle_type=word`; keep the raw Minimax payload and normalize `timestamped_words` into word-level alignment segments.
-6. Run `scripts/build_subtitle_track.py` to map Minimax timing onto reviewed script segments.
-7. For normal production, run `scripts/run_pipeline_mode.py` instead of manually chaining every post-script command.
-   - `--mode draft`: fastest preview; keeps hard truth gates and rendering, skips GPT image, contact sheet, and render QA by default.
-   - `--mode standard`: default daily mode; reuses unchanged voice/GPT/render outputs and runs voice QA, contact sheet, and render QA.
-   - `--mode strict`: delivery gate; standard plus case hygiene and a denser contact sheet.
-8. If manual execution is needed, build and validate `video_project.json` with `scripts/build_video_project.py` and `scripts/validate_video_project.py --strict`.
-9. Prepare GPT image keyframes with `scripts/prepare_gpt_image_keyframes.py` for standard/strict runs; draft runs may render from raw registered assets to get feedback faster.
-10. Render with `scripts/render_simple_ffmpeg.py`; it produces the main FFmpeg video and appends the configured outro.
+7. Run `scripts/build_subtitle_track.py` to map Minimax timing onto reviewed script segments.
+8. For normal production, run `scripts/run_pipeline_mode.py` instead of manually chaining every post-script command.
+   - `--mode standard`: default daily mode; **fully regenerates** voice, GPT image keyframes, render, voice QA, contact sheet, and render QA unless you pass `--cache` or `--reuse-gpt`.
+   - `--mode draft`: fastest preview; skips GPT image and QA; may reuse cached voice/render with `--cache`.
+   - `--mode strict`: delivery gate; same full-regeneration defaults as standard, plus case hygiene and a denser contact sheet.
+   - `--gpt-image` defaults to `always`; use `never` only for intentional non-GPT previews.
+9. If manual execution is needed, build and validate `video_project.json` with `scripts/build_video_project.py` and `scripts/validate_video_project.py --strict`.
+10. Prepare GPT image keyframes with `scripts/prepare_gpt_image_keyframes.py` for standard/strict runs; draft runs may render from raw registered assets to get feedback faster.
+11. Render with `scripts/render_simple_ffmpeg.py`; it produces the main FFmpeg video and appends the configured outro.
    - Subtitles are burned through ASS using the `douyin-live-smartclip` style: bottom centered, bold white text, black outline, height-based font size, and two-line wrapping.
    - Each `visual_track` event may carry `motion` (`hold` / `push_in` / `pull_out`, amount capped at `0.06`, anchor fixed at `center`) and `transition_in` (`cut` / `crossfade`). `build_video_project.py` fills conservative defaults automatically.
-   - Dynamic red boxes, click rings, arrows, and labels belong in `overlay_track`, driven by registered screenshot callout metadata.
-11. Run contact-sheet and render QA before presenting a final video; `standard` and `strict` do this through the mode runner.
+   - Website screenshot highlights are baked into GPT image prepared keyframes. Use `overlay_track` only for non-website dynamic cues when explicitly needed.
+12. Run contact-sheet and render QA before presenting a final video; `standard` and `strict` do this through the mode runner.
 
 ## Non-Negotiable Rules
 
@@ -57,6 +60,7 @@ Use this skill when the user provides a target website or asks for a short featu
 - V2 uses `minimax_t2a` only. Do not route to voice clone or FunASR.
 - `video_project.json` is the source of truth after it is built.
 - Do not invent website states or generated results. Show only captured or supplied evidence.
+- Do not write narration before `visual_plan.json` locks the visual sequence for new cases. Script text must be derived from the locked beat's selected assets and allowed claims.
 - Do not press publishing, deleting, payment, or account-mutating actions without explicit user approval.
 - For 柯幻熊猫, do not press `开始生成` unless logged-in state is verified and the user requested the generation workflow.
 - For 柯幻熊猫, write login proof to `browser_materials.auth_state.logged_in=true`; V2 build/render refuses to continue without it.

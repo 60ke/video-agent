@@ -1,10 +1,10 @@
 # Script Director Prompt
 
-Use this prompt to convert user copy, product notes, website evidence, and material understanding into `video_script.json`.
+Use this prompt after `visual_plan.json` is reviewed. Convert locked visual beats, user copy, product notes, website evidence, and material understanding into `video_script.json`.
 
 ## Goal
 
-Create reviewed spoken script segments that can drive voice, subtitles, and visuals.
+Create reviewed spoken script segments that can drive voice and subtitles while preserving the already locked visual beat sequence.
 
 Do not output plain copy only.
 
@@ -23,6 +23,7 @@ Return JSON:
   "segments": [
     {
       "id": "seg_001",
+      "visual_beat_id": "beat_001",
       "stage": "hook",
       "text": "做一套品牌视觉，不用从零开始。",
       "camera_note": "从首页进入文生图，再点进 VI 功能页；此路径靠顺序截图和 overlay 标记体现，不要念出来。",
@@ -47,6 +48,8 @@ Return JSON:
 ### Narration vs camera notes (critical)
 
 `text` is the spoken voiceover, and it is also used verbatim as the on-screen subtitle. It must read as natural, benefit-first marketing copy for a viewer.
+
+When `visual_plan.status=reviewed`, write one script segment for each visual beat unless the brief explicitly asks to merge or split beats. Each segment must include `visual_beat_id`, and `preferred_asset_ids` must exactly match that beat's `locked_asset_ids`. Do not choose new images during script writing.
 
 `text` must NOT contain operation instructions, UI step recitation, or production/meta commentary. These belong in `camera_note`, which is planning metadata only and is never voiced or captioned.
 
@@ -73,6 +76,8 @@ Return JSON:
 - For `功能入口截图`, the visual target is the opened hover/dropdown child item for the feature, not a top-level card pill/chip with the same label. Put this distinction in `camera_note`.
 - Result/gallery narration must be derived from the selected assets' `visible_text`, `supported_claims`, `feature_label`, and `prompt_inputs`. Do not name industries/scenes that are not visible or registered on the selected result images.
 - Parameter-panel narration must match required fields visible in the screenshot. If exact filled values are unknown, use generic wording such as "按必填项填好行业、场景和描述", not specific upload/theme/style claims that the screenshot does not prove.
+- Prefer the beat's `allowed_claims` as the source of each segment's wording. Avoid every item in `forbidden_claims`.
+- Do not invent scenes, industries, styles, parameter values, or results in `text` to make the copy more vivid. If the locked asset does not prove it, keep the narration generic.
 - Include `layout_intent` only for already prepared assets, such as `result-showcase`, `full-width`, `grid-rebuild`, or `main-plus-reference`.
 - Website/app screenshots used in final video must already be AI-verified 9:16 screenshots. Generated result visuals must be saved result crops/exports under `assets/results/`, not website result-page screenshots.
 - Do not select multiple images for one segment unless the layout can keep them readable in 9:16. Use sequential close-ups if equal-width comparison would be too narrow.

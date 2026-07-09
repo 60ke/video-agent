@@ -18,9 +18,10 @@
 *   **方案**：新增 `scripts/generate_voice_minimax.py`，全量替换旧版 `generate_voice.py` 和 `run_funasr.py`。
 *   **收益**：一步到位！通过调用 Minimax 的 T2A Http 接口，不仅直接获取高质量的官方音色（如 `male-qn-qingse`），还可以通过设置 `subtitle_enable: true`，直接在一次请求内拿到引擎原生的毫秒级字/句级时间戳。不仅让整个工程“变轻了”，速度更是提升了数十倍，画面卡点达到理论上的 100% 精确。
 
-### 2.3 视觉前置规划 (Visual Planning)
+### 2.3 两阶段视觉前置规划 (Visual Plan -> Script)
 *   **痛点**：以往大模型在写脚本时是“先想词，再找图”，导致经常出现“用网页界面的截图去解说生成效果”等逻辑错乱现象。
-*   **方案**：在生成视频脚本前，强制要求大模型输出“视觉来源设计”。即必须先确定这张图的来源是 **“网页界面截图 (Website Screenshot)”** 还是 **“生成的最终结果图 (Generated Result)”**，定好画面骨架后，再为其填充配音文案。
+*   **方案**：在生成视频脚本前，先输出并验收 `visual_plan.json`。每个 beat 必须锁定具体 `locked_asset_ids`、证据类型、功能路径、允许表达的事实和禁止表达的内容；随后 `video_script.json` 只能通过 `visual_beat_id` 引用这些 beat，并继承锁定素材。也就是说，先定“这几秒展示哪张图、它能证明什么”，再写“这几秒该怎么说”。
+*   **收益**：字幕不会先发明“企业展厅、党建空间、校园长廊”这类场景再去找图；结果图文案只能来自已选结果图的 visible text / supported claims / prompt inputs，参数页文案只能说截图能证明的输入结构。
 
 ### 2.4 视觉后置兜底 (Visual QA)
 *   **痛点**：生成完毕后没有对图文逻辑进行机器校验，只能靠人工排雷。
@@ -29,11 +30,12 @@
 ## 3. 全新极简流水线总览
 
 1. **Material Gathering**: CDP 抓取网站截图、登录证明、功能入口、参数面板和坐标元数据（`image_resources.json`）。需要展示真实操作路径时，使用多张 prepared 9:16 截图和 `overlay_track` 动态标记串联入口路径。
-2. **Visual Planning & Scripting**: 大模型先行决定图片来源与骨架，再填充旁白文案（`video_script.json`）。
-3. **Voice & Subtitle Sync**: 运行 `generate_voice_minimax.py`，一键调用 Minimax 接口，秒级输出 `audio/voice.mp3` 与原生的 `output/minimax/minimax_alignment.json`。
-4. **Project Assembly**: 构建 `video_project.json` 和 `subtitle_track.json`，把“声、文、图”精准锁定。
-5. **Fast Rendering**: 运行 `render_simple_ffmpeg.py`，按 `visual_track` 合并视觉组、应用受控整帧运动，并用 FFmpeg 合成视频。
-6. **Vision QA**: 视觉模型抽查审片，通过后直接交付。
+2. **Visual Planning**: 大模型先行锁定视觉顺序、素材 ID、证据绑定和可说事实（`visual_plan.json`）。
+3. **Evidence-bound Scripting**: 大模型基于 `visual_plan.json` 填充旁白文案（`video_script.json`），不再重新选材。
+4. **Voice & Subtitle Sync**: 运行 `generate_voice_minimax.py`，一键调用 Minimax 接口，秒级输出 `audio/voice.mp3` 与原生的 `output/minimax/minimax_alignment.json`。
+5. **Project Assembly**: 构建 `video_project.json` 和 `subtitle_track.json`，把“声、文、图”精准锁定。
+6. **Fast Rendering**: 运行 `render_simple_ffmpeg.py`，按 `visual_track` 合并视觉组、应用受控整帧运动，并用 FFmpeg 合成视频。
+7. **Vision QA**: 视觉模型抽查审片，通过后直接交付。
 
 ---
 
@@ -64,9 +66,9 @@
 
 ### 4.1.1 网站截图关键帧布局
 
-CDP 不再生成浏览器录屏素材。它只负责捕获干净截图和目标 DOM 坐标，随后由 `scripts/prepare_gpt_image_keyframes.py` 把网站主页、功能入口、参数面板等截图优化成 1080x1920 prepared keyframe。
+CDP 不再生成浏览器录屏素材。它只负责捕获干净截图和目标 DOM 坐标，随后由 `scripts/prepare_gpt_image_keyframes.py` 把网站主页、功能入口、参数面板等截图交给 GPT image 优化成 1080x1920 prepared keyframe。
 
-动态引导效果不提前烧进截图：红框、箭头、鼠标圆圈、点击脉冲等都通过 `image_resources.json.callouts` 进入 `overlay_track`，由渲染器在正确的字幕时间段叠加。这样可以避免横屏截图在转成竖屏后红框错位，也避免局部放大不可控。
+网站截图的静态引导标记由 GPT image 在 prepared keyframe 中完成。标记风格不再使用程序化红框，而是根据文件名和功能路径生成更统一的设计化高亮：普通二级功能入口标记 hover 菜单项，图文广告子类标记右侧子菜单项，参数面板标记更大的参数区域。渲染器不再为网站截图生成程序化 callout overlay。
 
 生成结果仍必须保存为图片、裁剪或导出到 `assets/results/`。网站结果页截图只能作为证据，不能作为最终结果展示图。
 

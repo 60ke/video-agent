@@ -87,6 +87,10 @@ def material_map(case_dir: Path) -> dict[str, dict[str, Any]]:
                 "source_module_label": image_resource.get("source_module_label"),
                 "parent_feature_id": image_resource.get("parent_feature_id"),
                 "parent_feature_label": image_resource.get("parent_feature_label"),
+                "industry_id": image_resource.get("industry_id"),
+                "industry_label": image_resource.get("industry_label"),
+                "scene_id": image_resource.get("scene_id"),
+                "scene_label": image_resource.get("scene_label"),
                 "workflow_step": image_resource.get("workflow_step"),
                 "source_workflow_step": image_resource.get("source_workflow_step"),
                 "operation_step": image_resource.get("operation_step"),
@@ -137,14 +141,7 @@ def workflow_step_for(asset: dict[str, Any]) -> str:
 
 def is_prepared_keyframe(asset: dict[str, Any]) -> bool:
     origin = str(asset.get("origin") or "").lower()
-    image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
-    quality = asset.get("quality", {}) if isinstance(asset.get("quality"), dict) else {}
-    workflow_step = str(image_resource.get("workflow_step") or "").lower()
-    return (
-        origin in {"gpt_image_site_keyframe", "gpt_image_layout_optimization"}
-        or workflow_step in {"prepared_site_keyframe", "prepared_9x16"}
-        or quality.get("ai_verified") is True
-    )
+    return origin in {"gpt_image_site_keyframe", "gpt_image_layout_optimization"}
 
 
 def prepared_replacement_for(asset_id: str, assets: list[dict[str, Any]]) -> str | None:
@@ -168,11 +165,9 @@ def prepared_replacement_for(asset_id: str, assets: list[dict[str, Any]]) -> str
         return None
     def prepared_origin_rank(asset: dict[str, Any]) -> int:
         origin = str(asset.get("origin") or "")
-        if origin == "programmatic_site_keyframe":
-            return 0
         if origin == "gpt_image_site_keyframe":
-            return 1
-        return 2
+            return 0
+        return 1
 
     candidates.sort(
         key=lambda asset: (
@@ -187,7 +182,7 @@ def prepared_replacement_for(asset_id: str, assets: list[dict[str, Any]]) -> str
 def score_asset_for_segment(asset: dict[str, Any], segment: dict[str, Any]) -> int:
     text = " ".join(
         str(segment.get(key) or "").lower()
-        for key in ("visual_intent", "material_task", "layout_intent", "focus_region", "evidence_binding")
+        for key in ("visual_intent", "material_task", "layout_intent", "focus_region", "evidence_binding", "camera_note", "text")
     )
     step = workflow_step_for(asset)
     score = 0
@@ -196,6 +191,13 @@ def score_asset_for_segment(asset: dict[str, Any], segment: dict[str, Any]) -> i
     image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
     capture_type = str(image_resource.get("capture_type") or "").lower()
     source_step = str(image_resource.get("source_workflow_step") or "").lower()
+    industry_label = str(image_resource.get("industry_label") or image_resource.get("scene_label") or "").strip()
+    explicit_industry = str(segment.get("industry_label") or segment.get("scene_label") or "").strip()
+    if industry_label:
+        if explicit_industry and normalize_text_key(industry_label) == normalize_text_key(explicit_industry):
+            score += 16
+        elif normalize_text_key(industry_label) and normalize_text_key(industry_label) in normalize_text_key(text):
+            score += 10
     if any(token in text for token in ("result", "结果", "效果图", "gallery")):
         if step in {"result_crop", "result_export", "result_gallery", "result_page"} or is_generated_result_asset(asset):
             score += 8
@@ -208,6 +210,10 @@ def score_asset_for_segment(asset: dict[str, Any], segment: dict[str, Any]) -> i
     if step == "home_entry":
         score += 1
     return score
+
+
+def normalize_text_key(value: str) -> str:
+    return "".join(str(value or "").lower().replace("_", "").replace("/", "").split())
 
 
 def feature_key_for_segment(segment: dict[str, Any]) -> str:
@@ -250,7 +256,7 @@ def asset_step_kind(asset: dict[str, Any]) -> str:
 
 
 def choose_asset_ids(segment: dict[str, Any], assets: list[dict[str, Any]], idx: int) -> list[str]:
-    preferred = segment.get("preferred_asset_ids") or segment.get("asset_ids") or []
+    preferred = segment.get("locked_asset_ids") or segment.get("preferred_asset_ids") or segment.get("asset_ids") or []
     if preferred:
         mapped_preferred = [prepared_replacement_for(str(asset_id), assets) or str(asset_id) for asset_id in preferred]
         task = str(segment.get("material_task") or "").lower()
@@ -648,6 +654,17 @@ def build_overlay_track(visuals: list[dict[str, Any]], assets_by_id: dict[str, d
         asset_id = str((visual.get("asset_ids") or [""])[0])
         asset = assets_by_id.get(asset_id, {})
         image_resource = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+        origin = str(asset.get("origin") or image_resource.get("origin") or "").lower()
+        workflow_step = str(image_resource.get("workflow_step") or "").lower()
+        capture_type = str(image_resource.get("capture_type") or "")
+        source = str(asset.get("source") or "").replace("\\", "/").lower()
+        if (
+            origin in {"site_screenshot_library", "gpt_image_site_keyframe"}
+            or workflow_step == "prepared_site_keyframe"
+            or capture_type in {"网站主页截图", "功能入口截图", "参数面板截图"}
+            or "assets/sites/" in source
+        ):
+            continue
         callouts = image_resource.get("callouts") if isinstance(image_resource.get("callouts"), list) else []
         semantic = visual.get("semantic_binding", {}) if isinstance(visual.get("semantic_binding"), dict) else {}
         step_kind = str(semantic.get("step_kind") or asset_step_kind(asset))
@@ -687,6 +704,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     if auth_errors:
         raise ValueError("; ".join(auth_errors))
     script = load_json(case_dir / "video_script.json", {})
+    visual_plan = load_json(case_dir / "visual_plan.json", {})
     voice_report = load_json(case_dir / "output" / "minimax" / "voice_report.json", {})
     voice_plan = load_json(case_dir / "voice_plan.json", {})
     subtitles = subtitle_segments(case_dir)
@@ -749,6 +767,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         },
         "inputs": input_data,
         "assets": project_assets,
+        "visual_plan": visual_plan if visual_plan.get("status") == "reviewed" else {},
         "script_segments": script_segments,
         "voice_track": {
             "mode": input_data.get("voice_config", {}).get("mode", "tts"),
@@ -775,7 +794,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "material_policy": [
                 "首页和入口素材只证明路径，不能冒充最终生成结果。",
                 "功能入口、参数面板、结果图优先来自同一 feature_id/feature_key。",
-                "prepared_site_keyframe 优先于原始网站截图。",
+                "GPT image prepared site keyframe 优先于原始网站截图。",
                 "结果展示必须使用保存下来的结果图或其 GPT keyframe 衍生图。",
             ],
         },
