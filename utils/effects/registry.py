@@ -167,6 +167,21 @@ def soft_background(source: Image.Image, *, strength: float = 0.35, blur: float 
     return Image.blend(Image.new("RGB", source.size, (244, 248, 255)), base, strength)
 
 
+def dim_reveal_background(source: Image.Image, *, blur: float = 14.0, dim: float = 0.52, tint: tuple[int, int, int] = (5, 12, 22)) -> Image.Image:
+    """A dark, readable unrevealed state for UI screenshots.
+
+    The previous wipe reveal used a pale/white softened background. On dark SaaS UI
+    screenshots that looked like a white mask. This version keeps the unrevealed
+    region dark, slightly blurred, and low-contrast, while preserving enough
+    context to understand the page before the reveal edge passes over it.
+    """
+    work = source.convert("RGB").filter(ImageFilter.GaussianBlur(blur))
+    work = ImageEnhance.Brightness(work).enhance(dim)
+    work = ImageEnhance.Contrast(work).enhance(0.78)
+    tint_layer = Image.new("RGB", source.size, tint)
+    return Image.blend(work, tint_layer, 0.26)
+
+
 def paste_transformed(canvas: Image.Image, img: Image.Image, *, scale: float = 1.0, opacity: float = 1.0, offset_x: int = 0, offset_y: int = 0, rotation: float = 0.0, squash_x: float = 1.0, squash_y: float = 1.0) -> None:
     width, height = img.size
     layer = img.convert("RGBA")
@@ -295,7 +310,12 @@ def _wipe_reveal(base: Image.Image, t: float, params: dict[str, Any]) -> Image.I
     width, height = base.size
     direction = str(params.get("direction") or "left_to_right")
     eased = ease_in_out_cubic(t)
-    bg = soft_background(base, strength=0.32, blur=20)
+    bg = dim_reveal_background(
+        base,
+        blur=float(params.get("background_blur", 14.0)),
+        dim=float(params.get("background_dim", 0.52)),
+        tint=tuple(params.get("background_tint", (5, 12, 22))),
+    )
     mask = Image.new("L", base.size, 0)
     draw = ImageDraw.Draw(mask)
     if direction == "top_to_bottom":
@@ -310,11 +330,19 @@ def _wipe_reveal(base: Image.Image, t: float, params: dict[str, Any]) -> Image.I
         pos = int(width * eased)
         draw.rectangle((0, 0, pos, height), fill=255)
         edge = (pos, 0, pos, height)
-    feather = int(params.get("feather_px") or max(10, width * 0.018))
+    feather = int(params.get("feather_px") or max(8, width * 0.012))
     mask = mask.filter(ImageFilter.GaussianBlur(feather))
     frame = Image.composite(base, bg, mask).convert("RGBA")
     if params.get("highlight_edge", True):
-        ImageDraw.Draw(frame, "RGBA").line(edge, fill=(90, 220, 255, int(160 * math.sin(math.pi * clamp(t)))), width=4)
+        pulse = math.sin(math.pi * clamp(t))
+        edge_alpha = int(float(params.get("edge_alpha", 220)) * pulse)
+        edge_width = int(params.get("edge_width", 3))
+        edge_color = tuple(params.get("edge_color", (80, 210, 255)))
+        glow = Image.new("RGBA", base.size, (0, 0, 0, 0))
+        glow_draw = ImageDraw.Draw(glow, "RGBA")
+        glow_draw.line(edge, fill=edge_color + (max(0, int(edge_alpha * 0.32)),), width=max(edge_width + 10, 12))
+        frame.alpha_composite(glow.filter(ImageFilter.GaussianBlur(8)))
+        ImageDraw.Draw(frame, "RGBA").line(edge, fill=edge_color + (max(0, edge_alpha),), width=edge_width)
     return frame.convert("RGB")
 
 
@@ -400,7 +428,20 @@ def suggested_effect(data: EffectSuggestionInput) -> dict[str, Any] | None:
     if data.step_kind in {"home", "entry"}:
         return {"name": "drop_bounce", "duration": min(0.9, data.duration - 0.55), "params": {"shadow": True}}
     if data.step_kind in {"params", "ui"} or data.is_wide_ui:
-        return {"name": "wipe_reveal", "duration": min(0.8, data.duration - 0.55), "params": {"direction": "left_to_right", "highlight_edge": True}}
+        return {
+            "name": "wipe_reveal",
+            "duration": min(0.8, data.duration - 0.55),
+            "params": {
+                "direction": "left_to_right",
+                "highlight_edge": True,
+                "background_dim": 0.52,
+                "background_blur": 14,
+                "background_tint": (5, 12, 22),
+                "edge_color": (80, 210, 255),
+                "edge_width": 3,
+                "edge_alpha": 220,
+            },
+        }
     if data.step_kind == "result" or data.is_generated_result:
         if data.duration >= 1.8:
             return {"name": "radial_unfurl", "duration": min(1.25, data.duration - 0.65), "params": {"rows": 5, "cols": 5}}
