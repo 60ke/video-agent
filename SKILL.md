@@ -1,6 +1,6 @@
 ---
 name: video-agent
-description: Generate a vertical product/demo video and platform-safe cover image from a target website using CDP screenshot capture or frozen materials, visual-first planning, Minimax T2A voice/timing, video_project.json, registered programmatic image effects, GPT Image cover generation, FFmpeg rendering, cover first-frame prepending, and QA.
+description: Generate a vertical product/demo video and platform-safe cover image from a target website using CDP screenshot capture or frozen materials, visual-first planning, concise subtitle timing, Minimax T2A voice/timing, video_project.json, registered programmatic image effects, GPT Image cover generation, FFmpeg rendering, cover first-frame prepending, and QA.
 ---
 
 # Video Agent
@@ -12,12 +12,13 @@ Use this skill when the user provides a target website or asks for a short featu
 1. `docs/pipeline_v2_refactor.md`
 2. `docs/effects_pipeline.md`
 3. `docs/cover_generation_strategy.md`
-4. `cdp_screenshot_material_spec.md`
-5. `cdp-capture/README.md` when browser login or screenshot material capture is required
-6. `rules/kehuanxiongmao-capture.md` for `https://kehuanxiongmao.com` or 柯幻熊猫
-7. `rules/douyin-real-demo.md` for Douyin/Kuaishou/Reels/Shorts style output
-8. `rules/vertical-browser-framing.md` for 9:16 website screenshots or result images
-9. `references/copywriting-rules.md` and `references/copywriting-options.md` for 柯幻熊猫 copy
+4. `docs/script_timing_constraints.md`
+5. `cdp_screenshot_material_spec.md`
+6. `cdp-capture/README.md` when browser login or screenshot material capture is required
+7. `rules/kehuanxiongmao-capture.md` for `https://kehuanxiongmao.com` or 柯幻熊猫
+8. `rules/douyin-real-demo.md` for Douyin/Kuaishou/Reels/Shorts style output
+9. `rules/vertical-browser-framing.md` for 9:16 website screenshots or result images
+10. `references/copywriting-rules.md` and `references/copywriting-options.md` for 柯幻熊猫 copy
 
 ## V2 Outputs
 
@@ -36,6 +37,7 @@ Use this skill when the user provides a target website or asks for a short featu
 - `output/cover/cover_main_3x4_crop_preview.png` for cover safe-zone QA
 - `output/qa/contact_sheet.jpg`
 - `output/reports/<label>_render_report.json`
+- `output/reports/subtitle_density_report.json` for subtitle/copy density QA
 - `output/reports/cover_generation_report.json` when a cover is generated
 - `output/reports/prepend_cover_report.json` when the cover is inserted as the video first frame
 
@@ -46,29 +48,31 @@ Use this skill when the user provides a target website or asks for a short featu
 3. Register site screenshots with `scripts/register_site_assets.py`; register saved result images with `scripts/register_result_assets.py` so each result carries feature and industry/scene labels.
 4. Plan visuals before writing narration. Produce reviewed `visual_plan.json` first: each beat locks exact asset IDs, evidence binding, allowed claims, and forbidden claims.
 5. Write `video_script.json` from the reviewed visual plan. Each script segment must reference `visual_beat_id`; its `preferred_asset_ids` must match that beat's `locked_asset_ids`.
+   - For feature-seeding videos, follow `docs/script_timing_constraints.md`: 15-20s target, 10-14 preferred Chinese oral chars per segment, one conclusion plus one keyword per image.
 6. Generate voice and native timing with `scripts/generate_voice_minimax.py`. The Minimax key stays local in `config/minimax.local.json` or `MINIMAX_API_KEY`.
    - Default Minimax speed is `1.5` unless local config overrides it.
    - Request `subtitle_type=word`; keep the raw Minimax payload and normalize `timestamped_words` into word-level alignment segments.
 7. Run `scripts/build_subtitle_track.py` to map Minimax timing onto reviewed script segments.
-8. For normal production, run `scripts/run_pipeline_mode.py` instead of manually chaining every post-script command.
+8. Run `scripts/check_subtitle_density.py --subtitle <case>/subtitle_track.json --report <case>/output/reports/subtitle_density_report.json` before treating feature-seeding copy as final.
+9. For normal production, run `scripts/run_pipeline_mode.py` instead of manually chaining every post-script command.
    - `--mode standard`: default daily mode; **fully regenerates** voice, GPT image keyframes, render, voice QA, contact sheet, and render QA unless you pass `--cache` or `--reuse-gpt`.
    - `--mode draft`: fastest preview; skips GPT image and QA; may reuse cached voice/render with `--cache`.
    - `--mode strict`: delivery gate; same full-regeneration defaults as standard, plus case hygiene and a denser contact sheet.
    - `--gpt-image` defaults to `always`; use `never` only for intentional non-GPT previews.
-9. If manual execution is needed, build and validate `video_project.json` with `scripts/build_video_project.py` and `scripts/validate_video_project.py --strict`.
-10. Prepare GPT image keyframes with `scripts/prepare_gpt_image_keyframes.py` for standard/strict runs; draft runs may render from raw registered assets to get feedback faster.
-11. For effect previews or effect-enabled renders, apply registered image effects with `scripts/apply_effect_plan.py`; this writes `video_project.effects.json` without changing voice, subtitle, or visual start/end timings.
-12. If the effect plan contains `scan_overlay`, prepare GPT Image auxiliary highlight overlays with `scripts/prepare_effect_assets.py`; this writes `assets/effects/`, `effect_asset_manifest.json`, and updates `video_project.effects.json`.
-13. Render with `scripts/render_simple_ffmpeg.py`; it produces the main FFmpeg video and appends the configured outro.
+10. If manual execution is needed, build and validate `video_project.json` with `scripts/build_video_project.py` and `scripts/validate_video_project.py --strict`.
+11. Prepare GPT image keyframes with `scripts/prepare_gpt_image_keyframes.py` for standard/strict runs; draft runs may render from raw registered assets to get feedback faster.
+12. For effect previews or effect-enabled renders, apply registered image effects with `scripts/apply_effect_plan.py`; this writes `video_project.effects.json` without changing voice, subtitle, or visual start/end timings.
+13. If the effect plan contains `scan_overlay`, prepare GPT Image auxiliary highlight overlays with `scripts/prepare_effect_assets.py`; this writes `assets/effects/`, `effect_asset_manifest.json`, and updates `video_project.effects.json`.
+14. Render with `scripts/render_simple_ffmpeg.py`; it produces the main FFmpeg video and appends the configured outro.
     - Subtitles are burned through ASS using the `douyin-live-smartclip` style: bottom centered, bold white text, black outline, height-based font size, and two-line wrapping.
     - Each `visual_track` event may carry `motion` (`hold` / `push_in` / `pull_out`, amount capped at `0.06`, anchor fixed at `center`) and `transition_in` (`cut` / `crossfade`). `build_video_project.py` fills conservative defaults automatically.
     - Each `visual_track` event may also carry a registered `effect`: `drop_bounce`, `pop_in`, `zoom_pulse`, `tile_drop`, `radial_unfurl`, `wipe_reveal`, or `scan_overlay`.
     - Website screenshot highlights are baked into GPT image prepared keyframes. Use `overlay_track` only for non-website dynamic cues when explicitly needed.
-14. For a platform cover, use `scripts/render_with_cover.py --title <front-end-cover-title>`. It builds the cover plan, generates `cover_main.png`, and prepends the cover to the newest rendered video by default.
+15. For a platform cover, use `scripts/render_with_cover.py --title <front-end-cover-title>`. It builds the cover plan, generates `cover_main.png`, and prepends the cover to the newest rendered video by default.
     - Cover titles must exactly match the front-end supplied `cover.title`; do not rewrite, shorten, translate, or invent title text.
     - Core cover content must stay inside the central 3:4 safe region. `output/cover/cover_main_3x4_crop_preview.png` is the required quick QA artifact.
     - Default video insertion is `--prepend-cover --cover-frame-count 1 --fps 30`, so the cover occupies the first `1/30s` frame. Use `--no-prepend-cover` to export only the standalone cover image.
-15. Run contact-sheet, cover safe-zone QA, and render QA before presenting a final video; `standard` and `strict` do video QA through the mode runner.
+16. Run contact-sheet, subtitle density QA, cover safe-zone QA, and render QA before presenting a final video; `standard` and `strict` do video QA through the mode runner.
 
 ## Non-Negotiable Rules
 
@@ -77,6 +81,8 @@ Use this skill when the user provides a target website or asks for a short featu
 - `video_project.json` or an explicit derivative such as `video_project.effects.json` is the source of truth after it is built.
 - Do not invent website states or generated results. Show only captured or supplied evidence.
 - Do not write narration before `visual_plan.json` locks the visual sequence for new cases. Script text must be derived from the locked beat's selected assets and allowed claims.
+- Feature-seeding copy must be concise: one visual beat should carry one conclusion plus one keyword, not a full explanatory paragraph.
+- Default script target is 15-20s. Avoid 30-40s explanatory scripts unless the user explicitly asks for a long version.
 - Do not press publishing, deleting, payment, or account-mutating actions without explicit user approval.
 - For 柯幻熊猫, do not press `开始生成` unless logged-in state is verified and the user requested the generation workflow.
 - For 柯幻熊猫, write login proof to `browser_materials.auth_state.logged_in=true`; V2 build/render refuses to continue without it.
@@ -91,6 +97,6 @@ Use this skill when the user provides a target website or asks for a short featu
 - Cover main title, subject, product/person/result, and supporting subtitle must fit inside the central 3:4 safe region; outside that region only background extension, glow, gradient, outline, and decoration are allowed.
 - Cover video insertion is first-frame only by default: one frame at 30fps. Do not insert a multi-second title card unless the user explicitly requests it.
 - Do not include the fixed outro in script, voice, subtitles, or visual beat planning; append it after the main video.
-- Do not present a video as final if voice, subtitle timing, visual readability, cover safe-zone/title accuracy, or render QA fails.
+- Do not present a video as final if voice, subtitle timing, subtitle density, visual readability, cover safe-zone/title accuracy, or render QA fails.
 - Use `draft` only for fast creative preview. Use `standard` for normal review and `strict` before treating a render as deliverable.
 - Keep older output versions; use labels instead of overwriting accepted renders.
