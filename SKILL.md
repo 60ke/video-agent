@@ -1,6 +1,6 @@
 ---
 name: video-agent
-description: Generate a vertical product/demo video and platform-safe cover image from a target website using CDP screenshot capture or frozen materials, visual-first planning, Minimax T2A voice/timing, video_project.json, registered programmatic image effects, GPT Image cover generation, FFmpeg rendering, and QA.
+description: Generate a vertical product/demo video and platform-safe cover image from a target website using CDP screenshot capture or frozen materials, visual-first planning, Minimax T2A voice/timing, video_project.json, registered programmatic image effects, GPT Image cover generation, FFmpeg rendering, cover first-frame prepending, and QA.
 ---
 
 # Video Agent
@@ -37,6 +37,7 @@ Use this skill when the user provides a target website or asks for a short featu
 - `output/qa/contact_sheet.jpg`
 - `output/reports/<label>_render_report.json`
 - `output/reports/cover_generation_report.json` when a cover is generated
+- `output/reports/prepend_cover_report.json` when the cover is inserted as the video first frame
 
 ## Execution
 
@@ -63,9 +64,10 @@ Use this skill when the user provides a target website or asks for a short featu
     - Each `visual_track` event may carry `motion` (`hold` / `push_in` / `pull_out`, amount capped at `0.06`, anchor fixed at `center`) and `transition_in` (`cut` / `crossfade`). `build_video_project.py` fills conservative defaults automatically.
     - Each `visual_track` event may also carry a registered `effect`: `drop_bounce`, `pop_in`, `zoom_pulse`, `tile_drop`, `radial_unfurl`, `wipe_reveal`, or `scan_overlay`.
     - Website screenshot highlights are baked into GPT image prepared keyframes. Use `overlay_track` only for non-website dynamic cues when explicitly needed.
-14. For a platform cover, build a cover plan with `scripts/build_cover_plan.py --title <front-end-cover-title>` and generate the image with `scripts/render_cover_image.py`.
+14. For a platform cover, use `scripts/render_with_cover.py --title <front-end-cover-title>`. It builds the cover plan, generates `cover_main.png`, and prepends the cover to the newest rendered video by default.
     - Cover titles must exactly match the front-end supplied `cover.title`; do not rewrite, shorten, translate, or invent title text.
     - Core cover content must stay inside the central 3:4 safe region. `output/cover/cover_main_3x4_crop_preview.png` is the required quick QA artifact.
+    - Default video insertion is `--prepend-cover --cover-frame-count 1 --fps 30`, so the cover occupies the first `1/30s` frame. Use `--no-prepend-cover` to export only the standalone cover image.
 15. Run contact-sheet, cover safe-zone QA, and render QA before presenting a final video; `standard` and `strict` do video QA through the mode runner.
 
 ## Non-Negotiable Rules
@@ -87,6 +89,7 @@ Use this skill when the user provides a target website or asks for a short featu
 - Effect auxiliary GPT Image output is not a new evidence image; it is an overlay derived from the approved source asset.
 - Cover generation must use the front-end supplied title exactly. If title accuracy cannot be verified, mark the cover as `review_required` instead of treating it as final.
 - Cover main title, subject, product/person/result, and supporting subtitle must fit inside the central 3:4 safe region; outside that region only background extension, glow, gradient, outline, and decoration are allowed.
+- Cover video insertion is first-frame only by default: one frame at 30fps. Do not insert a multi-second title card unless the user explicitly requests it.
 - Do not include the fixed outro in script, voice, subtitles, or visual beat planning; append it after the main video.
 - Do not present a video as final if voice, subtitle timing, visual readability, cover safe-zone/title accuracy, or render QA fails.
 - Use `draft` only for fast creative preview. Use `standard` for normal review and `strict` before treating a render as deliverable.
