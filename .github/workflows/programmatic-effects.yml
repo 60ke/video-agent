@@ -11,6 +11,7 @@ on:
       - "scripts/render_simple_ffmpeg.py"
       - "scripts/render_simple_ffmpeg_legacy.py"
       - "scripts/check_effect_*.py"
+      - "scripts/check_perspective_effect.py"
       - ".github/workflows/programmatic-effects.yml"
 
 permissions:
@@ -25,7 +26,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
       - name: Install runtime dependency
         run: python -m pip install --upgrade pillow
       - name: Compile changed Python modules
