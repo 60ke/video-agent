@@ -23,6 +23,35 @@ Each `visual_track` event may include:
 }
 ```
 
+For website UI screenshots, `perspective_push_in` produces the tilted camera push shown in product-demo videos:
+
+```json
+{
+  "effect": {
+    "name": "perspective_push_in",
+    "duration": 1.45,
+    "params": {
+      "start_width": 0.72,
+      "end_width": 1.08,
+      "start_x": 0.08,
+      "end_x": -0.02,
+      "start_y": 0.22,
+      "end_y": 0.05,
+      "start_perspective": 0.14,
+      "end_perspective": 0.075,
+      "start_rotation": 1.8,
+      "end_rotation": 0.35,
+      "grid_spacing": 72,
+      "corner_radius": 28,
+      "border_width": 3,
+      "shadow": true
+    }
+  }
+}
+```
+
+The effect automatically detects a wide screenshot band inside a prepared 9:16 frame. Use `card_crop: [x, y, width, height]` with normalized coordinates when the automatic crop should be overridden. It renders a dark grid background, rounded screenshot card, perspective compression, border glow, shadow, and ease-out push-in. The camera reaches its final state by `effect.duration` and then holds that transformed state for the stable tail.
+
 For effects that need an auxiliary image:
 
 ```json
@@ -67,14 +96,15 @@ After `prepare_effect_assets.py` runs, it becomes:
 Adds default effect choices to `visual_track` based on existing project evidence:
 
 - homepage/entry screenshots: `drop_bounce`
-- parameter/UI screenshots: `wipe_reveal`
+- parameter pages and wide website UI screenshots: `perspective_push_in`
+- remaining parameter/UI screenshots that are not eligible for perspective treatment: `wipe_reveal`
 - generated result images: `tile_drop` or `radial_unfurl`
 - generic single-image beats: `pop_in`
 - explicit analysis/highlight intent: `scan_overlay`
 
 It writes `video_project.effects.json` and `output/reports/effect_plan_report.json`.
 
-Motion handling defaults to `--freeze-motion auto`: only strong entrance/assembly effects (`drop_bounce`, `tile_drop`, `radial_unfurl`) replace existing push/pull motion with `hold`. Softer effects keep existing motion unless the caller explicitly passes `--freeze-motion always`. Use `--freeze-motion never` for experiments that should preserve all existing motion.
+Motion handling defaults to `--freeze-motion auto`: strong entrance/assembly effects and the perspective camera effect (`drop_bounce`, `tile_drop`, `radial_unfurl`, `perspective_push_in`) replace existing push/pull motion with `hold`. Softer effects keep existing motion unless the caller explicitly passes `--freeze-motion always`. Use `--freeze-motion never` for experiments that should preserve all existing motion.
 
 ### `scripts/prepare_effect_assets.py`
 
@@ -117,6 +147,15 @@ python scripts\render_with_effects.py `
   --json
 ```
 
+### `scripts/check_perspective_effect.py`
+
+Runs a dependency-free smoke check against a synthetic website UI frame. It verifies registration, rule-based selection for wide UI, normalization, output shape, visible mid-animation transformation, and a stable final tail.
+
+```powershell
+python scripts\check_perspective_effect.py --json
+python scripts\check_perspective_effect.py --output-dir output\perspective_preview --json
+```
+
 ## Planning model
 
 Current first-pass planning is programmatic and conservative:
@@ -135,9 +174,10 @@ Future LLM planning should stay bounded by the same whitelist and validation pat
 
 - Effects do not change audio, subtitles, or event timing.
 - Same visual groups must keep the same effect across adjacent subtitle slices.
-- Effects are bounded to the first part of a group, then the source image remains stable.
+- Entrance effects are bounded to the first part of a group, then the source image remains stable.
+- `perspective_push_in` settles during the bounded effect interval and holds the final transformed card through the stable tail instead of snapping back to the flat source.
 - Effect duration is clipped to the visual group safety budget; if the clipped duration is zero or below the effect's minimum duration, the effect is disabled instead of falling back to its default duration.
-- Strong entrance/assembly effects set motion to `hold` by default to avoid compounded movement; soft effects preserve existing motion by default.
+- Strong entrance/assembly/perspective effects set motion to `hold` by default to avoid compounded movement; soft effects preserve existing motion by default.
 - `scan_overlay` is the only first-pass effect that depends on GPT Image.
 
 ## Current whitelist
@@ -150,4 +190,5 @@ tile_drop
 radial_unfurl
 wipe_reveal
 scan_overlay
+perspective_push_in
 ```
