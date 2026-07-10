@@ -69,16 +69,22 @@ For website feature seeding, the entry path is part of the proof. Use sequential
 
 ## Production Modes
 
-After CDP/material capture, reviewed `visual_plan.json`, and reviewed `video_script.json`, prefer the mode runner. `--mode` defaults to `standard`, which **fully regenerates** voice, GPT image keyframes, and render by default. Use `--cache` / `--reuse-gpt` only when you explicitly want to reuse prior outputs. Use `--gpt-image never` only for draft-style previews inside standard mode.
+After CDP/material capture plus reviewed `visual_plan.json` and `video_script.json`, use a two-step default:
+
+1. run `run_pipeline_mode.py` for base full regeneration (voice/subtitle/project);
+2. run `render_with_effects.py` for the final full-effects render.
+
+Use `--cache` / `--reuse-gpt` only when you explicitly want reuse. For no-reference fresh generation, keep force/full-regeneration options enabled.
 
 ```powershell
 python scripts\run_pipeline_mode.py --case cases\<new_case> --label demo_v1 --json
 python scripts\run_pipeline_mode.py --case cases\<new_case> --mode draft --label demo_draft --json
 python scripts\run_pipeline_mode.py --case cases\<new_case> --mode strict --label demo_final --json
 python scripts\run_pipeline_mode.py --case cases\<new_case> --label demo_cached --cache --reuse-gpt --json
+python scripts\render_with_effects.py --case cases\<new_case> --project cases\<new_case>\video_project.gpt_image.json --label demo_effects --force-effect-plan --force-effect-assets --json
 ```
 
-For website result videos that claim a real generation result, pass the current receipt with `--receipt-id receipt_<capture_label>` so old demo images cannot be silently reused as fresh results.
+By default, pipeline runs may use existing registered assets under `assets/results/` when no receipt is provided. If you need strict fresh-result binding, pass `--receipt-id receipt_<capture_label>` (or add `--require-receipt`) so only assets from the specified receipt are accepted.
 
 ## Minimal Command Flow
 
@@ -94,6 +100,7 @@ python scripts\accept_planner_output.py --case cases\<new_case> --kind visual_pl
 python scripts\prepare_planner_context.py --case cases\<new_case> --stage script --json
 python scripts\accept_planner_output.py --case cases\<new_case> --kind script --input <SCRIPT_JSON> --json
 python scripts\run_pipeline_mode.py --case cases\<new_case> --label demo_v1 --json
+python scripts\render_with_effects.py --case cases\<new_case> --project cases\<new_case>\video_project.gpt_image.json --label demo_v1_fx --force-effect-plan --force-effect-assets --json
 ```
 
 For manual project builds, after `video_project.json` exists:

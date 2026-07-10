@@ -599,8 +599,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--allow-existing-results",
         action="store_true",
-        help="Allow old/demo result assets without a receipt id. Use only for explicit packaging tests.",
+        help="Allow existing result assets without a receipt id. This is the default behavior.",
     )
+    parser.add_argument(
+        "--require-receipt",
+        action="store_false",
+        dest="allow_existing_results",
+        help="Require --receipt-id for website real-result claims and reject unbound existing result assets.",
+    )
+    parser.set_defaults(allow_existing_results=True)
     parser.add_argument(
         "--cache",
         action="store_true",
