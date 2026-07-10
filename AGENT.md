@@ -9,7 +9,7 @@
 
 ## Effect Integration
 
-Registered programmatic image effects are documented in `AGENT.md` and `docs/effects_pipeline.md`. The implementation is in `utils/effects/registry.py` and is executed by `scripts/render_simple_ffmpeg.py` from `visual_track[].effect`.
+Registered programmatic image effects are documented in `AGENT.md` and `docs/effects_pipeline.md`. The core registry is in `utils/effects/registry.py`; isolated extensions such as `perspective_push_in` are installed from `utils/effects/` and executed by `scripts/render_simple_ffmpeg.py` from `visual_track[].effect`.
 
 Current whitelist:
 
@@ -20,6 +20,9 @@ Current whitelist:
 - `radial_unfurl`
 - `wipe_reveal`
 - `scan_overlay`
+- `perspective_push_in`
+
+`perspective_push_in` is the default treatment for eligible parameter pages and wide website UI screenshots. It creates a tilted rounded UI card on a dark grid, pushes the card toward the camera, then holds the final transformed frame. `--freeze-motion auto` freezes the separate base push/pull motion for this effect.
 
 `slider_compare` is intentionally not part of the default set.
 
@@ -35,6 +38,12 @@ Or use:
 
 ```powershell
 python scripts\render_with_effects.py --case cases\<case> --project cases\<case>\video_project.gpt_image.json --label effects_preview --json
+```
+
+Smoke-check the perspective implementation with:
+
+```powershell
+python scripts\check_perspective_effect.py --json
 ```
 
 Effects must not change voice/subtitle/visual start-end timing. They only change how an already selected image is composited during its own `visual_track` span.
