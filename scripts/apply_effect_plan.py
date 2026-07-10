@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import sys
 from pathlib import Path
@@ -52,7 +53,16 @@ def is_wide_ui_asset(asset: dict[str, Any]) -> bool:
     risks = {str(v).lower() for v in asset.get("display_risk", []) if isinstance(v, str)}
     return bool(
         risks & {"wide_desktop_ui", "dense_desktop_ui"}
-        or (aspect and aspect > 1.2 and ("ui" in role or "page" in role or origin in {"browser_capture", "frontend_capture", "cdp_capture"} or "assets/sites/" in source))
+        or (
+            aspect
+            and aspect > 1.2
+            and (
+                "ui" in role
+                or "page" in role
+                or origin in {"browser_capture", "frontend_capture", "cdp_capture"}
+                or "assets/sites/" in source
+            )
+        )
     )
 
 
@@ -66,7 +76,9 @@ def is_generated_result_asset(asset: dict[str, Any]) -> bool:
     combined = " ".join((workflow_step, role, origin, source, description))
     if workflow_step in RESULT_STEPS or "assets/results/" in source:
         return True
-    return any(token in combined for token in ("result", "效果图", "结果", "生成图", "packaging", "vi_result")) and not any(token in combined for token in ("ui", "界面", "首页", "菜单", "page", "browser"))
+    return any(token in combined for token in ("result", "效果图", "结果", "生成图", "packaging", "vi_result")) and not any(
+        token in combined for token in ("ui", "界面", "首页", "菜单", "page", "browser")
+    )
 
 
 def force_scan_requested(event: dict[str, Any]) -> bool:
@@ -143,38 +155,138 @@ def hold_motion_preserving_flags(raw_motion: Any) -> dict[str, Any]:
     return result
 
 
-def apply_effects(project: dict[str, Any], *, preset: str, force: bool, freeze_motion: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    assets = asset_index(project)
-    changed: list[dict[str, Any]] = []
-    for idx, event in enumerate(project.get("visual_track", [])):
+def visual_group_key(event: dict[str, Any]) -> tuple[str, tuple[str, ...]]:
+    layout = str(event.get("layout") or event.get("display_mode") or "").strip()
+    asset_ids = tuple(str(asset_id) for asset_id in event.get("asset_ids", []))
+    return layout, asset_ids
+
+
+def merged_visual_groups(track: Any) -> list[list[tuple[int, dict[str, Any]]]]:
+    if not isinstance(track, list):
+        return []
+    groups: list[list[tuple[int, dict[str, Any]]]] = []
+    for index, event in enumerate(track):
         if not isinstance(event, dict):
             continue
-        if event.get("effect") and not force:
-            continue
-        asset_ids = [str(asset_id) for asset_id in event.get("asset_ids", [])]
-        asset = assets.get(asset_ids[0], {}) if asset_ids else {}
-        effect = default_effect_for_event(event, asset, preset)
-        if not effect:
-            continue
+        item = (index, event)
+        if groups and visual_group_key(groups[-1][-1][1]) == visual_group_key(event):
+            groups[-1].append(item)
+        else:
+            groups.append([item])
+    return groups
+
+
+def merged_planning_event(items: list[tuple[int, dict[str, Any]]]) -> dict[str, Any]:
+    first = items[0][1]
+    merged = copy.deepcopy(first)
+    starts = [float(event.get("start", 0.0)) for _, event in items]
+    ends = [float(event.get("end", event.get("start", 0.0))) for _, event in items]
+    merged["start"] = min(starts)
+    merged["end"] = max(ends)
+
+    for key in ("visual_intent", "material_task", "layout_intent", "camera_note", "effect_hint"):
+        values = [str(event.get(key) or "").strip() for _, event in items]
+        merged[key] = " ".join(value for value in values if value)
+
+    if not isinstance(merged.get("semantic_binding"), dict) or not merged.get("semantic_binding"):
+        for _, event in items:
+            semantic = event.get("semantic_binding")
+            if isinstance(semantic, dict) and semantic:
+                merged["semantic_binding"] = copy.deepcopy(semantic)
+                break
+    return merged
+
+
+def effect_identity(effect: Any) -> str:
+    return json.dumps(effect or {}, ensure_ascii=False, sort_keys=True)
+
+
+def canonical_existing_effect(items: list[tuple[int, dict[str, Any]]], duration: float) -> dict[str, Any] | None:
+    existing = [event.get("effect") for _, event in items if event.get("effect")]
+    if not existing:
+        return None
+    identities = {effect_identity(effect) for effect in existing}
+    if len(identities) > 1:
+        labels = [str(event.get("id") or index) for index, event in items]
+        raise ValueError(f"same visual group has conflicting explicit effects: {labels}")
+    return normalize_effect_config(existing[0], group_duration=duration)
+
+
+def apply_group_effect(
+    items: list[tuple[int, dict[str, Any]]],
+    effect: dict[str, Any],
+    *,
+    freeze_motion: str,
+    changed: list[dict[str, Any]],
+    source: str,
+) -> None:
+    effect_name = str(effect.get("name") or "")
+    motion_frozen = should_freeze_motion(effect_name, freeze_motion)
+    first_motion = items[0][1].get("motion") if isinstance(items[0][1].get("motion"), dict) else None
+    shared_motion = hold_motion_preserving_flags(first_motion) if motion_frozen else copy.deepcopy(first_motion)
+    if isinstance(shared_motion, dict):
+        shared_motion.setdefault("avoid_flicker", True)
+
+    for index, event in items:
         previous_motion = event.get("motion") if isinstance(event.get("motion"), dict) else None
-        event["effect"] = effect
-        motion_frozen = should_freeze_motion(str(effect.get("name") or ""), freeze_motion)
+        event["effect"] = copy.deepcopy(effect)
         if motion_frozen:
             event["motion"] = hold_motion_preserving_flags(previous_motion)
-        elif isinstance(previous_motion, dict):
-            previous_motion.setdefault("avoid_flicker", True)
-            event["motion"] = previous_motion
+        elif isinstance(shared_motion, dict):
+            event["motion"] = copy.deepcopy(shared_motion)
         event.setdefault("qa_expectations", {})["effect_stable_tail"] = True
         changed.append(
             {
-                "visual_index": idx,
+                "visual_index": index,
                 "visual_id": event.get("id"),
-                "effect": effect,
+                "effect": copy.deepcopy(effect),
                 "motion_frozen": motion_frozen,
                 "freeze_motion_policy": freeze_motion,
+                "group_size": len(items),
+                "effect_source": source,
             }
         )
-    project.setdefault("renderer_plan", {})["effect_policy"] = {"preset": preset, "applied_count": len(changed), "freeze_motion": freeze_motion}
+
+
+def apply_effects(project: dict[str, Any], *, preset: str, force: bool, freeze_motion: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    assets = asset_index(project)
+    changed: list[dict[str, Any]] = []
+    for items in merged_visual_groups(project.get("visual_track", [])):
+        merged_event = merged_planning_event(items)
+        duration = max(0.0, float(merged_event["end"]) - float(merged_event["start"]))
+
+        existing_effect = canonical_existing_effect(items, duration)
+        if existing_effect and not force:
+            if all(effect_identity(event.get("effect")) == effect_identity(existing_effect) for _, event in items):
+                continue
+            apply_group_effect(
+                items,
+                existing_effect,
+                freeze_motion=freeze_motion,
+                changed=changed,
+                source="existing_group_effect",
+            )
+            continue
+
+        asset_ids = [str(asset_id) for asset_id in merged_event.get("asset_ids", [])]
+        asset = assets.get(asset_ids[0], {}) if asset_ids else {}
+        effect = default_effect_for_event(merged_event, asset, preset)
+        if not effect:
+            continue
+        apply_group_effect(
+            items,
+            effect,
+            freeze_motion=freeze_motion,
+            changed=changed,
+            source="planned_group_effect",
+        )
+
+    project.setdefault("renderer_plan", {})["effect_policy"] = {
+        "preset": preset,
+        "applied_count": len(changed),
+        "freeze_motion": freeze_motion,
+        "planning_unit": "merged_visual_group",
+    }
     return project, changed
 
 
@@ -188,8 +300,25 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     output_project = Path(args.output_project).expanduser().resolve(strict=False) if args.output_project else case_dir / "video_project.effects.json"
     write_json(output_project, project)
     report_path = case_dir / "output" / "reports" / "effect_plan_report.json"
-    write_json(report_path, {"schema_version": 1, "project": str(output_project), "preset": args.preset, "force": bool(args.force), "freeze_motion": args.freeze_motion, "items": changed, "count": len(changed)})
-    return {"ok": True, "code": "ok", "reason": "", "data": {"project": str(output_project), "report": str(report_path), "count": len(changed)}}
+    write_json(
+        report_path,
+        {
+            "schema_version": 1,
+            "project": str(output_project),
+            "preset": args.preset,
+            "force": bool(args.force),
+            "freeze_motion": args.freeze_motion,
+            "planning_unit": "merged_visual_group",
+            "items": changed,
+            "count": len(changed),
+        },
+    )
+    return {
+        "ok": True,
+        "code": "ok",
+        "reason": "",
+        "data": {"project": str(output_project), "report": str(report_path), "count": len(changed)},
+    }
 
 
 def build_parser() -> argparse.ArgumentParser:
