@@ -14,7 +14,7 @@ from utils.effects.registry import EffectSuggestionInput, normalize_effect_confi
 
 RESULT_STEPS = {"result_crop", "result_export", "result_gallery", "result_page"}
 SEQUENCE_TYPES = {"image_sequence", "site_flow_steps", "result_gallery"}
-MOTION_FREEZE_EFFECTS = {"drop_bounce", "tile_drop", "radial_unfurl"}
+MOTION_FREEZE_EFFECTS = {"drop_bounce", "tile_drop", "radial_unfurl", "perspective_push_in"}
 
 
 def load_json(path: Path, default: Any = None) -> Any:
@@ -203,7 +203,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--freeze-motion",
         choices=("auto", "always", "never"),
         default="auto",
-        help="Whether to replace existing push/pull motion with hold when adding effects. auto freezes only strong entrance/assembly effects.",
+        help="Whether to replace existing push/pull motion with hold when adding effects. auto freezes strong entrance, assembly, and perspective camera effects.",
     )
     parser.add_argument("--json", action="store_true")
     return parser
