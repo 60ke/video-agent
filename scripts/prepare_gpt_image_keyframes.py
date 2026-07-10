@@ -23,12 +23,14 @@ TARGET_WIDTH = 1080
 TARGET_HEIGHT = 1920
 RESULT_STEPS = {"result_crop", "result_export", "result_gallery", "result_page"}
 SITE_CAPTURE_TYPES = {"网站主页截图", "功能入口截图", "参数面板截图"}
-GPT_IMAGE_MAX_ATTEMPTS = 6
-GPT_IMAGE_RETRY_INTERVAL_SECONDS = 20
+GPT_IMAGE_MAX_ATTEMPTS = 8
+GPT_IMAGE_RETRY_INTERVAL_SECONDS = 8
+GPT_IMAGE_PROVIDER_COOLDOWN_SECONDS = 45
 
 
 @dataclass(frozen=True)
-class GPTImageConfig:
+class GPTImageProvider:
+    name: str
     base_url: str
     api_key: str
     edit_path: str = "/v1/images/edits"
@@ -36,6 +38,66 @@ class GPTImageConfig:
     quality: str = "low"
     size: str = DEFAULT_SIZE
     timeout_seconds: int = 600
+    weight: int = 1
+
+
+@dataclass
+class GPTImageConfig:
+    providers: list[GPTImageProvider]
+    strategy: str = "weighted_failover"
+    max_attempts: int = GPT_IMAGE_MAX_ATTEMPTS
+    retry_interval_seconds: float = GPT_IMAGE_RETRY_INTERVAL_SECONDS
+    provider_cooldown_seconds: float = GPT_IMAGE_PROVIDER_COOLDOWN_SECONDS
+    _rr_index: int = 0
+    _cooldown_until: dict[str, float] | None = None
+
+    @property
+    def base_url(self) -> str:
+        return self.providers[0].base_url if self.providers else ""
+
+    @property
+    def api_key(self) -> str:
+        return self.providers[0].api_key if self.providers else ""
+
+    @property
+    def edit_path(self) -> str:
+        return self.providers[0].edit_path if self.providers else "/v1/images/edits"
+
+    @property
+    def model(self) -> str:
+        return self.providers[0].model if self.providers else "gpt-image-2"
+
+    @property
+    def quality(self) -> str:
+        return self.providers[0].quality if self.providers else "low"
+
+    @property
+    def size(self) -> str:
+        return self.providers[0].size if self.providers else DEFAULT_SIZE
+
+    @property
+    def timeout_seconds(self) -> int:
+        return self.providers[0].timeout_seconds if self.providers else 600
+
+    def provider_summary(self) -> dict[str, Any]:
+        return {
+            "strategy": self.strategy,
+            "max_attempts": self.max_attempts,
+            "retry_interval_seconds": self.retry_interval_seconds,
+            "provider_cooldown_seconds": self.provider_cooldown_seconds,
+            "providers": [
+                {
+                    "name": provider.name,
+                    "base_url": provider.base_url,
+                    "edit_path": provider.edit_path,
+                    "model": provider.model,
+                    "quality": provider.quality,
+                    "size": provider.size,
+                    "weight": provider.weight,
+                }
+                for provider in self.providers
+            ],
+        }
 
 
 def load_json(path: Path, default: Any = None) -> Any:
@@ -49,130 +111,278 @@ def write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def _provider_from_dict(item: dict[str, Any], *, defaults: dict[str, Any], index: int) -> GPTImageProvider:
+    api_key = str(item.get("api_key") or defaults.get("api_key") or "").strip()
+    base_url = str(item.get("base_url") or defaults.get("base_url") or "").strip()
+    if not api_key or not base_url:
+        raise ValueError(f"GPT image provider[{index}] requires api_key and base_url")
+    name = str(item.get("name") or f"provider_{index + 1}").strip() or f"provider_{index + 1}"
+    weight = int(item.get("weight") or defaults.get("weight") or 1)
+    return GPTImageProvider(
+        name=name,
+        base_url=base_url,
+        api_key=api_key,
+        edit_path=str(item.get("edit_path") or defaults.get("edit_path") or "/v1/images/edits"),
+        model=str(item.get("model") or defaults.get("model") or "gpt-image-2"),
+        quality=str(item.get("quality") or defaults.get("quality") or "low"),
+        size=str(item.get("size") or defaults.get("size") or DEFAULT_SIZE),
+        timeout_seconds=int(item.get("timeout_seconds") or defaults.get("timeout_seconds") or 600),
+        weight=max(1, weight),
+    )
+
+
 def load_config(path: Path) -> GPTImageConfig:
     payload = load_json(path, {})
     if not isinstance(payload, dict):
         raise ValueError(f"GPT image config must be a JSON object: {path}")
-    api_key = str(payload.get("api_key") or os.getenv("GPT_IMAGE_API_KEY") or "").strip()
-    base_url = str(payload.get("base_url") or os.getenv("GPT_IMAGE_BASE_URL") or "https://maasapi.casdao.com").strip()
-    if not api_key:
-        raise ValueError(f"GPT image api_key is missing; write it to {path} or GPT_IMAGE_API_KEY")
+
+    defaults = {
+        "api_key": str(payload.get("api_key") or os.getenv("GPT_IMAGE_API_KEY") or "").strip(),
+        "base_url": str(payload.get("base_url") or os.getenv("GPT_IMAGE_BASE_URL") or "").strip(),
+        "edit_path": str(payload.get("edit_path") or "/v1/images/edits"),
+        "model": str(payload.get("model") or "gpt-image-2"),
+        "quality": str(payload.get("quality") or "low"),
+        "size": str(payload.get("size") or DEFAULT_SIZE),
+        "timeout_seconds": int(payload.get("timeout_seconds") or 600),
+        "weight": 1,
+    }
+
+    providers_raw = payload.get("providers")
+    providers: list[GPTImageProvider] = []
+    if isinstance(providers_raw, list) and providers_raw:
+        for idx, item in enumerate(providers_raw):
+            if not isinstance(item, dict):
+                raise ValueError(f"GPT image providers[{idx}] must be an object")
+            providers.append(_provider_from_dict(item, defaults=defaults, index=idx))
+    else:
+        api_key = defaults["api_key"]
+        base_url = defaults["base_url"] or "https://maasapi.casdao.com"
+        if not api_key:
+            raise ValueError(f"GPT image api_key is missing; write it to {path} or GPT_IMAGE_API_KEY")
+        providers.append(
+            GPTImageProvider(
+                name=str(payload.get("name") or "default"),
+                base_url=base_url,
+                api_key=api_key,
+                edit_path=defaults["edit_path"],
+                model=defaults["model"],
+                quality=defaults["quality"],
+                size=defaults["size"],
+                timeout_seconds=defaults["timeout_seconds"],
+                weight=1,
+            )
+        )
+
+    strategy = str(payload.get("strategy") or "weighted_failover").strip() or "weighted_failover"
     return GPTImageConfig(
-        base_url=base_url,
-        api_key=api_key,
-        edit_path=str(payload.get("edit_path") or "/v1/images/edits"),
-        model=str(payload.get("model") or "gpt-image-2"),
-        quality=str(payload.get("quality") or "low"),
-        size=str(payload.get("size") or DEFAULT_SIZE),
-        timeout_seconds=int(payload.get("timeout_seconds") or 600),
+        providers=providers,
+        strategy=strategy,
+        max_attempts=int(payload.get("max_attempts") or GPT_IMAGE_MAX_ATTEMPTS),
+        retry_interval_seconds=float(payload.get("retry_interval_seconds") or GPT_IMAGE_RETRY_INTERVAL_SECONDS),
+        provider_cooldown_seconds=float(payload.get("provider_cooldown_seconds") or GPT_IMAGE_PROVIDER_COOLDOWN_SECONDS),
+        _cooldown_until={},
     )
 
 
 def dry_run_config() -> GPTImageConfig:
-    return GPTImageConfig(base_url="dry-run", api_key="dry-run", edit_path="/dry-run", model="dry-run")
+    return GPTImageConfig(
+        providers=[
+            GPTImageProvider(
+                name="dry-run",
+                base_url="dry-run",
+                api_key="dry-run",
+                edit_path="/dry-run",
+                model="dry-run",
+            )
+        ],
+        strategy="weighted_failover",
+    )
 
 
 def bearer(api_key: str) -> str:
     return api_key if " " in api_key.strip() else f"Bearer {api_key.strip()}"
 
 
-def edit_url(config: GPTImageConfig) -> str:
-    return urljoin(config.base_url.rstrip("/") + "/", config.edit_path.lstrip("/"))
+def edit_url(provider: GPTImageProvider) -> str:
+    return urljoin(provider.base_url.rstrip("/") + "/", provider.edit_path.lstrip("/"))
 
 
 def content_type(path: Path) -> str:
     return mimetypes.guess_type(path.name)[0] or "image/png"
 
 
+class GPTImageRequestError(RuntimeError):
+    def __init__(self, message: str, *, status_code: int | None = None, provider: str | None = None) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.provider = provider
+
+
+def _httpx_client(*, timeout: float | httpx.Timeout) -> httpx.Client:
+    # Provider IP allowlists require the machine's direct egress IP.
+    # Explicitly disable env/system proxies for GPT image calls.
+    return httpx.Client(timeout=timeout, trust_env=False, proxy=None)
+
+
 def decode_image_response(response: httpx.Response) -> bytes:
+    status_code = int(response.status_code)
     try:
         body = response.json()
     except ValueError as exc:
-        raise RuntimeError(f"GPT image response is not JSON: HTTP {response.status_code}") from exc
-    if response.status_code >= 400:
+        raise GPTImageRequestError(
+            f"GPT image response is not JSON: HTTP {status_code}",
+            status_code=status_code,
+        ) from exc
+    if status_code < 200 or status_code >= 300:
         error = body.get("error") if isinstance(body, dict) else None
         message = error.get("message") if isinstance(error, dict) else None
-        raise RuntimeError(str(message or f"GPT image HTTP {response.status_code}"))
+        raise GPTImageRequestError(
+            str(message or f"GPT image HTTP {status_code}"),
+            status_code=status_code,
+        )
     if not isinstance(body, dict):
-        raise RuntimeError("GPT image response root is not an object")
+        raise GPTImageRequestError("GPT image response root is not an object", status_code=status_code)
     items = body.get("data")
     if not isinstance(items, list) or not items:
-        raise RuntimeError("GPT image response has no data items")
+        raise GPTImageRequestError("GPT image response has no data items", status_code=status_code)
     first = next((item for item in items if isinstance(item, dict)), None)
     if not first:
-        raise RuntimeError("GPT image response data item is invalid")
+        raise GPTImageRequestError("GPT image response data item is invalid", status_code=status_code)
     b64_json = str(first.get("b64_json") or "").strip()
     if b64_json:
         return base64.b64decode(b64_json)
     url = str(first.get("url") or "").strip()
     if url:
-        with httpx.Client(timeout=120) as client:
+        with _httpx_client(timeout=120) as client:
             downloaded = client.get(url)
-        if downloaded.status_code >= 400:
-            raise RuntimeError(f"failed to download GPT image result: HTTP {downloaded.status_code}")
+        if downloaded.status_code < 200 or downloaded.status_code >= 300:
+            raise GPTImageRequestError(
+                f"failed to download GPT image result: HTTP {downloaded.status_code}",
+                status_code=int(downloaded.status_code),
+            )
         return downloaded.content
-    raise RuntimeError("GPT image response has no b64_json or url")
+    raise GPTImageRequestError("GPT image response has no b64_json or url", status_code=status_code)
 
 
-def is_retryable_gpt_image_error(exc: BaseException, status_code: int | None = None) -> bool:
+def is_success_status(status_code: int | None) -> bool:
+    return status_code is not None and 200 <= int(status_code) < 300
+
+
+def should_failover_provider(exc: BaseException, status_code: int | None = None) -> bool:
+    """Failover on any non-success outcome.
+
+    Rule: only a completed 2xx response with a valid image is success.
+    Network failures, non-2xx HTTP, and 2xx responses that cannot be decoded
+    all switch to another provider.
+    """
     if isinstance(exc, (httpx.TimeoutException, httpx.NetworkError, httpx.ConnectError, httpx.ReadTimeout, httpx.WriteTimeout)):
         return True
-    if status_code in {408, 425, 429, 500, 502, 503, 504}:
+    if isinstance(exc, GPTImageRequestError):
         return True
-    message = str(exc).lower()
-    retry_tokens = (
-        "负载",
-        "饱和",
-        "rate limit",
-        "too many requests",
-        "temporarily unavailable",
-        "timeout",
-        "timed out",
-        "connection reset",
-        "connection aborted",
-        "service unavailable",
-        "bad gateway",
-        "gateway timeout",
-        "http 408",
-        "http 425",
-        "http 429",
-        "http 500",
-        "http 502",
-        "http 503",
-        "http 504",
-    )
-    return any(token in message for token in retry_tokens)
+    if isinstance(exc, httpx.HTTPStatusError):
+        code = exc.response.status_code if status_code is None else status_code
+        return not is_success_status(code)
+    if status_code is not None:
+        return not is_success_status(status_code)
+    return True
+
+
+def _mark_provider_cooldown(config: GPTImageConfig, provider: GPTImageProvider, *, status_code: int | None) -> None:
+    if config._cooldown_until is None:
+        config._cooldown_until = {}
+    # Auth/quota/forbidden style codes get a longer cooldown; rate-limit/5xx stay short.
+    hard = status_code in {401, 402, 403, 404} or (status_code is not None and 400 <= int(status_code) < 500 and status_code not in {408, 425, 429})
+    cooldown = 3600.0 if hard else max(0.0, float(config.provider_cooldown_seconds))
+    config._cooldown_until[provider.name] = time.time() + cooldown
+
+
+def _available_providers(config: GPTImageConfig) -> list[GPTImageProvider]:
+    now = time.time()
+    cooldown = config._cooldown_until or {}
+    available = [provider for provider in config.providers if float(cooldown.get(provider.name) or 0) <= now]
+    return available or list(config.providers)
+
+
+def _select_provider(config: GPTImageConfig, *, prefer_not: str | None = None) -> GPTImageProvider:
+    candidates = _available_providers(config)
+    if prefer_not and len(candidates) > 1:
+        filtered = [provider for provider in candidates if provider.name != prefer_not]
+        if filtered:
+            candidates = filtered
+    if not candidates:
+        raise RuntimeError("no GPT image providers configured")
+
+    if config.strategy == "round_robin":
+        index = config._rr_index % len(candidates)
+        config._rr_index += 1
+        return candidates[index]
+
+    # Default: weighted_failover — expand by weight, then round-robin across the expanded list.
+    expanded: list[GPTImageProvider] = []
+    for provider in candidates:
+        expanded.extend([provider] * max(1, int(provider.weight)))
+    index = config._rr_index % len(expanded)
+    config._rr_index += 1
+    return expanded[index]
+
+
+def _post_gpt_edit(provider: GPTImageProvider, image_path: Path, prompt: str) -> bytes:
+    data = {"model": provider.model, "prompt": prompt, "quality": provider.quality, "n": "1"}
+    if provider.size:
+        data["size"] = provider.size
+    image_bytes = image_path.read_bytes()
+    files = {"image": (image_path.name, image_bytes, content_type(image_path))}
+    headers = {"Authorization": bearer(provider.api_key)}
+    url = edit_url(provider)
+    with _httpx_client(timeout=provider.timeout_seconds) as client:
+        response = client.post(url, data=data, files=files, headers=headers)
+    try:
+        return decode_image_response(response)
+    except GPTImageRequestError as exc:
+        raise GPTImageRequestError(str(exc), status_code=exc.status_code, provider=provider.name) from None
 
 
 def gpt_edit_image(config: GPTImageConfig, image_path: Path, prompt: str, raw_output: Path) -> None:
-    data = {"model": config.model, "prompt": prompt, "quality": config.quality, "n": "1"}
-    if config.size:
-        data["size"] = config.size
-    image_bytes = image_path.read_bytes()
-    files = {"image": (image_path.name, image_bytes, content_type(image_path))}
-    headers = {"Authorization": bearer(config.api_key)}
-    url = edit_url(config)
+    if not config.providers:
+        raise RuntimeError("no GPT image providers configured")
     last_exc: Exception | None = None
-    for attempt in range(1, GPT_IMAGE_MAX_ATTEMPTS + 1):
+    last_provider_name: str | None = None
+    max_attempts = max(1, int(config.max_attempts))
+    for attempt in range(1, max_attempts + 1):
+        provider = _select_provider(config, prefer_not=last_provider_name)
+        last_provider_name = provider.name
         try:
-            with httpx.Client(timeout=config.timeout_seconds) as client:
-                response = client.post(url, data=data, files=files, headers=headers)
+            payload = _post_gpt_edit(provider, image_path, prompt)
             raw_output.parent.mkdir(parents=True, exist_ok=True)
-            raw_output.write_bytes(decode_image_response(response))
+            raw_output.write_bytes(payload)
             return
-        except Exception as exc:  # noqa: BLE001 - retry only on transient provider failures
+        except Exception as exc:  # noqa: BLE001 - failover on any non-success provider outcome
             last_exc = exc if isinstance(exc, Exception) else RuntimeError(str(exc))
             status_code = None
-            if isinstance(exc, httpx.HTTPStatusError):
+            if isinstance(exc, GPTImageRequestError):
+                status_code = exc.status_code
+            elif isinstance(exc, httpx.HTTPStatusError):
                 status_code = exc.response.status_code
-            if attempt >= GPT_IMAGE_MAX_ATTEMPTS or not is_retryable_gpt_image_error(last_exc, status_code):
+            failover = should_failover_provider(last_exc, status_code)
+            if failover:
+                _mark_provider_cooldown(config, provider, status_code=status_code)
+            remaining_providers = [item.name for item in _available_providers(config) if item.name != provider.name]
+            can_switch = bool(remaining_providers)
+            if attempt >= max_attempts or not failover:
                 raise last_exc from None
+            if not can_switch and status_code is not None and 400 <= int(status_code) < 500 and status_code not in {408, 425, 429}:
+                # No alternate provider left for a hard client error.
+                raise last_exc from None
+            wait_seconds = float(config.retry_interval_seconds)
+            action = "switching provider" if can_switch else "retrying same pool"
+            code_text = str(status_code) if status_code is not None else "network"
             print(
-                f"GPT image request failed (attempt {attempt}/{GPT_IMAGE_MAX_ATTEMPTS}): {last_exc}; "
-                f"retrying in {GPT_IMAGE_RETRY_INTERVAL_SECONDS}s",
+                f"GPT image request failed via {provider.name} "
+                f"(attempt {attempt}/{max_attempts}, status={code_text}): {last_exc}; "
+                f"{action} and waiting {wait_seconds:.0f}s",
                 file=sys.stderr,
             )
-            time.sleep(GPT_IMAGE_RETRY_INTERVAL_SECONDS)
+            time.sleep(wait_seconds)
     if last_exc:
         raise last_exc
 
@@ -592,7 +802,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             report_path,
             {
                 "schema_version": 1,
-                "provider": {"base_url": config.base_url, "edit_path": config.edit_path, "model": config.model, "quality": config.quality, "size": config.size},
+                "provider": config.provider_summary(),
                 "project": str(output_project),
                 "registered_assets": [],
                 "registered_resources": [],
@@ -712,7 +922,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         report_path,
         {
             "schema_version": 1,
-            "provider": {"base_url": config.base_url, "edit_path": config.edit_path, "model": config.model, "quality": config.quality, "size": config.size},
+            "provider": config.provider_summary(),
             "project": str(output_project),
             "registered_assets": [] if args.dry_run else [asset["id"] for asset in new_assets],
             "registered_resources": [] if args.dry_run else [resource["id"] for resource in new_resources],

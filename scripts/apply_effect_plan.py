@@ -105,18 +105,24 @@ def default_effect_for_event(event: dict[str, Any], asset: dict[str, Any], prese
     if clip_type in SEQUENCE_TYPES:
         return None
     semantic = event.get("semantic_binding", {}) if isinstance(event.get("semantic_binding"), dict) else {}
-    step_kind = str(semantic.get("step_kind") or "").lower()
-    if not step_kind:
-        workflow = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
-        workflow_step = str(workflow.get("workflow_step") or workflow.get("source_workflow_step") or "").lower()
-        if workflow_step in RESULT_STEPS:
-            step_kind = "result"
-        elif workflow_step in {"home_entry"}:
-            step_kind = "home"
-        elif workflow_step in {"feature_menu_select", "feature_entry", "menu_select"}:
-            step_kind = "entry"
-        elif workflow_step in {"feature_page_empty", "feature_form_params", "form_filled"}:
-            step_kind = "params"
+    workflow = asset.get("image_resource", {}) if isinstance(asset.get("image_resource"), dict) else {}
+    # GPT prepared keyframes set workflow_step=prepared_* and keep the real
+    # capture step in source_workflow_step — prefer the latter for effects.
+    source_workflow_step = str(workflow.get("source_workflow_step") or "").lower()
+    workflow_step = str(workflow.get("workflow_step") or "").lower()
+    routing_step = source_workflow_step or workflow_step
+    # Prefer concrete capture workflow over coarse semantic labels so homepage
+    # is not treated as a feature-entry shot for effect allocation.
+    if routing_step in RESULT_STEPS:
+        step_kind = "result"
+    elif routing_step in {"home_entry"}:
+        step_kind = "home"
+    elif routing_step in {"feature_menu_select", "feature_entry", "menu_select"}:
+        step_kind = "entry"
+    elif routing_step in {"feature_page_empty", "feature_form_params", "form_filled"}:
+        step_kind = "params"
+    else:
+        step_kind = str(semantic.get("step_kind") or "").lower()
     if preset == "minimal" and step_kind not in {"result", "entry"} and not force_scan_requested(event):
         return None
     data = EffectSuggestionInput(

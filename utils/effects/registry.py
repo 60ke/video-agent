@@ -425,9 +425,9 @@ def suggested_effect(data: EffectSuggestionInput) -> dict[str, Any] | None:
     text = " ".join([data.step_kind, data.layout, data.visual_intent, data.material_task]).lower()
     if any(token in text for token in ("解析", "结构", "高亮", "analysis", "blueprint", "scan")) and data.duration >= 1.6:
         return {"name": "scan_overlay", "duration": min(1.3, data.duration - 0.55), "needs_aux_asset": True, "aux_asset_kind": "highlight_overlay", "params": {"band_width": 0.14, "overlay_opacity": 0.72, "residual_opacity": 0.10}}
-    if data.step_kind in {"home", "entry"}:
+    if data.step_kind == "home":
         return {"name": "drop_bounce", "duration": min(0.9, data.duration - 0.55), "params": {"shadow": True}}
-    if data.step_kind in {"params", "ui"} or data.is_wide_ui:
+    if data.step_kind == "entry" or data.step_kind in {"params", "ui"} or data.is_wide_ui:
         return {
             "name": "wipe_reveal",
             "duration": min(0.8, data.duration - 0.55),

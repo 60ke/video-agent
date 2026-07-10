@@ -244,7 +244,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     if not args.dry_run:
         register_effect_assets(case_dir, new_assets, manifest_items)
     report_path = case_dir / "output" / "reports" / "effect_assets_report.json"
-    write_json(report_path, {"schema_version": 1, "provider": {"base_url": config.base_url, "edit_path": config.edit_path, "model": config.model, "quality": config.quality, "size": config.size}, "project": str(output_project), "items": report_items, "count": len(report_items), "status": "ok" if report_items else "skipped_no_aux_effects"})
+    write_json(report_path, {"schema_version": 1, "provider": config.provider_summary(), "project": str(output_project), "items": report_items, "count": len(report_items), "status": "ok" if report_items else "skipped_no_aux_effects"})
     return {"ok": True, "code": "ok", "reason": "", "data": {"project": str(output_project), "report": str(report_path), "count": len(report_items)}}
 
 
