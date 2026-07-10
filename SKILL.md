@@ -63,13 +63,15 @@ Use this skill when the user provides a target website or asks for a short featu
 10. After base regeneration, use `scripts/render_with_effects.py` as the default final render entry for regular production. This is the canonical full-effects output path (not a side preview path).
    - It runs `apply_effect_plan.py` + `prepare_effect_assets.py` + `render_simple_ffmpeg.py` in sequence.
    - Use `--force-effect-plan --force-effect-assets` for no-reference/no-reuse effect regeneration.
-   - Keep `--freeze-motion auto` unless a run explicitly needs `always`/`never`.
+   - Keep `--freeze-motion auto` unless a run explicitly needs `always`/`never`; auto freezes strong entrance/assembly effects and `perspective_push_in`.
    - `render_simple_ffmpeg.py` performs the final encode and outro append.
    - Subtitles are burned through ASS using the `douyin-live-smartclip` style: bottom centered, bold white text, black outline, height-based font size, and two-line wrapping.
    - Each `visual_track` event may carry `motion` (`hold` / `push_in` / `pull_out`, amount capped at `0.06`, anchor fixed at `center`) and `transition_in` (`cut` / `crossfade`). `build_video_project.py` fills conservative defaults automatically.
-   - Each `visual_track` event may also carry a registered `effect`: `drop_bounce`, `pop_in`, `zoom_pulse`, `tile_drop`, `radial_unfurl`, `wipe_reveal`, or `scan_overlay`.
+   - Each `visual_track` event may also carry a registered `effect`: `drop_bounce`, `pop_in`, `zoom_pulse`, `tile_drop`, `radial_unfurl`, `wipe_reveal`, `scan_overlay`, or `perspective_push_in`.
+   - `perspective_push_in` is preferred for eligible parameter pages and wide website UI screenshots. It creates the dark-grid, rounded-card, tilted push-in presentation and holds its final camera state through the stable tail.
    - Website screenshot highlights are baked into GPT image prepared keyframes. Use `overlay_track` only for non-website dynamic cues when explicitly needed.
 11. If manual execution is needed, build and validate `video_project.json` with `scripts/build_video_project.py` and `scripts/validate_video_project.py --strict`, prepare GPT image keyframes with `scripts/prepare_gpt_image_keyframes.py`, apply registered image effects with `scripts/apply_effect_plan.py`, prepare `scan_overlay` auxiliary assets with `scripts/prepare_effect_assets.py` when needed, then render with `scripts/render_simple_ffmpeg.py`.
+   - Run `scripts/check_perspective_effect.py --json` after changing the perspective implementation or its default planner parameters.
 12. For a platform cover, use `scripts/render_with_cover.py --title <front-end-cover-title>`. It builds the cover plan, generates `cover_main.png`, and prepends the cover to the newest rendered video by default.
     - Cover titles must exactly match the front-end supplied `cover.title`; do not rewrite, shorten, translate, or invent title text.
     - Core cover content must stay inside the central 3:4 safe region. `output/cover/cover_main_3x4_crop_preview.png` is the required quick QA artifact.
@@ -93,7 +95,7 @@ Use this skill when the user provides a target website or asks for a short featu
 - The default full-process workflow starts from a new case and ends with effect-enabled final render output (`render_with_effects.py`).
 - Regular production output is full-effects by default; do not treat effect rendering as optional preview-only behavior.
 - By default, `run_pipeline_mode.py` allows existing registered result assets (from `assets/results/`) when no receipt is provided. For strict fresh-result binding, pass `--receipt-id` (and optionally `--require-receipt`) so only receipt-bound results are accepted.
-- Final visuals must already be prepared and AI-verified. Function/process screenshots should be 9:16 captures; generated results must be saved images/crops/exports under `assets/results/`. The renderer width-fits images and does not perform local crop/zoom repair.
+- Final visuals must already be prepared and AI-verified. Function/process screenshots should be 9:16 captures; generated results must be saved images/crops/exports under `assets/results/`. The base renderer width-fits images and does not invent local content. `perspective_push_in` may detect the existing UI band or use an explicit normalized `card_crop`, but it must only recompose pixels from the approved source asset.
 - The renderer merges consecutive `visual_track` events that share the same `layout`+`asset_ids` into one continuous shot with one uninterrupted motion/effect sweep. Do not declare `crossfade`, a different `motion`, or a different `effect` between two such events; the renderer rejects it.
 - GPT image edits are for format, ratio, layout optimization, effect auxiliary overlays, and platform cover generation only. Prompts must preserve the original screenshot/result content and must not invent new UI, generated results, text, logos, or product details.
 - Effect auxiliary GPT Image output is not a new evidence image; it is an overlay derived from the approved source asset.
