@@ -1,0 +1,20 @@
+# 柯幻熊猫品牌素材库
+
+本目录保存从官方微信素材包复制并经内容哈希去重的品牌素材。原始素材包仍保存在用户文档目录，本目录是视频生成链路使用的冻结副本。
+
+## 目录
+
+- `logo/`：品牌 Logo，注册为 `brand_logo`。
+- `ip/static/`：标准形象和动作图，注册为 `brand_ip_static`。
+- `ip/animated/`：透明 GIF，注册为 `brand_ip_animation`。
+- `ip/video/`：品牌动作视频，注册为 `brand_ip_video`。
+
+`熊猫结尾.mp4` 与 `assets/outro/default_panda_outro.mp4` 内容哈希完全相同，因此不在本目录重复保存。
+
+## 使用约束
+
+- 品牌素材进入所有 case 的 Catalog 快照，但不得替代功能入口、参数页或真实结果图。
+- 自动 Planner 仅在 CTA、等待或生成过渡等明确语义中选择品牌补镜头。
+- CTA 优先使用挥手视频，等待/生成过渡优先使用跑步动画。
+- MP4 原始音轨不进入成片，成片继续使用统一 Voice、BGM 和语义 SFX。
+- 标记为透明但实际没有 Alpha 通道的 PNG 只能作为完整卡片使用，未经抠图不得作为透明叠层。

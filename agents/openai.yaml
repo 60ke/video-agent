@@ -1,8 +1,8 @@
 interface:
   display_name: "Video Agent"
-  short_description: "Generate reusable product/demo videos"
+  short_description: "Generate word-timed vertical product videos"
   brand_color: "#0EA5E9"
-  default_prompt: "Use $video-agent to generate a vertical product/demo video from my website, script, images, Minimax voice timing, FFmpeg rendering, and QA requirements."
+  default_prompt: "Use $video-agent-v3 to build a material-first 9:16 product video with Minimax word timing, deterministic visual cues, platform-safe subtitles, and final MP4 QA."
 
 policy:
   allow_implicit_invocation: true

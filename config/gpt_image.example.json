@@ -1,0 +1,16 @@
+{
+  "strategy": "weighted_failover",
+  "edit_path": "/v1/images/edits",
+  "model": "gpt-image-2",
+  "quality": "low",
+  "size": "1024x1792",
+  "timeout_seconds": 600,
+  "providers": [
+    {
+      "name": "provider-name",
+      "base_url": "https://api.example.com",
+      "api_key": "replace-locally",
+      "weight": 1
+    }
+  ]
+}

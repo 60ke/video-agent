@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "video-agent-v3"
+version = "3.0.0"
+description = "Material-first, word-timed vertical video compiler"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+  "httpx>=0.27,<1",
+  "numpy>=2.0,<3",
+  "opencv-python-headless>=4.10,<5",
+  "pillow>=11,<12",
+  "pydantic>=2.8,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<9",
+  "pytest-cov>=5,<7",
+  "ruff>=0.12,<1",
+]
+
+[project.scripts]
+video-agent = "video_agent.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["video_agent*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 140
+target-version = "py310"

@@ -1,49 +1,9 @@
 # Agent Notes
 
-## Current Direction
-
-- The previous Electron recorder and CDP video capture experiments are abandoned.
-- CDP is used for login reuse, navigation, screenshot capture, form inspection, and coordinate metadata only.
-- Video visuals are built from registered images, GPT image prepared 9:16 keyframes, optional registered programmatic image effects, and renderer-side `overlay_track` callouts.
-- Do not add a new browser video recording path unless the user explicitly reopens that experiment.
-
-## Effect Integration
-
-Registered programmatic image effects are documented in `AGENT.md` and `docs/effects_pipeline.md`. The core registry is in `utils/effects/registry.py`; isolated extensions such as `perspective_push_in` are installed from `utils/effects/` and executed by `scripts/render_simple_ffmpeg.py` from `visual_track[].effect`.
-
-Current whitelist:
-
-- `drop_bounce`
-- `pop_in`
-- `zoom_pulse`
-- `tile_drop`
-- `radial_unfurl`
-- `wipe_reveal`
-- `scan_overlay`
-- `perspective_push_in`
-
-`perspective_push_in` is the default treatment for eligible parameter pages and wide website UI screenshots. It creates a tilted rounded UI card on a dark grid, pushes the card toward the camera, then holds the final transformed frame. `--freeze-motion auto` freezes the separate base push/pull motion for this effect.
-
-`slider_compare` is intentionally not part of the default set.
-
-## Safe Effect Workflow
-
-```powershell
-python scripts\apply_effect_plan.py --case cases\<case> --project cases\<case>\video_project.gpt_image.json --json
-python scripts\prepare_effect_assets.py --case cases\<case> --project cases\<case>\video_project.effects.json --json
-python scripts\render_simple_ffmpeg.py --case cases\<case> --project cases\<case>\video_project.effects.json --label effects_preview --json
-```
-
-Or use:
-
-```powershell
-python scripts\render_with_effects.py --case cases\<case> --project cases\<case>\video_project.gpt_image.json --label effects_preview --json
-```
-
-Smoke-check the perspective implementation with:
-
-```powershell
-python scripts\check_perspective_effect.py --json
-```
-
-Effects must not change voice/subtitle/visual start-end timing. They only change how an already selected image is composited during its own `visual_track` span.
+- V3 is the only supported video pipeline.
+- CDP produces clean screenshots and callout coordinates, not browser recordings or final video effects.
+- The Orchestrator owns the stage DAG; individual modules are not user-facing production entry points.
+- `timing_lock.json` contains objective speech timing only. Visual actions belong to `visual_plan.json` and compile to absolute frames in `render_plan.json`.
+- Keep local provider keys in ignored `config/*.local.json` files.
+- Prefer same-feature E0/E1 assets. Never let unreviewed, rejected, E2, or E3 material substantiate a factual product claim.
+- Fix reusable templates and compilers when a Golden Case reveals a problem; do not patch one case's rendered frames.

@@ -1,0 +1,5 @@
+{
+  "base_url": "https://api.example.com",
+  "api_key": "replace-locally",
+  "model": "gpt-5"
+}

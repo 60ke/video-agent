@@ -1,0 +1,34 @@
+{
+  "schema_version": 3,
+  "case_id": "vi_v3_golden",
+  "goal": "柯幻熊猫文生图 VI 功能种草短视频，强调真实结果、准确入口和简洁操作",
+  "mode": "material_first",
+  "quality": "final",
+  "feature_path": ["文生图", "VI"],
+  "format": {"width": 1080, "height": 1920, "fps": 30},
+  "duration_policy": {"preferred_min_sec": 15.0, "preferred_max_sec": 20.0, "hard_max_sec": 24.0},
+  "voice": {
+    "provider": "minimax",
+    "model": "speech-2.8-hd",
+    "voice_id": "male-qn-qingse",
+    "speed": 1.5,
+    "emotion": null,
+    "subtitle_type": "word",
+    "pause_profile": "short_video_natural_v1"
+  },
+  "audio": {
+    "bgm_path": null,
+    "bgm_gain_db": -22.0,
+    "voice_gain_db": 0.0,
+    "sfx_profile": "short_video_ui_v1",
+    "sfx_overrides": {},
+    "sfx_density": {"min_gap_ms": 280, "window_ms": 3000, "max_events_per_window": 3, "repeat_cooldown_ms": 900}
+  },
+  "platform_profile": "douyin_portrait_v1",
+  "narration_source": "input/narration.json",
+  "materialization_source": null,
+  "visual_plan_source": null,
+  "selected_asset_ids": [],
+  "ai_enabled": false,
+  "vision_review_enabled": false
+}

@@ -1,110 +1,92 @@
-# Video Agent
+# Video Agent V3
 
-Agent-driven workflow for short vertical product/demo videos from real website evidence and prepared visual assets.
+素材驱动、词级定时、确定性渲染的 9:16 短视频生产系统。
 
-Pipeline V2 is the only supported path:
+V3 只有一条正式成片链：
 
 ```text
-CDP screenshot capture / static materials
--> assets/sites filename parsing + image_resources.json
--> locked visual_plan.json
--> evidence-bound video_script.json
--> Minimax T2A voice + word timing
--> subtitle_track.json
--> video_project.json
--> GPT image 9:16 keyframe optimization
--> FFmpeg image/sequence render + overlay_track + hard subtitles + outro
--> contact sheet + render QA
+assets catalog
+-> optional controlled derivatives
+-> material-bound narration
+-> Minimax speech-2.8-hd (speed 1.5, word timing)
+-> immutable timing lock
+-> visual plan + shared semantic cues
+-> single render plan
+-> Pillow/OpenCV scene renderer
+-> FFmpeg video and multi-track audio mix
+-> final MP4 QA
 ```
 
-## Canonical Docs
-
-Read these in order:
-
-1. `SKILL.md` - agent-facing execution entry
-2. `docs/pipeline_v2_refactor.md` - V2 rationale and architectural boundary
-3. `cdp_screenshot_material_spec.md` - website screenshot naming, callout metadata, and registration contract
-4. `cdp-capture/README.md` - CDP login and screenshot material capture
-5. `rules/kehuanxiongmao-capture.md` - 柯幻熊猫 capture and generation rules
-6. `rules/douyin-real-demo.md` - real-demo and short-video quality gates
-7. `rules/vertical-browser-framing.md` - 9:16 website/result framing rules
-8. `references/copywriting-rules.md` and `references/copywriting-options.md` - brand copywriting knowledge
-
-## Local Secrets
-
-Minimax credentials stay local in `config/minimax.local.json` or `MINIMAX_API_KEY`.
-`config/*.local.json` is ignored by git.
-If no speed is configured, Minimax T2A uses `speed=1.5` by default. Subtitle requests use `subtitle_type=word` and are converted into `output/minimax/minimax_alignment.json` before script-level subtitle tracks are built.
-
-GPT image credentials stay local in `config/gpt_image.local.json` or `GPT_IMAGE_API_KEY`.
-The default edit endpoint is OpenAI-compatible `/v1/images/edits`, using `gpt-image-2`.
-
-## Visual Asset Policy
-
-Final visuals are prepared before rendering. Function/process screenshots must be AI-verified 9:16 keyframes or registered site screenshots that can be prepared into 9:16. Generated-result visuals must be saved images, crops, or exports under `assets/results/`; website result page screenshots are evidence only and are rejected as final result visuals.
-
-For website feature seeding, the entry path is part of the proof. Use sequential GPT-image prepared screenshots to show the route from homepage or product entry, to `文生图`, to the target feature, and then to the parameter page. CDP is a screenshot and coordinate-evidence producer only; website screenshot highlights are baked into prepared keyframes instead of renderer-side red boxes.
-
-## Current Scripts
-
-- `scripts/init_case.py` - create a V2 case scaffold
-- `scripts/register_materials.py` - freeze static media into a case
-- `scripts/register_site_assets.py` - register reusable `assets/sites` website screenshots into a case
-- `scripts/register_result_assets.py` - register reusable or live generated result images by feature and industry/scene
-- `scripts/apply_site_profile.py` - seed website knowledge from profiles
-- `scripts/prepare_planner_context.py` - prepare visual-plan/script planner context
-- `scripts/accept_planner_output.py` - validate AI planner JSON and write reviewed artifacts
-- `scripts/create_voice_plan.py` - join reviewed script segments into voice text
-- `scripts/generate_voice_minimax.py` - generate `audio/voice.mp3` and `output/minimax/minimax_alignment.json`
-- `scripts/build_subtitle_track.py` - map Minimax timing onto reviewed script subtitles
-- `scripts/check_voice_qa.py` - check speech density, terms, and silence
-- `scripts/build_video_project.py` - assemble render-ready `video_project.json`
-- `scripts/prepare_gpt_image_keyframes.py` - create AI-verified 1080x1920 keyframes from source screenshots/results
-- `scripts/validate_video_project.py` - validate V2 case/project JSON
-- `scripts/render_simple_ffmpeg.py` - render the final MP4 with FFmpeg and smartclip-style ASS subtitles
-- `scripts/make_contact_sheet.py` - extract QA frames and contact sheet
-- `scripts/render_qa.py` - run machine-checkable render QA
-- `scripts/run_pipeline_mode.py` - run post-script production in `draft`, `standard`, or `strict` mode; `standard`/`strict` default to full regeneration and GPT image keyframes
-- `scripts/check_case_hygiene.py` - check case and package hygiene
-
-## Production Modes
-
-After CDP/material capture plus reviewed `visual_plan.json` and `video_script.json`, use a two-step default:
-
-1. run `run_pipeline_mode.py` for base full regeneration (voice/subtitle/project);
-2. run `render_with_effects.py` for the final full-effects render.
-
-Use `--cache` / `--reuse-gpt` only when you explicitly want reuse. For no-reference fresh generation, keep force/full-regeneration options enabled.
+## Quick Start
 
 ```powershell
-python scripts\run_pipeline_mode.py --case cases\<new_case> --label demo_v1 --json
-python scripts\run_pipeline_mode.py --case cases\<new_case> --mode draft --label demo_draft --json
-python scripts\run_pipeline_mode.py --case cases\<new_case> --mode strict --label demo_final --json
-python scripts\run_pipeline_mode.py --case cases\<new_case> --label demo_cached --cache --reuse-gpt --json
-python scripts\render_with_effects.py --case cases\<new_case> --project cases\<new_case>\video_project.gpt_image.json --label demo_effects --force-effect-plan --force-effect-assets --json
+python -m pip install -e ".[dev]"
+python -m video_agent catalog --assets assets --json
+python -m video_agent init --case cases\demo --case-id demo --goal "VI 功能种草" --feature-path 文生图 --feature-path VI --json
+python -m video_agent run --case cases\demo --json
+python -m video_agent inspect --case cases\demo --json
 ```
 
-By default, pipeline runs may use existing registered assets under `assets/results/` when no receipt is provided. If you need strict fresh-result binding, pass `--receipt-id receipt_<capture_label>` (or add `--require-receipt`) so only assets from the specified receipt are accepted.
+每次运行写入 `cases/<case>/runs/<run_id>/`。权威产物为：
 
-## Minimal Command Flow
+- `asset_catalog.json`
+- `narration.json`
+- `timing_lock.json`
+- `visual_plan.json`
+- `render_plan.json`
+- `run_manifest.json`
+- `qa_report.json`
+- `final/video.mp4`
+
+`--from-stage`、`--until-stage` 和 `--resume <run_id>` 用于定位重跑，不会创建旁路成片格式。
+
+## Local Keys
+
+密钥只保存在本地并由 `.gitignore` 排除：
+
+- Minimax：`config/minimax.local.json` 或 `MINIMAX_API_KEY`
+- GPT Image：`config/gpt_image.local.json` 或 `GPT_IMAGE_API_KEY`
+- AI Planner/Critic：`config/ai.local.json` 或 `VIDEO_AGENT_AI_API_KEY`
+
+Minimax 默认固定为 `speed=1.5`、`subtitle_type=word`。时间戳文本只允许标点差异，禁止按时长比例回退。
+
+## Asset Policy
+
+- `assets/sites/`：中文文件名的网站主页、功能入口、参数页截图；`_callouts.json` 保存 CDP 坐标。
+- `assets/results/`：按中文功能路径和行业/场景命名的真实结果图。
+- `assets/brand/`：品牌 Logo、静态 IP、透明动画和动作视频；作为 CTA/过渡补镜头，不承担功能结果证据。
+- `assets/outro/`：共享片尾或品牌素材。
+- E0 原始证据和 E1 保真派生可支持事实；E2 语义派生和 E3 装饰素材不能支持事实。
+- GPT Image 派生默认 `unreviewed`，必须通过 `asset-review` 或 Vision Review 后才能进入正式 Render Plan。
+- 网站 UI 禁止交给 GPT Image 重画。9:16 构图、动态聚焦和网格背景由确定性渲染器完成。
 
 ```powershell
-python scripts\init_case.py --case cases\<new_case> --target-url "https://kehuanxiongmao.com/" --preferred-feature "活动美陈" --json
-python scripts\apply_site_profile.py --case cases\<new_case> --profile kehuanxiongmao --json
-node cdp-capture\bin\cdp-capture.js capture-material activity_meichen --mode visible
-python scripts\register_site_assets.py --case cases\<new_case> --feature 活动美陈 --json
-python scripts\register_result_assets.py --case cases\<new_case> --feature 活动美陈 --json
-# capture/register any extra result images, then produce and accept visual_plan.json and video_script.json
-python scripts\prepare_planner_context.py --case cases\<new_case> --stage visual_plan --json
-python scripts\accept_planner_output.py --case cases\<new_case> --kind visual_plan --input <VISUAL_PLAN_JSON> --json
-python scripts\prepare_planner_context.py --case cases\<new_case> --stage script --json
-python scripts\accept_planner_output.py --case cases\<new_case> --kind script --input <SCRIPT_JSON> --json
-python scripts\run_pipeline_mode.py --case cases\<new_case> --label demo_v1 --json
-python scripts\render_with_effects.py --case cases\<new_case> --project cases\<new_case>\video_project.gpt_image.json --label demo_v1_fx --force-effect-plan --force-effect-assets --json
+python -m video_agent asset-review --case cases\demo --run <run_id> --asset-id <asset_id> --approve --json
 ```
 
-For manual project builds, after `video_project.json` exists:
+## Quality Gates
+
+- 字段操作的视觉、字幕强调和 SFX 共用词级 anchor；镜头转场和 SFX 共用镜头起始 anchor。
+- 字幕始终单行，每 cue 不超过 10 个全角单位。
+- 镜头连续覆盖全时间轴，默认 15–20 秒，超过 24 秒失败。
+- 抖音右侧操作栏和底部信息区零碰撞。
+- 参数页等文字密集 UI 禁止透视；普通功能片只允许简洁淡变、等比缩放、翻页和短暂后完全回正的透视入场。
+- 默认语义音效 profile 为 `short_video_ui_v1`，每种音效可独立设置增益、裁切和淡入淡出，并接受密度限流。
+- 品牌 IP 只在评论引导、关注提示、等待生成等语义明确的 Beat 中自动出现；动态素材按镜头局部时间循环播放，忽略素材原音轨。
+- 最终音频归一到约 `-16 LUFS / -1.5 dBTP` 并在 MP4 上复测。
+- 最终 QA 检查真实 MP4，不以中间 JSON 成功代替交付成功。
+
+## Documentation
+
+- [V3 终极设计](docs/video_agent_v3_final_design.md)
+- [V3 实现说明](docs/video_agent_v3_implementation.md)
+- [CDP 素材采集](cdp-capture/README.md)
+
+## Tests
 
 ```powershell
-python scripts\prepare_gpt_image_keyframes.py --case cases\<new_case> --project cases\<new_case>\video_project.json --json
+python -m pytest
+python -m compileall -q video_agent
 ```
+
+可复现案例位于 `golden_cases/vi_v3` 和 `golden_cases/culture_wall_v3`。运行产物被忽略，case、口播和素材均随仓库保存。

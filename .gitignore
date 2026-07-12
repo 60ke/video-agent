@@ -1,7 +1,11 @@
 __pycache__/
+*.egg-info/
+.pytest_cache/
 *.pyc
 *.pyo
 cases/
+golden_cases/*/runs/
+golden_cases/*/latest_run.json
 config/*.local.json
 .env
 .env.*
@@ -13,4 +17,5 @@ cdp-capture/output/*
 cdp-capture/profiles/*
 cdp-capture/node_modules/*
 output/
+.codex-remote-attachments/
 wanxiang-frontend/

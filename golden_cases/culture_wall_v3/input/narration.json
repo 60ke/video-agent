@@ -1,0 +1,14 @@
+{
+  "schema_version": 3,
+  "case_id": "culture_wall_v3_golden",
+  "voice_style": "清晰、自然、有节奏，结果展示留出阅读时间",
+  "beats": [
+    {"beat_id": "beat_001", "spoken_text": "一面文化墙，也能带出空间主题。", "claim_ids": [], "asset_slots": ["真实结果", "文化墙展示"], "hit_phrases": ["空间主题"], "pause_intents": []},
+    {"beat_id": "beat_002", "spoken_text": "进入文生图，找到文化墙。", "claim_ids": [], "asset_slots": ["功能入口"], "hit_phrases": ["文化墙"], "pause_intents": []},
+    {"beat_id": "beat_003", "spoken_text": "按页面提示，填好必填项。", "claim_ids": [], "asset_slots": ["参数"], "hit_phrases": [], "pause_intents": []},
+    {"beat_id": "beat_004", "spoken_text": "社区服务，可以清楚分区。", "claim_ids": [], "asset_slots": ["真实结果", "社区服务"], "hit_phrases": ["社区服务"], "pause_intents": []},
+    {"beat_id": "beat_005", "spoken_text": "医院文化，也能传递关怀。", "claim_ids": [], "asset_slots": ["真实结果", "医院文化"], "hit_phrases": ["医院文化"], "pause_intents": []},
+    {"beat_id": "beat_006", "spoken_text": "职工之家，也能融入整个环境。", "claim_ids": [], "asset_slots": ["真实结果", "职工之家"], "hit_phrases": ["职工之家"], "pause_intents": []},
+    {"beat_id": "beat_007", "spoken_text": "想看哪种空间，评论区告诉我。", "claim_ids": [], "asset_slots": ["真实结果", "收束"], "hit_phrases": ["评论区"], "pause_intents": []}
+  ]
+}

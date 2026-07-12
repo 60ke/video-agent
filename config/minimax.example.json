@@ -1,0 +1,8 @@
+{
+  "endpoint": "https://api.minimaxi.com/v1/t2a_v2",
+  "api_key": "replace-locally",
+  "sample_rate": 32000,
+  "bitrate": 128000,
+  "vol": 1.0,
+  "pitch": 0
+}

@@ -45,7 +45,7 @@ The output filenames follow the site material naming policy, for example:
 柯幻熊猫_文生图_图文广告_车贴_参数面板截图.png
 ```
 
-`_callouts.json` stores target boxes and semantic hints. GPT image and the final renderer use those hints to place red boxes, arrows, click rings, and labels after the screenshot has been converted into a 9:16 keyframe.
+`_callouts.json` stores target boxes and semantic hints. The V3 deterministic renderer uses those hints to crop the relevant panel and align highlight/click effects to word-level cues. Website UI is not redrawn by GPT Image.
 
 ## Capture Contract
 
@@ -59,7 +59,7 @@ The output filenames follow the site material naming policy, for example:
 
 ## Result Authenticity
 
-Generated result images are not captured through this screenshot-only tool unless an explicit generation workflow is implemented for the current module. Final result visuals must be saved or exported under the case's `assets/results/` and registered into `image_resources.json`.
+Generated result images are not captured through this screenshot-only tool unless an explicit generation workflow is implemented for the current module. Final result visuals must be saved or exported under `assets/results/` and registered by rebuilding `assets/catalog.json`.
 
 Avoid false positives:
 
