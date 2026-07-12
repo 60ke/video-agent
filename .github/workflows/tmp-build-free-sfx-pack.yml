@@ -1,0 +1,190 @@
+name: Build temporary CC0 SFX pack
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - '.github/workflows/tmp-build-free-sfx-pack.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-sfx-pack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Download CC0 source pack
+        run: |
+          git clone --depth 1 https://github.com/Calinou/kenney-interface-sounds.git source_repo
+
+      - name: Build curated pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p work/source_cc0 work/ready/{swish,tick,click,pop,card_flick,impact,confirmation,select}
+
+          SRC=source_repo/addons/kenney_interface_sounds
+
+          cp "$SRC/LICENSE.txt" work/LICENSE_CC0.txt
+
+          declare -A FILES=(
+            [soft_swish_01]=scroll_001.wav
+            [soft_swish_02]=scroll_002.wav
+            [soft_swish_03]=scroll_003.wav
+            [soft_swish_04]=scroll_004.wav
+            [soft_swish_05]=scroll_005.wav
+            [ui_tick_01]=tick_001.wav
+            [ui_tick_02]=tick_002.wav
+            [ui_tick_03]=tick_004.wav
+            [ui_click_01]=click_001.wav
+            [ui_click_02]=click_002.wav
+            [ui_click_03]=click_003.wav
+            [soft_pop_01]=pluck_001.wav
+            [soft_pop_02]=pluck_002.wav
+            [card_flick_01]=scratch_001.wav
+            [card_flick_02]=scratch_002.wav
+            [card_flick_03]=scratch_003.wav
+            [soft_impact_01]=drop_001.wav
+            [soft_impact_02]=drop_002.wav
+            [soft_impact_03]=drop_003.wav
+            [confirmation_01]=confirmation_001.wav
+            [confirmation_02]=confirmation_002.wav
+            [confirmation_03]=confirmation_003.wav
+            [select_01]=select_001.wav
+            [select_02]=select_002.wav
+            [select_03]=select_003.wav
+          )
+
+          for name in "${!FILES[@]}"; do
+            src_file="${FILES[$name]}"
+            cp "$SRC/$src_file" "work/source_cc0/${name}__${src_file}"
+
+            case "$name" in
+              soft_swish_*) category=swish ;;
+              ui_tick_*) category=tick ;;
+              ui_click_*) category=click ;;
+              soft_pop_*) category=pop ;;
+              card_flick_*) category=card_flick ;;
+              soft_impact_*) category=impact ;;
+              confirmation_*) category=confirmation ;;
+              select_*) category=select ;;
+              *) category=misc ;;
+            esac
+
+            out="work/ready/$category/${name}.wav"
+            if ! ffmpeg -hide_banner -loglevel error -y -i "$SRC/$src_file" \
+              -af "silenceremove=start_periods=1:start_threshold=-55dB:start_silence=0.005:stop_periods=1:stop_threshold=-55dB:stop_silence=0.03,alimiter=limit=0.85" \
+              -ar 48000 -ac 2 "$out"; then
+              ffmpeg -hide_banner -loglevel error -y -i "$SRC/$src_file" -af "alimiter=limit=0.85" -ar 48000 -ac 2 "$out"
+            fi
+          done
+
+          # Deterministic left/right-biased versions. These reuse the CC0 neutral swish.
+          ffmpeg -hide_banner -loglevel error -y -i work/ready/swish/soft_swish_01.wav \
+            -af "pan=stereo|c0=0.95*c0+0.20*c1|c1=0.22*c0+0.08*c1" \
+            work/ready/swish/swish_left_01.wav
+          ffmpeg -hide_banner -loglevel error -y -i work/ready/swish/soft_swish_01.wav \
+            -af "pan=stereo|c0=0.08*c0+0.22*c1|c1=0.20*c0+0.95*c1" \
+            work/ready/swish/swish_right_01.wav
+
+          cat > work/README.md <<'EOF'
+          # Video Agent CC0 SFX Starter Pack
+
+          A curated starter pack for image carousels, card transitions, UI clicks and result reveals.
+
+          ## Recommended mapping
+
+          - `ready/swish/soft_swish_*.wav`: image carousel, left/right slide, light transition.
+          - `ready/swish/swish_left_01.wav`: left-biased slide transition.
+          - `ready/swish/swish_right_01.wav`: right-biased slide transition.
+          - `ready/tick/ui_tick_*.wav`: rapid image switching; use when a full swish would be too dense.
+          - `ready/click/ui_click_*.wav`: button click and cursor click.
+          - `ready/pop/soft_pop_*.wav`: card pop-in, module appearance.
+          - `ready/card_flick/card_flick_*.wav`: card draw, stacked-card switch, paper-like movement.
+          - `ready/impact/soft_impact_*.wav`: important result settling or final full-screen reveal.
+          - `ready/confirmation/confirmation_*.wav`: successful completion or light confirmation.
+          - `ready/select/select_*.wav`: item selection and parameter switch.
+
+          ## Timing recommendation
+
+          - Slide: align sound onset with the first movement frame.
+          - Button click: align the transient peak with the click frame.
+          - Result settle: align the impact peak with the frame where the result reaches its final scale/position.
+          - For dense carousels, use ticks between slides and reserve a swish + impact for the key result.
+
+          ## Source and license
+
+          Source: Kenney Interface Sounds, mirrored at `Calinou/kenney-interface-sounds`.
+          Original pack: https://kenney.nl/assets/interface-sounds
+          License: Creative Commons CC0 1.0 Universal. See `LICENSE_CC0.txt`.
+
+          The `ready/` files are resampled/trimmed derivatives of the included CC0 source files.
+          EOF
+
+          python - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+
+          root = Path('work/ready')
+          entries = []
+          recommendations = {
+              'swish': {'action': 'slide_or_carousel', 'sync_point': 'onset'},
+              'tick': {'action': 'rapid_switch', 'sync_point': 'peak'},
+              'click': {'action': 'button_click', 'sync_point': 'peak'},
+              'pop': {'action': 'card_or_module_appear', 'sync_point': 'onset'},
+              'card_flick': {'action': 'card_stack_switch', 'sync_point': 'onset'},
+              'impact': {'action': 'key_result_settle', 'sync_point': 'peak'},
+              'confirmation': {'action': 'success_or_completion', 'sync_point': 'onset'},
+              'select': {'action': 'parameter_or_item_select', 'sync_point': 'peak'},
+          }
+          for path in sorted(root.rglob('*.wav')):
+              result = subprocess.run(
+                  ['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', str(path)],
+                  check=True, capture_output=True, text=True,
+              )
+              category = path.parent.name
+              entries.append({
+                  'file': path.as_posix().removeprefix('work/'),
+                  'category': category,
+                  'duration_seconds': round(float(result.stdout.strip()), 4),
+                  **recommendations[category],
+              })
+          manifest = {
+              'name': 'video-agent-cc0-sfx-starter-pack',
+              'sample_rate_hz': 48000,
+              'channels': 2,
+              'license': 'CC0-1.0',
+              'source': 'https://kenney.nl/assets/interface-sounds',
+              'files': entries,
+          }
+          Path('work/manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
+          PY
+
+          mv work video_agent_sfx_pack
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+
+          src = Path('video_agent_sfx_pack')
+          out = Path('video_agent_sfx_pack.zip')
+          with zipfile.ZipFile(out, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+              for p in sorted(src.rglob('*')):
+                  if p.is_file():
+                      zf.write(p, p.as_posix())
+          print(out, out.stat().st_size)
+          PY
+
+      - name: Upload pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-agent-sfx-pack
+          path: video_agent_sfx_pack.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
