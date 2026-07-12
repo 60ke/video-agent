@@ -1,4 +1,4 @@
-name: Discover Mixkit SFX URLs
+name: Build curated social-editor SFX test pack
 
 on:
   pull_request:
@@ -10,54 +10,123 @@ permissions:
   contents: read
 
 jobs:
-  discover:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Python deps
-        run: pip install requests beautifulsoup4 lxml
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg zip
+          pip install requests
 
-      - name: Fetch and inspect pages
+      - name: Build pack
         run: |
           python - <<'PY'
-          import json, re, requests
-          from bs4 import BeautifulSoup
+          import json, subprocess
           from pathlib import Path
+          import requests
 
-          pages = {
-              'transition': 'https://mixkit.co/free-sound-effects/transition/',
-              'whoosh': 'https://mixkit.co/free-sound-effects/whoosh/',
-              'pop': 'https://mixkit.co/free-sound-effects/pop/',
-              'click': 'https://mixkit.co/free-sound-effects/click/',
-              'interface': 'https://mixkit.co/free-sound-effects/interface/',
-          }
-          out = {}
-          headers = {'User-Agent': 'Mozilla/5.0'}
-          for name, url in pages.items():
-              r = requests.get(url, headers=headers, timeout=30)
-              print(name, r.status_code, len(r.text))
-              html = r.text
-              Path(f'{name}.html').write_text(html, encoding='utf-8')
-              soup = BeautifulSoup(html, 'lxml')
-              urls = set()
-              for tag in soup.find_all(True):
-                  for attr in ('src','href','data-src','data-url','data-file','data-download','data-audio'):
-                      v = tag.get(attr)
-                      if isinstance(v, str) and ('mp3' in v or 'wav' in v or 'm4a' in v):
-                          urls.add(v)
-              for m in re.findall(r'https?://[^\"\'<> ]+\.(?:mp3|wav|m4a)(?:\?[^\"\'<> ]*)?', html, flags=re.I):
-                  urls.add(m)
-              print('urls', len(urls))
-              for u in sorted(urls)[:100]:
-                  print(u)
-              out[name] = sorted(urls)
-          Path('discovered.json').write_text(json.dumps(out, indent=2), encoding='utf-8')
+          root = Path('video_agent_social_editor_sfx_pack')
+          (root/'original_mp3').mkdir(parents=True, exist_ok=True)
+          (root/'ready_wav').mkdir(parents=True, exist_ok=True)
+          (root/'previews').mkdir(parents=True, exist_ok=True)
+
+          items = [
+            ('transition_fast_01','Cinematic whoosh fast transition','transition',1492,'fast image slide or scene cut','onset'),
+            ('transition_fast_02','Fast small sweep transition','transition',166,'short carousel slide','onset'),
+            ('transition_fast_03','Air zoom vacuum','transition',2608,'zoom or push transition','onset'),
+            ('transition_fast_04','Fast whoosh transition','transition',1490,'general fast transition','onset'),
+            ('transition_tech_01','Technology transition slide','transition',3120,'UI or technology panel slide','onset'),
+            ('transition_short_01','Short transition sweep','transition',175,'micro transition','onset'),
+            ('transition_fast_05','Fast transitions swoosh','transition',3115,'rapid image sequence','onset'),
+            ('transition_scifi_01','Fast sci fi transition sweep','transition',3114,'tech result reveal','onset'),
+            ('transition_vacuum_01','Vacuum swoosh transition','transition',1465,'pull or suction transition','onset'),
+            ('transition_magic_01','Magic transition sweep presentation','transition',2638,'design or image generation reveal','onset'),
+            ('pop_whoosh_01','Explainer video pops whoosh light pop','accent',3005,'card, image or module pop','peak'),
+            ('pop_alert_01','Message pop alert','accent',2354,'small item appear','peak'),
+            ('pop_alert_02','Dry pop up notification alert','accent',2356,'clean card or text pop','peak'),
+            ('pop_electric_01','Electric pop','accent',2365,'technology accent','peak'),
+            ('whoosh_air_01','Air woosh','accent',1489,'soft full-frame movement','onset'),
+            ('whoosh_stutter_01','Cinematic whoosh stutter','accent',787,'fast multi-step transition','onset'),
+            ('whoosh_magic_01','Magic sparkle whoosh','accent',2350,'AI generation or polished reveal','onset'),
+            ('reveal_impact_01','Movie whoosh impact presentation','accent',2903,'important result settle','peak'),
+            ('ui_select_01','Modern technology select','ui',3124,'parameter select or generate button','peak'),
+            ('ui_click_01','Cool interface click tone','ui',2568,'clean interface click','peak'),
+            ('ui_click_02','Interface device click','ui',2577,'device or panel click','peak'),
+            ('ui_select_02','Interface option select','ui',2573,'option switch','peak'),
+            ('ui_open_01','Opening software interface','ui',2578,'panel open','onset'),
+            ('ui_start_01','Software interface start','ui',2574,'task start or generate action','onset'),
+            ('ui_page_forward_01','Page forward single chime','ui',1107,'next image or page','peak'),
+            ('ui_page_back_01','Page back chime','ui',1108,'previous image or return','peak'),
+          ]
+
+          session = requests.Session()
+          session.headers.update({'User-Agent':'Mozilla/5.0'})
+          manifest=[]
+          for sid,title,category,mid,use,sync_point in items:
+              url=f'https://assets.mixkit.co/active_storage/sfx/{mid}/{mid}-preview.mp3'
+              mp3=root/'original_mp3'/f'{sid}__mixkit_{mid}.mp3'
+              wavdir=root/'ready_wav'/category
+              wavdir.mkdir(parents=True,exist_ok=True)
+              wav=wavdir/f'{sid}.wav'
+              r=session.get(url,timeout=60)
+              r.raise_for_status()
+              mp3.write_bytes(r.content)
+              af='silenceremove=start_periods=1:start_threshold=-60dB:start_silence=0.003:stop_periods=1:stop_threshold=-60dB:stop_silence=0.025,alimiter=limit=0.92'
+              try:
+                  subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(mp3),'-af',af,'-ar','48000','-ac','2',str(wav)],check=True)
+              except subprocess.CalledProcessError:
+                  subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(mp3),'-af','alimiter=limit=0.92','-ar','48000','-ac','2',str(wav)],check=True)
+              d=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1',str(wav)],capture_output=True,text=True,check=True)
+              manifest.append({'id':sid,'title':title,'category':category,'mixkit_id':mid,'use':use,'sync_point':sync_point,'duration_seconds':round(float(d.stdout.strip()),4),'source_url':url,'original_file':str(mp3.relative_to(root)),'ready_file':str(wav.relative_to(root))})
+
+          (root/'manifest.json').write_text(json.dumps({'name':'video-agent-social-editor-sfx-pack','source':'Mixkit','files':manifest},ensure_ascii=False,indent=2),encoding='utf-8')
+          (root/'README.md').write_text('''# Video Agent 社交短视频/剪辑软件风格音效测试包
+
+本包已完全移除上一版 Kenney 音效，改用 Mixkit 精选的短转场、轻 pop、科技 UI 和结果揭示音效。
+
+优先试听：
+- transition_fast_01
+- transition_tech_01
+- pop_whoosh_01
+- reveal_impact_01
+- ui_select_01
+- whoosh_magic_01
+
+目录：
+- original_mp3：网站原始文件
+- ready_wav：48kHz 双声道程序接入版本
+- previews：分类试听合集
+- manifest.json：标题、时长、用途、同步点与来源
+''',encoding='utf-8')
+
+          silence=root/'silence.wav'
+          subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','lavfi','-i','anullsrc=r=48000:cl=stereo','-t','0.35',str(silence)],check=True)
+          for cat in ('transition','accent','ui'):
+              lst=root/f'{cat}.txt'
+              lines=[]
+              for sid,title,category,mid,use,sync_point in items:
+                  if category==cat:
+                      lines.append(f"file '{(root/'ready_wav'/cat/f'{sid}.wav').resolve()}'")
+                      lines.append(f"file '{silence.resolve()}'")
+              lst.write_text('\n'.join(lines),encoding='utf-8')
+              subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','concat','-safe','0','-i',str(lst),'-c','copy',str(root/'previews'/f'{cat}_preview.wav')],check=True)
+          alltxt=root/'all.txt'
+          alltxt.write_text('\n'.join([f"file '{(root/'previews'/f'{c}_preview.wav').resolve()}'" for c in ('transition','accent','ui')]),encoding='utf-8')
+          subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','concat','-safe','0','-i',str(alltxt),'-c','copy',str(root/'previews'/'all_preview.wav')],check=True)
+          silence.unlink(missing_ok=True)
+          for p in root.glob('*.txt'): p.unlink()
           PY
 
-      - name: Upload discovery files
+          zip -qr video_agent_social_editor_sfx_pack.zip video_agent_social_editor_sfx_pack
+          sha256sum video_agent_social_editor_sfx_pack.zip > video_agent_social_editor_sfx_pack.zip.sha256
+
+      - name: Upload pack
         uses: actions/upload-artifact@v4
         with:
-          name: mixkit-discovery
+          name: video-agent-social-editor-sfx-pack
           path: |
-            discovered.json
-            *.html
+            video_agent_social_editor_sfx_pack.zip
+            video_agent_social_editor_sfx_pack.zip.sha256
+          compression-level: 0
           retention-days: 1
