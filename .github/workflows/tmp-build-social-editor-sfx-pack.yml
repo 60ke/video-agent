@@ -1,0 +1,205 @@
+name: Build temporary social-editor SFX pack
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - '.github/workflows/tmp-build-social-editor-sfx-pack.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg zip
+          pip install requests
+
+      - name: Download and build curated pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import re
+          import subprocess
+          from pathlib import Path
+          import requests
+
+          root = Path('video_agent_social_editor_sfx_pack')
+          original = root / 'original_mp3'
+          ready = root / 'ready_wav'
+          previews = root / 'previews'
+          original.mkdir(parents=True, exist_ok=True)
+          ready.mkdir(parents=True, exist_ok=True)
+          previews.mkdir(parents=True, exist_ok=True)
+
+          items = [
+              # Fast transitions / slides
+              {'id':'transition_fast_01','title':'Cinematic whoosh fast transition','category':'transition','mixkit_id':1492,'use':'fast image slide or scene cut','sync_point':'onset'},
+              {'id':'transition_fast_02','title':'Fast small sweep transition','category':'transition','mixkit_id':166,'use':'short carousel slide','sync_point':'onset'},
+              {'id':'transition_fast_03','title':'Air zoom vacuum','category':'transition','mixkit_id':2608,'use':'zoom or push transition','sync_point':'onset'},
+              {'id':'transition_fast_04','title':'Fast whoosh transition','category':'transition','mixkit_id':1490,'use':'general fast transition','sync_point':'onset'},
+              {'id':'transition_tech_01','title':'Technology transition slide','category':'transition','mixkit_id':3120,'use':'UI or technology panel slide','sync_point':'onset'},
+              {'id':'transition_short_01','title':'Short transition sweep','category':'transition','mixkit_id':175,'use':'micro transition','sync_point':'onset'},
+              {'id':'transition_fast_05','title':'Fast transitions swoosh','category':'transition','mixkit_id':3115,'use':'rapid image sequence','sync_point':'onset'},
+              {'id':'transition_scifi_01','title':'Fast sci fi transition sweep','category':'transition','mixkit_id':3114,'use':'tech result reveal','sync_point':'onset'},
+              {'id':'transition_vacuum_01','title':'Vacuum swoosh transition','category':'transition','mixkit_id':1465,'use':'pull or suction transition','sync_point':'onset'},
+              {'id':'transition_magic_01','title':'Magic transition sweep presentation','category':'transition','mixkit_id':2638,'use':'design or image generation reveal','sync_point':'onset'},
+
+              # CapCut/TikTok-style light pop and reveal accents
+              {'id':'pop_whoosh_01','title':'Explainer video pops whoosh light pop','category':'accent','mixkit_id':3005,'use':'card pop, module appear, light result reveal','sync_point':'peak'},
+              {'id':'pop_alert_01','title':'Message pop alert','category':'accent','mixkit_id':2354,'use':'small item appear','sync_point':'peak'},
+              {'id':'pop_alert_02','title':'Dry pop up notification alert','category':'accent','mixkit_id':2356,'use':'clean card or text pop','sync_point':'peak'},
+              {'id':'pop_electric_01','title':'Electric pop','category':'accent','mixkit_id':2365,'use':'technology accent','sync_point':'peak'},
+              {'id':'whoosh_air_01','title':'Air woosh','category':'accent','mixkit_id':1489,'use':'soft full-frame movement','sync_point':'onset'},
+              {'id':'whoosh_stutter_01','title':'Cinematic whoosh stutter','category':'accent','mixkit_id':787,'use':'fast multi-step transition','sync_point':'onset'},
+              {'id':'whoosh_magic_01','title':'Magic sparkle whoosh','category':'accent','mixkit_id':2350,'use':'AI generation or polished reveal','sync_point':'onset'},
+              {'id':'reveal_impact_01','title':'Movie whoosh impact presentation','category':'accent','mixkit_id':2903,'use':'important result full-screen settle','sync_point':'peak'},
+
+              # UI clicks and confirmation tones
+              {'id':'ui_select_01','title':'Modern technology select','category':'ui','mixkit_id':3124,'use':'parameter select or button click','sync_point':'peak'},
+              {'id':'ui_click_01','title':'Cool interface click tone','category':'ui','mixkit_id':2568,'use':'clean interface click','sync_point':'peak'},
+              {'id':'ui_click_02','title':'Interface device click','category':'ui','mixkit_id':2577,'use':'device or panel click','sync_point':'peak'},
+              {'id':'ui_select_02','title':'Interface option select','category':'ui','mixkit_id':2573,'use':'option switch','sync_point':'peak'},
+              {'id':'ui_open_01','title':'Opening software interface','category':'ui','mixkit_id':2578,'use':'panel open','sync_point':'onset'},
+              {'id':'ui_start_01','title':'Software interface start','category':'ui','mixkit_id':2574,'use':'task start or generate action','sync_point':'onset'},
+              {'id':'ui_page_forward_01','title':'Page forward single chime','category':'ui','mixkit_id':1107,'use':'next image or page','sync_point':'peak'},
+              {'id':'ui_page_back_01','title':'Page back chime','category':'ui','mixkit_id':1108,'use':'previous image or return','sync_point':'peak'},
+          ]
+
+          session = requests.Session()
+          session.headers.update({'User-Agent':'Mozilla/5.0'})
+          manifest = {'name':'video-agent-social-editor-sfx-pack','source':'Mixkit','files':[]}
+
+          for item in items:
+              mid = item['mixkit_id']
+              url = f'https://assets.mixkit.co/active_storage/sfx/{mid}/{mid}-preview.mp3'
+              mp3 = original / f"{item['id']}__mixkit_{mid}.mp3"
+              wav_dir = ready / item['category']
+              wav_dir.mkdir(parents=True, exist_ok=True)
+              wav = wav_dir / f"{item['id']}.wav"
+
+              r = session.get(url, timeout=60)
+              r.raise_for_status()
+              mp3.write_bytes(r.content)
+
+              # Keep the original dynamics, only trim leading/trailing silence,
+              # resample to 48 kHz stereo and apply a conservative limiter.
+              af = (
+                  'silenceremove=start_periods=1:start_threshold=-60dB:'
+                  'start_silence=0.003:stop_periods=1:stop_threshold=-60dB:'
+                  'stop_silence=0.025,alimiter=limit=0.92'
+              )
+              cmd = [
+                  'ffmpeg','-hide_banner','-loglevel','error','-y',
+                  '-i',str(mp3),'-af',af,'-ar','48000','-ac','2',str(wav)
+              ]
+              try:
+                  subprocess.run(cmd, check=True)
+              except subprocess.CalledProcessError:
+                  subprocess.run([
+                      'ffmpeg','-hide_banner','-loglevel','error','-y',
+                      '-i',str(mp3),'-af','alimiter=limit=0.92',
+                      '-ar','48000','-ac','2',str(wav)
+                  ], check=True)
+
+              probe = subprocess.run([
+                  'ffprobe','-v','error','-show_entries','format=duration',
+                  '-of','default=noprint_wrappers=1:nokey=1',str(wav)
+              ], check=True, capture_output=True, text=True)
+              duration = round(float(probe.stdout.strip()), 4)
+              manifest['files'].append({
+                  **item,
+                  'source_url':url,
+                  'original_file':mp3.as_posix().replace(root.as_posix()+'/', ''),
+                  'ready_file':wav.as_posix().replace(root.as_posix()+'/', ''),
+                  'duration_seconds':duration,
+                  'sample_rate_hz':48000,
+                  'channels':2,
+              })
+
+          (root / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
+
+          readme = '''# Video Agent 社交短视频/剪辑软件风格音效测试包
+
+这次已完全移除上一版 Kenney 音效，只保留从 Mixkit 精选的短视频转场、轻 pop、科技 UI 和结果揭示音效。
+
+## 建议优先试听
+
+1. `transition_fast_01`：快速左右切图、普通转场。
+2. `transition_tech_01`：网页/UI 面板滑入。
+3. `pop_whoosh_01`：卡片、图片、模块弹出，最接近常见剪辑软件轻音效。
+4. `reveal_impact_01`：重点结果落定。
+5. `ui_select_01`：生成按钮或参数选择。
+6. `whoosh_magic_01`：AI 生成、设计结果揭示。
+
+## 使用原则
+
+- 图片开始移动：对齐 `onset`。
+- 点击、pop、结果落定：对齐 `peak`。
+- 连续轮播不要每张都用重 whoosh；普通切换用 `transition_fast_*`，重点结果再用 `reveal_impact_01`。
+
+## 目录
+
+- `original_mp3/`：网站原始下载文件，方便直接试听。
+- `ready_wav/`：转为 48kHz 双声道并轻度去静音、限峰的程序接入版本。
+- `previews/`：分类试听合集。
+- `manifest.json`：标题、来源、时长、建议用途和同步点。
+
+来源页：Mixkit Free Sound Effects。每个文件的直接来源地址记录在 `manifest.json` 中。
+'''
+          (root / 'README.md').write_text(readme, encoding='utf-8')
+
+          # Build category preview WAV files with 350 ms silence gaps.
+          silence = root / 'silence_350ms.wav'
+          subprocess.run([
+              'ffmpeg','-hide_banner','-loglevel','error','-y',
+              '-f','lavfi','-i','anullsrc=r=48000:cl=stereo','-t','0.35',str(silence)
+          ], check=True)
+          for category in sorted({x['category'] for x in items}):
+              files = [ready / category / f"{x['id']}.wav" for x in items if x['category']==category]
+              concat = root / f'concat_{category}.txt'
+              lines=[]
+              for f in files:
+                  lines.append(f"file '{f.resolve()}'")
+                  lines.append(f"file '{silence.resolve()}'")
+              concat.write_text('\n'.join(lines), encoding='utf-8')
+              subprocess.run([
+                  'ffmpeg','-hide_banner','-loglevel','error','-y',
+                  '-f','concat','-safe','0','-i',str(concat),'-c','copy',
+                  str(previews / f'{category}_preview.wav')
+              ], check=True)
+
+          # Full audition sequence: transition -> accent -> UI.
+          full_list = root / 'concat_all.txt'
+          full_lines=[]
+          for category in ('transition','accent','ui'):
+              full_lines.append(f"file '{(previews / f'{category}_preview.wav').resolve()}'")
+          full_list.write_text('\n'.join(full_lines), encoding='utf-8')
+          subprocess.run([
+              'ffmpeg','-hide_banner','-loglevel','error','-y',
+              '-f','concat','-safe','0','-i',str(full_list),'-c','copy',
+              str(previews / 'all_preview.wav')
+          ], check=True)
+
+          for p in [silence, *root.glob('concat_*.txt')]:
+              p.unlink(missing_ok=True)
+          PY
+
+          zip -qr video_agent_social_editor_sfx_pack.zip video_agent_social_editor_sfx_pack
+          sha256sum video_agent_social_editor_sfx_pack.zip > video_agent_social_editor_sfx_pack.zip.sha256
+
+      - name: Upload pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-agent-social-editor-sfx-pack
+          path: |
+            video_agent_social_editor_sfx_pack.zip
+            video_agent_social_editor_sfx_pack.zip.sha256
+          compression-level: 0
+          retention-days: 1
