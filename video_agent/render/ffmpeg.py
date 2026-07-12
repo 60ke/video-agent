@@ -94,7 +94,8 @@ def render_video(plan: RenderPlan, output: Path, *, preset: str = "medium", crf:
     mix_inputs = "".join(f"[{label}]" for label in labels)
     filters.append(
         f"{mix_inputs}amix=inputs={len(labels)}:duration=longest:normalize=0,"
-        f"loudnorm=I=-16:TP=-1.5:LRA=11,atrim=0:{duration:.6f}[aout]"
+        f"loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000,"
+        f"aformat=sample_rates=48000:sample_fmts=fltp:channel_layouts=stereo,atrim=0:{duration:.6f}[aout]"
     )
     command.extend(
         [

@@ -8,7 +8,12 @@ from video_agent.ai.text_client import OpenAICompatibleTextClient
 from video_agent.contracts import CheckResult, RenderPlan
 
 
-def review_contact_sheet(repo_root: Path, plan: RenderPlan, contact_sheet: Path) -> tuple[CheckResult, dict[str, object]]:
+def review_contact_sheet(
+    repo_root: Path,
+    plan: RenderPlan,
+    contact_sheet: Path,
+    cue_contact_sheet: Path | None = None,
+) -> tuple[CheckResult, dict[str, object]]:
     prompt = load_prompt(repo_root / "video_agent" / "prompts" / "visual_critic.md")
     request = json.dumps(
         {
@@ -18,9 +23,11 @@ def review_contact_sheet(repo_root: Path, plan: RenderPlan, contact_sheet: Path)
             "shots": [
                 {
                     "shot_id": shot.shot_id,
-                    "beat_id": shot.beat_id,
+                    "track": shot.track,
+                    "beat_ids": shot.beat_ids,
                     "template": shot.template,
-                    "effect": shot.effect,
+                    "motion": shot.motion,
+                    "transition_in": shot.transition_in,
                 }
                 for shot in plan.shots
             ],
@@ -28,10 +35,13 @@ def review_contact_sheet(repo_root: Path, plan: RenderPlan, contact_sheet: Path)
         },
         ensure_ascii=False,
     )
+    evidence_sheets = [contact_sheet]
+    if cue_contact_sheet and cue_contact_sheet.is_file():
+        evidence_sheets.append(cue_contact_sheet)
     result = OpenAICompatibleTextClient(repo_root).complete_json_with_images(
         prompt.text,
         request,
-        [contact_sheet],
+        evidence_sheets,
         "visual_review",
     )
     verdict = str(result.get("verdict") or "fail").lower()
@@ -42,5 +52,5 @@ def review_contact_sheet(repo_root: Path, plan: RenderPlan, contact_sheet: Path)
         message=str(result.get("summary") or ""),
         details={"issues": issues},
     )
-    trace = {"path": prompt.path.as_posix(), "sha256": prompt.sha256, "result": result}
+    trace = {"path": prompt.path.as_posix(), "sha256": prompt.sha256, "evidence_sheets": [path.as_posix() for path in evidence_sheets], "result": result}
     return check, trace

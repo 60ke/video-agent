@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import bisect
 import math
+import os
+import shutil
+import subprocess
 from functools import lru_cache
 from pathlib import Path
 
@@ -16,17 +19,26 @@ from video_agent.scene.easing import ease_out_cubic, smoothstep
 
 
 FONT_CANDIDATES = (
+    Path(os.environ["VIDEO_AGENT_FONT"]) if os.environ.get("VIDEO_AGENT_FONT") else None,
     Path("C:/Windows/Fonts/msyhbd.ttc"),
     Path("C:/Windows/Fonts/NotoSansSC-VF.ttf"),
     Path("C:/Windows/Fonts/simhei.ttf"),
+    Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"),
+    Path("/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf"),
 )
 
 
 @lru_cache(maxsize=16)
 def _font(size: int) -> ImageFont.FreeTypeFont:
     for candidate in FONT_CANDIDATES:
-        if candidate.is_file():
+        if candidate and candidate.is_file():
             return ImageFont.truetype(str(candidate), size=size)
+    if shutil.which("fc-match"):
+        resolved = subprocess.run(
+            ["fc-match", "-f", "%{file}", "Noto Sans CJK SC"], capture_output=True, text=True, encoding="utf-8", errors="replace"
+        ).stdout.strip()
+        if resolved and Path(resolved).is_file():
+            return ImageFont.truetype(resolved, size=size)
     raise FileNotFoundError("no supported Chinese font found")
 
 
@@ -229,7 +241,11 @@ class FrameRenderer:
                     raise ValueError(f"unable to open render video asset: {asset.path}")
                 self.video_captures[asset.asset_id] = capture
         self.card_cache: dict[tuple[str, str], Image.Image] = {}
-        self.shot_starts = [shot.start_frame for shot in plan.shots]
+        self.base_shots = sorted((shot for shot in plan.shots if shot.track == "base"), key=lambda item: item.start_frame)
+        self.overlay_shots = sorted((shot for shot in plan.shots if shot.track == "overlay"), key=lambda item: item.start_frame)
+        if not self.base_shots:
+            raise ValueError("render plan needs at least one base-track shot")
+        self.shot_starts = [shot.start_frame for shot in self.base_shots]
         self.subtitle_starts = [cue.start_frame for cue in plan.subtitles]
         self.background = _grid_background(plan.width, plan.height).convert("RGBA")
 
@@ -268,8 +284,7 @@ class FrameRenderer:
         self.video_state[asset_id] = (source_index, image)
         return image.copy()
 
-    def _source_for_shot(self, shot: RenderShot, frame: int) -> Image.Image:
-        asset_id = shot.asset_ids[0]
+    def _source_for_asset(self, shot: RenderShot, asset_id: str, frame: int) -> Image.Image:
         asset = self.assets[asset_id]
         if asset.media_type == "video":
             return self._motion_frame(asset_id, shot, frame)
@@ -277,7 +292,7 @@ class FrameRenderer:
 
     def _active_shot(self, frame: int) -> RenderShot:
         index = max(0, bisect.bisect_right(self.shot_starts, frame) - 1)
-        return self.plan.shots[min(index, len(self.plan.shots) - 1)]
+        return self.base_shots[min(index, len(self.base_shots) - 1)]
 
     def _active_subtitle(self, frame: int) -> SubtitleCue | None:
         index = bisect.bisect_right(self.subtitle_starts, frame) - 1
@@ -296,9 +311,8 @@ class FrameRenderer:
         progress = (frame - (cue.hit_frame - cue.anticipation_frames)) / duration
         return cue, max(0.0, min(1.0, progress))
 
-    def _card_for_shot(self, shot: RenderShot, frame: int) -> Image.Image:
-        asset_id = shot.asset_ids[0]
-        image = self._source_for_shot(shot, frame)
+    def _card_for_asset(self, shot: RenderShot, frame: int, asset_id: str) -> Image.Image:
+        image = self._source_for_asset(shot, asset_id, frame)
         asset = self.assets[asset_id]
         focus_cue, focus_progress = self._active_focus(shot, frame)
         crop_cue = focus_cue or next((cue for cue in shot.cues if cue.asset_anchor_id), None)
@@ -323,41 +337,101 @@ class FrameRenderer:
             card = _focus_overlay(card, local_focus, focus_progress, shot.template)
         return card
 
-    def _render_shot(self, shot: RenderShot, frame: int) -> Image.Image:
-        canvas = self.background.copy()
+    def _comparison_card(self, shot: RenderShot, frame: int) -> Image.Image:
+        reference_id = shot.asset_bindings.get("reference")
+        result_id = shot.asset_bindings.get("result")
+        if not reference_id or not result_id:
+            raise ValueError("reference_to_result requires reference and result asset bindings")
+        stage = Image.new("RGBA", (self.profile.content_safe.w, 1250), (0, 0, 0, 0))
+        label_font = _font(30)
+        for index, (label, asset_id) in enumerate((("实景参考", reference_id), ("生成效果", result_id))):
+            card = self._card_for_asset(shot, frame, asset_id)
+            fitted, position = _fit(card, PixelRect(32, 60 + index * 600, stage.width - 64, 500))
+            stage.alpha_composite(fitted, position)
+            label_box = (position[0] + 14, position[1] + 14)
+            draw = ImageDraw.Draw(stage)
+            draw.rounded_rectangle((label_box[0], label_box[1], label_box[0] + 154, label_box[1] + 52), radius=16, fill=(12, 18, 26, 220))
+            draw.text((label_box[0] + 15, label_box[1] + 8), label, font=label_font, fill=(238, 244, 255))
+        return stage
+
+    def _card_for_shot(self, shot: RenderShot, frame: int) -> Image.Image:
+        if shot.template == "reference_to_result":
+            return self._comparison_card(shot, frame)
+        if shot.template == "image_carousel":
+            asset_ids = list(shot.asset_bindings.values())
+            local = max(0, frame - shot.start_frame)
+            segment = max(1, (shot.end_frame - shot.start_frame) // len(asset_ids))
+            return self._card_for_asset(shot, frame, asset_ids[min(len(asset_ids) - 1, local // segment)])
+        asset_id = shot.asset_bindings.get("primary") or next(iter(shot.asset_bindings.values()))
+        return self._card_for_asset(shot, frame, asset_id)
+
+    def _paint_shot(
+        self,
+        canvas: Image.Image,
+        shot: RenderShot,
+        frame: int,
+        *,
+        alpha_multiplier: float = 1.0,
+        x_offset: int = 0,
+    ) -> None:
         duration = max(1, shot.end_frame - shot.start_frame)
-        progress = (frame - shot.start_frame) / duration
+        progress = max(0.0, min(1.0, (frame - shot.start_frame) / duration))
         card = self._card_for_shot(shot, frame)
-        if shot.effect == "perspective_push_in":
+        if shot.motion == "perspective_push_in":
             entrance_ratio = 0.18
             if progress < entrance_ratio:
                 entrance_progress = min(1.0, progress / entrance_ratio)
-                canvas = Image.alpha_composite(canvas, _perspective_card(card, self.plan.width, self.plan.height, entrance_progress))
+                warped = _perspective_card(card, self.plan.width, self.plan.height, entrance_progress)
+                if alpha_multiplier < 1.0:
+                    warped.putalpha(warped.getchannel("A").point(lambda value: int(value * alpha_multiplier)))
+                canvas.alpha_composite(warped, (x_offset, 0))
             else:
                 settled, settled_position = _flat_perspective_endpoint(card, self.plan.width, self.plan.height)
-                _paste_shadow(canvas, settled, settled_position)
-            return canvas
-        position = ((self.plan.width - card.width) // 2, 290 + (1250 - card.height) // 2)
-        alpha = 1.0
+                _paste_shadow(canvas, settled, (settled_position[0] + x_offset, settled_position[1]))
+            return
+        position = ((self.plan.width - card.width) // 2 + x_offset, 290 + (1250 - card.height) // 2)
+        alpha = alpha_multiplier
         scale = 1.0
-        if shot.effect in {"fade_in", "crossfade"}:
-            alpha = min(1.0, progress / 0.12)
-        elif shot.effect == "fade_out":
-            alpha = min(1.0, (1.0 - progress) / 0.12)
-        elif shot.effect == "scale_in":
+        if shot.motion == "fade_in":
+            alpha *= min(1.0, progress / 0.12)
+        elif shot.motion == "fade_out":
+            alpha *= max(0.0, min(1.0, (1.0 - progress) / 0.12))
+        elif shot.motion == "scale_in":
             scale = 0.94 + 0.06 * ease_out_cubic(min(1.0, progress / 0.22))
-        elif shot.effect == "scale_out":
+        elif shot.motion == "scale_out":
             scale = 1.06 - 0.06 * ease_out_cubic(min(1.0, progress / 0.22))
-        elif shot.effect == "page_slide":
-            position = (int(position[0] + (1.0 - ease_out_cubic(min(1.0, progress / 0.2))) * self.plan.width), position[1])
         if not math.isclose(scale, 1.0):
             resized = card.resize((int(card.width * scale), int(card.height * scale)), Image.Resampling.LANCZOS)
-            position = ((self.plan.width - resized.width) // 2, position[1] + (card.height - resized.height) // 2)
+            position = ((self.plan.width - resized.width) // 2 + x_offset, position[1] + (card.height - resized.height) // 2)
             card = resized
         if alpha < 1.0:
             card = card.copy()
             card.putalpha(card.getchannel("A").point(lambda value: int(value * alpha)))
         _paste_shadow(canvas, card, position)
+
+    def _render_base(self, frame: int) -> Image.Image:
+        canvas = self.background.copy()
+        current = self._active_shot(frame)
+        current_index = self.base_shots.index(current)
+        transition = current.transition_in
+        duration = int(transition.get("duration_frames", 0))
+        kind = str(transition.get("kind", "cut"))
+        if current_index and duration and frame < current.start_frame + duration:
+            previous = self.base_shots[current_index - 1]
+            progress = max(0.0, min(1.0, (frame - current.start_frame) / duration))
+            if kind == "crossfade" or kind.startswith("wipe"):
+                self._paint_shot(canvas, previous, min(frame, previous.end_frame - 1), alpha_multiplier=1.0 - progress)
+                self._paint_shot(canvas, current, frame, alpha_multiplier=progress)
+                return canvas
+            if kind == "slide_left":
+                self._paint_shot(canvas, previous, min(frame, previous.end_frame - 1), x_offset=-round(self.plan.width * progress))
+                self._paint_shot(canvas, current, frame, x_offset=round(self.plan.width * (1.0 - progress)))
+                return canvas
+            if kind == "slide_right":
+                self._paint_shot(canvas, previous, min(frame, previous.end_frame - 1), x_offset=round(self.plan.width * progress))
+                self._paint_shot(canvas, current, frame, x_offset=-round(self.plan.width * (1.0 - progress)))
+                return canvas
+        self._paint_shot(canvas, current, frame)
         return canvas
 
     def _draw_subtitle(self, canvas: Image.Image, cue: SubtitleCue) -> None:
@@ -388,8 +462,10 @@ class FrameRenderer:
                 draw.text((suffix_x, y), emphasis_suffix, font=font, fill=(250, 250, 250), stroke_width=stroke, stroke_fill=(8, 10, 14))
 
     def render(self, frame: int) -> Image.Image:
-        shot = self._active_shot(frame)
-        canvas = self._render_shot(shot, frame)
+        canvas = self._render_base(frame)
+        for shot in self.overlay_shots:
+            if shot.start_frame <= frame < shot.end_frame:
+                self._paint_shot(canvas, shot, frame)
         subtitle = self._active_subtitle(frame)
         if subtitle:
             self._draw_subtitle(canvas, subtitle)

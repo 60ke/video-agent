@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import subprocess
 import json
+import os
 import re
 from pathlib import Path
 
@@ -25,7 +26,7 @@ def _measure_loudness(video: Path) -> dict[str, float]:
             "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json",
             "-f",
             "null",
-            "NUL",
+            os.devnull,
         ],
         capture_output=True,
         text=True,
@@ -74,6 +75,38 @@ def _contact_sheet(video: Path, output: Path, plan: RenderPlan, frames: int = 16
         raise RuntimeError(f"contact sheet failed: {proc.stderr[-1000:]}")
 
 
+def _cue_contact_sheet(video: Path, output: Path, plan: RenderPlan, fps: int) -> None:
+    """Show before/hit/after evidence for motion and SFX cue inspection."""
+
+    selected = []
+    for shot in plan.shots:
+        for cue in shot.cues:
+            selected.extend([max(0, cue.hit_frame - 3), cue.hit_frame, min(plan.frame_count - 1, cue.hit_frame + max(3, round(fps * 0.2)))])
+    if not selected:
+        return
+    selected = sorted(set(selected))[:24]
+    select_expr = "+".join(f"eq(n\\,{frame})" for frame in selected)
+    command = [
+        "ffmpeg",
+        "-y",
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-i",
+        str(video),
+        "-vf",
+        f"select='{select_expr}',scale=180:320:force_original_aspect_ratio=decrease,pad=180:320:(ow-iw)/2:(oh-ih)/2:black,tile=4x6:padding=4:margin=4",
+        "-vsync",
+        "vfr",
+        "-frames:v",
+        "1",
+        str(output),
+    ]
+    proc = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if proc.returncode != 0:
+        raise RuntimeError(f"cue contact sheet failed: {proc.stderr[-1000:]}")
+
+
 def run_final_qa(plan: RenderPlan, video: Path, run_dir: Path) -> QaReport:
     checks = validate_render_plan(plan)
     if not video.is_file():
@@ -108,6 +141,7 @@ def run_final_qa(plan: RenderPlan, video: Path, run_dir: Path) -> QaReport:
     checks.append(CheckResult(check_id="final_audio_loudness", status="passed" if loudness_ok else "failed", details=loudness))
     sheet = run_dir / "final" / "contact_sheet.jpg"
     _contact_sheet(video, sheet, plan)
+    _cue_contact_sheet(video, run_dir / "final" / "cue_contact_sheet.jpg", plan, plan.fps)
     failed = any(check.status == "failed" for check in checks)
     return QaReport(
         case_id=plan.case_id,

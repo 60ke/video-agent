@@ -890,7 +890,7 @@ V3 首版特效白名单只保留简单、清晰、可读的动作：
 - `fade_in` / `fade_out`
 - `scale_in`，由小到大并回稳
 - `scale_out`，由大到小并回稳
-- `page_slide` 或简洁翻页
+- `slide_left` / `slide_right` 的真实双画面切换
 - 修正构图后的 `perspective_push_in`
 
 默认删除或禁用：

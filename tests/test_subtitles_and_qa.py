@@ -61,7 +61,7 @@ def test_subtitle_compiler_never_crosses_beat_boundary() -> None:
     assert all(not ({token.beat_id for token in timing.tokens if token.start_frame >= cue.start_frame and token.end_frame <= cue.end_frame} - {cue.beat_id}) for cue in cues)
 
 
-def test_qa_rejects_forbidden_effect_and_long_subtitle() -> None:
+def test_qa_rejects_forbidden_motion_and_long_subtitle() -> None:
     plan = RenderPlan(
         case_id="demo",
         run_id="run",
@@ -70,19 +70,19 @@ def test_qa_rejects_forbidden_effect_and_long_subtitle() -> None:
         shots=[
             RenderShot(
                 shot_id="shot",
-                beat_id="beat",
-                template="result_safe_stage",
-                asset_ids=["asset"],
+                beat_ids=["beat"],
+                template="result_showcase",
+                asset_bindings={"primary": "asset"},
                 start_frame=0,
                 end_frame=30,
-                effect="tile_drop",
+                motion="tile_drop",
             )
         ],
         subtitles=[SubtitleCue(cue_id="sub", text="这是一条明显超过十个字的字幕", start_frame=0, end_frame=30, slot="subtitle_top")],
         audio_tracks=[AudioTrack(kind="voice", path="voice.mp3")],
     )
     checks = {check.check_id: check for check in validate_render_plan(plan)}
-    assert checks["effect_allowlist"].status == "failed"
+    assert checks["motion_allowlist"].status == "failed"
     assert checks["subtitle_single_line_10_units"].status == "failed"
 
 
@@ -95,12 +95,12 @@ def test_qa_rejects_perspective_on_text_dense_ui() -> None:
         shots=[
             RenderShot(
                 shot_id="shot",
-                beat_id="beat",
+                beat_ids=["beat"],
                 template="ui_params_focus",
-                asset_ids=["asset"],
+                asset_bindings={"primary": "asset"},
                 start_frame=0,
                 end_frame=30,
-                effect="perspective_push_in",
+                motion="perspective_push_in",
             )
         ],
         subtitles=[],

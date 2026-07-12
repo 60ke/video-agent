@@ -4,6 +4,7 @@ from video_agent.contracts import (
     Asset,
     AssetCatalog,
     AssetQuality,
+    CaseConfig,
     EvidenceClass,
     Narration,
     NarrationBeat,
@@ -11,7 +12,8 @@ from video_agent.contracts import (
     Provenance,
     VisualAnchor,
 )
-from video_agent.planning.auto_visual import _anchor_for_phrase, _asset_for_beat
+from video_agent.planning.auto_visual import _anchor_for_phrase, _assets_for_beat
+from video_agent.ai.visual_planner import _candidate_assets
 
 
 def _asset() -> Asset:
@@ -59,16 +61,14 @@ def test_result_selection_prefers_matching_industry_tag() -> None:
     medical = _asset().model_copy(
         update={"asset_id": "asset_result_medical", "role": "result_image", "filename": "文化墙_医疗文化.png", "tags": ["医疗文化"]}
     )
-    asset, template, _ = _asset_for_beat(
-        0,
+    candidates = _assets_for_beat(
         "医疗空间，重点更加集中。",
         ["真实结果", "医疗文化"],
         {"result_image": [community, medical], "feature_form_params": [], "feature_entry": [], "site_home": []},
-        0,
         set(),
     )
-    assert asset.asset_id == medical.asset_id
-    assert template == "result_safe_stage"
+    assert candidates[0][0].asset_id == medical.asset_id
+    assert candidates[0][1] == "result_showcase"
 
 
 def test_cta_prefers_waving_brand_video() -> None:
@@ -84,8 +84,7 @@ def test_cta_prefers_waving_brand_video() -> None:
     running = waving.model_copy(
         update={"asset_id": "asset_brand_run", "filename": "柯幻熊猫_跑步.mp4", "tags": ["柯幻熊猫", "跑步"]}
     )
-    asset, template, _ = _asset_for_beat(
-        6,
+    candidates = _assets_for_beat(
         "想看哪种空间，评论区告诉我。",
         [],
         {
@@ -97,8 +96,15 @@ def test_cta_prefers_waving_brand_video() -> None:
             "feature_entry": [],
             "site_home": [],
         },
-        0,
         set(),
     )
-    assert asset.asset_id == waving.asset_id
-    assert template == "brand_ip_cutaway"
+    assert candidates[0][0].asset_id == waving.asset_id
+    assert candidates[0][1] == "brand_ip_cutaway"
+
+
+def test_multimodal_packet_excludes_unreviewed_assets() -> None:
+    approved = _asset().model_copy(update={"role": "result_image"})
+    unreviewed = approved.model_copy(update={"asset_id": "asset_unreviewed", "quality": AssetQuality(status="unreviewed")})
+    catalog = AssetCatalog(catalog_id="fixture", generated_at="now", source_root="assets", assets=[approved, unreviewed])
+    selected = _candidate_assets(CaseConfig(case_id="demo", goal="测试", feature_path=["文生图", "VI"]), catalog)
+    assert [asset.asset_id for asset in selected] == [approved.asset_id]

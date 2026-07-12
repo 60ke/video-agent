@@ -11,6 +11,8 @@ _PROFILES: dict[str, dict[str, SemanticSfx]] = {
             max_duration_ms=180,
             fade_out_ms=45,
             priority=25,
+            sync_point="peak",
+            sync_offset_ms=28,
         ),
         "ui_click": SemanticSfx(
             path="assets/audio/sfx/ui_click.wav",
@@ -18,6 +20,8 @@ _PROFILES: dict[str, dict[str, SemanticSfx]] = {
             max_duration_ms=160,
             fade_out_ms=40,
             priority=60,
+            sync_point="peak",
+            sync_offset_ms=24,
         ),
         "field_focus": SemanticSfx(
             path="assets/audio/sfx/field_focus.wav",
@@ -25,6 +29,8 @@ _PROFILES: dict[str, dict[str, SemanticSfx]] = {
             max_duration_ms=220,
             fade_out_ms=55,
             priority=45,
+            sync_point="peak",
+            sync_offset_ms=62,
         ),
         "upload": SemanticSfx(
             path="assets/audio/sfx/upload.wav",
@@ -32,6 +38,8 @@ _PROFILES: dict[str, dict[str, SemanticSfx]] = {
             max_duration_ms=380,
             fade_out_ms=80,
             priority=65,
+            sync_point="peak",
+            sync_offset_ms=94,
         ),
         "result_reveal": SemanticSfx(
             path="assets/audio/sfx/result_reveal.wav",
@@ -39,6 +47,8 @@ _PROFILES: dict[str, dict[str, SemanticSfx]] = {
             max_duration_ms=520,
             fade_out_ms=120,
             priority=80,
+            sync_point="peak",
+            sync_offset_ms=128,
         ),
         "page_flip": SemanticSfx(
             path="assets/audio/sfx/page_flip.wav",
@@ -46,6 +56,8 @@ _PROFILES: dict[str, dict[str, SemanticSfx]] = {
             max_duration_ms=300,
             fade_out_ms=90,
             priority=40,
+            sync_point="peak",
+            sync_offset_ms=52,
         ),
         "success": SemanticSfx(
             path="assets/audio/sfx/success.wav",
@@ -53,6 +65,8 @@ _PROFILES: dict[str, dict[str, SemanticSfx]] = {
             max_duration_ms=620,
             fade_out_ms=140,
             priority=85,
+            sync_point="peak",
+            sync_offset_ms=145,
         ),
     }
 }

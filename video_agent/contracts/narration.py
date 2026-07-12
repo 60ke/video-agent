@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
+from .assets import EvidenceClass
 from .base import Contract, VersionedContract
 
 
@@ -11,6 +12,25 @@ class PauseIntent(Contract):
     after_phrase: str
     kind: Literal["micro", "short", "beat", "section"]
     requested_ms: int = Field(ge=10, le=450)
+
+
+class Claim(Contract):
+    """A factual statement that may appear in narration or a visual shot."""
+
+    claim_id: str = Field(pattern=r"^[A-Za-z0-9_-]+$")
+    text: str = Field(min_length=1)
+    supporting_asset_ids: list[str] = Field(min_length=1)
+    required_evidence_classes: list[EvidenceClass] = Field(
+        default_factory=lambda: [EvidenceClass.SOURCE, EvidenceClass.FAITHFUL],
+        min_length=1,
+    )
+
+    @model_validator(mode="after")
+    def factual_evidence_only(self) -> "Claim":
+        unsupported = set(self.required_evidence_classes) - {EvidenceClass.SOURCE, EvidenceClass.FAITHFUL}
+        if unsupported:
+            raise ValueError("factual claims require E0 source or E1 faithful evidence")
+        return self
 
 
 class NarrationBeat(Contract):
@@ -26,7 +46,18 @@ class NarrationBeat(Contract):
 class Narration(VersionedContract):
     case_id: str
     beats: list[NarrationBeat] = Field(min_length=1)
+    claims: list[Claim] = Field(default_factory=list)
     voice_style: str = "清晰、自然、有节奏"
+
+    @model_validator(mode="after")
+    def claim_references_exist(self) -> "Narration":
+        known = {claim.claim_id for claim in self.claims}
+        if len(known) != len(self.claims):
+            raise ValueError("claim_id values must be unique")
+        unknown = sorted({claim_id for beat in self.beats for claim_id in beat.claim_ids} - known)
+        if unknown:
+            raise ValueError(f"beats reference unknown claims: {unknown}")
+        return self
 
     @property
     def spoken_text(self) -> str:

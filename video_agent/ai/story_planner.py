@@ -8,6 +8,9 @@ from video_agent.ai.text_client import OpenAICompatibleTextClient
 from video_agent.contracts import AssetCatalog, CaseConfig, Narration
 
 
+PLANNER_APPROVED_STATUSES = {"machine_checked", "vision_verified", "human_approved"}
+
+
 def plan_narration(repo_root: Path, case: CaseConfig, catalog: AssetCatalog) -> tuple[Narration, dict[str, str]]:
     prompt = load_prompt(repo_root / "video_agent" / "prompts" / "story_and_shot_proposal.md")
     materials = [
@@ -15,12 +18,14 @@ def plan_narration(repo_root: Path, case: CaseConfig, catalog: AssetCatalog) -> 
             "asset_id": asset.asset_id,
             "semantic_path": asset.semantic_path,
             "role": asset.role,
+            "evidence_class": asset.evidence_class.value,
+            "quality_status": asset.quality.status,
             "claims": asset.claims,
             "tags": asset.tags,
             "anchors": [anchor.label for anchor in asset.visual_anchors],
         }
         for asset in catalog.assets
-        if asset.quality.status != "rejected"
+        if asset.quality.status in PLANNER_APPROVED_STATUSES
     ]
     user = json.dumps(
         {

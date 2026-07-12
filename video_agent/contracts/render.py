@@ -33,14 +33,21 @@ class CompiledCue(Contract):
 
 class RenderShot(Contract):
     shot_id: str
-    beat_id: str
+    track: str = "base"
+    beat_ids: list[str] = Field(min_length=1)
     template: str
-    asset_ids: list[str] = Field(min_length=1)
+    asset_bindings: dict[str, str] = Field(min_length=1)
+    claim_ids: list[str] = Field(default_factory=list)
     start_frame: int = Field(ge=0)
     end_frame: int = Field(gt=0)
     cues: list[CompiledCue] = Field(default_factory=list)
-    effect: str | None = None
+    motion: str = "none"
+    transition_in: dict[str, int | str] = Field(default_factory=lambda: {"kind": "cut", "duration_frames": 0})
     long_hold_reason: str | None = None
+
+    @property
+    def asset_ids(self) -> list[str]:
+        return list(self.asset_bindings.values())
 
     @model_validator(mode="after")
     def positive_span(self) -> "RenderShot":
@@ -72,6 +79,8 @@ class AudioTrack(Contract):
     max_duration_ms: int | None = Field(default=None, gt=0)
     fade_in_ms: int = Field(default=0, ge=0)
     fade_out_ms: int = Field(default=0, ge=0)
+    sync_frame: int | None = Field(default=None, ge=0)
+    sync_point: str | None = None
 
 
 class RenderPlan(VersionedContract):

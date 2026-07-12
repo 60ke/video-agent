@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from video_agent.compiler.render_plan import EFFECT_ALLOWLIST, TEXT_DENSE_EFFECT_ALLOWLIST, TEXT_DENSE_TEMPLATES
+from video_agent.compiler.render_plan import MOTION_ALLOWLIST, TEXT_DENSE_MOTION_ALLOWLIST, TEXT_DENSE_TEMPLATES
 from video_agent.compiler.subtitles import fullwidth_units
 from video_agent.contracts import CheckResult, RenderPlan
 from video_agent.platform import get_profile
@@ -23,12 +23,12 @@ def validate_render_plan(plan: RenderPlan) -> list[CheckResult]:
         if any(slot.intersects(region) for region in profile.avoid_regions):
             slot_errors.append(cue.cue_id)
     checks.append(CheckResult(check_id="subtitle_platform_safe", status="failed" if slot_errors else "passed", message=", ".join(slot_errors)))
-    effect_errors = [shot.shot_id for shot in plan.shots if shot.effect not in EFFECT_ALLOWLIST]
-    checks.append(CheckResult(check_id="effect_allowlist", status="failed" if effect_errors else "passed", message=", ".join(effect_errors)))
+    motion_errors = [shot.shot_id for shot in plan.shots if shot.motion not in MOTION_ALLOWLIST]
+    checks.append(CheckResult(check_id="motion_allowlist", status="failed" if motion_errors else "passed", message=", ".join(motion_errors)))
     text_distortion_errors = [
         shot.shot_id
         for shot in plan.shots
-        if shot.template in TEXT_DENSE_TEMPLATES and shot.effect not in TEXT_DENSE_EFFECT_ALLOWLIST
+        if shot.template in TEXT_DENSE_TEMPLATES and shot.motion not in TEXT_DENSE_MOTION_ALLOWLIST
     ]
     checks.append(
         CheckResult(
@@ -43,7 +43,7 @@ def validate_render_plan(plan: RenderPlan) -> list[CheckResult]:
         if track.kind != "sfx":
             continue
         cue = cue_by_anchor.get(track.anchor_id or "")
-        if cue is None or cue.hit_frame != track.start_frame:
+        if cue is None or cue.hit_frame != track.sync_frame:
             audio_anchor_errors.append(track.anchor_id or track.path)
     checks.append(
         CheckResult(
@@ -97,22 +97,32 @@ def validate_render_plan(plan: RenderPlan) -> list[CheckResult]:
             density_errors.append(f"{shot.shot_id}:over_4s")
     checks.append(CheckResult(check_id="semantic_visual_density", status="failed" if density_errors else "passed", message=", ".join(density_errors)))
     timeline_errors = []
-    ordered = sorted(plan.shots, key=lambda shot: shot.start_frame)
-    if ordered[0].start_frame != 0:
+    ordered = sorted((shot for shot in plan.shots if shot.track == "base"), key=lambda shot: shot.start_frame)
+    if not ordered:
+        timeline_errors.append("missing_base_track")
+    elif ordered[0].start_frame != 0:
         timeline_errors.append(f"starts_at:{ordered[0].start_frame}")
     for previous, current in zip(ordered, ordered[1:]):
         if current.start_frame < previous.end_frame:
             timeline_errors.append(f"overlap:{previous.shot_id}/{current.shot_id}")
         elif current.start_frame > previous.end_frame:
             timeline_errors.append(f"gap:{previous.shot_id}/{current.shot_id}")
-    if ordered[-1].end_frame != plan.frame_count:
+    if ordered and ordered[-1].end_frame != plan.frame_count:
         timeline_errors.append(f"ends_at:{ordered[-1].end_frame}/{plan.frame_count}")
     checks.append(CheckResult(check_id="shot_timeline", status="failed" if timeline_errors else "passed", message=", ".join(timeline_errors)))
-    shot_by_beat = {shot.beat_id: shot for shot in plan.shots}
     subtitle_beat_errors = []
     for cue in plan.subtitles:
-        shot = shot_by_beat.get(cue.beat_id or "")
-        if cue.beat_id and (shot is None or cue.start_frame < shot.start_frame or cue.end_frame > shot.end_frame):
+        matching = sorted(
+            (shot for shot in plan.shots if shot.track == "base" and cue.beat_id in shot.beat_ids),
+            key=lambda shot: shot.start_frame,
+        )
+        covered_until = cue.start_frame
+        for shot in matching:
+            if shot.start_frame <= covered_until < shot.end_frame:
+                covered_until = max(covered_until, shot.end_frame)
+            if covered_until >= cue.end_frame:
+                break
+        if cue.beat_id and covered_until < cue.end_frame:
             subtitle_beat_errors.append(cue.cue_id)
     checks.append(
         CheckResult(

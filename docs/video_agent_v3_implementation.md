@@ -22,7 +22,9 @@ catalog -> materialize -> narration -> speech -> visual -> compile -> render -> 
 - 仅允许标点缺失的严格字序对齐，不存在比例 timing fallback；
 - 标点标签与实测 pause event、有效语速 QA；
 - Beat 边界字幕切分、单行 10 单位限制、关键词强调；
-- 视觉/SFX 共用 phrase anchor 或镜头起始 anchor，绝对帧编译；
+- Claim -> supporting asset -> visible shot 的事实证据闭环；
+- 一个 Beat 多 Shot、连续 base 轨和可重叠 overlay 轨，支持真实 crossfade / 左右滑动；
+- 视觉/SFX 共用 phrase anchor 或镜头起始 anchor，SFX onset/peak 可提前起播，绝对帧编译；
 - 抖音安全区、低对比网格舞台、动态 UI 聚焦、结果图完整展示；
 - 参数表单等文字密集 UI 仅允许等比缩放或淡变，禁止透视和滑页形变；
 - `perspective_push_in` 仅作短暂入场，18% 镜头时长后回到无透视清晰卡片；
@@ -30,7 +32,8 @@ catalog -> materialize -> narration -> speech -> visual -> compile -> render -> 
 - 品牌素材库注册、CTA/等待语义选材，以及透明 GIF/MP4 的确定性逐帧渲染；
 - Voice/BGM/SFX 多轨混音、BGM ducking、`-16 LUFS` 输出归一；
 - 最终 MP4 分辨率、帧数、时长、音轨、响度、字幕、密度和时间轴 QA；
-- 可选多模态 Contact Sheet Vision Critic。
+- 可选多模态 Visual Planner 与 Contact Sheet Vision Critic；
+- `--resume` 记录并校验阶段 input/output SHA256，从首个失效阶段继续；
 
 ## 3. 派生素材
 
@@ -80,7 +83,7 @@ python -m video_agent asset-review --case <case> --run <run_id> --asset-id <id> 
 - 上传相关短语：`upload`；
 - 结果镜头入场：`result_reveal`。
 
-转场类音效绑定镜头起始 anchor，字段操作类音效优先绑定词级 phrase anchor。编译器按优先级执行最小间隔、重复冷却和三秒窗口限流。
+转场类音效绑定镜头起始 anchor，字段操作类音效优先绑定词级 phrase anchor。每个音效可使用 onset 或 peak 同步点，编译器会将文件起播时间前移对应毫秒数；随后按优先级执行最小间隔、重复冷却和三秒窗口限流。
 
 ```json
 {

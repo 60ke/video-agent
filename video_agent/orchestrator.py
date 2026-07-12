@@ -4,11 +4,12 @@ from pathlib import Path
 from typing import Any
 
 from video_agent.ai.story_planner import plan_narration
+from video_agent.ai.visual_planner import plan_visual
 from video_agent.ai.visual_critic import review_contact_sheet
 from video_agent.assets import build_catalog, catalog_snapshot, materialize_assets
 from video_agent.compiler import compile_render_plan
 from video_agent.contracts import AssetCatalog, MaterializationPlan, Narration, QaReport, RenderPlan, TimingLock, VisualPlan
-from video_agent.io import load_model, sha256_file, sha256_json, utc_now, write_json_atomic
+from video_agent.io import load_json, load_model, sha256_file, sha256_json, utc_now, write_json_atomic
 from video_agent.planning import build_auto_visual_plan
 from video_agent.qa import run_final_qa, validate_render_plan, validate_timing_lock
 from video_agent.render import render_video
@@ -19,7 +20,18 @@ from video_agent.speech import MinimaxClient, build_timing_lock
 class Orchestrator:
     def __init__(self, context: RunContext) -> None:
         self.context = context
-        self.manifest: dict[str, Any] = {
+        manifest_path = self.context.artifact("run_manifest.json")
+        if manifest_path.is_file():
+            loaded = load_json(manifest_path)
+            if not isinstance(loaded, dict) or loaded.get("case_id") != context.case.case_id or loaded.get("run_id") != context.run_id:
+                raise ValueError("existing run_manifest does not match the requested case/run")
+            self.manifest = loaded
+            self.manifest.setdefault("stages", {})
+            self.manifest.setdefault("prompts", [])
+            self.manifest["status"] = "running"
+            self.manifest.pop("error", None)
+        else:
+            self.manifest = {
             "schema_version": 3,
             "case_id": context.case.case_id,
             "run_id": context.run_id,
@@ -27,16 +39,69 @@ class Orchestrator:
             "status": "running",
             "stages": {},
             "prompts": [],
-        }
+            }
 
-    def _record(self, stage: str, status: str, output: Path | None = None, details: dict[str, Any] | None = None) -> None:
+    def _record(
+        self,
+        stage: str,
+        status: str,
+        output: Path | None = None,
+        details: dict[str, Any] | None = None,
+        input_sha256: str | None = None,
+    ) -> None:
         item: dict[str, Any] = {"status": status, "updated_at": utc_now()}
+        if input_sha256:
+            item["input_sha256"] = input_sha256
         if output and output.is_file():
             item.update({"output": output.as_posix(), "sha256": sha256_file(output)})
         if details:
             item["details"] = details
         self.manifest["stages"][stage] = item
         write_json_atomic(self.context.artifact("run_manifest.json"), self.manifest)
+
+    def _artifact_sha256(self, name: str) -> str | None:
+        path = self.context.artifact(name)
+        return sha256_file(path) if path.is_file() else None
+
+    def _stage_input_sha256(self, stage: str) -> str:
+        case = self.context.case.model_dump(mode="json")
+        source_map: dict[str, Any] = {
+            "catalog": {
+                "case": case,
+                "global_catalog": sha256_file(self.context.repo_root / "assets" / "catalog.json")
+                if (self.context.repo_root / "assets" / "catalog.json").is_file()
+                else None,
+            },
+            "materialize": {"case": case, "catalog": self._artifact_sha256("asset_catalog.source.json")},
+            "narration": {"case": case, "catalog": self._artifact_sha256("asset_catalog.json")},
+            "speech": {"voice": case["voice"], "narration": self._artifact_sha256("narration.json")},
+            "visual": {
+                "mode": case["visual_planner_mode"],
+                "narration": self._artifact_sha256("narration.json"),
+                "timing": self._artifact_sha256("timing_lock.json"),
+                "catalog": self._artifact_sha256("asset_catalog.json"),
+            },
+            "compile": {
+                "narration": self._artifact_sha256("narration.json"),
+                "timing": self._artifact_sha256("timing_lock.json"),
+                "visual": self._artifact_sha256("visual_plan.json"),
+                "catalog": self._artifact_sha256("asset_catalog.json"),
+                "format": case["format"],
+                "audio": case["audio"],
+            },
+            "render": {"plan": self._artifact_sha256("render_plan.json"), "quality": case["quality"]},
+            "qa": {"plan": self._artifact_sha256("render_plan.json"), "video": self._artifact_sha256("final/video.mp4")},
+        }
+        return sha256_json(source_map[stage])
+
+    def _can_resume_stage(self, stage: str, input_sha256: str) -> bool:
+        item = self.manifest["stages"].get(stage)
+        if not isinstance(item, dict) or item.get("status") != "completed" or item.get("input_sha256") != input_sha256:
+            return False
+        output = item.get("output")
+        expected = item.get("sha256")
+        path = Path(str(output)) if output else None
+        return bool(path and expected and path.is_file() and sha256_file(path) == expected)
 
     def run(self, from_stage: str | None = None, until_stage: str | None = None) -> Path | None:
         start = STAGES.index(from_stage) if from_stage else 0
@@ -47,9 +112,12 @@ class Orchestrator:
         final_video: Path | None = existing_video if existing_video.is_file() else None
         try:
             for stage in STAGES[start : end + 1]:
+                input_sha256 = self._stage_input_sha256(stage)
+                if from_stage is None and self._can_resume_stage(stage, input_sha256):
+                    continue
                 method = getattr(self, f"stage_{stage}")
                 output = method()
-                self._record(stage, "completed", output if isinstance(output, Path) else None)
+                self._record(stage, "completed", output if isinstance(output, Path) else None, input_sha256=input_sha256)
                 if stage == "render" and isinstance(output, Path):
                     final_video = output
             self.manifest["status"] = "completed"
@@ -59,7 +127,7 @@ class Orchestrator:
         except Exception as exc:
             self.manifest["status"] = "failed"
             self.manifest["error"] = {"type": exc.__class__.__name__, "message": str(exc)}
-            write_json_atomic(self.context.artifact("run_manifest.json"), self.manifest)
+            self._record(stage, "failed", details={"type": exc.__class__.__name__, "message": str(exc)}, input_sha256=input_sha256)
             self.context.mark_latest("failed")
             raise
 
@@ -131,6 +199,9 @@ class Orchestrator:
         catalog = load_model(self.context.artifact("asset_catalog.json"), AssetCatalog)
         if self.context.case.visual_plan_source:
             visual = load_model(self.context.case_dir / self.context.case.visual_plan_source, VisualPlan)
+        elif self.context.case.visual_planner_mode == "multimodal":
+            visual, prompt = plan_visual(self.context.repo_root, self.context.case, narration, timing, catalog)
+            self.manifest["prompts"].append(prompt)
         else:
             visual = build_auto_visual_plan(self.context.case.case_id, narration, timing, catalog)
         visual.timing_lock_sha256 = sha256_json(timing)
@@ -139,12 +210,14 @@ class Orchestrator:
         return output
 
     def stage_compile(self) -> Path:
+        narration = load_model(self.context.artifact("narration.json"), Narration)
         timing = load_model(self.context.artifact("timing_lock.json"), TimingLock)
         visual = load_model(self.context.artifact("visual_plan.json"), VisualPlan)
         catalog = load_model(self.context.artifact("asset_catalog.json"), AssetCatalog)
         plan = compile_render_plan(
             self.context.case.case_id,
             self.context.run_id,
+            narration,
             timing,
             visual,
             catalog,
@@ -178,6 +251,7 @@ class Orchestrator:
                 self.context.repo_root,
                 plan,
                 self.context.run_dir / "final" / "contact_sheet.jpg",
+                self.context.run_dir / "final" / "cue_contact_sheet.jpg",
             )
             report.checks.append(review)
             self.manifest["prompts"].append({"path": trace["path"], "sha256": trace["sha256"]})

@@ -6,6 +6,7 @@ from pathlib import Path
 from PIL import Image
 
 from video_agent.ai.gpt_image import edit_image
+from video_agent.ai.prompt_loader import load_prompt
 from video_agent.contracts import (
     Asset,
     AssetCatalog,
@@ -26,20 +27,15 @@ GPT_KINDS = {
 }
 
 
-def _prompt(kind: DeriveKind, instruction: str) -> str:
-    common = (
-        "Use the supplied image as the only visual source. Preserve the original brand identity, logo geometry, "
-        "Chinese text, product objects, colors, and factual content. Do not invent product features, UI, results, "
-        "logos, or readable copy. Output a polished 9:16 vertical keyframe with a quiet dark grid background and "
-        "clear safe margins for Douyin overlays. "
-    )
+def _prompt(repo_root: Path, kind: DeriveKind, instruction: str) -> tuple[str, str]:
     recipes = {
         DeriveKind.CANVAS_EXTEND: "Extend only the surrounding canvas; keep the source image itself unchanged and fully visible.",
         DeriveKind.LOGO_ISOLATE_SEMANTIC: "Create a semantic presentation of the existing logo on a clean background; do not claim pixel-perfect extraction.",
         DeriveKind.BRAND_IP_SUBTITLE_BREAK: "Create a restrained brand interlude using only the visible brand or IP element from the source.",
         DeriveKind.IDENTITY_TO_SYSTEM_TRANSITION: "Compose the visible identity element and the original complete design system as a clear before-to-system frame.",
     }
-    return f"{common}{recipes[kind]} Additional direction: {instruction or 'none'}"
+    prompt = load_prompt(repo_root / "video_agent" / "prompts" / "materialization" / "controlled_derivative.md")
+    return prompt.text.format(recipe=recipes[kind], instruction=instruction or "none"), prompt.sha256
 
 
 def _deterministic_reframe(source: Path, output: Path) -> None:
@@ -72,12 +68,13 @@ def materialize_assets(
         source = (repo_root / parent.path).resolve()
         output = output_dir / f"{request.request_id}.png"
         prompt = ""
+        prompt_sha256 = None
         provider = model = response_id = None
         evidence = EvidenceClass.FAITHFUL
         if request.derive_kind == DeriveKind.CROP_AND_REFRAME:
             _deterministic_reframe(source, output)
         else:
-            prompt = _prompt(request.derive_kind, request.instruction)
+            prompt, prompt_sha256 = _prompt(repo_root, request.derive_kind, request.instruction)
             result = edit_image(repo_root, source, prompt)
             output.write_bytes(result.content)
             provider, model, response_id = result.provider, result.model, result.response_id
@@ -114,7 +111,11 @@ def materialize_assets(
                     prompt_sha256=sha256_json(prompt) if prompt else None,
                     response_id=response_id,
                 ),
-                metadata={"derive_kind": request.derive_kind.value, "request_id": request.request_id},
+                metadata={
+                    "derive_kind": request.derive_kind.value,
+                    "request_id": request.request_id,
+                    "prompt_template_sha256": prompt_sha256,
+                },
             )
         )
     return AssetCatalog(

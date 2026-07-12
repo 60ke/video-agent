@@ -21,6 +21,7 @@ from video_agent.contracts import (
     Provenance,
     SemanticSfx,
     ShotPlan,
+    TimeRef,
     TimingLock,
     TokenTiming,
     VisualPlan,
@@ -72,7 +73,7 @@ def test_auto_visual_uses_flat_motion_and_semantic_sfx_for_params(tmp_path: Path
     visual = build_auto_visual_plan("demo", narration, _timing(), catalog)
 
     assert visual.shots[0].template == "ui_params_focus"
-    assert visual.shots[0].effect == "scale_in"
+    assert visual.shots[0].motion == "scale_in"
     assert visual.shots[0].cue_bindings[0].sfx == "field_focus"
 
 
@@ -90,10 +91,12 @@ def test_compile_resolves_semantic_sfx_and_keeps_anchor_frame(tmp_path: Path) ->
         shots=[
             ShotPlan(
                 shot_id="shot_1",
-                beat_id="beat_1",
+                beat_ids=["beat_1"],
+                start=TimeRef(anchor_id="beat_start:beat_1"),
+                end=TimeRef(anchor_id="beat_end:beat_1"),
                 template="ui_params_focus",
-                asset_ids=[asset.asset_id],
-                effect="scale_in",
+                asset_bindings={"primary": asset.asset_id},
+                motion="scale_in",
                 cue_bindings=[{"action": "focus.hit", "anchor_id": "anchor_1", "sfx": "field_focus"}],
             )
         ],
@@ -101,13 +104,14 @@ def test_compile_resolves_semantic_sfx_and_keeps_anchor_frame(tmp_path: Path) ->
     audio = AudioConfig(
         sfx_profile=None,
         sfx_overrides={
-            "field_focus": SemanticSfx(path=sfx_path.name, gain_db=-18, max_duration_ms=100, fade_out_ms=30)
+            "field_focus": SemanticSfx(path=sfx_path.name, gain_db=-18, max_duration_ms=100, fade_out_ms=30, sync_point="peak", sync_offset_ms=40)
         },
     )
 
     plan = compile_render_plan(
         "demo",
         "run",
+        Narration(case_id="demo", beats=[NarrationBeat(beat_id="beat_1", spoken_text="填写必填项")]),
         _timing(),
         visual,
         catalog,
@@ -123,7 +127,9 @@ def test_compile_resolves_semantic_sfx_and_keeps_anchor_frame(tmp_path: Path) ->
     sfx = next(track for track in plan.audio_tracks if track.kind == "sfx")
     assert sfx.semantic_id == "field_focus"
     assert sfx.anchor_id == "anchor_1"
-    assert sfx.start_frame == 6
+    assert sfx.start_frame == 5
+    assert sfx.sync_frame == 6
+    assert sfx.sync_point == "peak"
     assert sfx.max_duration_ms == 100
 
 

@@ -4,25 +4,27 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from video_agent.audio import merge_sfx_profile
+from video_agent.compiler.subtitles import compile_subtitles
 from video_agent.contracts import (
     AssetCatalog,
     AudioConfig,
     AudioTrack,
     CompiledCue,
     DurationPolicy,
+    Narration,
     RenderAsset,
     RenderPlan,
     RenderShot,
     TimingLock,
     VisualPlan,
 )
-from video_agent.compiler.subtitles import compile_subtitles
 
 
-EFFECT_ALLOWLIST = {None, "cut", "crossfade", "fade_in", "fade_out", "scale_in", "scale_out", "page_slide", "perspective_push_in"}
+MOTION_ALLOWLIST = {"none", "fade_in", "fade_out", "scale_in", "scale_out", "perspective_push_in"}
 TEXT_DENSE_TEMPLATES = {"ui_params_focus"}
-TEXT_DENSE_EFFECT_ALLOWLIST = {None, "cut", "crossfade", "fade_in", "fade_out", "scale_in", "scale_out"}
+TEXT_DENSE_MOTION_ALLOWLIST = {"none", "fade_in", "fade_out", "scale_in", "scale_out"}
 BEAT_START_ANCHOR_PREFIX = "beat_start:"
+BEAT_END_ANCHOR_PREFIX = "beat_end:"
 
 
 @dataclass(frozen=True)
@@ -30,6 +32,8 @@ class _SfxEvent:
     semantic_id: str
     anchor_id: str
     hit_frame: int
+    start_frame: int
+    sync_point: str
     path: str
     gain_db: float
     trim_start_ms: int
@@ -61,18 +65,55 @@ def _select_sfx_events(events: list[_SfxEvent], fps: int, audio: AudioConfig) ->
             for chosen in selected
         ):
             continue
-        events_in_window = sum(
-            1 for chosen in selected if abs(event_ms - chosen.hit_frame * 1000 / fps) < policy.window_ms
-        )
+        events_in_window = sum(1 for chosen in selected if abs(event_ms - chosen.hit_frame * 1000 / fps) < policy.window_ms)
         if events_in_window >= policy.max_events_per_window:
             continue
         selected.append(event)
-    return sorted(selected, key=lambda item: (item.hit_frame, item.semantic_id))
+    return sorted(selected, key=lambda item: (item.start_frame, item.semantic_id))
+
+
+def _timing_anchors(timing: TimingLock) -> dict[str, int]:
+    anchors = {anchor.anchor_id: anchor.hit_frame for anchor in timing.phrase_anchors}
+    for span in timing.beat_spans:
+        anchors[f"{BEAT_START_ANCHOR_PREFIX}{span.beat_id}"] = span.start_frame
+        anchors[f"{BEAT_END_ANCHOR_PREFIX}{span.beat_id}"] = span.end_frame
+    return anchors
+
+
+def _resolve_time(anchor_frames: dict[str, int], anchor_id: str, offset_frames: int, duration_frames: int) -> int:
+    if anchor_id not in anchor_frames:
+        raise ValueError(f"shot references unknown timing anchor: {anchor_id}")
+    return max(0, min(duration_frames, anchor_frames[anchor_id] + offset_frames))
+
+
+def _validate_claim_bindings(narration: Narration, visual: VisualPlan, asset_by_id: dict[str, object]) -> None:
+    claims = {claim.claim_id: claim for claim in narration.claims}
+    for shot in visual.shots:
+        for claim_id in shot.claim_ids:
+            claim = claims.get(claim_id)
+            if claim is None:
+                raise ValueError(f"shot references unknown claim: {claim_id}")
+            supporting = set(claim.supporting_asset_ids).intersection(shot.asset_ids)
+            if not supporting:
+                raise ValueError(f"claim {claim_id} is not supported by an asset visible in {shot.shot_id}")
+            invalid = [
+                asset_id
+                for asset_id in supporting
+                if getattr(asset_by_id[asset_id], "evidence_class") not in claim.required_evidence_classes
+            ]
+            if invalid:
+                raise ValueError(f"claim {claim_id} uses insufficient evidence in {shot.shot_id}: {invalid}")
+
+    for beat in narration.beats:
+        for claim_id in beat.claim_ids:
+            if not any(claim_id in shot.claim_ids and beat.beat_id in shot.beat_ids for shot in visual.shots):
+                raise ValueError(f"narration claim {claim_id} has no supporting visual shot for {beat.beat_id}")
 
 
 def compile_render_plan(
     case_id: str,
     run_id: str,
+    narration: Narration,
     timing: TimingLock,
     visual: VisualPlan,
     catalog: AssetCatalog,
@@ -84,86 +125,81 @@ def compile_render_plan(
     audio: AudioConfig,
     duration_policy: DurationPolicy,
 ) -> RenderPlan:
-    if visual.case_id != case_id or timing.case_id != case_id:
-        raise ValueError("case ids differ across timing and visual contracts")
-    span_by_beat = {span.beat_id: span for span in timing.beat_spans}
-    first_beat_id = min(timing.beat_spans, key=lambda item: item.start_frame).beat_id
+    if narration.case_id != case_id or visual.case_id != case_id or timing.case_id != case_id:
+        raise ValueError("case ids differ across narration, timing, and visual contracts")
+    if width != 1080 or height != 1920:
+        raise ValueError("V3 currently renders only the douyin_portrait_v1 1080x1920 canvas")
+
+    beat_ids = {beat.beat_id for beat in narration.beats}
     anchor_by_id = {anchor.anchor_id: anchor for anchor in timing.phrase_anchors}
+    anchor_frames = _timing_anchors(timing)
     asset_by_id = {asset.asset_id: asset for asset in catalog.assets}
-    render_shots: list[RenderShot] = []
+    _validate_claim_bindings(narration, visual, asset_by_id)
+
     audio_tracks = [
-        AudioTrack(
-            kind="voice",
-            path=str(Path(timing.audio_path).resolve()),
-            start_frame=0,
-            gain_db=audio.voice_gain_db,
-        )
+        AudioTrack(kind="voice", path=str(Path(timing.audio_path).resolve()), start_frame=0, gain_db=audio.voice_gain_db)
     ]
-    sfx_profile = merge_sfx_profile(audio.sfx_profile, audio.sfx_overrides)
-    sfx_events: list[_SfxEvent] = []
     if audio.bgm_path:
         bgm_path = (case_dir / audio.bgm_path).resolve()
         if not bgm_path.is_file():
             raise FileNotFoundError(f"BGM source is missing: {bgm_path}")
-        audio_tracks.append(
-            AudioTrack(
-                kind="bgm",
-                path=bgm_path.as_posix(),
-                gain_db=audio.bgm_gain_db,
-                loop=True,
-                duck_under_voice=True,
-            )
-        )
+        audio_tracks.append(AudioTrack(kind="bgm", path=bgm_path.as_posix(), gain_db=audio.bgm_gain_db, loop=True, duck_under_voice=True))
+
+    sfx_profile = merge_sfx_profile(audio.sfx_profile, audio.sfx_overrides)
+    render_shots: list[RenderShot] = []
+    sfx_events: list[_SfxEvent] = []
     used_asset_ids: set[str] = set()
+    approved = {"machine_checked", "vision_verified", "human_approved"}
+
     for shot in visual.shots:
-        if shot.beat_id not in span_by_beat:
-            raise ValueError(f"shot references unknown beat: {shot.beat_id}")
-        if shot.effect not in EFFECT_ALLOWLIST:
-            raise ValueError(f"effect is not allowed in V3: {shot.effect}")
-        if shot.template in TEXT_DENSE_TEMPLATES and shot.effect not in TEXT_DENSE_EFFECT_ALLOWLIST:
-            raise ValueError(f"effect {shot.effect!r} distorts text-dense template {shot.template!r}")
+        unknown_beats = set(shot.beat_ids) - beat_ids
+        if unknown_beats:
+            raise ValueError(f"shot references unknown beats: {sorted(unknown_beats)}")
+        if shot.motion not in MOTION_ALLOWLIST:
+            raise ValueError(f"motion is not allowed in V3: {shot.motion}")
+        if shot.template in TEXT_DENSE_TEMPLATES and shot.motion not in TEXT_DENSE_MOTION_ALLOWLIST:
+            raise ValueError(f"motion {shot.motion!r} distorts text-dense template {shot.template!r}")
         missing_assets = [asset_id for asset_id in shot.asset_ids if asset_id not in asset_by_id]
         if missing_assets:
             raise ValueError(f"shot references missing assets: {missing_assets}")
-        unapproved = [
-            asset_id
-            for asset_id in shot.asset_ids
-            if asset_by_id[asset_id].quality.status not in {"machine_checked", "vision_verified", "human_approved"}
-        ]
+        unapproved = [asset_id for asset_id in shot.asset_ids if asset_by_id[asset_id].quality.status not in approved]
         if unapproved:
             raise ValueError(f"shot references unapproved assets: {unapproved}")
-        span = span_by_beat[shot.beat_id]
+
+        start_frame = _resolve_time(anchor_frames, shot.start.anchor_id, shot.start.offset_frames, timing.duration_frames)
+        end_frame = _resolve_time(anchor_frames, shot.end.anchor_id, shot.end.offset_frames, timing.duration_frames)
+        if end_frame <= start_frame:
+            raise ValueError(f"shot has non-positive resolved duration: {shot.shot_id}")
         cues: list[CompiledCue] = []
         for binding in shot.cue_bindings:
             anchor = anchor_by_id.get(binding.anchor_id)
-            is_beat_start = binding.anchor_id == f"{BEAT_START_ANCHOR_PREFIX}{shot.beat_id}"
-            if anchor is None and not is_beat_start:
-                raise ValueError(f"shot references unknown phrase anchor: {binding.anchor_id}")
-            if anchor is not None and anchor.beat_id != shot.beat_id:
-                raise ValueError(f"cue anchor belongs to another beat: {binding.anchor_id}")
-            anchor_id = binding.anchor_id if is_beat_start else anchor.anchor_id
-            hit_frame = (0 if shot.beat_id == first_beat_id else span.start_frame) if is_beat_start else anchor.hit_frame
-            cues.append(
-                CompiledCue(
-                    action=binding.action,
-                    anchor_id=anchor_id,
-                    hit_frame=hit_frame,
-                    asset_anchor_id=binding.asset_anchor_id,
-                )
+            is_beat_boundary = binding.anchor_id in anchor_frames and (
+                binding.anchor_id.startswith(BEAT_START_ANCHOR_PREFIX) or binding.anchor_id.startswith(BEAT_END_ANCHOR_PREFIX)
             )
+            if anchor is None and not is_beat_boundary:
+                raise ValueError(f"shot references unknown phrase anchor: {binding.anchor_id}")
+            if anchor is not None and anchor.beat_id not in shot.beat_ids:
+                raise ValueError(f"cue anchor belongs to a beat outside {shot.shot_id}: {binding.anchor_id}")
+            hit_frame = max(0, min(timing.duration_frames, anchor_frames[binding.anchor_id] + binding.offset_frames))
+            if hit_frame < start_frame or hit_frame > end_frame:
+                raise ValueError(f"cue anchor falls outside shot range: {binding.anchor_id}")
+            cues.append(CompiledCue(action=binding.action, anchor_id=binding.anchor_id, hit_frame=hit_frame, asset_anchor_id=binding.asset_anchor_id))
             if binding.sfx:
                 source = sfx_profile.get(binding.sfx)
                 if not source:
                     raise ValueError(f"SFX cue has no configured source: {binding.sfx}")
-                sfx_path = _resolve_sfx_path(source.path, case_dir, repo_root)
-                if not sfx_path.is_file():
-                    raise FileNotFoundError(f"SFX source is missing: {sfx_path}")
+                path = _resolve_sfx_path(source.path, case_dir, repo_root)
+                if not path.is_file():
+                    raise FileNotFoundError(f"SFX source is missing: {path}")
+                sync_frames = round(source.sync_offset_ms * timing.fps / 1000)
                 sfx_events.append(
                     _SfxEvent(
                         semantic_id=binding.sfx,
-                        anchor_id=anchor_id,
+                        anchor_id=binding.anchor_id,
                         hit_frame=hit_frame,
-                        path=sfx_path.as_posix(),
+                        start_frame=max(0, hit_frame - sync_frames),
+                        sync_point=source.sync_point,
+                        path=path.as_posix(),
                         gain_db=source.gain_db,
                         trim_start_ms=source.trim_start_ms,
                         max_duration_ms=source.max_duration_ms,
@@ -175,13 +211,16 @@ def compile_render_plan(
         render_shots.append(
             RenderShot(
                 shot_id=shot.shot_id,
-                beat_id=shot.beat_id,
+                track=shot.track,
+                beat_ids=shot.beat_ids,
                 template=shot.template,
-                asset_ids=shot.asset_ids,
-                start_frame=span.start_frame,
-                end_frame=span.end_frame,
+                asset_bindings=shot.asset_bindings,
+                claim_ids=shot.claim_ids,
+                start_frame=start_frame,
+                end_frame=end_frame,
                 cues=cues,
-                effect=shot.effect,
+                motion=shot.motion,
+                transition_in=shot.transition_in.model_dump(mode="json"),
                 long_hold_reason=shot.long_hold_reason,
             )
         )
@@ -192,7 +231,9 @@ def compile_render_plan(
             AudioTrack(
                 kind="sfx",
                 path=event.path,
-                start_frame=event.hit_frame,
+                start_frame=event.start_frame,
+                sync_frame=event.hit_frame,
+                sync_point=event.sync_point,
                 gain_db=event.gain_db,
                 anchor_id=event.anchor_id,
                 semantic_id=event.semantic_id,
@@ -202,12 +243,6 @@ def compile_render_plan(
                 fade_out_ms=event.fade_out_ms,
             )
         )
-
-    ordered_shots = sorted(render_shots, key=lambda item: item.start_frame)
-    ordered_shots[0].start_frame = 0
-    for previous, current in zip(ordered_shots, ordered_shots[1:]):
-        previous.end_frame = current.start_frame
-    ordered_shots[-1].end_frame = timing.duration_frames
 
     render_assets: list[RenderAsset] = []
     for asset_id in sorted(used_asset_ids):
@@ -228,11 +263,7 @@ def compile_render_plan(
                 frame_count=asset.metadata.get("frame_count"),
                 duration_ms=asset.metadata.get("duration_ms"),
                 anchors={anchor.anchor_id: anchor.rect.model_dump() for anchor in asset.visual_anchors},
-                anchor_panels={
-                    anchor.anchor_id: anchor.panel_rect.model_dump()
-                    for anchor in asset.visual_anchors
-                    if anchor.panel_rect is not None
-                },
+                anchor_panels={anchor.anchor_id: anchor.panel_rect.model_dump() for anchor in asset.visual_anchors if anchor.panel_rect is not None},
             )
         )
 
@@ -248,7 +279,7 @@ def compile_render_plan(
         hard_max_sec=duration_policy.hard_max_sec,
         platform_profile=platform_profile,
         assets=render_assets,
-        shots=ordered_shots,
+        shots=sorted(render_shots, key=lambda item: (item.track != "base", item.start_frame, item.shot_id)),
         subtitles=compile_subtitles(timing),
         audio_tracks=audio_tracks,
         style={

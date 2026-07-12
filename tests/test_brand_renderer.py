@@ -32,9 +32,9 @@ def test_renderer_plays_animated_brand_gif(tmp_path: Path) -> None:
         shots=[
             RenderShot(
                 shot_id="shot_1",
-                beat_id="beat_1",
+                beat_ids=["beat_1"],
                 template="brand_ip_cutaway",
-                asset_ids=["asset_brand_gif"],
+                asset_bindings={"primary": "asset_brand_gif"},
                 start_frame=0,
                 end_frame=30,
             )

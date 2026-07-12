@@ -43,6 +43,8 @@ class SemanticSfx(Contract):
     fade_in_ms: int = Field(default=5, ge=0, le=500)
     fade_out_ms: int = Field(default=80, ge=0, le=1000)
     priority: int = Field(default=50, ge=0, le=100)
+    sync_point: Literal["onset", "peak"] = "onset"
+    sync_offset_ms: int = Field(default=0, ge=0, le=1000)
 
     @model_validator(mode="after")
     def validate_fades(self) -> "SemanticSfx":
@@ -81,6 +83,7 @@ class CaseConfig(VersionedContract):
     narration_source: str | None = None
     materialization_source: str | None = None
     visual_plan_source: str | None = None
+    visual_planner_mode: Literal["auto", "multimodal"] = "auto"
     selected_asset_ids: list[str] = Field(default_factory=list)
     ai_enabled: bool = False
     vision_review_enabled: bool = False
