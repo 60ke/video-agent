@@ -1,0 +1,63 @@
+name: Discover Mixkit SFX URLs
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - '.github/workflows/tmp-discover-mixkit-sfx.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Python deps
+        run: pip install requests beautifulsoup4 lxml
+
+      - name: Fetch and inspect pages
+        run: |
+          python - <<'PY'
+          import json, re, requests
+          from bs4 import BeautifulSoup
+          from pathlib import Path
+
+          pages = {
+              'transition': 'https://mixkit.co/free-sound-effects/transition/',
+              'whoosh': 'https://mixkit.co/free-sound-effects/whoosh/',
+              'pop': 'https://mixkit.co/free-sound-effects/pop/',
+              'click': 'https://mixkit.co/free-sound-effects/click/',
+              'interface': 'https://mixkit.co/free-sound-effects/interface/',
+          }
+          out = {}
+          headers = {'User-Agent': 'Mozilla/5.0'}
+          for name, url in pages.items():
+              r = requests.get(url, headers=headers, timeout=30)
+              print(name, r.status_code, len(r.text))
+              html = r.text
+              Path(f'{name}.html').write_text(html, encoding='utf-8')
+              soup = BeautifulSoup(html, 'lxml')
+              urls = set()
+              for tag in soup.find_all(True):
+                  for attr in ('src','href','data-src','data-url','data-file','data-download','data-audio'):
+                      v = tag.get(attr)
+                      if isinstance(v, str) and ('mp3' in v or 'wav' in v or 'm4a' in v):
+                          urls.add(v)
+              for m in re.findall(r'https?://[^\"\'<> ]+\.(?:mp3|wav|m4a)(?:\?[^\"\'<> ]*)?', html, flags=re.I):
+                  urls.add(m)
+              print('urls', len(urls))
+              for u in sorted(urls)[:100]:
+                  print(u)
+              out[name] = sorted(urls)
+          Path('discovered.json').write_text(json.dumps(out, indent=2), encoding='utf-8')
+          PY
+
+      - name: Upload discovery files
+        uses: actions/upload-artifact@v4
+        with:
+          name: mixkit-discovery
+          path: |
+            discovered.json
+            *.html
+          retention-days: 1
