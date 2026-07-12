@@ -1,0 +1,160 @@
+name: Build social-editor SFX test pack v2
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg zip
+
+      - name: Download and curate sounds
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=video_agent_social_editor_sfx_pack_v2
+          mkdir -p "$ROOT/original_mp3" "$ROOT/ready_wav/transition" "$ROOT/ready_wav/accent" "$ROOT/ready_wav/ui" "$ROOT/previews"
+
+          cat > sounds.tsv <<'EOF'
+          transition_fast_01	Cinematic whoosh fast transition	transition	1492	fast image slide or scene cut	onset
+          transition_fast_02	Fast small sweep transition	transition	166	short carousel slide	onset
+          transition_zoom_01	Air zoom vacuum	transition	2608	zoom or push transition	onset
+          transition_fast_03	Fast whoosh transition	transition	1490	general fast transition	onset
+          transition_tech_01	Technology transition slide	transition	3120	UI or technology panel slide	onset
+          transition_short_01	Short transition sweep	transition	175	micro transition	onset
+          transition_fast_04	Fast transitions swoosh	transition	3115	rapid image sequence	onset
+          transition_scifi_01	Fast sci-fi transition sweep	transition	3114	tech result reveal	onset
+          transition_vacuum_01	Vacuum swoosh transition	transition	1465	pull or suction transition	onset
+          transition_magic_01	Magic transition sweep presentation	transition	2638	design or image-generation reveal	onset
+          pop_whoosh_01	Explainer video pops whoosh light pop	accent	3005	card, image or module pop	peak
+          pop_alert_01	Message pop alert	accent	2354	small item appear	peak
+          pop_alert_02	Dry pop-up notification alert	accent	2356	clean card or text pop	peak
+          pop_electric_01	Electric pop	accent	2365	technology accent	peak
+          whoosh_air_01	Air woosh	accent	1489	soft full-frame movement	onset
+          whoosh_stutter_01	Cinematic whoosh stutter	accent	787	fast multi-step transition	onset
+          whoosh_magic_01	Magic sparkle whoosh	accent	2350	AI generation or polished reveal	onset
+          reveal_impact_01	Movie whoosh impact presentation	accent	2903	important result settle	peak
+          ui_select_01	Modern technology select	ui	3124	parameter select or generate button	peak
+          ui_click_01	Cool interface click tone	ui	2568	clean interface click	peak
+          ui_click_02	Interface device click	ui	2577	device or panel click	peak
+          ui_select_02	Interface option select	ui	2573	option switch	peak
+          ui_open_01	Opening software interface	ui	2578	panel open	onset
+          ui_start_01	Software interface start	ui	2574	task start or generate action	onset
+          ui_page_forward_01	Page forward single chime	ui	1107	next image or page	peak
+          ui_page_back_01	Page back chime	ui	1108	previous image or return	peak
+          EOF
+
+          python - <<'PY'
+          import csv, json, subprocess, urllib.request
+          from pathlib import Path
+
+          root = Path('video_agent_social_editor_sfx_pack_v2')
+          rows = []
+          with open('sounds.tsv', encoding='utf-8') as f:
+              for row in csv.reader(f, delimiter='\t'):
+                  if not row:
+                      continue
+                  sid, title, category, mixkit_id, use, sync_point = row
+                  url = f'https://assets.mixkit.co/active_storage/sfx/{mixkit_id}/{mixkit_id}-preview.mp3'
+                  mp3 = root / 'original_mp3' / f'{sid}__mixkit_{mixkit_id}.mp3'
+                  wav = root / 'ready_wav' / category / f'{sid}.wav'
+                  request = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+                  with urllib.request.urlopen(request, timeout=60) as response:
+                      mp3.write_bytes(response.read())
+                  subprocess.run([
+                      'ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(mp3),
+                      '-af','silenceremove=start_periods=1:start_threshold=-60dB:start_silence=0.003:stop_periods=1:stop_threshold=-60dB:stop_silence=0.025,alimiter=limit=0.92',
+                      '-ar','48000','-ac','2',str(wav)
+                  ], check=True)
+                  probe = subprocess.run([
+                      'ffprobe','-v','error','-show_entries','format=duration',
+                      '-of','default=noprint_wrappers=1:nokey=1',str(wav)
+                  ], capture_output=True, text=True, check=True)
+                  rows.append({
+                      'id': sid,
+                      'title': title,
+                      'category': category,
+                      'mixkit_id': int(mixkit_id),
+                      'suggested_use': use,
+                      'sync_point': sync_point,
+                      'duration_seconds': round(float(probe.stdout.strip()), 4),
+                      'source_url': url,
+                      'original_file': str(mp3.relative_to(root)),
+                      'ready_file': str(wav.relative_to(root)),
+                      'sample_rate_hz': 48000,
+                      'channels': 2
+                  })
+          (root/'manifest.json').write_text(json.dumps({
+              'name': 'video-agent-social-editor-sfx-pack-v2',
+              'purpose': 'local quality evaluation for Douyin/CapCut-style short-video editing',
+              'source': 'Mixkit',
+              'files': rows
+          }, ensure_ascii=False, indent=2), encoding='utf-8')
+          PY
+
+          cat > "$ROOT/README.md" <<'EOF'
+          # Video Agent 社交短视频 / 剪辑软件风格音效测试包 V2
+
+          本包已完全移除上一版 Kenney 音效，重新选择了更偏短视频剪辑、快速转场、图片弹出、科技 UI 和结果揭示的声音。
+
+          ## 优先试听
+
+          - `transition_fast_01`：快速左右切图、普通转场。
+          - `transition_tech_01`：网页或 UI 面板滑入。
+          - `pop_whoosh_01`：卡片、图片、模块弹出。
+          - `reveal_impact_01`：重点结果落定。
+          - `ui_select_01`：参数选择或生成按钮。
+          - `whoosh_magic_01`：AI 生成、设计结果揭示。
+
+          ## 目录
+
+          - `original_mp3/`：网站原始预览音频，优先用于主观试听。
+          - `ready_wav/`：48kHz 双声道、轻度去首尾静音并限峰的程序接入版本。
+          - `previews/`：按类别和全量连续试听文件。
+          - `manifest.json`：标题、来源、时长、建议用途和同步点。
+
+          ## 卡点建议
+
+          - `onset`：音效开始点对齐画面开始运动。
+          - `peak`：瞬态峰值对齐按钮点击、卡片弹出或结果落定。
+
+          本包用于本地效果验证。正式发布前应逐项确认素材来源及授权条件。
+          EOF
+
+          ffmpeg -hide_banner -loglevel error -y -f lavfi -i 'anullsrc=r=48000:cl=stereo' -t 0.35 "$ROOT/silence.wav"
+          for CAT in transition accent ui; do
+            LIST="$ROOT/${CAT}.txt"
+            : > "$LIST"
+            while IFS=$'\t' read -r ID TITLE CATEGORY MIXKIT_ID USE SYNC; do
+              [ "$CATEGORY" = "$CAT" ] || continue
+              echo "file '$(realpath "$ROOT/ready_wav/$CAT/$ID.wav")'" >> "$LIST"
+              echo "file '$(realpath "$ROOT/silence.wav")'" >> "$LIST"
+            done < sounds.tsv
+            ffmpeg -hide_banner -loglevel error -y -f concat -safe 0 -i "$LIST" -c copy "$ROOT/previews/${CAT}_preview.wav"
+          done
+          printf "file '%s'\nfile '%s'\nfile '%s'\n" \
+            "$(realpath "$ROOT/previews/transition_preview.wav")" \
+            "$(realpath "$ROOT/previews/accent_preview.wav")" \
+            "$(realpath "$ROOT/previews/ui_preview.wav")" > "$ROOT/all.txt"
+          ffmpeg -hide_banner -loglevel error -y -f concat -safe 0 -i "$ROOT/all.txt" -c copy "$ROOT/previews/all_preview.wav"
+          rm -f "$ROOT/silence.wav" "$ROOT"/*.txt sounds.tsv
+
+          zip -qr video_agent_social_editor_sfx_pack_v2.zip "$ROOT"
+          sha256sum video_agent_social_editor_sfx_pack_v2.zip > video_agent_social_editor_sfx_pack_v2.zip.sha256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-agent-social-editor-sfx-pack-v2
+          path: |
+            video_agent_social_editor_sfx_pack_v2.zip
+            video_agent_social_editor_sfx_pack_v2.zip.sha256
+          compression-level: 0
+          retention-days: 1
