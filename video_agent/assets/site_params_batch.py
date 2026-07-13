@@ -272,39 +272,43 @@ def generate_site_params_keyframes(
         source_path = source.path.resolve().as_posix()
         old = next((item for item in previous.get("assets", []) if isinstance(item, dict) and item.get("source_path") == source_path), None)
         if not force and output.is_file() and old is None:
-            with Image.open(output) as image:
-                width, height = image.size
-                image.verify()
-            results.append(
-                {
-                    "source_path": source_path,
-                    "source_filename": source.path.name,
-                    "source_sha256": source_sha256,
-                    "output_path": output.resolve().as_posix(),
-                    "output_filename": output.name,
-                    "output_sha256": sha256_file(output),
-                    "width": width,
-                    "height": height,
-                    "site": source.site,
-                    "module": source.module,
-                    "feature_path": list(source.feature_path),
-                    "feature": source.feature,
-                    "annotation_style": "legacy_recovered_parameter_keyframe",
-                    "required_field_labels": list(annotation.labels),
-                    "callout_text": annotation.callout_text,
-                    "frontend_source_path": annotation.frontend_source_path,
-                    "frontend_source_sha256": annotation.frontend_source_sha256,
-                    "cdp_required_field_labels": list(annotation.cdp_labels),
-                    "cdp_unmatched_field_labels": list(annotation.cdp_unmatched_labels),
-                    "recipe_sha256": sha256_json({"legacy_recovered": source_sha256}),
-                    "provider": "recovered_interrupted_batch",
-                    "model": "unknown",
-                    "response_id": None,
-                    "quality_status": "unreviewed",
-                    "status": "recovered",
-                }
-            )
-            continue
+            try:
+                with Image.open(output) as image:
+                    width, height = image.size
+                    image.verify()
+            except Exception:  # noqa: BLE001 - corrupt interrupted output must be regenerated
+                output.unlink(missing_ok=True)
+            else:
+                results.append(
+                    {
+                        "source_path": source_path,
+                        "source_filename": source.path.name,
+                        "source_sha256": source_sha256,
+                        "output_path": output.resolve().as_posix(),
+                        "output_filename": output.name,
+                        "output_sha256": sha256_file(output),
+                        "width": width,
+                        "height": height,
+                        "site": source.site,
+                        "module": source.module,
+                        "feature_path": list(source.feature_path),
+                        "feature": source.feature,
+                        "annotation_style": "legacy_recovered_parameter_keyframe",
+                        "required_field_labels": list(annotation.labels),
+                        "callout_text": annotation.callout_text,
+                        "frontend_source_path": annotation.frontend_source_path,
+                        "frontend_source_sha256": annotation.frontend_source_sha256,
+                        "cdp_required_field_labels": list(annotation.cdp_labels),
+                        "cdp_unmatched_field_labels": list(annotation.cdp_unmatched_labels),
+                        "recipe_sha256": sha256_json({"legacy_recovered": source_sha256}),
+                        "provider": "recovered_interrupted_batch",
+                        "model": "unknown",
+                        "response_id": None,
+                        "quality_status": "unreviewed",
+                        "status": "recovered",
+                    }
+                )
+                continue
         boxes = _field_boxes(source, annotation, callouts)
         recipe_sha256 = sha256_json(
             {
