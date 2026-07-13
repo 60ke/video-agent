@@ -8,7 +8,7 @@ V3 只有一条正式成片链：
 assets catalog
 -> optional controlled derivatives
 -> claim-bound narration
--> Minimax speech-2.8-hd (speed 1.5, word timing)
+-> MiniMax speech-2.8-hd (single request, word timing)
 -> immutable timing lock
 -> multi-track visual plan + shared semantic cues
 -> single render plan
@@ -48,7 +48,7 @@ python -m video_agent inspect --case cases\demo --json
 - GPT Image：`config/gpt_image.local.json` 或 `GPT_IMAGE_API_KEY`
 - AI Planner/Critic：`config/ai.local.json` 或 `VIDEO_AGENT_AI_API_KEY`
 
-Minimax 默认固定为 `speed=1.5`、`subtitle_type=word`。时间戳文本只允许标点差异，禁止按时长比例回退。
+MiniMax 默认速度为 `1.3`、`subtitle_type=word`。完整文案以换行连接 Beat 后只调用一次 TTS 接口，所有镜头和字幕使用该次请求返回的真实词级时间戳。显式停顿标签仍然关闭。
 
 ## Asset Policy
 
@@ -67,9 +67,10 @@ python -m video_agent asset-review --case cases\demo --run <run_id> --asset-id <
 ## Quality Gates
 
 - 一个口播 Beat 可拆为多个镜头；base 轨连续覆盖全片，overlay 轨只承载局部标注或品牌补镜头。
+- 普通概括段按可读时间选择最多 3 张代表素材；明确枚举功能时使用 `visual_strategy=enumerated_results`，每个 `hit_phrase` 必须匹配同功能结果图并命中词级 Cue，缺图或时长不足直接失败。带圈选入口至少 1.2 秒且命中后保持 0.6 秒，参数页至少 2.2 秒，结果图至少 1.2 秒。
 - 字段操作的视觉、字幕强调和 SFX 共用词级 anchor；SFX 可按 onset 或 peak 提前起播，使听觉峰值落在视觉命中帧。
 - 字幕始终单行，每 cue 不超过 10 个全角单位。
-- 镜头连续覆盖全时间轴，默认 15–20 秒，超过 24 秒失败。
+- 镜头连续覆盖全时间轴，默认 15–20 秒，超过 60 秒失败。
 - 抖音右侧操作栏和底部信息区零碰撞。
 - 参数页等文字密集 UI 禁止透视；普通功能片只允许简洁淡变、等比缩放、翻页和短暂后完全回正的透视入场。
 - 唯一语义音效 profile 为 `douyin_common_v1`，由 `assets/audio/sfx/catalog.json` 校验哈希与 48kHz/16-bit/stereo 格式，并在运行时应用裁切、peak 对齐、增益和密度限流。

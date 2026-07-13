@@ -42,6 +42,7 @@ class NarrationBeat(Contract):
     beat_id: str
     spoken_text: str = Field(min_length=1)
     tts_markup_text: str | None = None
+    visual_strategy: Literal["auto", "enumerated_results"] = "auto"
     claim_cues: list[ClaimCue] = Field(default_factory=list)
     asset_slots: list[str] = Field(default_factory=list)
     hit_phrases: list[str] = Field(default_factory=list)
@@ -52,6 +53,10 @@ class NarrationBeat(Contract):
         missing = [cue.phrase for cue in self.claim_cues if cue.phrase not in self.spoken_text]
         if missing:
             raise ValueError(f"claim cue phrases must appear verbatim in spoken_text: {missing}")
+        if self.visual_strategy == "enumerated_results":
+            missing_hits = [phrase for phrase in self.hit_phrases if phrase not in self.spoken_text]
+            if not self.hit_phrases or missing_hits:
+                raise ValueError("enumerated_results requires hit_phrases that appear verbatim in spoken_text")
         return self
 
 

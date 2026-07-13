@@ -43,10 +43,17 @@ def _body_video(path: Path) -> None:
 
 
 def test_cover_prompt_keeps_v2_title_and_safe_zone_constraints() -> None:
-    prompt = _prompt(CoverSpec(title="AI文化墙怎么做", subtitle_hint="一键生成多套方案"), 2)
+    prompt = _prompt(CoverSpec(title="AI文化墙怎么做", subtitle_hint="一键生成多套方案"), 2, "什么网站，可以帮你一键生成文化墙")
     assert '"AI文化墙怎么做"' in prompt
     assert "x=0..1080, y=240..1680" in prompt
     assert "Website UI may only be a small supporting element" in prompt
+    assert "什么网站，可以帮你一键生成文化墙" in prompt
+    assert "Do not render the narration as subtitles" in prompt
+
+
+def test_cover_prompt_without_subtitle_forbids_subtitle_text() -> None:
+    prompt = _prompt(CoverSpec(title="VI设计 一句话生成"), 1, "不需要提示词，只需要简单输入你的品牌名称")
+    assert "If the optional subtitle is empty, render no subtitle." in prompt
 
 
 def test_cover_postprocess_adds_exactly_one_frame_without_accumulating(tmp_path: Path, monkeypatch) -> None:

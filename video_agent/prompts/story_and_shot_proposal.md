@@ -6,7 +6,8 @@
 - 默认总口播 15-20 秒，短句、自然口语。
 - 先展示最强真实结果，再说明入口、参数和更多结果。
 - hit_phrases 必须原样存在于 spoken_text，并对应可见素材或参数锚点。
-- pause_intents 只放在需要换气或镜头交接的位置，requested_ms 为 80-380。
-- 不输出 tts_markup_text，由 Pause Compiler 生成。
+- `pause_intents` 必须为空数组，不输出 `tts_markup_text`；显式语音停顿当前关闭，由 MiniMax 按正常标点自然处理。
+- 全部 Beat 将拼接为一次 MiniMax 请求。每个 Beat 末尾必须使用符合语义的句号、问号或感叹号，功能枚举内部使用顿号，禁止依赖隐式段落边界。
+- 明确逐项念出多个功能名时设置 `visual_strategy=enumerated_results`，并将每个功能名原样写入 `hit_phrases`。概括数量或功能总览保持 `visual_strategy=auto`。
 - 不把 E2/E3 素材当作真实产品证据；只使用输入 materials 中状态为已审核且 evidence_class 为 E0/E1 的素材作为 supporting_asset_ids。
 - 每个 beat 至少绑定一个 asset slot，slot 使用 result、entry、params、brand_identity 等简短语义名。

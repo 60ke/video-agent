@@ -165,28 +165,6 @@ def build_timing_lock(
                     claim_ids=claim_ids,
                 )
             )
-        for pause_idx, pause in enumerate(beat.pause_intents):
-            normalized_phrase = normalize_text(pause.after_phrase)
-            start = local_text.find(normalized_phrase)
-            if start < 0:
-                raise ValueError(f"pause phrase not found in {beat.beat_id}: {pause.after_phrase}")
-            end = start + len(normalized_phrase)
-            matched_indexes = [idx for idx, span in enumerate(local_offsets) if span[1] > start and span[0] < end]
-            last_local_idx = matched_indexes[-1]
-            after_token = local_tokens[last_local_idx]
-            next_token = local_tokens[last_local_idx + 1] if last_local_idx + 1 < len(local_tokens) else None
-            measured_start = after_token.end_frame
-            measured_end = next_token.start_frame if next_token else measured_start
-            pause_events.append(
-                PauseEvent(
-                    pause_id=f"pause_{beat.beat_id}_{pause_idx + 1:02d}",
-                    after_token_id=after_token.token_id,
-                    requested_ms=pause.requested_ms,
-                    measured_start_frame=measured_start,
-                    measured_end_frame=max(measured_start, measured_end),
-                )
-            )
-
     duration_frames = max(ms_to_frame(duration_ms, fps), tokens[-1].end_frame)
     return TimingLock(
         case_id=case_id,

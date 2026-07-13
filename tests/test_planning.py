@@ -16,7 +16,7 @@ from video_agent.contracts import (
     Provenance,
     VisualAnchor,
 )
-from video_agent.planning.auto_visual import _assets_for_beat
+from video_agent.planning.auto_visual import _assets_for_beat, _fit_visual_candidates
 from video_agent.ai.visual_planner import _candidate_assets
 
 
@@ -78,6 +78,113 @@ def test_feature_entry_never_falls_back_to_result_or_source_screenshot() -> None
             {"result_image": [result], "feature_form_params": [], "feature_entry": [], "site_home": []},
             set(),
         )
+
+
+def test_feature_entry_selection_follows_named_features() -> None:
+    culture = _asset().model_copy(
+        update={"asset_id": "asset_entry_culture", "role": "feature_entry", "semantic_path": ["文生图", "文化墙"], "filename": "文化墙_功能入口关键帧.png"}
+    )
+    logo = culture.model_copy(
+        update={"asset_id": "asset_entry_logo", "semantic_path": ["文生图", "LOGO"], "filename": "LOGO_功能入口关键帧.png"}
+    )
+    candidates = _assets_for_beat(
+        "点击进入文化墙和LOGO功能。",
+        ["操作路径", "文化墙", "LOGO"],
+        {"result_image": [], "feature_form_params": [], "feature_entry": [culture, logo], "site_home": []},
+        set(),
+    )
+
+    assert [asset.asset_id for asset, _ in candidates] == [culture.asset_id, logo.asset_id]
+
+
+def test_capability_listing_prefers_named_feature_entry_over_matching_results() -> None:
+    entry = _asset().model_copy(
+        update={"asset_id": "asset_entry_culture", "role": "feature_entry", "semantic_path": ["文生图", "文化墙"]}
+    )
+    result = entry.model_copy(
+        update={
+            "asset_id": "asset_result_culture",
+            "role": "result_image",
+            "filename": "文化墙_医院文化_结果图.png",
+            "provenance": Provenance(origin="curated_result_library"),
+        }
+    )
+
+    candidates = _assets_for_beat(
+        "文化墙、美陈等设计方案。",
+        ["功能入口", "文化墙", "美陈"],
+        {"result_image": [result], "feature_form_params": [], "feature_entry": [entry], "site_home": [], "feature_list": []},
+        set(),
+    )
+
+    assert [(asset.asset_id, template) for asset, template in candidates] == [("asset_entry_culture", "ui_feature_entry")]
+
+
+def test_enumerated_results_keep_one_asset_per_spoken_feature() -> None:
+    culture = _asset().model_copy(
+        update={"asset_id": "result_culture", "role": "result_image", "semantic_path": ["文生图", "文化墙"]}
+    )
+    logo = _asset().model_copy(
+        update={"asset_id": "result_logo", "role": "result_image", "semantic_path": ["文生图", "LOGO"]}
+    )
+    candidates = _assets_for_beat(
+        "文化墙、LOGO。",
+        ["文化墙", "LOGO"],
+        {"result_image": [culture, logo]},
+        set(),
+        visual_strategy="enumerated_results",
+        hit_phrases=["文化墙", "LOGO"],
+    )
+
+    assert [(asset.asset_id, template) for asset, template in candidates] == [
+        ("result_culture", "result_showcase"),
+        ("result_logo", "result_showcase"),
+    ]
+
+
+def test_enumerated_results_fail_instead_of_using_filename_false_positive() -> None:
+    vi_named_ecommerce = _asset().model_copy(
+        update={
+            "asset_id": "result_vi",
+            "role": "result_image",
+            "semantic_path": ["文生图", "VI"],
+            "filename": "某品牌电商VI结果图.png",
+        }
+    )
+
+    with pytest.raises(ValueError, match="电商"):
+        _assets_for_beat(
+            "电商。",
+            ["电商"],
+            {"result_image": [vi_named_ecommerce]},
+            set(),
+            visual_strategy="enumerated_results",
+            hit_phrases=["电商"],
+        )
+
+
+def test_readability_budget_selects_representative_visuals() -> None:
+    entry = _asset().model_copy(update={"role": "feature_entry"})
+    four_entries = [
+        (entry.model_copy(update={"asset_id": f"asset_entry_{index}", "filename": f"入口_{index}.png"}), "ui_feature_entry")
+        for index in range(4)
+    ]
+    six_entries = [
+        (entry.model_copy(update={"asset_id": f"asset_more_{index}", "filename": f"更多_{index}.png"}), "ui_feature_entry")
+        for index in range(6)
+    ]
+    results = [
+        (_asset().model_copy(update={"asset_id": f"asset_result_{index}", "role": "result_image"}), "result_showcase")
+        for index in range(3)
+    ]
+
+    selected_four = _fit_visual_candidates(four_entries, 83, 30, all_required=False, beat_id="four")
+    selected_six = _fit_visual_candidates(six_entries, 116, 30, all_required=False, beat_id="six")
+    selected_results = _fit_visual_candidates(results, 72, 30, all_required=False, beat_id="results")
+
+    assert [item[0].asset_id for item in selected_four] == ["asset_entry_0", "asset_entry_3"]
+    assert [item[0].asset_id for item in selected_six] == ["asset_more_0", "asset_more_2", "asset_more_5"]
+    assert [item[0].asset_id for item in selected_results] == ["asset_result_0", "asset_result_2"]
 
 
 def test_cta_prefers_waving_brand_video() -> None:

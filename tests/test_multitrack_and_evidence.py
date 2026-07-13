@@ -62,11 +62,11 @@ def _timing() -> TimingLock:
         audio_path="voice.wav",
         audio_sha256="a" * 64,
         fps=30,
-        duration_ms=1000,
-        duration_frames=30,
-        tokens=[TokenTiming(token_id="tok", text="展示", start_ms=0, end_ms=1000, start_frame=0, end_frame=30, beat_id="beat_1")],
+        duration_ms=3000,
+        duration_frames=90,
+        tokens=[TokenTiming(token_id="tok", text="展示", start_ms=0, end_ms=3000, start_frame=0, end_frame=90, beat_id="beat_1")],
         phrase_anchors=[PhraseAnchor(anchor_id="claim_anchor", text="展示真实结果", token_ids=["tok"], hit_frame=6, beat_id="beat_1", claim_ids=["claim_result"])],
-        beat_spans=[BeatSpan(beat_id="beat_1", token_ids=["tok"], start_frame=0, end_frame=30)],
+        beat_spans=[BeatSpan(beat_id="beat_1", token_ids=["tok"], start_frame=0, end_frame=90)],
     )
 
 
@@ -84,7 +84,7 @@ def _compile(tmp_path: Path, visual: VisualPlan, narration: Narration, catalog: 
         1920,
         tmp_path,
         AudioConfig(sfx_profile=None),
-        DurationPolicy(preferred_min_sec=1, preferred_max_sec=1, hard_max_sec=1),
+        DurationPolicy(preferred_min_sec=3, preferred_max_sec=3, hard_max_sec=3),
     )
 
 
@@ -202,7 +202,7 @@ def test_multitrack_plan_renders_real_mp4(tmp_path: Path) -> None:
                 shot_id="red",
                 beat_ids=["beat_1"],
                 start=TimeRef(anchor_id="beat_start:beat_1"),
-                end=TimeRef(anchor_id="beat_start:beat_1", offset_frames=15),
+                end=TimeRef(anchor_id="beat_start:beat_1", offset_frames=45),
                 template="result_showcase",
                 asset_bindings={"primary": red.asset_id},
                 cue_bindings=[CueBinding(action=f"visual.enter.{index}", anchor_id="beat_start:beat_1", offset_frames=index) for index in range(9)],
@@ -210,7 +210,7 @@ def test_multitrack_plan_renders_real_mp4(tmp_path: Path) -> None:
             ShotPlan(
                 shot_id="green",
                 beat_ids=["beat_1"],
-                start=TimeRef(anchor_id="beat_start:beat_1", offset_frames=15),
+                start=TimeRef(anchor_id="beat_start:beat_1", offset_frames=45),
                 end=TimeRef(anchor_id="beat_end:beat_1"),
                 template="result_showcase",
                 asset_bindings={"primary": green.asset_id},
@@ -224,7 +224,7 @@ def test_multitrack_plan_renders_real_mp4(tmp_path: Path) -> None:
         output.setnchannels(1)
         output.setsampwidth(2)
         output.setframerate(48_000)
-        output.writeframes(b"".join(struct.pack("<h", round(2400 * math.sin(2 * math.pi * 440 * sample / 48_000))) for sample in range(48_000)))
+        output.writeframes(b"".join(struct.pack("<h", round(2400 * math.sin(2 * math.pi * 440 * sample / 48_000))) for sample in range(144_000)))
     plan.audio_tracks[0].path = voice.as_posix()
     output = render_video(plan, tmp_path / "multitrack.mp4", preset="ultrafast", crf=30)
     streams = ffprobe(output)["streams"]

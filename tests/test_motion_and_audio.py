@@ -70,7 +70,15 @@ def test_auto_visual_uses_flat_motion_and_semantic_sfx_for_params(tmp_path: Path
         beats=[NarrationBeat(beat_id="beat_1", spoken_text="填写必填项", asset_slots=["参数"], hit_phrases=["填写必填项"])],
     )
 
-    visual = build_auto_visual_plan("demo", narration, _timing(), catalog)
+    timing = _timing().model_copy(
+        update={
+            "duration_ms": 3000,
+            "duration_frames": 90,
+            "tokens": [_timing().tokens[0].model_copy(update={"end_ms": 3000, "end_frame": 90})],
+            "beat_spans": [_timing().beat_spans[0].model_copy(update={"end_frame": 90})],
+        }
+    )
+    visual = build_auto_visual_plan("demo", narration, timing, catalog)
 
     assert visual.shots[0].template == "ui_params_focus"
     assert visual.shots[0].motion == "scale_in"
@@ -81,7 +89,14 @@ def test_auto_visual_covers_timeline_tail_and_marks_pause(tmp_path: Path) -> Non
     asset = _asset(tmp_path / "params.png")
     catalog = AssetCatalog(catalog_id="demo", generated_at="now", source_root="assets", assets=[asset])
     narration = Narration(case_id="demo", beats=[NarrationBeat(beat_id="beat_1", spoken_text="填写必填项", asset_slots=["参数"])])
-    timing = _timing().model_copy(update={"duration_ms": 1500, "duration_frames": 45})
+    timing = _timing().model_copy(
+        update={
+            "duration_ms": 4000,
+            "duration_frames": 120,
+            "tokens": [_timing().tokens[0].model_copy(update={"end_ms": 3000, "end_frame": 90})],
+            "beat_spans": [_timing().beat_spans[0].model_copy(update={"end_frame": 90})],
+        }
+    )
     visual = build_auto_visual_plan("demo", narration, timing, catalog)
     assert visual.shots[0].start.anchor_id == "timeline_start"
     assert visual.shots[-1].end.anchor_id == "timeline_end"

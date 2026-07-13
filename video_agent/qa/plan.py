@@ -118,6 +118,39 @@ def validate_render_plan(plan: RenderPlan) -> list[CheckResult]:
         if shot.end_frame - shot.start_frame > plan.fps * 4 and not shot.long_hold_reason:
             density_errors.append(f"{shot.shot_id}:over_4s")
     checks.append(CheckResult(check_id="semantic_visual_density", status="failed" if density_errors else "passed", message=", ".join(density_errors)))
+    readability_errors: list[str] = []
+    minimum_seconds = {
+        "ui_params_focus": 2.2,
+        "result_showcase": 1.2,
+        "reference_to_result": 1.5,
+        "brand_ip_cutaway": 1.2,
+    }
+    for shot in plan.shots:
+        if shot.track != "base":
+            continue
+        required = 1.2 if shot.template == "ui_feature_entry" and shot.callout_animation else minimum_seconds.get(shot.template, 1.5 if shot.template == "ui_feature_entry" else 0.0)
+        actual = (shot.end_frame - shot.start_frame) / plan.fps
+        if actual + 1e-6 < required:
+            readability_errors.append(f"{shot.shot_id}:{actual:.3f}s<{required:.3f}s")
+    checks.append(
+        CheckResult(
+            check_id="template_readability_duration",
+            status="failed" if readability_errors else "passed",
+            message=", ".join(readability_errors),
+        )
+    )
+    callout_hold_errors = [
+        f"{shot.shot_id}:{(shot.end_frame - shot.callout_animation.hit_frame) / plan.fps:.3f}s"
+        for shot in plan.shots
+        if shot.callout_animation and shot.end_frame - shot.callout_animation.hit_frame < round(plan.fps * 0.6)
+    ]
+    checks.append(
+        CheckResult(
+            check_id="callout_stable_hold",
+            status="failed" if callout_hold_errors else "passed",
+            message=", ".join(callout_hold_errors),
+        )
+    )
     timeline_errors = []
     ordered = sorted((shot for shot in plan.shots if shot.track == "base"), key=lambda shot: shot.start_frame)
     if not ordered:

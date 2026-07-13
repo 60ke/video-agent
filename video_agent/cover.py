@@ -21,6 +21,7 @@ from video_agent.contracts import AssetCatalog, RenderPlan, VisualPlan
 class CoverSpec(Contract):
     title: str = Field(min_length=1, max_length=28)
     subtitle_hint: str | None = Field(default=None, max_length=40)
+    narration_text: str | None = Field(default=None, max_length=10000)
     style_hint: str = "short_video_feature_seed"
     reference_asset_ids: list[str] = Field(default_factory=list, max_length=3)
     max_references: int = Field(default=3, ge=1, le=3)
@@ -105,14 +106,20 @@ def _reference_sheet(paths: list[Path], output: Path) -> Path:
     return output
 
 
-def _prompt(spec: CoverSpec, reference_count: int) -> str:
+def _prompt(spec: CoverSpec, reference_count: int, narration_text: str = "") -> str:
     subtitle = spec.subtitle_hint or ""
+    narration_context = narration_text or "（未提供口播文案）"
     return f"""
 Create a high-quality vertical short-video cover image, final canvas 1080x1920.
 
 STRICT TITLE REQUIREMENT:
 Render the main title exactly, character by character, as: "{spec.title}"
-Do not rewrite, omit, translate, replace, or garble any character. The only other new text allowed is the optional subtitle: "{subtitle}".
+Do not rewrite, omit, translate, replace, or garble any character. The only other new text allowed is the optional subtitle: "{subtitle}". If the optional subtitle is empty, render no subtitle.
+
+FULL NARRATION CONTEXT:
+{narration_context}
+
+Use the full narration only to understand the video's subject, hook, audience, and visual priority. Do not render the narration as subtitles, a transcript, a paragraph, or multiple caption lines. The cover is a thumbnail, not a video subtitle frame.
 
 CENTRAL 3:4 SAFE ZONE:
 Put the title, subtitle, main result subject, logo, and every important element inside x=0..1080, y=240..1680. Keep the most critical content inside x=100..860, y=240..1500 so Douyin controls and metadata cannot cover it. Outside the central safe zone use only background extension and restrained decoration.
@@ -193,7 +200,17 @@ def postprocess_cover(repo_root: Path, case_dir: Path, run_dir: Path, spec_path:
 
     references = _select_references(repo_root, spec, catalog, visual)
     sheet = _reference_sheet(references, work / "cover_reference_sheet.png")
-    prompt = _prompt(spec, len(references))
+    narration_text = spec.narration_text
+    narration_path = run_dir / "narration.json"
+    if not narration_text and narration_path.is_file():
+        narration_data = load_json(narration_path)
+        beats = narration_data.get("beats", []) if isinstance(narration_data, dict) else []
+        narration_text = " ".join(
+            str(beat.get("spoken_text") or "")
+            for beat in beats
+            if isinstance(beat, dict) and beat.get("spoken_text")
+        )
+    prompt = _prompt(spec, len(references), narration_text or "")
     result = edit_image(repo_root, sheet, prompt)
     raw = work / "cover_raw.png"
     raw.write_bytes(result.content)

@@ -16,7 +16,7 @@ class VideoFormat(Contract):
 class DurationPolicy(Contract):
     preferred_min_sec: float = 15.0
     preferred_max_sec: float = 20.0
-    hard_max_sec: float = 24.0
+    hard_max_sec: float = 60.0
 
     @model_validator(mode="after")
     def validate_order(self) -> "DurationPolicy":
@@ -29,10 +29,10 @@ class VoiceConfig(Contract):
     provider: Literal["minimax"] = "minimax"
     model: str = "speech-2.8-hd"
     voice_id: str = "male-qn-qingse"
-    speed: float = Field(default=1.5, ge=0.5, le=2.0)
+    speed: float = Field(default=1.3, ge=0.5, le=2.0)
     emotion: str | None = None
     subtitle_type: Literal["word"] = "word"
-    pause_profile: str = "short_video_natural_v1"
+    pause_profile: str = "disabled"
 
 
 class SemanticSfx(Contract):
@@ -85,5 +85,7 @@ class CaseConfig(VersionedContract):
     visual_plan_source: str | None = None
     visual_planner_mode: Literal["auto", "multimodal"] = "auto"
     selected_asset_ids: list[str] = Field(default_factory=list)
+    cover_enabled: bool = False
+    cover_source: str = "input/cover.json"
     ai_enabled: bool = False
     vision_review_enabled: bool = False

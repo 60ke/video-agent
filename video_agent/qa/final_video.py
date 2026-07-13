@@ -40,16 +40,29 @@ def _measure_loudness(video: Path) -> dict[str, float]:
     return {"integrated_lufs": float(payload["input_i"]), "true_peak_dbtp": float(payload["input_tp"])}
 
 
-def _contact_sheet(video: Path, output: Path, plan: RenderPlan, frames: int = 16) -> None:
+def _cover_frame_count(run_dir: Path) -> int:
+    """Return post-processed cover frames without making cover mode a plan concern."""
+
+    report_path = run_dir / "cover_report.json"
+    if not report_path.is_file():
+        return 0
+    try:
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+        return max(0, int(payload.get("cover_frames", 0)))
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return 0
+
+
+def _contact_sheet(video: Path, output: Path, plan: RenderPlan, frames: int = 16, frame_offset: int = 0) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     selected: list[int] = []
     for shot in plan.shots:
         span = shot.end_frame - shot.start_frame
-        selected.append(min(shot.end_frame - 1, shot.start_frame + max(10, round(span * 0.45))))
+        selected.append(frame_offset + min(shot.end_frame - 1, shot.start_frame + max(10, round(span * 0.45))))
         if shot.cues:
-            selected.extend(min(shot.end_frame - 1, cue.hit_frame + cue.settle_frames) for cue in shot.cues)
+            selected.extend(frame_offset + min(shot.end_frame - 1, cue.hit_frame + cue.settle_frames) for cue in shot.cues)
         else:
-            selected.append(min(shot.end_frame - 1, shot.start_frame + max(12, round(span * 0.72))))
+            selected.append(frame_offset + min(shot.end_frame - 1, shot.start_frame + max(12, round(span * 0.72))))
     selected = sorted(set(max(0, value) for value in selected))
     if len(selected) > frames:
         selected = [selected[round(index * (len(selected) - 1) / (frames - 1))] for index in range(frames)]
@@ -75,7 +88,7 @@ def _contact_sheet(video: Path, output: Path, plan: RenderPlan, frames: int = 16
         raise RuntimeError(f"contact sheet failed: {proc.stderr[-1000:]}")
 
 
-def _cue_contact_sheets(video: Path, output_dir: Path, plan: RenderPlan, fps: int) -> list[Path]:
+def _cue_contact_sheets(video: Path, output_dir: Path, plan: RenderPlan, fps: int, frame_offset: int = 0) -> list[Path]:
     """Show before/hit/after evidence for motion and SFX cue inspection."""
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -86,7 +99,13 @@ def _cue_contact_sheets(video: Path, output_dir: Path, plan: RenderPlan, fps: in
     for page_index, page_start in enumerate(range(0, len(cues), 8), start=1):
         selected: list[int] = []
         for cue in cues[page_start : page_start + 8]:
-            selected.extend([max(0, cue.hit_frame - 3), cue.hit_frame, min(plan.frame_count - 1, cue.hit_frame + max(3, round(fps * 0.2)))])
+            selected.extend(
+                [
+                    frame_offset + max(0, cue.hit_frame - 3),
+                    frame_offset + cue.hit_frame,
+                    frame_offset + min(plan.frame_count - 1, cue.hit_frame + max(3, round(fps * 0.2))),
+                ]
+            )
         output = output_dir / f"cue_contact_sheet_{page_index:03d}.jpg"
         select_expr = "+".join(f"eq(n\\,{frame})" for frame in selected)
         command = [
@@ -107,19 +126,28 @@ def run_final_qa(plan: RenderPlan, video: Path, run_dir: Path) -> QaReport:
         checks.append(CheckResult(check_id="final_video_exists", status="failed", message=str(video)))
         return QaReport(case_id=plan.case_id, run_id=plan.run_id, status="failed", checks=checks)
     probe = ffprobe(video)
+    cover_frames = _cover_frame_count(run_dir)
     video_stream = next((stream for stream in probe.get("streams", []) if stream.get("codec_type") == "video"), None)
     audio_stream = next((stream for stream in probe.get("streams", []) if stream.get("codec_type") == "audio"), None)
     dimensions_ok = bool(video_stream and video_stream.get("width") == plan.width and video_stream.get("height") == plan.height)
     checks.append(CheckResult(check_id="final_dimensions", status="passed" if dimensions_ok else "failed", details=video_stream or {}))
     checks.append(CheckResult(check_id="final_audio", status="passed" if audio_stream else "failed", details=audio_stream or {}))
     duration = float((probe.get("format") or {}).get("duration") or 0)
-    expected = plan.frame_count / plan.fps
+    expected_frames = plan.frame_count + cover_frames
+    expected = expected_frames / plan.fps
     duration_ok = abs(duration - expected) <= max(1 / plan.fps, 0.05) and duration <= plan.hard_max_sec
     checks.append(
         CheckResult(
             check_id="final_duration",
             status="passed" if duration_ok else "failed",
-            details={"actual": duration, "expected": expected, "hard_max": plan.hard_max_sec},
+            details={
+                "actual": duration,
+                "expected": expected,
+                "expected_frames": expected_frames,
+                "body_frames": plan.frame_count,
+                "cover_frames": cover_frames,
+                "hard_max": plan.hard_max_sec,
+            },
         )
     )
     preferred = plan.preferred_min_sec <= duration <= plan.preferred_max_sec
@@ -134,8 +162,8 @@ def run_final_qa(plan: RenderPlan, video: Path, run_dir: Path) -> QaReport:
     loudness_ok = -18.0 <= loudness["integrated_lufs"] <= -14.0 and loudness["true_peak_dbtp"] <= -1.0
     checks.append(CheckResult(check_id="final_audio_loudness", status="passed" if loudness_ok else "failed", details=loudness))
     sheet = run_dir / "final" / "contact_sheet.jpg"
-    _contact_sheet(video, sheet, plan)
-    _cue_contact_sheets(video, run_dir / "final", plan, plan.fps)
+    _contact_sheet(video, sheet, plan, frame_offset=cover_frames)
+    _cue_contact_sheets(video, run_dir / "final", plan, plan.fps, frame_offset=cover_frames)
     failed = any(check.status == "failed" for check in checks)
     return QaReport(
         case_id=plan.case_id,

@@ -79,6 +79,7 @@ def normalize_tokens(raw: Any) -> list[dict[str, Any]]:
     ]
     divisor = 1000.0 if observed and max(observed) > 1000 else 1.0
     result: list[dict[str, Any]] = []
+    seen_source_spans: set[tuple[str, int, int]] = set()
     for item in items:
         text = str(_value(item, ("text", "word", "token", "char")) or "")
         start = float(_value(item, ("time_begin", "start_time", "start", "begin")) or 0)
@@ -86,7 +87,18 @@ def normalize_tokens(raw: Any) -> list[dict[str, Any]]:
         start_ms = int(round(start / divisor * 1000))
         end_ms = int(round(end / divisor * 1000))
         if text and end_ms > start_ms:
-            result.append({"text": text, "start_ms": start_ms, "end_ms": end_ms})
+            token = {"text": text, "start_ms": start_ms, "end_ms": end_ms}
+            source_begin = _value(item, ("word_begin", "token_begin"))
+            source_end = _value(item, ("word_end", "token_end"))
+            source_span = (text, int(source_begin), int(source_end)) if source_begin is not None and source_end is not None else None
+            # MiniMax can duplicate a numeric word with the same source span
+            # (for example two `20` tokens in `20多个`) while assigning them
+            # different audio spans. It is one spoken token, not two words.
+            if source_span and source_span in seen_source_spans:
+                continue
+            if source_span:
+                seen_source_spans.add(source_span)
+            result.append(token)
     return result
 
 

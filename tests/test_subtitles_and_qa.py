@@ -7,6 +7,7 @@ from video_agent.compiler.subtitles import compile_subtitles, fullwidth_units
 from video_agent.contracts import (
     AudioTrack,
     BeatSpan,
+    CompiledCalloutAnimation,
     CueBinding,
     RenderAsset,
     RenderPlan,
@@ -113,6 +114,33 @@ def test_qa_rejects_perspective_on_text_dense_ui() -> None:
     )
     checks = {check.check_id: check for check in validate_render_plan(plan)}
     assert checks["text_dense_motion_safe"].status == "failed"
+
+
+def test_qa_rejects_short_reading_time_and_late_callout() -> None:
+    plan = RenderPlan(
+        case_id="demo",
+        run_id="run",
+        frame_count=30,
+        assets=[RenderAsset(asset_id="asset", path="demo.png", sha256="a" * 64, width=100, height=100)],
+        shots=[
+            RenderShot(
+                shot_id="entry",
+                beat_ids=["beat"],
+                template="ui_feature_entry",
+                asset_bindings={"primary": "asset"},
+                start_frame=0,
+                end_frame=30,
+                callout_animation=CompiledCalloutAnimation(kind="handdrawn_circle_reveal", start_frame=8, hit_frame=20),
+            )
+        ],
+        subtitles=[],
+        audio_tracks=[AudioTrack(kind="voice", path="voice.mp3")],
+    )
+
+    checks = {check.check_id: check for check in validate_render_plan(plan)}
+
+    assert checks["template_readability_duration"].status == "failed"
+    assert checks["callout_stable_hold"].status == "failed"
 
 
 def test_overlay_layout_rejects_douyin_rail_and_subtitle_slots() -> None:

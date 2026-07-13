@@ -10,6 +10,7 @@ from video_agent.ai.visual_critic import review_contact_sheet
 from video_agent.assets import build_catalog, catalog_snapshot, materialize_assets
 from video_agent.compiler import compile_render_plan
 from video_agent.contracts import AssetCatalog, MaterializationPlan, Narration, QaReport, RenderPlan, TimingLock, VisualPlan
+from video_agent.cover import postprocess_cover
 from video_agent.io import load_json, load_model, sha256_file, sha256_json, utc_now, write_json_atomic
 from video_agent.planning import build_auto_visual_plan
 from video_agent.qa import run_final_qa, validate_render_plan, validate_timing_lock
@@ -131,7 +132,12 @@ class Orchestrator:
                 "format": case["format"],
                 "audio": case["audio"],
             },
-            "render": {"plan": self._artifact_sha256("render_plan.json"), "quality": case["quality"]},
+            "render": {
+                "plan": self._artifact_sha256("render_plan.json"),
+                "quality": case["quality"],
+                "cover_enabled": case["cover_enabled"],
+                "cover_source": self._source_sha256(case["cover_source"]) if case["cover_enabled"] else None,
+            },
             "qa": {"plan": self._artifact_sha256("render_plan.json"), "video": self._artifact_sha256("final/video.mp4"), "vision_review_enabled": case["vision_review_enabled"]},
         }
         return {**common, "stage": stage, "inputs": source_map[stage]}
@@ -289,7 +295,11 @@ class Orchestrator:
     def stage_render(self) -> Path:
         plan = load_model(self.context.artifact("render_plan.json"), RenderPlan)
         output = self.context.run_dir / "final" / "video.mp4"
-        return render_video(plan, output, preset="veryfast" if self.context.case.quality == "draft" else "medium", crf=22 if self.context.case.quality == "draft" else 18)
+        render_video(plan, output, preset="veryfast" if self.context.case.quality == "draft" else "medium", crf=22 if self.context.case.quality == "draft" else 18)
+        if self.context.case.cover_enabled:
+            spec = self.context.case_dir / self.context.case.cover_source
+            postprocess_cover(self.context.repo_root, self.context.case_dir, self.context.run_dir, spec)
+        return output
 
     def stage_qa(self) -> Path:
         plan = load_model(self.context.artifact("render_plan.json"), RenderPlan)

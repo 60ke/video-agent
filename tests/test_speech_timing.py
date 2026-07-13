@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from video_agent.contracts import Narration, NarrationBeat, PauseIntent
-from video_agent.speech.pause_compiler import compile_narration_markup, strip_tts_markup
+from video_agent.speech.pause_compiler import compile_narration_markup
 from video_agent.speech.minimax import normalize_tokens
 from video_agent.speech.timing_lock import build_timing_lock, ms_to_frame
 
@@ -17,7 +17,7 @@ def _tokens(text: str, step_ms: int = 120) -> list[dict[str, int | str]]:
     ]
 
 
-def test_pause_markup_keeps_clean_spoken_text() -> None:
+def test_explicit_pause_markup_is_disabled() -> None:
     narration = Narration(
         case_id="pause_case",
         beats=[
@@ -32,8 +32,20 @@ def test_pause_markup_keeps_clean_spoken_text() -> None:
 
     markup = compile_narration_markup(narration)
 
-    assert "上传LOGO<#0.18#>" in markup
-    assert strip_tts_markup(markup) == narration.spoken_text
+    assert markup == "上传LOGO，再填写品牌名称。\n一键生成。"
+    assert markup.replace("\n", "") == narration.spoken_text
+    assert "<#" not in markup
+
+
+def test_narration_beat_supports_enumerated_visual_strategy() -> None:
+    beat = NarrationBeat(
+        beat_id="beat_001",
+        spoken_text="文化墙、美陈。",
+        visual_strategy="enumerated_results",
+        hit_phrases=["文化墙", "美陈"],
+    )
+
+    assert beat.visual_strategy == "enumerated_results"
 
 
 def test_word_timing_is_strict_and_frame_locked(tmp_path: Path) -> None:
@@ -90,6 +102,27 @@ def test_minimax_timestamp_unit_is_detected_for_the_whole_response() -> None:
     ]
 
 
+def test_minimax_collapses_exact_span_duplicate_numeric_word() -> None:
+    raw = {
+        "subtitles": [
+            {
+                "timestamped_words": [
+                    {"word": "还", "word_begin": 0, "word_end": 1, "time_begin": 0, "time_end": 1000},
+                    {"word": "20", "word_begin": 1, "word_end": 3, "time_begin": 1000, "time_end": 2000},
+                    {"word": "20", "word_begin": 1, "word_end": 3, "time_begin": 2000, "time_end": 3000},
+                    {"word": "多", "word_begin": 3, "word_end": 4, "time_begin": 3000, "time_end": 4000},
+                ]
+            }
+        ]
+    }
+
+    assert normalize_tokens(raw) == [
+        {"text": "还", "start_ms": 0, "end_ms": 1000},
+        {"text": "20", "start_ms": 1000, "end_ms": 2000},
+        {"text": "多", "start_ms": 3000, "end_ms": 4000},
+    ]
+
+
 def test_punctuation_token_end_is_merged_into_previous_word(tmp_path: Path) -> None:
     audio = tmp_path / "voice.mp3"
     audio.write_bytes(b"synthetic-audio")
@@ -113,4 +146,4 @@ def test_punctuation_token_end_is_merged_into_previous_word(tmp_path: Path) -> N
         {"text": "。", "start_ms": 700, "end_ms": 750},
     ]
     timing = build_timing_lock("punctuation_pause", narration, raw, audio, 800, 30)
-    assert timing.pause_events[0].measured_start_frame == ms_to_frame(360, 30)
+    assert timing.pause_events == []
