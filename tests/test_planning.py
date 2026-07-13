@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import pytest
+
 from video_agent.contracts import (
     Asset,
     AssetCatalog,
     AssetQuality,
     CaseConfig,
+    Claim,
+    ClaimCue,
     EvidenceClass,
     Narration,
     NarrationBeat,
@@ -12,7 +16,7 @@ from video_agent.contracts import (
     Provenance,
     VisualAnchor,
 )
-from video_agent.planning.auto_visual import _anchor_for_phrase, _assets_for_beat
+from video_agent.planning.auto_visual import _assets_for_beat
 from video_agent.ai.visual_planner import _candidate_assets
 
 
@@ -41,12 +45,6 @@ def _asset() -> Asset:
     )
 
 
-def test_anchor_selection_never_falls_back_to_unrelated_field() -> None:
-    asset = _asset()
-    assert _anchor_for_phrase(asset, "填写品牌名称") == "anchor_brand"
-    assert _anchor_for_phrase(asset, "选择行业") is None
-
-
 def test_catalog_contract_fixture_is_valid() -> None:
     catalog = AssetCatalog(catalog_id="fixture", generated_at="now", source_root="assets", assets=[_asset()])
     narration = Narration(case_id="demo", beats=[NarrationBeat(beat_id="b1", spoken_text="填写品牌名称")])
@@ -69,6 +67,17 @@ def test_result_selection_prefers_matching_industry_tag() -> None:
     )
     assert candidates[0][0].asset_id == medical.asset_id
     assert candidates[0][1] == "result_showcase"
+
+
+def test_feature_entry_never_falls_back_to_result_or_source_screenshot() -> None:
+    result = _asset().model_copy(update={"asset_id": "asset_result_only", "role": "result_image"})
+    with pytest.raises(ValueError, match="production feature-entry keyframe is required"):
+        _assets_for_beat(
+            "进入功能入口",
+            ["功能入口"],
+            {"result_image": [result], "feature_form_params": [], "feature_entry": [], "site_home": []},
+            set(),
+        )
 
 
 def test_cta_prefers_waving_brand_video() -> None:
@@ -106,5 +115,37 @@ def test_multimodal_packet_excludes_unreviewed_assets() -> None:
     approved = _asset().model_copy(update={"role": "result_image"})
     unreviewed = approved.model_copy(update={"asset_id": "asset_unreviewed", "quality": AssetQuality(status="unreviewed")})
     catalog = AssetCatalog(catalog_id="fixture", generated_at="now", source_root="assets", assets=[approved, unreviewed])
-    selected = _candidate_assets(CaseConfig(case_id="demo", goal="测试", feature_path=["文生图", "VI"]), catalog)
+    narration = Narration(case_id="demo", beats=[NarrationBeat(beat_id="beat_1", spoken_text="测试")])
+    selected = _candidate_assets(CaseConfig(case_id="demo", goal="测试", feature_path=["文生图", "VI"]), narration, catalog)
     assert [asset.asset_id for asset in selected] == [approved.asset_id]
+
+
+def test_multimodal_packet_never_drops_claim_evidence_at_limit() -> None:
+    evidence = [
+        _asset().model_copy(update={"asset_id": f"claim_asset_{index:02d}", "role": "result_image"})
+        for index in range(10)
+    ]
+    extras = [_asset().model_copy(update={"asset_id": f"extra_{index:02d}", "role": "site_home"}) for index in range(8)]
+    catalog = AssetCatalog(catalog_id="fixture", generated_at="now", source_root="assets", assets=evidence + extras)
+    narration = Narration(
+        case_id="demo",
+        claims=[Claim(claim_id="claim_all", text="十张结果", supporting_asset_ids=[asset.asset_id for asset in evidence])],
+        beats=[NarrationBeat(beat_id="beat_1", spoken_text="展示十张结果", claim_cues=[ClaimCue(claim_id="claim_all", phrase="十张结果")])],
+    )
+    selected = _candidate_assets(CaseConfig(case_id="demo", goal="测试", feature_path=["文生图", "VI"]), narration, catalog)
+    assert {asset.asset_id for asset in evidence} <= {asset.asset_id for asset in selected}
+    assert len(selected) == 12
+
+
+def test_multimodal_packet_fails_when_claim_evidence_exceeds_limit() -> None:
+    evidence = [_asset().model_copy(update={"asset_id": f"claim_asset_{index:02d}", "role": "result_image"}) for index in range(13)]
+    narration = Narration(
+        case_id="demo",
+        claims=[Claim(claim_id="claim_all", text="证据", supporting_asset_ids=[asset.asset_id for asset in evidence])],
+        beats=[NarrationBeat(beat_id="beat_1", spoken_text="展示证据", claim_cues=[ClaimCue(claim_id="claim_all", phrase="证据")])],
+    )
+    catalog = AssetCatalog(catalog_id="fixture", generated_at="now", source_root="assets", assets=evidence)
+    import pytest
+
+    with pytest.raises(ValueError, match="exceeds multimodal image limit"):
+        _candidate_assets(CaseConfig(case_id="demo", goal="测试", feature_path=["文生图", "VI"]), narration, catalog)

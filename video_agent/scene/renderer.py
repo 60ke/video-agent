@@ -10,12 +10,12 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageSequence
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont, ImageSequence
 
 from video_agent.compiler.subtitles import fullwidth_units
-from video_agent.contracts import CompiledCue, RenderPlan, RenderShot, SubtitleCue
+from video_agent.contracts import RenderPlan, RenderShot, SubtitleCue
 from video_agent.platform import PixelRect, get_profile
-from video_agent.scene.easing import ease_out_cubic, smoothstep
+from video_agent.scene.easing import ease_out_cubic
 
 
 FONT_CANDIDATES = (
@@ -81,90 +81,6 @@ def _rounded_card(image: Image.Image, radius: int = 28) -> Image.Image:
     return source
 
 
-def _crop_around_anchor(
-    image: Image.Image,
-    rect: dict[str, float],
-    template: str,
-    panel_rect: dict[str, float] | None = None,
-) -> tuple[Image.Image, dict[str, float]]:
-    x, y, w, h = rect["x"], rect["y"], rect["w"], rect["h"]
-    if template == "ui_feature_entry":
-        context = panel_rect or rect
-        context_center_x = context["x"] + context["w"] / 2
-        context_center_y = context["y"] + context["h"] / 2
-        crop_w = max(0.34, min(0.62, context["w"] * 2.4))
-        crop_h = max(0.62, min(0.86, context["h"] * 1.45))
-        center_x = context_center_x
-        center_y = context_center_y
-    elif w >= 0.6:
-        crop_w = 1.0
-        crop_h = 0.70
-        center_x = 0.5
-        center_y = min(0.65, max(crop_h / 2, y + h / 2 - 0.10))
-    else:
-        crop_w = 0.94
-        crop_h = 0.64
-        center_x = x + w / 2
-        center_y = y + h / 2
-    left = max(0.0, min(1.0 - crop_w, center_x - crop_w / 2))
-    top = max(0.0, min(1.0 - crop_h, center_y - crop_h / 2))
-    px = (
-        int(round(left * image.width)),
-        int(round(top * image.height)),
-        int(round((left + crop_w) * image.width)),
-        int(round((top + crop_h) * image.height)),
-    )
-    cropped = image.crop(px)
-    local = {
-        "x": (x - left) / crop_w,
-        "y": (y - top) / crop_h,
-        "w": w / crop_w,
-        "h": h / crop_h,
-    }
-    return cropped, local
-
-
-def _expand_focus(rect: dict[str, float], template: str) -> dict[str, float]:
-    center_x = rect["x"] + rect["w"] / 2
-    center_y = rect["y"] + rect["h"] / 2
-    if template == "ui_params_focus" and rect["w"] < 0.7:
-        width = max(0.82, min(0.94, rect["w"] * 2.0 + 0.28))
-        height = max(0.13, min(0.24, rect["h"] * 2.5 + 0.08))
-    elif template == "ui_params_focus":
-        width = min(0.96, rect["w"])
-        height = max(0.16, min(0.30, rect["h"] * 1.35))
-    else:
-        width = max(0.20, min(0.40, rect["w"] * 2.0 + 0.14))
-        height = max(0.08, min(0.18, rect["h"] * 1.8 + 0.04))
-    x = max(0.0, min(1.0 - width, center_x - width / 2))
-    if template == "ui_feature_entry":
-        x = max(0.0, min(1.0 - width, x + 0.07))
-    y = max(0.0, min(1.0 - height, center_y - height / 2))
-    return {"x": x, "y": y, "w": width, "h": height}
-
-
-def _focus_overlay(card: Image.Image, rect: dict[str, float], progress: float, template: str) -> Image.Image:
-    source = card.convert("RGBA")
-    focus = _expand_focus(rect, template)
-    box = (
-        int(round(focus["x"] * source.width)),
-        int(round(focus["y"] * source.height)),
-        int(round((focus["x"] + focus["w"]) * source.width)),
-        int(round((focus["y"] + focus["h"]) * source.height)),
-    )
-    dimmed = ImageEnhance.Brightness(source.convert("RGB")).enhance(1.0 - 0.42 * smoothstep(progress)).convert("RGBA")
-    cutout = Image.new("L", source.size, 0)
-    ImageDraw.Draw(cutout).rounded_rectangle(box, radius=18, fill=255)
-    source = Image.composite(source, dimmed, cutout)
-    overlay = Image.new("RGBA", source.size, (0, 0, 0, 0))
-    draw = ImageDraw.Draw(overlay)
-    alpha = int(round(255 * smoothstep(progress)))
-    draw.rounded_rectangle(box, radius=18, outline=(255, 74, 86, alpha), width=7)
-    outer = (box[0] - 8, box[1] - 8, box[2] + 8, box[3] + 8)
-    draw.rounded_rectangle(outer, radius=22, outline=(255, 190, 80, int(alpha * 0.65)), width=3)
-    return Image.alpha_composite(source, overlay)
-
-
 def _paste_shadow(canvas: Image.Image, card: Image.Image, position: tuple[int, int]) -> None:
     shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
     mask = card.getchannel("A") if card.mode == "RGBA" else Image.new("L", card.size, 255)
@@ -226,6 +142,16 @@ class FrameRenderer:
             for asset in plan.assets
             if asset.media_type == "image"
         }
+        self.callout_bases = {
+            asset.asset_id: Image.open(asset.callout_base_path).convert("RGBA")
+            for asset in plan.assets
+            if asset.callout_base_path
+        }
+        self.callout_layers = {
+            asset.asset_id: Image.open(asset.callout_layer_path).convert("RGBA")
+            for asset in plan.assets
+            if asset.callout_layer_path
+        }
         self.gif_frames: dict[str, list[Image.Image]] = {}
         self.video_captures: dict[str, cv2.VideoCapture] = {}
         self.video_state: dict[str, tuple[int, Image.Image]] = {}
@@ -242,7 +168,10 @@ class FrameRenderer:
                 self.video_captures[asset.asset_id] = capture
         self.card_cache: dict[tuple[str, str], Image.Image] = {}
         self.base_shots = sorted((shot for shot in plan.shots if shot.track == "base"), key=lambda item: item.start_frame)
-        self.overlay_shots = sorted((shot for shot in plan.shots if shot.track == "overlay"), key=lambda item: item.start_frame)
+        self.overlay_shots = sorted(
+            (shot for shot in plan.shots if shot.track == "overlay"),
+            key=lambda item: (int((item.overlay_layout or {}).get("z_index", 10)), item.start_frame),
+        )
         if not self.base_shots:
             raise ValueError("render plan needs at least one base-track shot")
         self.shot_starts = [shot.start_frame for shot in self.base_shots]
@@ -251,6 +180,10 @@ class FrameRenderer:
 
     def close(self) -> None:
         for image in self.images.values():
+            image.close()
+        for image in self.callout_bases.values():
+            image.close()
+        for image in self.callout_layers.values():
             image.close()
         for frames in self.gif_frames.values():
             for image in frames:
@@ -288,6 +221,22 @@ class FrameRenderer:
         asset = self.assets[asset_id]
         if asset.media_type == "video":
             return self._motion_frame(asset_id, shot, frame)
+        if shot.callout_animation and asset_id in self.callout_bases and asset_id in self.callout_layers:
+            base = self.callout_bases[asset_id].copy()
+            animation = shot.callout_animation
+            if frame < animation.start_frame:
+                return base
+            layer = self.callout_layers[asset_id].copy()
+            if frame < animation.hit_frame:
+                progress = max(0.0, min(1.0, (frame - animation.start_frame) / (animation.hit_frame - animation.start_frame)))
+                alpha = layer.getchannel("A")
+                bbox = alpha.getbbox()
+                if bbox:
+                    reveal = Image.new("L", layer.size)
+                    ImageDraw.Draw(reveal).pieslice(bbox, start=-18, end=-18 + 360 * ease_out_cubic(progress), fill=255)
+                    layer.putalpha(ImageChops.multiply(alpha, reveal))
+            base.alpha_composite(layer)
+            return base
         return self.images[asset_id]
 
     def _active_shot(self, frame: int) -> RenderShot:
@@ -301,40 +250,25 @@ class FrameRenderer:
         cue = self.plan.subtitles[index]
         return cue if cue.start_frame <= frame < cue.end_frame else None
 
-    @staticmethod
-    def _active_focus(shot: RenderShot, frame: int) -> tuple[CompiledCue | None, float]:
-        candidates = [cue for cue in shot.cues if cue.asset_anchor_id and frame >= cue.hit_frame - cue.anticipation_frames]
-        if not candidates:
-            return None, 0.0
-        cue = max(candidates, key=lambda item: item.hit_frame)
-        duration = max(1, cue.anticipation_frames + cue.settle_frames)
-        progress = (frame - (cue.hit_frame - cue.anticipation_frames)) / duration
-        return cue, max(0.0, min(1.0, progress))
-
     def _card_for_asset(self, shot: RenderShot, frame: int, asset_id: str) -> Image.Image:
         image = self._source_for_asset(shot, asset_id, frame)
         asset = self.assets[asset_id]
-        focus_cue, focus_progress = self._active_focus(shot, frame)
-        crop_cue = focus_cue or next((cue for cue in shot.cues if cue.asset_anchor_id), None)
-        local_focus: dict[str, float] | None = None
-        source = image
-        if crop_cue and crop_cue.asset_anchor_id in asset.anchors and shot.template in {"ui_params_focus", "ui_feature_entry"}:
-            panel = asset.anchor_panels.get(crop_cue.asset_anchor_id)
-            source, local_focus = _crop_around_anchor(image, asset.anchors[crop_cue.asset_anchor_id], shot.template, panel)
         stage = self.profile.content_safe
-        max_stage = PixelRect(stage.x, 290, stage.w, 1250)
-        cache_key = (asset_id, f"{shot.template}:{crop_cue.asset_anchor_id if crop_cue else 'none'}")
-        cacheable = asset.media_type == "image"
+        max_stage = (
+            PixelRect(self.profile.critical_safe.x, 270, self.profile.critical_safe.w, 1260)
+            if shot.template == "ui_params_focus"
+            else PixelRect(stage.x, 290, stage.w, 1250)
+        )
+        cache_key = (asset_id, shot.template)
+        cacheable = asset.media_type == "image" and shot.callout_animation is None
         if cacheable and cache_key not in self.card_cache:
-            card, _ = _fit(source, PixelRect(0, 0, max_stage.w, max_stage.h))
+            card, _ = _fit(image, PixelRect(0, 0, max_stage.w, max_stage.h))
             self.card_cache[cache_key] = _rounded_card(card, radius=26)
         if cacheable:
             card = self.card_cache[cache_key].copy()
         else:
-            fitted, _ = _fit(source, PixelRect(0, 0, max_stage.w, max_stage.h))
+            fitted, _ = _fit(image, PixelRect(0, 0, max_stage.w, max_stage.h))
             card = _rounded_card(fitted, radius=26)
-        if local_focus and focus_cue:
-            card = _focus_overlay(card, local_focus, focus_progress, shot.template)
         return card
 
     def _comparison_card(self, shot: RenderShot, frame: int) -> Image.Image:
@@ -357,11 +291,6 @@ class FrameRenderer:
     def _card_for_shot(self, shot: RenderShot, frame: int) -> Image.Image:
         if shot.template == "reference_to_result":
             return self._comparison_card(shot, frame)
-        if shot.template == "image_carousel":
-            asset_ids = list(shot.asset_bindings.values())
-            local = max(0, frame - shot.start_frame)
-            segment = max(1, (shot.end_frame - shot.start_frame) // len(asset_ids))
-            return self._card_for_asset(shot, frame, asset_ids[min(len(asset_ids) - 1, local // segment)])
         asset_id = shot.asset_bindings.get("primary") or next(iter(shot.asset_bindings.values()))
         return self._card_for_asset(shot, frame, asset_id)
 
@@ -377,6 +306,7 @@ class FrameRenderer:
         duration = max(1, shot.end_frame - shot.start_frame)
         progress = max(0.0, min(1.0, (frame - shot.start_frame) / duration))
         card = self._card_for_shot(shot, frame)
+        overlay_layout = shot.overlay_layout if shot.track == "overlay" else None
         if shot.motion == "perspective_push_in":
             entrance_ratio = 0.18
             if progress < entrance_ratio:
@@ -389,20 +319,43 @@ class FrameRenderer:
                 settled, settled_position = _flat_perspective_endpoint(card, self.plan.width, self.plan.height)
                 _paste_shadow(canvas, settled, (settled_position[0] + x_offset, settled_position[1]))
             return
-        position = ((self.plan.width - card.width) // 2 + x_offset, 290 + (1250 - card.height) // 2)
-        alpha = alpha_multiplier
+        if overlay_layout:
+            stage = self.profile.content_safe
+            box = PixelRect(
+                stage.x + round(float(overlay_layout["x"]) * stage.w),
+                stage.y + round(float(overlay_layout["y"]) * stage.h),
+                round(float(overlay_layout["w"]) * stage.w),
+                round(float(overlay_layout["h"]) * stage.h),
+            )
+            card, position = _fit(card, box, fill=overlay_layout.get("fit") == "cover")
+            position = (position[0] + x_offset, position[1])
+        else:
+            stage_y = 270 if shot.template == "ui_params_focus" else 290
+            stage_h = 1260 if shot.template == "ui_params_focus" else 1250
+            position = ((self.plan.width - card.width) // 2 + x_offset, stage_y + (stage_h - card.height) // 2)
+        alpha = alpha_multiplier * (float(overlay_layout.get("opacity", 1.0)) if overlay_layout else 1.0)
         scale = 1.0
         if shot.motion == "fade_in":
             alpha *= min(1.0, progress / 0.12)
         elif shot.motion == "fade_out":
             alpha *= max(0.0, min(1.0, (1.0 - progress) / 0.12))
         elif shot.motion == "scale_in":
-            scale = 0.94 + 0.06 * ease_out_cubic(min(1.0, progress / 0.22))
+            if shot.template == "ui_feature_entry":
+                scale = 0.82 + 0.20 * ease_out_cubic(min(1.0, progress / 0.75))
+            elif shot.template == "ui_params_focus":
+                scale = 0.90 + 0.10 * ease_out_cubic(min(1.0, progress / 0.50))
+            else:
+                scale = 0.94 + 0.06 * ease_out_cubic(min(1.0, progress / 0.22))
         elif shot.motion == "scale_out":
             scale = 1.06 - 0.06 * ease_out_cubic(min(1.0, progress / 0.22))
+        if shot.callout_animation and shot.callout_animation.hit_frame <= frame < shot.callout_animation.hit_frame + 8:
+            pulse_progress = (frame - shot.callout_animation.hit_frame) / 8
+            pulse = math.sin(math.pi * pulse_progress)
+            scale *= 1.0 + (shot.callout_animation.finish_pulse_scale - 1.0) * pulse
         if not math.isclose(scale, 1.0):
+            center = (position[0] + card.width / 2, position[1] + card.height / 2)
             resized = card.resize((int(card.width * scale), int(card.height * scale)), Image.Resampling.LANCZOS)
-            position = ((self.plan.width - resized.width) // 2 + x_offset, position[1] + (card.height - resized.height) // 2)
+            position = (round(center[0] - resized.width / 2), round(center[1] - resized.height / 2))
             card = resized
         if alpha < 1.0:
             card = card.copy()
@@ -419,7 +372,7 @@ class FrameRenderer:
         if current_index and duration and frame < current.start_frame + duration:
             previous = self.base_shots[current_index - 1]
             progress = max(0.0, min(1.0, (frame - current.start_frame) / duration))
-            if kind == "crossfade" or kind.startswith("wipe"):
+            if kind == "crossfade":
                 self._paint_shot(canvas, previous, min(frame, previous.end_frame - 1), alpha_multiplier=1.0 - progress)
                 self._paint_shot(canvas, current, frame, alpha_multiplier=progress)
                 return canvas

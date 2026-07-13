@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from video_agent.compiler.render_plan import MOTION_ALLOWLIST, TEXT_DENSE_MOTION_ALLOWLIST, TEXT_DENSE_TEMPLATES
+from video_agent.compiler.render_plan import MOTION_ALLOWLIST, TEMPLATE_ALLOWLIST, TEXT_DENSE_MOTION_ALLOWLIST, TEXT_DENSE_TEMPLATES
 from video_agent.compiler.subtitles import fullwidth_units
 from video_agent.contracts import CheckResult, RenderPlan
-from video_agent.platform import get_profile
+from video_agent.platform import PixelRect, get_profile
 
 
 def validate_render_plan(plan: RenderPlan) -> list[CheckResult]:
@@ -25,6 +25,23 @@ def validate_render_plan(plan: RenderPlan) -> list[CheckResult]:
     checks.append(CheckResult(check_id="subtitle_platform_safe", status="failed" if slot_errors else "passed", message=", ".join(slot_errors)))
     motion_errors = [shot.shot_id for shot in plan.shots if shot.motion not in MOTION_ALLOWLIST]
     checks.append(CheckResult(check_id="motion_allowlist", status="failed" if motion_errors else "passed", message=", ".join(motion_errors)))
+    template_errors = [shot.shot_id for shot in plan.shots if shot.template not in TEMPLATE_ALLOWLIST]
+    checks.append(CheckResult(check_id="template_implemented", status="failed" if template_errors else "passed", message=", ".join(template_errors)))
+    overlay_errors: list[str] = []
+    for shot in plan.shots:
+        if shot.track != "overlay" or not shot.overlay_layout:
+            continue
+        layout = shot.overlay_layout
+        stage = profile.content_safe
+        box = PixelRect(
+            stage.x + round(float(layout["x"]) * stage.w),
+            stage.y + round(float(layout["y"]) * stage.h),
+            round(float(layout["w"]) * stage.w),
+            round(float(layout["h"]) * stage.h),
+        )
+        if any(box.intersects(region) for region in (*profile.avoid_regions, profile.subtitle_top, profile.subtitle_lower)):
+            overlay_errors.append(shot.shot_id)
+    checks.append(CheckResult(check_id="overlay_platform_safe", status="failed" if overlay_errors else "passed", message=", ".join(overlay_errors)))
     text_distortion_errors = [
         shot.shot_id
         for shot in plan.shots
@@ -37,13 +54,18 @@ def validate_render_plan(plan: RenderPlan) -> list[CheckResult]:
             message=", ".join(text_distortion_errors),
         )
     )
-    cue_by_anchor = {cue.anchor_id: cue for shot in plan.shots for cue in shot.cues}
+    cues_by_anchor: dict[str, list[object]] = {}
+    for shot in plan.shots:
+        for cue in shot.cues:
+            cues_by_anchor.setdefault(cue.anchor_id, []).append(cue)
     audio_anchor_errors = []
     for track in plan.audio_tracks:
         if track.kind != "sfx":
             continue
-        cue = cue_by_anchor.get(track.anchor_id or "")
-        if cue is None or cue.hit_frame != track.sync_frame:
+        cues = cues_by_anchor.get(track.anchor_id or "", [])
+        cue = next((candidate for candidate in cues if candidate.hit_frame == track.sync_frame), None)
+        actual_peak_frame = track.start_frame + round(track.effective_sync_offset_ms * plan.fps / 1000)
+        if cue is None or track.sync_frame is None or abs(cue.hit_frame - actual_peak_frame) > 1:
             audio_anchor_errors.append(track.anchor_id or track.path)
     checks.append(
         CheckResult(

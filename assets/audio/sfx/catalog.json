@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "profile_id": "douyin_common_v1",
+  "normalization": {
+    "sample_rate": 48000,
+    "sample_width_bits": 16,
+    "channels": 2,
+    "codec": "pcm_s16le"
+  },
+  "assets": [
+    {
+      "path": "assets/audio/sfx/typing.wav",
+      "gain_db": -22.0,
+      "trim_start_ms": 430,
+      "max_duration_ms": 1320,
+      "fade_in_ms": 5,
+      "fade_out_ms": 80,
+      "priority": 45,
+      "sync_point": "onset",
+      "sync_offset_ms": 0,
+      "semantic_id": "typing",
+      "filename": "typing.wav",
+      "source_filename": "打字声-音效.wav",
+      "source_sha256": "6ee6a5b82b7c9ab2d7110c430f5a825988bed1d9e276e30006f2362bb83cf5da",
+      "registered_sha256": "fff2fda6d38106618639e32457b4f2b31e5f7742f28334ca629bc0a8bfed94a3",
+      "sample_rate": 48000,
+      "sample_width_bits": 16,
+      "channels": 2,
+      "duration_ms": 2090,
+      "allowed_intents": [
+        "参数输入",
+        "名称",
+        "主题",
+        "描述"
+      ],
+      "forbidden_intents": []
+    },
+    {
+      "path": "assets/audio/sfx/transition_whoosh.wav",
+      "gain_db": -18.0,
+      "trim_start_ms": 10,
+      "max_duration_ms": 1150,
+      "fade_in_ms": 8,
+      "fade_out_ms": 120,
+      "priority": 65,
+      "sync_point": "peak",
+      "sync_offset_ms": 332,
+      "semantic_id": "transition_whoosh",
+      "filename": "transition_whoosh.wav",
+      "source_filename": "呼-转场.wav",
+      "source_sha256": "463fe60e47b8917a92b62d34c57fc75285c0fabe0b1f8173f850dea481ea740b",
+      "registered_sha256": "40754cc0eb5275ac5ca7555de24179dfb257d9e92ba814d8fb471f6c5469bd57",
+      "sample_rate": 48000,
+      "sample_width_bits": 16,
+      "channels": 2,
+      "duration_ms": 1254,
+      "allowed_intents": [
+        "slide_left",
+        "slide_right",
+        "大镜头交接"
+      ],
+      "forbidden_intents": []
+    },
+    {
+      "path": "assets/audio/sfx/camera_shutter.wav",
+      "gain_db": -18.0,
+      "trim_start_ms": 70,
+      "max_duration_ms": 250,
+      "fade_in_ms": 3,
+      "fade_out_ms": 45,
+      "priority": 72,
+      "sync_point": "peak",
+      "sync_offset_ms": 99,
+      "semantic_id": "camera_shutter",
+      "filename": "camera_shutter.wav",
+      "source_filename": "咔嚓拍照声-音效.wav",
+      "source_sha256": "78335622194e8571f479ffc58ab21bded050f07200c86ad47e9dbceb6a24ef90",
+      "registered_sha256": "8ff2b469eb31b580d71817204e4178b6f381197a19c34f60c715d10a9943ff29",
+      "sample_rate": 48000,
+      "sample_width_bits": 16,
+      "channels": 2,
+      "duration_ms": 372,
+      "allowed_intents": [
+        "截图",
+        "保存",
+        "定格",
+        "导出图片"
+      ],
+      "forbidden_intents": [
+        "普通结果切换"
+      ]
+    },
+    {
+      "path": "assets/audio/sfx/task_complete.wav",
+      "gain_db": -18.0,
+      "trim_start_ms": 0,
+      "max_duration_ms": 760,
+      "fade_in_ms": 5,
+      "fade_out_ms": 130,
+      "priority": 88,
+      "sync_point": "peak",
+      "sync_offset_ms": 113,
+      "semantic_id": "task_complete",
+      "filename": "task_complete.wav",
+      "source_filename": "任务完成buling-音效.wav",
+      "source_sha256": "b25b21863893246190954016dd6368a4bd683f08f63982964c3a115715ca46f8",
+      "registered_sha256": "4d885364919c63dd680628d1b23ac9e0123fa14ef8115d87806fd333feb9652d",
+      "sample_rate": 48000,
+      "sample_width_bits": 16,
+      "channels": 2,
+      "duration_ms": 882,
+      "allowed_intents": [
+        "生成完成",
+        "任务完成",
+        "成功"
+      ],
+      "forbidden_intents": []
+    },
+    {
+      "path": "assets/audio/sfx/mouse_click.wav",
+      "gain_db": -16.0,
+      "trim_start_ms": 130,
+      "max_duration_ms": 180,
+      "fade_in_ms": 2,
+      "fade_out_ms": 30,
+      "priority": 65,
+      "sync_point": "peak",
+      "sync_offset_ms": 134,
+      "semantic_id": "mouse_click",
+      "filename": "mouse_click.wav",
+      "source_filename": "鼠标点击声-音效.wav",
+      "source_sha256": "620cfc7feb464f632d876b872118246dacfd5609f9d9c1a49feadca70f370506",
+      "registered_sha256": "4257a0526fe3d31858df7d8f8408f8c4a7abd10b03504fa7ff85ec60c8d54810",
+      "sample_rate": 48000,
+      "sample_width_bits": 16,
+      "channels": 2,
+      "duration_ms": 418,
+      "allowed_intents": [
+        "菜单点击",
+        "按钮点击",
+        "上传",
+        "字段点击"
+      ],
+      "forbidden_intents": []
+    },
+    {
+      "path": "assets/audio/sfx/swish.wav",
+      "gain_db": -17.0,
+      "trim_start_ms": 0,
+      "max_duration_ms": 140,
+      "fade_in_ms": 2,
+      "fade_out_ms": 35,
+      "priority": 55,
+      "sync_point": "peak",
+      "sync_offset_ms": 20,
+      "semantic_id": "swish",
+      "filename": "swish.wav",
+      "source_filename": "唰-音效.wav",
+      "source_sha256": "399eaee0f3f16642c70b8763c00518995830971bc558fe1269e0ff0653c4fdbd",
+      "registered_sha256": "37c0dba58111ed178315feede6fa520fbbceff45c23d194fd916942c8f06a87c",
+      "sample_rate": 48000,
+      "sample_width_bits": 16,
+      "channels": 2,
+      "duration_ms": 209,
+      "allowed_intents": [
+        "短结果切换",
+        "轻量淡变"
+      ],
+      "forbidden_intents": []
+    }
+  ]
+}

@@ -145,7 +145,10 @@ def build_timing_lock(
             size = len(normalize_text(token.text))
             local_offsets.append((local_cursor, local_cursor + size))
             local_cursor += size
-        for phrase in beat.hit_phrases:
+        phrase_claims: dict[str, list[str]] = {phrase: [] for phrase in beat.hit_phrases}
+        for cue in beat.claim_cues:
+            phrase_claims.setdefault(cue.phrase, []).append(cue.claim_id)
+        for phrase, claim_ids in phrase_claims.items():
             normalized_phrase = normalize_text(phrase)
             start = local_text.find(normalized_phrase)
             if start < 0:
@@ -159,6 +162,7 @@ def build_timing_lock(
                     token_ids=[token.token_id for token in matched],
                     hit_frame=matched[0].start_frame,
                     beat_id=beat.beat_id,
+                    claim_ids=claim_ids,
                 )
             )
         for pause_idx, pause in enumerate(beat.pause_intents):

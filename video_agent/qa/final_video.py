@@ -75,36 +75,30 @@ def _contact_sheet(video: Path, output: Path, plan: RenderPlan, frames: int = 16
         raise RuntimeError(f"contact sheet failed: {proc.stderr[-1000:]}")
 
 
-def _cue_contact_sheet(video: Path, output: Path, plan: RenderPlan, fps: int) -> None:
+def _cue_contact_sheets(video: Path, output_dir: Path, plan: RenderPlan, fps: int) -> list[Path]:
     """Show before/hit/after evidence for motion and SFX cue inspection."""
 
-    selected = []
-    for shot in plan.shots:
-        for cue in shot.cues:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for stale in output_dir.glob("cue_contact_sheet_*.jpg"):
+        stale.unlink()
+    cues = [cue for shot in plan.shots for cue in shot.cues]
+    outputs: list[Path] = []
+    for page_index, page_start in enumerate(range(0, len(cues), 8), start=1):
+        selected: list[int] = []
+        for cue in cues[page_start : page_start + 8]:
             selected.extend([max(0, cue.hit_frame - 3), cue.hit_frame, min(plan.frame_count - 1, cue.hit_frame + max(3, round(fps * 0.2)))])
-    if not selected:
-        return
-    selected = sorted(set(selected))[:24]
-    select_expr = "+".join(f"eq(n\\,{frame})" for frame in selected)
-    command = [
-        "ffmpeg",
-        "-y",
-        "-hide_banner",
-        "-loglevel",
-        "error",
-        "-i",
-        str(video),
-        "-vf",
-        f"select='{select_expr}',scale=180:320:force_original_aspect_ratio=decrease,pad=180:320:(ow-iw)/2:(oh-ih)/2:black,tile=4x6:padding=4:margin=4",
-        "-vsync",
-        "vfr",
-        "-frames:v",
-        "1",
-        str(output),
-    ]
-    proc = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if proc.returncode != 0:
-        raise RuntimeError(f"cue contact sheet failed: {proc.stderr[-1000:]}")
+        output = output_dir / f"cue_contact_sheet_{page_index:03d}.jpg"
+        select_expr = "+".join(f"eq(n\\,{frame})" for frame in selected)
+        command = [
+            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(video),
+            "-vf", f"select='{select_expr}',scale=180:320:force_original_aspect_ratio=decrease,pad=180:320:(ow-iw)/2:(oh-ih)/2:black,tile=4x6:padding=4:margin=4",
+            "-vsync", "vfr", "-frames:v", "1", str(output),
+        ]
+        proc = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        if proc.returncode != 0:
+            raise RuntimeError(f"cue contact sheet failed: {proc.stderr[-1000:]}")
+        outputs.append(output)
+    return outputs
 
 
 def run_final_qa(plan: RenderPlan, video: Path, run_dir: Path) -> QaReport:
@@ -141,7 +135,7 @@ def run_final_qa(plan: RenderPlan, video: Path, run_dir: Path) -> QaReport:
     checks.append(CheckResult(check_id="final_audio_loudness", status="passed" if loudness_ok else "failed", details=loudness))
     sheet = run_dir / "final" / "contact_sheet.jpg"
     _contact_sheet(video, sheet, plan)
-    _cue_contact_sheet(video, run_dir / "final" / "cue_contact_sheet.jpg", plan, plan.fps)
+    _cue_contact_sheets(video, run_dir / "final", plan, plan.fps)
     failed = any(check.status == "failed" for check in checks)
     return QaReport(
         case_id=plan.case_id,

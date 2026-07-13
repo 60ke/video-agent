@@ -17,8 +17,10 @@ class RenderAsset(Contract):
     fps: float | None = Field(default=None, gt=0)
     frame_count: int | None = Field(default=None, gt=0)
     duration_ms: int | None = Field(default=None, gt=0)
-    anchors: dict[str, dict[str, float]] = Field(default_factory=dict)
-    anchor_panels: dict[str, dict[str, float]] = Field(default_factory=dict)
+    callout_base_path: str | None = None
+    callout_base_sha256: str | None = None
+    callout_layer_path: str | None = None
+    callout_layer_sha256: str | None = None
 
 
 class CompiledCue(Contract):
@@ -28,7 +30,19 @@ class CompiledCue(Contract):
     anticipation_frames: int = Field(default=5, ge=0, le=15)
     settle_frames: int = Field(default=8, ge=0, le=30)
     hold_frames: int = Field(default=12, ge=0)
-    asset_anchor_id: str | None = None
+
+
+class CompiledCalloutAnimation(Contract):
+    kind: str
+    start_frame: int = Field(ge=0)
+    hit_frame: int = Field(ge=0)
+    finish_pulse_scale: float = Field(default=1.018, ge=1.0, le=1.08)
+
+    @model_validator(mode="after")
+    def valid_range(self) -> "CompiledCalloutAnimation":
+        if self.hit_frame <= self.start_frame:
+            raise ValueError("callout animation must have a positive frame range")
+        return self
 
 
 class RenderShot(Contract):
@@ -44,6 +58,8 @@ class RenderShot(Contract):
     motion: str = "none"
     transition_in: dict[str, int | str] = Field(default_factory=lambda: {"kind": "cut", "duration_frames": 0})
     long_hold_reason: str | None = None
+    overlay_layout: dict[str, float | int | str] | None = None
+    callout_animation: CompiledCalloutAnimation | None = None
 
     @property
     def asset_ids(self) -> list[str]:
@@ -81,6 +97,7 @@ class AudioTrack(Contract):
     fade_out_ms: int = Field(default=0, ge=0)
     sync_frame: int | None = Field(default=None, ge=0)
     sync_point: str | None = None
+    effective_sync_offset_ms: int = Field(default=0, ge=0)
 
 
 class RenderPlan(VersionedContract):

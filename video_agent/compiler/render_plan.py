@@ -9,6 +9,7 @@ from video_agent.contracts import (
     AssetCatalog,
     AudioConfig,
     AudioTrack,
+    CompiledCalloutAnimation,
     CompiledCue,
     DurationPolicy,
     Narration,
@@ -18,13 +19,17 @@ from video_agent.contracts import (
     TimingLock,
     VisualPlan,
 )
+from video_agent.io import sha256_file
 
 
 MOTION_ALLOWLIST = {"none", "fade_in", "fade_out", "scale_in", "scale_out", "perspective_push_in"}
+TEMPLATE_ALLOWLIST = {"ui_params_focus", "ui_feature_entry", "result_showcase", "brand_ip_cutaway", "reference_to_result"}
 TEXT_DENSE_TEMPLATES = {"ui_params_focus"}
 TEXT_DENSE_MOTION_ALLOWLIST = {"none", "fade_in", "fade_out", "scale_in", "scale_out"}
 BEAT_START_ANCHOR_PREFIX = "beat_start:"
 BEAT_END_ANCHOR_PREFIX = "beat_end:"
+TIMELINE_START_ANCHOR = "timeline_start"
+TIMELINE_END_ANCHOR = "timeline_end"
 
 
 @dataclass(frozen=True)
@@ -34,6 +39,7 @@ class _SfxEvent:
     hit_frame: int
     start_frame: int
     sync_point: str
+    effective_sync_offset_ms: int
     path: str
     gain_db: float
     trim_start_ms: int
@@ -53,7 +59,7 @@ def _resolve_sfx_path(path: str, case_dir: Path, repo_root: Path) -> Path:
 
 def _select_sfx_events(events: list[_SfxEvent], fps: int, audio: AudioConfig) -> list[_SfxEvent]:
     policy = audio.sfx_density
-    ranked = sorted(events, key=lambda item: (-item.priority, item.hit_frame, item.semantic_id))
+    ranked = sorted(events, key=lambda item: (item.hit_frame, -item.priority, item.semantic_id))
     selected: list[_SfxEvent] = []
     for event in ranked:
         event_ms = event.hit_frame * 1000 / fps
@@ -73,7 +79,11 @@ def _select_sfx_events(events: list[_SfxEvent], fps: int, audio: AudioConfig) ->
 
 
 def _timing_anchors(timing: TimingLock) -> dict[str, int]:
-    anchors = {anchor.anchor_id: anchor.hit_frame for anchor in timing.phrase_anchors}
+    anchors = {
+        TIMELINE_START_ANCHOR: 0,
+        TIMELINE_END_ANCHOR: timing.duration_frames,
+        **{anchor.anchor_id: anchor.hit_frame for anchor in timing.phrase_anchors},
+    }
     for span in timing.beat_spans:
         anchors[f"{BEAT_START_ANCHOR_PREFIX}{span.beat_id}"] = span.start_frame
         anchors[f"{BEAT_END_ANCHOR_PREFIX}{span.beat_id}"] = span.end_frame
@@ -104,10 +114,25 @@ def _validate_claim_bindings(narration: Narration, visual: VisualPlan, asset_by_
             if invalid:
                 raise ValueError(f"claim {claim_id} uses insufficient evidence in {shot.shot_id}: {invalid}")
 
+
+
+def _validate_claim_timing(narration: Narration, timing: TimingLock, shots: list[RenderShot]) -> None:
+    anchors = {(anchor.beat_id, claim_id): anchor for anchor in timing.phrase_anchors for claim_id in anchor.claim_ids}
     for beat in narration.beats:
-        for claim_id in beat.claim_ids:
-            if not any(claim_id in shot.claim_ids and beat.beat_id in shot.beat_ids for shot in visual.shots):
-                raise ValueError(f"narration claim {claim_id} has no supporting visual shot for {beat.beat_id}")
+        for cue in beat.claim_cues:
+            anchor = anchors.get((beat.beat_id, cue.claim_id))
+            if anchor is None:
+                raise ValueError(f"claim cue has no timing anchor: {beat.beat_id}/{cue.claim_id}")
+            visible = any(
+                shot.track == "base"
+                and cue.claim_id in shot.claim_ids
+                and shot.start_frame <= anchor.hit_frame < shot.end_frame
+                for shot in shots
+            )
+            if not visible:
+                raise ValueError(
+                    f"claim {cue.claim_id} is not visibly supported at frame {anchor.hit_frame} in {beat.beat_id}"
+                )
 
 
 def compile_render_plan(
@@ -157,6 +182,8 @@ def compile_render_plan(
             raise ValueError(f"shot references unknown beats: {sorted(unknown_beats)}")
         if shot.motion not in MOTION_ALLOWLIST:
             raise ValueError(f"motion is not allowed in V3: {shot.motion}")
+        if shot.template not in TEMPLATE_ALLOWLIST:
+            raise ValueError(f"template is not implemented in V3: {shot.template}")
         if shot.template in TEXT_DENSE_TEMPLATES and shot.motion not in TEXT_DENSE_MOTION_ALLOWLIST:
             raise ValueError(f"motion {shot.motion!r} distorts text-dense template {shot.template!r}")
         missing_assets = [asset_id for asset_id in shot.asset_ids if asset_id not in asset_by_id]
@@ -165,6 +192,9 @@ def compile_render_plan(
         unapproved = [asset_id for asset_id in shot.asset_ids if asset_by_id[asset_id].quality.status not in approved]
         if unapproved:
             raise ValueError(f"shot references unapproved assets: {unapproved}")
+        ineligible = [asset_id for asset_id in shot.asset_ids if not asset_by_id[asset_id].production_eligible]
+        if ineligible:
+            raise ValueError(f"shot references source-only assets: {ineligible}")
 
         start_frame = _resolve_time(anchor_frames, shot.start.anchor_id, shot.start.offset_frames, timing.duration_frames)
         end_frame = _resolve_time(anchor_frames, shot.end.anchor_id, shot.end.offset_frames, timing.duration_frames)
@@ -183,7 +213,7 @@ def compile_render_plan(
             hit_frame = max(0, min(timing.duration_frames, anchor_frames[binding.anchor_id] + binding.offset_frames))
             if hit_frame < start_frame or hit_frame > end_frame:
                 raise ValueError(f"cue anchor falls outside shot range: {binding.anchor_id}")
-            cues.append(CompiledCue(action=binding.action, anchor_id=binding.anchor_id, hit_frame=hit_frame, asset_anchor_id=binding.asset_anchor_id))
+            cues.append(CompiledCue(action=binding.action, anchor_id=binding.anchor_id, hit_frame=hit_frame))
             if binding.sfx:
                 source = sfx_profile.get(binding.sfx)
                 if not source:
@@ -191,23 +221,50 @@ def compile_render_plan(
                 path = _resolve_sfx_path(source.path, case_dir, repo_root)
                 if not path.is_file():
                     raise FileNotFoundError(f"SFX source is missing: {path}")
-                sync_frames = round(source.sync_offset_ms * timing.fps / 1000)
+                hit_ms = hit_frame * 1000 / timing.fps
+                desired_start_ms = hit_ms - source.sync_offset_ms
+                extra_trim_ms = max(0, round(-desired_start_ms))
+                effective_sync_offset_ms = max(0, source.sync_offset_ms - extra_trim_ms)
+                sfx_start_frame = max(0, round(max(0.0, desired_start_ms) * timing.fps / 1000))
                 sfx_events.append(
                     _SfxEvent(
                         semantic_id=binding.sfx,
                         anchor_id=binding.anchor_id,
                         hit_frame=hit_frame,
-                        start_frame=max(0, hit_frame - sync_frames),
+                        start_frame=sfx_start_frame,
                         sync_point=source.sync_point,
+                        effective_sync_offset_ms=effective_sync_offset_ms,
                         path=path.as_posix(),
                         gain_db=source.gain_db,
-                        trim_start_ms=source.trim_start_ms,
+                        trim_start_ms=source.trim_start_ms + extra_trim_ms,
                         max_duration_ms=source.max_duration_ms,
                         fade_in_ms=source.fade_in_ms,
                         fade_out_ms=source.fade_out_ms,
                         priority=source.priority,
                     )
                 )
+        compiled_callout = None
+        if shot.callout_animation:
+            completion = next((cue for cue in cues if cue.action == shot.callout_animation.completion_action), None)
+            if completion is None:
+                raise ValueError(f"callout animation has no completion cue: {shot.shot_id}")
+            primary_id = shot.asset_bindings.get("primary")
+            primary = asset_by_id.get(primary_id or "")
+            if primary is None:
+                raise ValueError(f"callout animation requires a primary asset: {shot.shot_id}")
+            required = ("callout_base_path", "callout_base_sha256", "callout_layer_path", "callout_layer_sha256")
+            missing_callout = [key for key in required if not primary.metadata.get(key)]
+            if missing_callout:
+                raise ValueError(f"callout animation asset is missing prepared layers: {primary.asset_id}/{missing_callout}")
+            callout_start = max(start_frame, completion.hit_frame - shot.callout_animation.duration_frames)
+            if callout_start >= completion.hit_frame:
+                raise ValueError(f"callout completion cue is too early: {shot.shot_id}")
+            compiled_callout = CompiledCalloutAnimation(
+                kind=shot.callout_animation.kind,
+                start_frame=callout_start,
+                hit_frame=completion.hit_frame,
+                finish_pulse_scale=shot.callout_animation.finish_pulse_scale,
+            )
         render_shots.append(
             RenderShot(
                 shot_id=shot.shot_id,
@@ -222,9 +279,13 @@ def compile_render_plan(
                 motion=shot.motion,
                 transition_in=shot.transition_in.model_dump(mode="json"),
                 long_hold_reason=shot.long_hold_reason,
+                overlay_layout=shot.overlay_layout.model_dump(mode="json") if shot.overlay_layout else None,
+                callout_animation=compiled_callout,
             )
         )
         used_asset_ids.update(shot.asset_ids)
+
+    _validate_claim_timing(narration, timing, render_shots)
 
     for event in _select_sfx_events(sfx_events, timing.fps, audio):
         audio_tracks.append(
@@ -234,6 +295,7 @@ def compile_render_plan(
                 start_frame=event.start_frame,
                 sync_frame=event.hit_frame,
                 sync_point=event.sync_point,
+                effective_sync_offset_ms=event.effective_sync_offset_ms,
                 gain_db=event.gain_db,
                 anchor_id=event.anchor_id,
                 semantic_id=event.semantic_id,
@@ -251,19 +313,32 @@ def compile_render_plan(
             raise ValueError(f"render asset is not valid visual media: {asset_id}")
         if asset.media_type == "video" and asset.role not in {"brand_ip_animation", "brand_ip_video"}:
             raise ValueError(f"video asset is not approved for deterministic rendering: {asset_id}")
+        callout_paths: dict[str, str | None] = {"base": None, "layer": None}
+        for label in callout_paths:
+            path_value = asset.metadata.get(f"callout_{label}_path")
+            digest = asset.metadata.get(f"callout_{label}_sha256")
+            if not path_value:
+                continue
+            path = Path(str(path_value))
+            path = path if path.is_absolute() else repo_root / path
+            if not path.is_file() or sha256_file(path) != digest:
+                raise ValueError(f"prepared callout {label} failed integrity check: {asset.asset_id}")
+            callout_paths[label] = path.resolve().as_posix()
         render_assets.append(
             RenderAsset(
                 asset_id=asset_id,
                 path=(repo_root / asset.path).resolve().as_posix(),
                 sha256=asset.sha256,
+                callout_base_path=callout_paths["base"],
+                callout_base_sha256=asset.metadata.get("callout_base_sha256"),
+                callout_layer_path=callout_paths["layer"],
+                callout_layer_sha256=asset.metadata.get("callout_layer_sha256"),
                 width=asset.width,
                 height=asset.height,
                 media_type=asset.media_type,
                 fps=asset.metadata.get("fps"),
                 frame_count=asset.metadata.get("frame_count"),
                 duration_ms=asset.metadata.get("duration_ms"),
-                anchors={anchor.anchor_id: anchor.rect.model_dump() for anchor in asset.visual_anchors},
-                anchor_panels={anchor.anchor_id: anchor.panel_rect.model_dump() for anchor in asset.visual_anchors if anchor.panel_rect is not None},
             )
         )
 

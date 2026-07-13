@@ -27,6 +27,7 @@ class PhraseAnchor(Contract):
     token_ids: list[str] = Field(min_length=1)
     hit_frame: int = Field(ge=0)
     beat_id: str
+    claim_ids: list[str] = Field(default_factory=list)
 
 
 class PauseEvent(Contract):

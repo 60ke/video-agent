@@ -72,12 +72,34 @@ python -m video_agent asset-review --case cases\demo --run <run_id> --asset-id <
 - 镜头连续覆盖全时间轴，默认 15–20 秒，超过 24 秒失败。
 - 抖音右侧操作栏和底部信息区零碰撞。
 - 参数页等文字密集 UI 禁止透视；普通功能片只允许简洁淡变、等比缩放、翻页和短暂后完全回正的透视入场。
-- 默认语义音效 profile 为 `short_video_ui_v1`，每种音效可独立设置增益、裁切、peak 偏移和淡入淡出，并接受密度限流。
+- 唯一语义音效 profile 为 `douyin_common_v1`，由 `assets/audio/sfx/catalog.json` 校验哈希与 48kHz/16-bit/stereo 格式，并在运行时应用裁切、peak 对齐、增益和密度限流。
 - 品牌 IP 只在评论引导、关注提示、等待生成等语义明确的 Beat 中自动出现；动态素材按镜头局部时间循环播放，忽略素材原音轨。
 - 最终音频归一到约 `-16 LUFS / -1.5 dBTP` 并在 MP4 上复测。
 - 最终 QA 检查真实 MP4，不以中间 JSON 成功代替交付成功；除总联系表外还会输出 Cue 前/命中/后的动态证据联系表。
 
 将 case 的 `visual_planner_mode` 设为 `"multimodal"`，可让 AI 直接查看经审核的功能截图与结果图，提出多镜头视觉计划；本地编译器仍会严格校验锚点、轨道连续性、素材审核状态与 Claim 证据。
+
+## Cover Postprocess
+
+发布封面独立于口播、视觉编排和 RenderPlan。主体视频通过正常 QA 后，在 case 中创建 `input/cover.json`：
+
+```json
+{
+  "title": "AI文化墙怎么做",
+  "subtitle_hint": "上传描述，一键生成多套方案",
+  "style_hint": "short_video_feature_seed",
+  "reference_asset_ids": [],
+  "max_references": 3
+}
+```
+
+执行封面生成与单帧前置：
+
+```powershell
+python -m video_agent cover-postprocess --case cases\<case> --run <run_id>
+```
+
+产物包括 `final/cover.png`、`final/cover_3x4_preview.png` 和 `cover_report.json`。无封面主体保存在 `work/cover/video_without_cover.mp4`；重复执行会替换已有封面，不会累计增加帧数。
 
 ## Documentation
 

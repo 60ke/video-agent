@@ -74,7 +74,18 @@ def test_auto_visual_uses_flat_motion_and_semantic_sfx_for_params(tmp_path: Path
 
     assert visual.shots[0].template == "ui_params_focus"
     assert visual.shots[0].motion == "scale_in"
-    assert visual.shots[0].cue_bindings[0].sfx == "field_focus"
+    assert visual.shots[0].cue_bindings[0].sfx == "typing"
+
+
+def test_auto_visual_covers_timeline_tail_and_marks_pause(tmp_path: Path) -> None:
+    asset = _asset(tmp_path / "params.png")
+    catalog = AssetCatalog(catalog_id="demo", generated_at="now", source_root="assets", assets=[asset])
+    narration = Narration(case_id="demo", beats=[NarrationBeat(beat_id="beat_1", spoken_text="填写必填项", asset_slots=["参数"])])
+    timing = _timing().model_copy(update={"duration_ms": 1500, "duration_frames": 45})
+    visual = build_auto_visual_plan("demo", narration, timing, catalog)
+    assert visual.shots[0].start.anchor_id == "timeline_start"
+    assert visual.shots[-1].end.anchor_id == "timeline_end"
+    assert visual.shots[-1].long_hold_reason == "pause"
 
 
 def test_compile_resolves_semantic_sfx_and_keeps_anchor_frame(tmp_path: Path) -> None:
@@ -97,14 +108,14 @@ def test_compile_resolves_semantic_sfx_and_keeps_anchor_frame(tmp_path: Path) ->
                 template="ui_params_focus",
                 asset_bindings={"primary": asset.asset_id},
                 motion="scale_in",
-                cue_bindings=[{"action": "focus.hit", "anchor_id": "anchor_1", "sfx": "field_focus"}],
+                cue_bindings=[{"action": "focus.hit", "anchor_id": "anchor_1", "sfx": "mouse_click"}],
             )
         ],
     )
     audio = AudioConfig(
         sfx_profile=None,
         sfx_overrides={
-            "field_focus": SemanticSfx(path=sfx_path.name, gain_db=-18, max_duration_ms=100, fade_out_ms=30, sync_point="peak", sync_offset_ms=40)
+            "mouse_click": SemanticSfx(path=sfx_path.name, gain_db=-18, max_duration_ms=100, fade_out_ms=30, sync_point="peak", sync_offset_ms=40)
         },
     )
 
@@ -125,7 +136,8 @@ def test_compile_resolves_semantic_sfx_and_keeps_anchor_frame(tmp_path: Path) ->
     )
 
     sfx = next(track for track in plan.audio_tracks if track.kind == "sfx")
-    assert sfx.semantic_id == "field_focus"
+    assert plan.shots[0].start_frame == 0
+    assert sfx.semantic_id == "mouse_click"
     assert sfx.anchor_id == "anchor_1"
     assert sfx.start_frame == 5
     assert sfx.sync_frame == 6
@@ -133,12 +145,41 @@ def test_compile_resolves_semantic_sfx_and_keeps_anchor_frame(tmp_path: Path) ->
     assert sfx.max_duration_ms == 100
 
 
-def test_builtin_sfx_profile_points_to_valid_wav_files() -> None:
+def test_first_frame_peak_sfx_uses_extra_trim(tmp_path: Path) -> None:
+    asset = _asset(tmp_path / "params.png")
+    sfx_path = tmp_path / "click.wav"
+    with wave.open(str(sfx_path), "wb") as output:
+        output.setnchannels(2)
+        output.setsampwidth(2)
+        output.setframerate(48_000)
+        output.writeframes(b"\x00\x00\x00\x00" * 4800)
+    timing = _timing().model_copy(
+        update={"phrase_anchors": [PhraseAnchor(anchor_id="anchor_1", text="填写必填项", token_ids=["tok_1"], hit_frame=0, beat_id="beat_1")]}
+    )
+    visual = VisualPlan(
+        case_id="demo",
+        shots=[ShotPlan(shot_id="shot", beat_ids=["beat_1"], start=TimeRef(anchor_id="timeline_start"), end=TimeRef(anchor_id="timeline_end"), template="ui_params_focus", asset_bindings={"primary": asset.asset_id}, cue_bindings=[{"action": "click", "anchor_id": "anchor_1", "sfx": "mouse_click"}])],
+    )
+    plan = compile_render_plan(
+        "demo", "run", Narration(case_id="demo", beats=[NarrationBeat(beat_id="beat_1", spoken_text="填写必填项")]), timing, visual,
+        AssetCatalog(catalog_id="demo", generated_at="now", source_root="assets", assets=[asset]), tmp_path, "douyin_portrait_v1", 1080, 1920, tmp_path,
+        AudioConfig(sfx_profile=None, sfx_overrides={"mouse_click": SemanticSfx(path=sfx_path.name, trim_start_ms=130, max_duration_ms=200, fade_out_ms=30, sync_point="peak", sync_offset_ms=134)}),
+        DurationPolicy(preferred_min_sec=1, preferred_max_sec=1, hard_max_sec=1),
+    )
+    sfx = next(track for track in plan.audio_tracks if track.kind == "sfx")
+    assert sfx.start_frame == 0
+    assert sfx.trim_start_ms == 264
+    assert sfx.effective_sync_offset_ms == 0
+
+
+def test_registered_sfx_profile_points_to_normalized_wav_files() -> None:
     repo_root = Path(__file__).resolve().parents[1]
-    profile = get_sfx_profile("short_video_ui_v1")
-    assert {"ui_click", "field_focus", "upload", "result_reveal", "success"} <= set(profile)
+    profile = get_sfx_profile("douyin_common_v1")
+    assert set(profile) == {"typing", "transition_whoosh", "camera_shutter", "task_complete", "mouse_click", "swish"}
     for source in profile.values():
         path = repo_root / source.path
         with wave.open(str(path), "rb") as audio:
             assert audio.getframerate() == 48_000
+            assert audio.getnchannels() == 2
+            assert audio.getsampwidth() == 2
             assert audio.getnframes() > 0

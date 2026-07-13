@@ -12,7 +12,7 @@ def review_contact_sheet(
     repo_root: Path,
     plan: RenderPlan,
     contact_sheet: Path,
-    cue_contact_sheet: Path | None = None,
+    cue_contact_sheets: list[Path] | None = None,
 ) -> tuple[CheckResult, dict[str, object]]:
     prompt = load_prompt(repo_root / "video_agent" / "prompts" / "visual_critic.md")
     request = json.dumps(
@@ -35,22 +35,19 @@ def review_contact_sheet(
         },
         ensure_ascii=False,
     )
-    evidence_sheets = [contact_sheet]
-    if cue_contact_sheet and cue_contact_sheet.is_file():
-        evidence_sheets.append(cue_contact_sheet)
-    result = OpenAICompatibleTextClient(repo_root).complete_json_with_images(
-        prompt.text,
-        request,
-        evidence_sheets,
-        "visual_review",
-    )
-    verdict = str(result.get("verdict") or "fail").lower()
-    issues = result.get("issues") if isinstance(result.get("issues"), list) else []
+    pages = [path for path in (cue_contact_sheets or []) if path.is_file()] or [contact_sheet]
+    client = OpenAICompatibleTextClient(repo_root)
+    results = [
+        client.complete_json_with_images(prompt.text, request, [contact_sheet, page] if page != contact_sheet else [contact_sheet], f"visual_review_page_{index}")
+        for index, page in enumerate(pages, start=1)
+    ]
+    verdict = "pass" if all(str(result.get("verdict") or "fail").lower() == "pass" for result in results) else "fail"
+    issues = [issue for result in results for issue in (result.get("issues") if isinstance(result.get("issues"), list) else [])]
     check = CheckResult(
         check_id="vision_critic_contact_sheet",
         status="passed" if verdict == "pass" else "failed",
-        message=str(result.get("summary") or ""),
-        details={"issues": issues},
+        message="; ".join(str(result.get("summary") or "") for result in results if result.get("summary")),
+        details={"issues": issues, "pages_reviewed": len(results)},
     )
-    trace = {"path": prompt.path.as_posix(), "sha256": prompt.sha256, "evidence_sheets": [path.as_posix() for path in evidence_sheets], "result": result}
+    trace = {"path": prompt.path.as_posix(), "sha256": prompt.sha256, "evidence_sheets": [contact_sheet.as_posix(), *[path.as_posix() for path in pages]], "result": {"verdict": verdict, "pages": results}}
     return check, trace

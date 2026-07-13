@@ -21,6 +21,9 @@ from video_agent.io import sha256_file, sha256_json, utc_now
 
 GPT_KINDS = {
     DeriveKind.CANVAS_EXTEND,
+    DeriveKind.SITE_HOME_KEYFRAME,
+    DeriveKind.SITE_FEATURE_ENTRY_KEYFRAME,
+    DeriveKind.SITE_PARAMS_KEYFRAME,
     DeriveKind.LOGO_ISOLATE_SEMANTIC,
     DeriveKind.BRAND_IP_SUBTITLE_BREAK,
     DeriveKind.IDENTITY_TO_SYSTEM_TRANSITION,
@@ -30,6 +33,9 @@ GPT_KINDS = {
 def _prompt(repo_root: Path, kind: DeriveKind, instruction: str) -> tuple[str, str]:
     recipes = {
         DeriveKind.CANVAS_EXTEND: "Extend only the surrounding canvas; keep the source image itself unchanged and fully visible.",
+        DeriveKind.SITE_HOME_KEYFRAME: "Create a close, readable 9:16 keyframe from the website's first viewport only. Let the 文生图 module occupy most of the safe screen and make it the visual focus using an elegant integrated highlight. Crop away the lower case-resource library and unrelated below-the-fold content. Preserve visible UI, Chinese text, colors, and layout relationships; do not invent or rewrite content.",
+        DeriveKind.SITE_FEATURE_ENTRY_KEYFRAME: "Create a close, readable 9:16 keyframe from the website's upper first viewport. The left 文生图 navigation item and its open hover menu are the required subject; do not treat the homepage shortcut pills as the navigation entry. Let the hover menu occupy most of the safe screen. Add exactly one conspicuous red hand-drawn double-stroke circle or ellipse around the named target item inside the hover menu. Adapt the shape naturally to the target text: use a compact circle or small ellipse for short labels such as VI, and a wider ellipse for longer Chinese labels. Keep generous breathing room and place the target text near the visual center. The mark may overlap empty menu spacing naturally, but it must not enclose or visually point to any adjacent label. Do not use a rigid table-cell rectangle. Crop away the lower case-resource library and unrelated below-the-fold content. Do not invent UI, rewrite Chinese text, or change the selected feature.",
+        DeriveKind.SITE_PARAMS_KEYFRAME: "Create a readable, interactive 9:16 parameter-panel keyframe. Preserve the original complete required-input area and the 开始生成 button, enlarge the panel for legibility, and preserve every visible UI field and Chinese label without rewriting content. The panel is the composition: crop and scale it to span the full usable frame width from left to right, with at most a 3% outer margin on either side. The output must never contain a blank right-side strip, right-side black space, side column, letterbox, split-screen, or any empty area that makes the parameter panel look narrow. Preserve every original red required asterisk/star symbol already visible in the UI exactly where it is: never remove, hide, recolor, restyle, move, duplicate, or replace an existing UI asterisk. The no-asterisk rule applies only to the newly added callout text. Render the injected callout text exactly, with no * character, and draw one hand-drawn curved arrow toward the supplied field area. Treat the callout and arrow as a bold overlay directly on top of the original parameter panel, preferentially in its right-side or lower-right area; do not reserve an empty region for it. The callout may overlap ordinary form content or the page background as needed for a strong, integrated composition. The sole placement prohibition is covering an original page title or section title. The injected callout text is the only new Chinese text allowed in the image. Never render source, validation, provenance, or instruction language such as 已验证必填字段, 必填字段, 字段说明, CDP, or 前端源码. Use a varied high-contrast style suited to the composition, such as marker handwriting with a contrasting arrow, outlined lettering with a brush underline, or a small sticker-style title with a scribbled pointer; do not always use the same color combination. Do not add people, avatars, fake cursor clicks, extra UI, red boxes, or invented field names.",
         DeriveKind.LOGO_ISOLATE_SEMANTIC: "Create a semantic presentation of the existing logo on a clean background; do not claim pixel-perfect extraction.",
         DeriveKind.BRAND_IP_SUBTITLE_BREAK: "Create a restrained brand interlude using only the visible brand or IP element from the source.",
         DeriveKind.IDENTITY_TO_SYSTEM_TRANSITION: "Compose the visible identity element and the original complete design system as a clear before-to-system frame.",
@@ -63,7 +69,8 @@ def materialize_assets(
             raise ValueError(f"derived request source is missing: {request.source_asset_id}")
         if parent.media_type != "image":
             raise ValueError(f"derived request source is not an image: {request.source_asset_id}")
-        if parent.provenance.origin == "site_screenshot_library" and request.derive_kind in GPT_KINDS:
+        site_kinds = {DeriveKind.SITE_HOME_KEYFRAME, DeriveKind.SITE_FEATURE_ENTRY_KEYFRAME, DeriveKind.SITE_PARAMS_KEYFRAME}
+        if parent.provenance.origin == "site_screenshot_library" and request.derive_kind in GPT_KINDS - site_kinds:
             raise ValueError("website screenshots cannot be redrawn by GPT Image")
         source = (repo_root / parent.path).resolve()
         output = output_dir / f"{request.request_id}.png"
@@ -104,7 +111,7 @@ def materialize_assets(
                     checks=["image_decode_ok"] + (["requires_visual_review"] if evidence == EvidenceClass.SEMANTIC else []),
                 ),
                 provenance=Provenance(
-                    origin="gpt_image_semantic_derivative" if evidence == EvidenceClass.SEMANTIC else "deterministic_faithful_derivative",
+                    origin="gpt_image_site_keyframe" if request.derive_kind in site_kinds else "gpt_image_semantic_derivative" if evidence == EvidenceClass.SEMANTIC else "deterministic_faithful_derivative",
                     parent_asset_ids=[parent.asset_id],
                     provider=provider,
                     model=model,

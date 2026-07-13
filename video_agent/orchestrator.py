@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -48,10 +49,13 @@ class Orchestrator:
         output: Path | None = None,
         details: dict[str, Any] | None = None,
         input_sha256: str | None = None,
+        input_fingerprint: dict[str, Any] | None = None,
     ) -> None:
         item: dict[str, Any] = {"status": status, "updated_at": utc_now()}
         if input_sha256:
             item["input_sha256"] = input_sha256
+        if input_fingerprint:
+            item["input_fingerprint"] = input_fingerprint
         if output and output.is_file():
             item.update({"output": output.as_posix(), "sha256": sha256_file(output)})
         if details:
@@ -63,8 +67,45 @@ class Orchestrator:
         path = self.context.artifact(name)
         return sha256_file(path) if path.is_file() else None
 
-    def _stage_input_sha256(self, stage: str) -> str:
+    def _content_sha256(self, path: Path | None) -> str | None:
+        return sha256_file(path) if path and path.is_file() else None
+
+    def _source_sha256(self, source: str | None) -> str | None:
+        return self._content_sha256(self.context.case_dir / source) if source else None
+
+    def _code_fingerprint(self) -> str:
+        paths = sorted((self.context.repo_root / "video_agent").rglob("*.py"))
+        paths.extend(sorted((self.context.repo_root / "video_agent" / "prompts").rglob("*.md")))
+        return sha256_json(
+            [{"path": path.relative_to(self.context.repo_root).as_posix(), "sha256": sha256_file(path)} for path in paths]
+        )
+
+    def _provider_fingerprint(self) -> dict[str, str]:
+        config_path = self.context.repo_root / "config" / "ai.local.json"
+        config = load_json(config_path) if config_path.is_file() else {}
+        return {
+            "provider": "openai_compatible",
+            "base_url": str(os.getenv("VIDEO_AGENT_AI_BASE_URL") or config.get("base_url") or "").rstrip("/"),
+            "model": str(config.get("model") or "gpt-5"),
+        }
+
+    def _stage_input_fingerprint(self, stage: str) -> dict[str, Any]:
         case = self.context.case.model_dump(mode="json")
+        prompt_map = {
+            "materialize": "materialization/controlled_derivative.md",
+            "narration": "story_and_shot_proposal.md",
+            "visual": "visual_story_planner.md",
+            "qa": "visual_critic.md",
+        }
+        prompt_name = prompt_map.get(stage)
+        prompt_sha = self._content_sha256(self.context.repo_root / "video_agent" / "prompts" / prompt_name) if prompt_name else None
+        common = {
+            "code_sha256": self._code_fingerprint(),
+            "prompt_sha256": prompt_sha,
+            "provider": self._provider_fingerprint(),
+            "vision_review_enabled": self.context.case.vision_review_enabled,
+            "quality": self.context.case.quality,
+        }
         source_map: dict[str, Any] = {
             "catalog": {
                 "case": case,
@@ -72,14 +113,15 @@ class Orchestrator:
                 if (self.context.repo_root / "assets" / "catalog.json").is_file()
                 else None,
             },
-            "materialize": {"case": case, "catalog": self._artifact_sha256("asset_catalog.source.json")},
-            "narration": {"case": case, "catalog": self._artifact_sha256("asset_catalog.json")},
+            "materialize": {"case": case, "catalog": self._artifact_sha256("asset_catalog.source.json"), "source": self._source_sha256(self.context.case.materialization_source)},
+            "narration": {"case": case, "catalog": self._artifact_sha256("asset_catalog.json"), "source": self._source_sha256(self.context.case.narration_source)},
             "speech": {"voice": case["voice"], "narration": self._artifact_sha256("narration.json")},
             "visual": {
                 "mode": case["visual_planner_mode"],
                 "narration": self._artifact_sha256("narration.json"),
                 "timing": self._artifact_sha256("timing_lock.json"),
                 "catalog": self._artifact_sha256("asset_catalog.json"),
+                "source": self._source_sha256(self.context.case.visual_plan_source),
             },
             "compile": {
                 "narration": self._artifact_sha256("narration.json"),
@@ -90,9 +132,12 @@ class Orchestrator:
                 "audio": case["audio"],
             },
             "render": {"plan": self._artifact_sha256("render_plan.json"), "quality": case["quality"]},
-            "qa": {"plan": self._artifact_sha256("render_plan.json"), "video": self._artifact_sha256("final/video.mp4")},
+            "qa": {"plan": self._artifact_sha256("render_plan.json"), "video": self._artifact_sha256("final/video.mp4"), "vision_review_enabled": case["vision_review_enabled"]},
         }
-        return sha256_json(source_map[stage])
+        return {**common, "stage": stage, "inputs": source_map[stage]}
+
+    def _stage_input_sha256(self, stage: str) -> str:
+        return sha256_json(self._stage_input_fingerprint(stage))
 
     def _can_resume_stage(self, stage: str, input_sha256: str) -> bool:
         item = self.manifest["stages"].get(stage)
@@ -110,14 +155,18 @@ class Orchestrator:
             raise ValueError("from-stage must not come after until-stage")
         existing_video = self.context.run_dir / "final" / "video.mp4"
         final_video: Path | None = existing_video if existing_video.is_file() else None
+        stage = "unknown"
+        input_sha256: str | None = None
+        input_fingerprint: dict[str, Any] | None = None
         try:
             for stage in STAGES[start : end + 1]:
-                input_sha256 = self._stage_input_sha256(stage)
+                input_fingerprint = self._stage_input_fingerprint(stage)
+                input_sha256 = sha256_json(input_fingerprint)
                 if from_stage is None and self._can_resume_stage(stage, input_sha256):
                     continue
                 method = getattr(self, f"stage_{stage}")
                 output = method()
-                self._record(stage, "completed", output if isinstance(output, Path) else None, input_sha256=input_sha256)
+                self._record(stage, "completed", output if isinstance(output, Path) else None, input_sha256=input_sha256, input_fingerprint=input_fingerprint)
                 if stage == "render" and isinstance(output, Path):
                     final_video = output
             self.manifest["status"] = "completed"
@@ -127,7 +176,7 @@ class Orchestrator:
         except Exception as exc:
             self.manifest["status"] = "failed"
             self.manifest["error"] = {"type": exc.__class__.__name__, "message": str(exc)}
-            self._record(stage, "failed", details={"type": exc.__class__.__name__, "message": str(exc)}, input_sha256=input_sha256)
+            self._record(stage, "failed", details={"type": exc.__class__.__name__, "message": str(exc)}, input_sha256=input_sha256, input_fingerprint=input_fingerprint)
             self.context.mark_latest("failed")
             raise
 
@@ -251,7 +300,7 @@ class Orchestrator:
                 self.context.repo_root,
                 plan,
                 self.context.run_dir / "final" / "contact_sheet.jpg",
-                self.context.run_dir / "final" / "cue_contact_sheet.jpg",
+                sorted((self.context.run_dir / "final").glob("cue_contact_sheet_*.jpg")),
             )
             report.checks.append(review)
             self.manifest["prompts"].append({"path": trace["path"], "sha256": trace["sha256"]})

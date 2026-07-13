@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+import pytest
+from pydantic import ValidationError
+
 from video_agent.compiler.subtitles import compile_subtitles, fullwidth_units
 from video_agent.contracts import (
     AudioTrack,
     BeatSpan,
+    CueBinding,
     RenderAsset,
     RenderPlan,
     RenderShot,
     SubtitleCue,
     TimingLock,
     TokenTiming,
+    TransitionIn,
 )
 from video_agent.qa import validate_render_plan
 
@@ -108,3 +113,34 @@ def test_qa_rejects_perspective_on_text_dense_ui() -> None:
     )
     checks = {check.check_id: check for check in validate_render_plan(plan)}
     assert checks["text_dense_motion_safe"].status == "failed"
+
+
+def test_overlay_layout_rejects_douyin_rail_and_subtitle_slots() -> None:
+    plan = RenderPlan(
+        case_id="demo", run_id="run", frame_count=30,
+        assets=[RenderAsset(asset_id="asset", path="demo.png", sha256="a" * 64, width=100, height=100)],
+        shots=[RenderShot(shot_id="base", beat_ids=["beat"], template="result_showcase", asset_bindings={"primary": "asset"}, start_frame=0, end_frame=30), RenderShot(shot_id="overlay", track="overlay", beat_ids=["beat"], template="brand_ip_cutaway", asset_bindings={"primary": "asset"}, start_frame=0, end_frame=30, overlay_layout={"x": 0.86, "y": 0.3, "w": 0.14, "h": 0.3, "fit": "contain", "opacity": 1.0, "z_index": 10})],
+        subtitles=[], audio_tracks=[AudioTrack(kind="voice", path="voice.mp3")],
+    )
+    checks = {check.check_id: check for check in validate_render_plan(plan)}
+    assert checks["overlay_platform_safe"].status == "failed"
+
+
+def test_wipe_transition_and_fake_carousel_are_removed() -> None:
+    with pytest.raises(ValidationError):
+        TransitionIn(kind="wipe_left", duration_frames=8)  # type: ignore[arg-type]
+    plan = RenderPlan(
+        case_id="demo", run_id="run", frame_count=30,
+        assets=[RenderAsset(asset_id="asset", path="demo.png", sha256="a" * 64, width=100, height=100)],
+        shots=[RenderShot(shot_id="shot", beat_ids=["beat"], template="image_carousel", asset_bindings={"primary": "asset"}, start_frame=0, end_frame=30)],
+        subtitles=[], audio_tracks=[AudioTrack(kind="voice", path="voice.mp3")],
+    )
+    checks = {check.check_id: check for check in validate_render_plan(plan)}
+    assert checks["template_implemented"].status == "failed"
+
+
+def test_runtime_contracts_reject_programmatic_asset_coordinates() -> None:
+    with pytest.raises(ValidationError):
+        CueBinding(action="focus.hit", anchor_id="phrase", asset_anchor_id="wrong_coordinate")  # type: ignore[call-arg]
+    with pytest.raises(ValidationError):
+        RenderAsset(asset_id="asset", path="demo.png", sha256="a" * 64, width=100, height=100, anchors={"wrong": {"x": 0.1}})  # type: ignore[call-arg]

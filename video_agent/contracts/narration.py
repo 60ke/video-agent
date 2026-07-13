@@ -33,14 +33,26 @@ class Claim(Contract):
         return self
 
 
+class ClaimCue(Contract):
+    claim_id: str = Field(pattern=r"^[A-Za-z0-9_-]+$")
+    phrase: str = Field(min_length=1)
+
+
 class NarrationBeat(Contract):
     beat_id: str
     spoken_text: str = Field(min_length=1)
     tts_markup_text: str | None = None
-    claim_ids: list[str] = Field(default_factory=list)
+    claim_cues: list[ClaimCue] = Field(default_factory=list)
     asset_slots: list[str] = Field(default_factory=list)
     hit_phrases: list[str] = Field(default_factory=list)
     pause_intents: list[PauseIntent] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def claim_phrases_are_spoken(self) -> "NarrationBeat":
+        missing = [cue.phrase for cue in self.claim_cues if cue.phrase not in self.spoken_text]
+        if missing:
+            raise ValueError(f"claim cue phrases must appear verbatim in spoken_text: {missing}")
+        return self
 
 
 class Narration(VersionedContract):
@@ -54,7 +66,7 @@ class Narration(VersionedContract):
         known = {claim.claim_id for claim in self.claims}
         if len(known) != len(self.claims):
             raise ValueError("claim_id values must be unique")
-        unknown = sorted({claim_id for beat in self.beats for claim_id in beat.claim_ids} - known)
+        unknown = sorted({cue.claim_id for beat in self.beats for cue in beat.claim_cues} - known)
         if unknown:
             raise ValueError(f"beats reference unknown claims: {unknown}")
         return self

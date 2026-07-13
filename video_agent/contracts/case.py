@@ -64,7 +64,7 @@ class AudioConfig(Contract):
     bgm_path: str | None = None
     bgm_gain_db: float = Field(default=-22.0, ge=-60.0, le=0.0)
     voice_gain_db: float = Field(default=0.0, ge=-24.0, le=12.0)
-    sfx_profile: str | None = "short_video_ui_v1"
+    sfx_profile: str | None = "douyin_common_v1"
     sfx_overrides: dict[str, SemanticSfx] = Field(default_factory=dict)
     sfx_density: SfxDensityPolicy = Field(default_factory=SfxDensityPolicy)
 

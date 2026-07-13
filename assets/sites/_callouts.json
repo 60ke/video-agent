@@ -4185,7 +4185,45 @@
         }
       ],
       "updated_at": "2026-07-09T00:43:56.470Z"
+    },
+    "柯幻熊猫_AI工具_功能列表截图.png": {
+      "filename": "柯幻熊猫_AI工具_功能列表截图.png",
+      "asset_kind": "feature_list",
+      "capture_type": "功能列表截图",
+      "feature_label": "AI工具",
+      "feature_path": [
+        "AI工具"
+      ],
+      "callouts": [
+        {
+          "type": "highlight_box",
+          "target_label": "AI工具功能列表",
+          "intent": "highlight_module_entry",
+          "box": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1.0,
+            "h": 1.0
+          },
+          "target_role": "feature_list",
+          "coordinate_space": "source_image_normalized"
+        },
+        {
+          "type": "pulse_ring",
+          "target_label": "无痕文字",
+          "intent": "click_target",
+          "box": {
+            "x": 0.023,
+            "y": 0.016,
+            "w": 0.438,
+            "h": 0.085
+          },
+          "target_role": "tool_entry",
+          "coordinate_space": "source_image_normalized"
+        }
+      ],
+      "updated_at": "2026-07-13T03:16:35.000Z"
     }
   },
-  "updated_at": "2026-07-09T00:43:56.470Z"
+  "updated_at": "2026-07-13T03:16:35.000Z"
 }

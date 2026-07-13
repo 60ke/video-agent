@@ -37,6 +37,8 @@ catalog -> materialize -> narration -> speech -> visual -> compile -> render -> 
 
 ## 3. 派生素材
 
+网站截图的 `visual_anchors` 仅属于素材分析元数据，不进入 `VisualPlan` 或 `RenderPlan`。Renderer 禁止根据坐标裁切、放大、压暗或绘制框线；网站截图优先使用审核通过的 9:16 派生关键帧，没有派生图时只做原图等比排版。
+
 `MaterializationPlan` 支持确定性 `crop_and_reframe` 和受控 GPT Image 派生。网站截图禁止进入 GPT Image 编辑。语义派生输出为 E2 且默认 `unreviewed`，不能被 Planner 或 Compiler 使用，直到：
 
 ```powershell
@@ -76,19 +78,22 @@ python -m video_agent asset-review --case <case> --run <run_id> --asset-id <id> 
 
 ### 5.1 语义音效
 
-共享音效位于 `assets/audio/sfx/`，默认 profile 为 `short_video_ui_v1`。自动视觉计划会按镜头语义绑定：
+共享音效位于 `assets/audio/sfx/`，唯一 profile 为 `douyin_common_v1`。自动视觉计划会按镜头语义绑定：
 
-- 功能入口：`ui_click`；
-- 参数聚焦：`field_focus`；
+- 功能入口、按钮、上传与字段点击：`mouse_click`；
+- 参数短语输入：`typing`；
 - 上传相关短语：`upload`；
-- 结果镜头入场：`result_reveal`。
+- 左右滑动：`transition_whoosh`；
+- 普通结果切换：`swish`；
+- 明确截图或保存：`camera_shutter`；
+- 明确生成完成：`task_complete`。
 
 转场类音效绑定镜头起始 anchor，字段操作类音效优先绑定词级 phrase anchor。每个音效可使用 onset 或 peak 同步点，编译器会将文件起播时间前移对应毫秒数；随后按优先级执行最小间隔、重复冷却和三秒窗口限流。
 
 ```json
 {
   "audio": {
-    "sfx_profile": "short_video_ui_v1",
+    "sfx_profile": "douyin_common_v1",
     "sfx_overrides": {},
     "sfx_density": {
       "min_gap_ms": 280,
@@ -108,5 +113,5 @@ python -m video_agent asset-review --case <case> --run <run_id> --asset-id <id> 
 python -m pytest
 python -m compileall -q video_agent
 python -m video_agent catalog --assets assets --json
-python -m video_agent.audio.generate_builtin --output assets/audio/sfx
+python -m video_agent sfx-register --source-dir C:\\Users\\CNGG\\Music --output assets\\audio\\sfx
 ```

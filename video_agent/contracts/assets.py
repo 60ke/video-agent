@@ -18,6 +18,9 @@ class EvidenceClass(str, Enum):
 class DeriveKind(str, Enum):
     CROP_AND_REFRAME = "crop_and_reframe"
     CANVAS_EXTEND = "canvas_extend"
+    SITE_HOME_KEYFRAME = "site_home_keyframe"
+    SITE_FEATURE_ENTRY_KEYFRAME = "site_feature_entry_keyframe"
+    SITE_PARAMS_KEYFRAME = "site_params_keyframe"
     LOGO_ISOLATE_SEMANTIC = "logo_isolate_semantic"
     BRAND_IP_SUBTITLE_BREAK = "brand_ip_subtitle_break"
     IDENTITY_TO_SYSTEM_TRANSITION = "identity_to_system_transition"
@@ -73,6 +76,7 @@ class Asset(Contract):
     height: int | None = Field(default=None, gt=0)
     semantic_path: list[str] = Field(default_factory=list)
     role: str
+    production_eligible: bool = True
     evidence_class: EvidenceClass
     claims: list[str] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)

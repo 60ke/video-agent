@@ -1,0 +1,1383 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-13T07:30:16.217853+00:00",
+  "workflow": "site_params_gpt_image_batch",
+  "annotation_style": "dynamic_required_field_handwritten_callout",
+  "source_dir": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites",
+  "output_dir": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板",
+  "assets": [
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_IP形象_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_IP形象_参数面板截图.png",
+      "source_sha256": "ad1ff4b3d607e341699e3a98748ca44fa6e9bc61840783096fb3a681182b6719",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_IP形象_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_IP形象_参数面板关键帧.png",
+      "output_sha256": "e91bd30a4ec1cc0f74549c261df75746f9011208ca01e47fb7aa1008a56fa6e5",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "IP形象"
+      ],
+      "feature": "IP形象",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "行业"
+      ],
+      "callout_text": "行业",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/textToImageIp/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "cdd650cdd3eb362a497d97ed879875e19e20558ca6a403fd96e6730de9552888",
+      "cdp_required_field_labels": [
+        "行业"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "bb7593f7acedc8cc256636ec8af98ad81daf5027f3c1751a588e621dac30fcab",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_LOGO_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_LOGO_参数面板截图.png",
+      "source_sha256": "3d9bae7a90aade1b31cb08abac47d4fed4b739c34a1578624b529c3ee4596cc7",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_LOGO_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_LOGO_参数面板关键帧.png",
+      "output_sha256": "9f99593e9222626645c014de094aa2e3110042b657c65b0a375e160b082757a8",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "LOGO"
+      ],
+      "feature": "LOGO",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "品牌名称",
+        "行业"
+      ],
+      "callout_text": "品牌名称+行业",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/textToImageLogo/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "216da5eff2363be02458b9b2fb35a43e121453c951f7ba6b17717270e94e12e1",
+      "cdp_required_field_labels": [
+        "品牌名称",
+        "行业"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "3d236f6a9bd50a12fa26d96feda48b2cea4fd7fc93d73a8753f8b2b3e4ed2952",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_VI_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_VI_参数面板截图.png",
+      "source_sha256": "61e7e8fbf6f90f51d1ca5c4e4ba0703bcbc90e669ec42b19c7d65d2b5f124e57",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_VI_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_VI_参数面板关键帧.png",
+      "output_sha256": "c2db73d77d4413cd3a48df6d3d76ce7f01f0089057c91db51730714ce0350e9d",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "VI"
+      ],
+      "feature": "VI",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "品牌名称"
+      ],
+      "callout_text": "品牌名称",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/viDesign/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "cef494e4b4ca47446575145df732427b620347b4856a5359a208d68667e6a82a",
+      "cdp_required_field_labels": [
+        "品牌名称"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "c5afef0f50be57025a214fda23f2f1cc18377b85c3c180f01ff6f4485338f7cc",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_会议美陈_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_会议美陈_参数面板截图.png",
+      "source_sha256": "0c4f0777f8ad2e90a791808109d732ced33b30ed15c7fd8cf77fcd105bae044a",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_会议美陈_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_会议美陈_参数面板关键帧.png",
+      "output_sha256": "3785d1f7d3ef83c03ed40b50cf433f7effebe95e3e1432758ee89d740e0dd534",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "会议美陈"
+      ],
+      "feature": "会议美陈",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "会议类型",
+        "会议名称"
+      ],
+      "callout_text": "会议类型+会议名称",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/meetingDecoration/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "f7f9d03df77aab00f559e2eb6161c7b3fe10f3a184160554afb9435274b45aac",
+      "cdp_required_field_labels": [
+        "会议类型",
+        "会议名称"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "c50902ed9ba4499d78d692c0deabc1dd08cc08ff1e1f6935de0a4a7c6c8850ca",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_包装_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_包装_参数面板截图.png",
+      "source_sha256": "5f653522d2c9ffde6b1897247d7d7124059d373ca2d2f3f0a50b207c76667953",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_包装_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_包装_参数面板关键帧.png",
+      "output_sha256": "2fa54ad3ec6e47d84b246519f9ab523df8f6a1d2e9d9b4a02ebb10e28612b5ab",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "包装"
+      ],
+      "feature": "包装",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "包装类型",
+        "包装描述"
+      ],
+      "callout_text": "包装类型+包装描述",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/packagingDesign/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "c860e6b71a1dbf56216457257822e61f107759f3ec124b27a1a51eb3259e1e6b",
+      "cdp_required_field_labels": [
+        "包装描述",
+        "包装类型"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "dee6fb5d4d76ef25a9a67f873205ba768ddee1836217ebd4612643fe5f023b50",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_banner_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_banner_参数面板截图.png",
+      "source_sha256": "af187d57cab64fb37386db1c9de6a2a8fe8a97dcbb1db8374c9858b939f02b0c",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_banner_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_banner_参数面板关键帧.png",
+      "output_sha256": "be877258b29413147fd742e42d7231d60e1374ea0addc211bafdbde054898839",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "banner"
+      ],
+      "feature": "图文广告/banner",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "主标题"
+      ],
+      "callout_text": "主标题",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "主标题"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "227cfad003ac3357c2f9f6a88e22ecc9cbaf1e635de8b0619a8446ac44be6d44",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_单页_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_单页_参数面板截图.png",
+      "source_sha256": "d5ff8f66067bc70ee833ef37e5d17023eb2b305c35d913b9783c47eea23320f4",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_单页_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_单页_参数面板关键帧.png",
+      "output_sha256": "4e300aee275a67ebdce1054fa3ca622e4cad2c3d3b3d927c91963035ef157939",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "单页"
+      ],
+      "feature": "图文广告/单页",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "行业类别",
+        "单页主题",
+        "版式"
+      ],
+      "callout_text": "行业类别+单页主题+版式",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "行业类别",
+        "单页主题",
+        "版式"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "a05bd1c3e0d6e405e1e823a3af10739ed247cebd682fc54302f2937d1e654b03",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_台历_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_台历_参数面板截图.png",
+      "source_sha256": "a07dc6fd445618405c71f39609726228ad33c88e3e18291c5c39d6dd92de144f",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_台历_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_台历_参数面板关键帧.png",
+      "output_sha256": "6cd68039ceb1aaa42fa8dc8f3865a6def2ba9c3bfe2704d0a6e85693db9b4399",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "台历"
+      ],
+      "feature": "图文广告/台历",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "台历类型",
+        "所属行业",
+        "物料规格"
+      ],
+      "callout_text": "台历类型+所属行业+物料规格",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "台历类型",
+        "所属行业",
+        "物料规格"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "3990e57e0bfd09c3ba24099e53b1dbe92f13562a13259a5e39c2de1b9936a333",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_名片_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_名片_参数面板截图.png",
+      "source_sha256": "f187bd5dcb69c2c5962ad6498f7e8768590b344d0c4193bebb98cfd5ac6c3912",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_名片_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_名片_参数面板关键帧.png",
+      "output_sha256": "0abec9fab6ec29644e74bc2277f2cb389847ea0578ed1ca950aa2234acf242c0",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "名片"
+      ],
+      "feature": "图文广告/名片",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "名片类型",
+        "姓名",
+        "职务 / 头衔"
+      ],
+      "callout_text": "名片类型+姓名+职务 / 头衔",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "名片类型",
+        "姓名",
+        "职务 / 头衔"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "30c0e1734ea4f139b9f88cdc34517441cb3785e709a099dfb19795a4cd96d874",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_展板_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_展板_参数面板截图.png",
+      "source_sha256": "4d5d6b139d3d8d44463eb20090efc68bca1449ae8f9ef3b0231f833ce254d14a",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_展板_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_展板_参数面板关键帧.png",
+      "output_sha256": "bea9be578c95cbd576d03f8da2f539ec7f152779159b8f3de2ee216c2c7f8fb1",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "展板"
+      ],
+      "feature": "图文广告/展板",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "主标题文案",
+        "核心信息"
+      ],
+      "callout_text": "主标题文案+核心信息",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "主标题文案",
+        "核心信息"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "2d4a5d8a280bc08c9d49fd2517512ad2e4680db3d7c2beaada9c200f0ba0fa18",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_易拉宝_展架_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_易拉宝_展架_参数面板截图.png",
+      "source_sha256": "cb1b61134606bcb73a4ec6ac5b0e3063e48b6ee475196a9262684dd7d125cb97",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_易拉宝_展架_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_易拉宝_展架_参数面板关键帧.png",
+      "output_sha256": "c081e7edab3dab87320e96790ada5008b9d1cca0dd8e68b3f38798402e75489d",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "易拉宝",
+        "展架"
+      ],
+      "feature": "图文广告/易拉宝/展架",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "易拉宝类型",
+        "所属行业",
+        "物料规格",
+        "主标题文案"
+      ],
+      "callout_text": "填写必填项",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "易拉宝类型",
+        "所属行业",
+        "物料规格",
+        "主标题文案"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "ec0a0fb743e4de2ae399c76d79fe8ddb03a42f745e775165649ed28a20719926",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_朋友圈海报_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_朋友圈海报_参数面板截图.png",
+      "source_sha256": "400e50ea590955fee64e8799fbd1cd2ec6c888acce654fe756220bc70495da33",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_朋友圈海报_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_朋友圈海报_参数面板关键帧.png",
+      "output_sha256": "a71314a456ac366e5c4b3cb478c0d5ddc096e1c79e12c2d56f1839fdf33e8489",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "朋友圈海报"
+      ],
+      "feature": "图文广告/朋友圈海报",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "海报主题"
+      ],
+      "callout_text": "海报主题",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "海报主题"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "e997fa24437ae11ef2cf137292e4a0298ec3f81c31aeca32c34d8534179ef5ec",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_灯箱_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_灯箱_参数面板截图.png",
+      "source_sha256": "8458c4591f19e83874c0858c26acdc453cc68b008d13f015b13be5996c88aaa2",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_灯箱_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_灯箱_参数面板关键帧.png",
+      "output_sha256": "729282bcb8bde263cd191a5cd4453cc79adc7b017023d91cbde6905d209d63f1",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "灯箱"
+      ],
+      "feature": "图文广告/灯箱",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "灯箱类型",
+        "灯箱尺寸"
+      ],
+      "callout_text": "灯箱类型+灯箱尺寸",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "灯箱类型",
+        "灯箱尺寸"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "9062d59e75617ecb1631f439bfb4304b4a06b4ac1adb8353a118c6f3675fa268",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_电梯广告_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_电梯广告_参数面板截图.png",
+      "source_sha256": "dd7bce99b60bc54c4a02b750777bac2db13210d45b4348c0f699d4e876497d89",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_电梯广告_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_电梯广告_参数面板关键帧.png",
+      "output_sha256": "3f8af87cfb30857fe904a35f1fe10c89233aa79637011d10e39ea0244541c854",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "电梯广告"
+      ],
+      "feature": "图文广告/电梯广告",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "主标题文案"
+      ],
+      "callout_text": "主标题文案",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "主标题文案"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "d189cf739314f03ff48a6eb4aa6f6ad6d5de2dd307c30777c957077ceab90b5e",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_直播背景_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_直播背景_参数面板截图.png",
+      "source_sha256": "e62bb1706a4522755a27aa2dd547fb2433dccbcf196e5c0bb411d9211340ad69",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_直播背景_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_直播背景_参数面板关键帧.png",
+      "output_sha256": "b3cb90108b4199a5b94c4a65486a1f51d02c65bf997770e5f5ac35624546ed74",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "直播背景"
+      ],
+      "feature": "图文广告/直播背景",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "行业",
+        "直播主题"
+      ],
+      "callout_text": "行业+直播主题",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "行业",
+        "直播主题"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "2e3b853bec0878bc6f5dda7236656995ba9198a369c8e7a20b8278f07dd710ee",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_胸卡&工牌_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_胸卡&工牌_参数面板截图.png",
+      "source_sha256": "a70a793d0f4c277c56e4ba8928465669829d6619bf518eed807d7ae4153ec845",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_胸卡&工牌_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_胸卡&工牌_参数面板关键帧.png",
+      "output_sha256": "488b9abcda3a3b73c8c7cfc394bf8634122f779ea8c62348597d039be99f4e15",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "胸卡&工牌"
+      ],
+      "feature": "图文广告/胸卡&工牌",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "所属行业",
+        "物料规格",
+        "主要信息"
+      ],
+      "callout_text": "所属行业+物料规格+主要信息",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "所属行业",
+        "物料规格",
+        "主要信息"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "1527b93b502dbc8841152f73e7ca29f910ed98aec803d6086fffda43342ccfbd",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_菜单_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_菜单_参数面板截图.png",
+      "source_sha256": "d5a8a3d8b48d5ea8e115b2bd0e01d8beda37260488e9476d4512787ee7bd1c9a",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_菜单_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_菜单_参数面板关键帧.png",
+      "output_sha256": "98aa89010837f2d23578d5a0a4674b0f67886c87ac6617508b71ce60f62d27a2",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "菜单"
+      ],
+      "feature": "图文广告/菜单",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "菜单类型",
+        "品牌名称",
+        "品类 / 菜系",
+        "菜单规格",
+        "视觉偏好"
+      ],
+      "callout_text": "填写必填项",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "菜单类型",
+        "品牌名称",
+        "品类 / 菜系",
+        "菜单规格",
+        "视觉偏好"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "ee8eaac27054445b73246ac8653abda30eacc61722ae28a8a32ef273dd4bc7b7",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_贴纸_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_贴纸_参数面板截图.png",
+      "source_sha256": "754c6f5d79d890b96c0b891b00ce6b31a74de846068167ae1f328fc59e01cffe",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_贴纸_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_贴纸_参数面板关键帧.png",
+      "output_sha256": "63882837d1c8123e2764422572b396b666aaf65bad12b9dab0813cc0ddfc0935",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "贴纸"
+      ],
+      "feature": "图文广告/贴纸",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "贴纸类型",
+        "风格"
+      ],
+      "callout_text": "贴纸类型+风格",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/StickerLeftFormPanel.vue",
+      "frontend_source_sha256": "cdf0bb9a42e8c7b43cb40a42a9248b7a5801ea7ab0f2e71159e25b1b88c1afd3",
+      "cdp_required_field_labels": [
+        "贴纸类型",
+        "风格"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "58e8adcdf8fd4ed0df9301e4ef92f9540fcc411d989e95260a676d91e8ba1df2",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_车贴_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_车贴_参数面板截图.png",
+      "source_sha256": "faeeb67f5471fb3cac64cda55e5fa4ce95cf7eb2afba81bff4cd4e19661ee896",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_车贴_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_车贴_参数面板关键帧.png",
+      "output_sha256": "6df873089215067bd09b47c0636e14f04431d0cf99a3b8714e2e401e210a5418",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "车贴"
+      ],
+      "feature": "图文广告/车贴",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "车贴类型",
+        "目标车型",
+        "贴装位置"
+      ],
+      "callout_text": "车贴类型+目标车型+贴装位置",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "车贴类型",
+        "目标车型",
+        "贴装位置"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "a6b0a1143a7066559a36a3cdb3e45351239c827c2093e3cab6d5bb1ef0b3fefd",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_高炮_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_图文广告_高炮_参数面板截图.png",
+      "source_sha256": "77245aa5c617b123a34353d8db9b9802ce2f9e26e8d438d41e7a98b4b5043edd",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_图文广告_高炮_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_图文广告_高炮_参数面板关键帧.png",
+      "output_sha256": "4519aa9644ff574eed5a4717eaa2d767ed4098b2b4cf582b1d34c3746da616a4",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "图文广告",
+        "高炮"
+      ],
+      "feature": "图文广告/高炮",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "高炮类型",
+        "高炮主题",
+        "补充描述"
+      ],
+      "callout_text": "高炮类型+高炮主题+补充描述",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/index.vue;C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/graphic-ad/components/ImageAdLeftFormPanel.vue",
+      "frontend_source_sha256": "7da3f11087631acd96a2a08766a7876cd7af1c4e2191b31014896ae8743af590",
+      "cdp_required_field_labels": [
+        "补充描述",
+        "高炮类型",
+        "高炮主题"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "ba799f488531ff2943cbbbb5114796a4eaf7b96a1abc55d9f9442b43251a648a",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_婚礼美陈_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_婚礼美陈_参数面板截图.png",
+      "source_sha256": "a1907a7c4ae0300968e4aafdd737cbf48f667a35200f4b0d7cbe516697770648",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_婚礼美陈_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_婚礼美陈_参数面板关键帧.png",
+      "output_sha256": "efa89a28d891256ad5988ed498105917cfc391e5d2806cc8c5f78d15e3ef2dff",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "婚礼美陈"
+      ],
+      "feature": "婚礼美陈",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "新人姓名",
+        "婚礼日期",
+        "场景类型"
+      ],
+      "callout_text": "新人姓名+婚礼日期+场景类型",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/weddingDecoration/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "38c75bdf8cca59ee1b599e9de1db19ff57f6bd7e275383a4356dffc375a11211",
+      "cdp_required_field_labels": [
+        "新人姓名",
+        "婚礼日期",
+        "场景类型"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "fc1fa2542f6da5c529fdda74a0ed9cda3b051f05e59aa17356fc179a8b4fedec",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_展台_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_展台_参数面板截图.png",
+      "source_sha256": "c143ffabd8b0fbbae7a3772996bb35bf8145491ab07e8b56a4a4a779147a294f",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_展台_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_展台_参数面板关键帧.png",
+      "output_sha256": "dd67975fda57d759315596dad8799023a7e71e1c4d561d2bf029b71c5fa3e6a2",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "展台"
+      ],
+      "feature": "展台",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "行业",
+        "主题",
+        "面积"
+      ],
+      "callout_text": "行业+主题+面积",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/exhibitBooth/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "e3d27e870f7253c9d9a7a381d2ad35ea492fac0e2d9428435225d4d8ebd34cf9",
+      "cdp_required_field_labels": [
+        "行业",
+        "主题",
+        "面积"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "1ae91cc921c9f7a2e55ba58c531e9e0fded4453e2ac09de1c2934c73b92a0d1c",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_文化墙_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_文化墙_参数面板截图.png",
+      "source_sha256": "b40e3b26871b8a6f0d24f432579950dda37e250b3e4497ec71f4c9fcc47fb8cb",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_文化墙_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_文化墙_参数面板关键帧.png",
+      "output_sha256": "86c5a0dcd53140ef722bd07c2b583c5dc27235d983f30058e195b524a9413bb5",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "文化墙"
+      ],
+      "feature": "文化墙",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "行业",
+        "单位名称",
+        "场景",
+        "文化墙描述"
+      ],
+      "callout_text": "填写必填项",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/cultureWall/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "f71a4f9933612ebb5b59dfbde0116f59da2a23f9b94d78f1c002e2306ae5faa6",
+      "cdp_required_field_labels": [
+        "文化墙描述",
+        "行业",
+        "场景"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "e5c007a164fd67764ac1223b293751567950f92524e738bcaf7d6499cac690c3",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_旅游海报_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_旅游海报_参数面板截图.png",
+      "source_sha256": "e07c808db6b8442804360c4a0d527514e2e29ff0d942a0e9c1cfd61370747cb4",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_旅游海报_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_旅游海报_参数面板关键帧.png",
+      "output_sha256": "42cdc8aada040456b7e8cc175ecb6773338960a8c81b8be97a5ca5b331262ea9",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "旅游海报"
+      ],
+      "feature": "旅游海报",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "主目的地",
+        "行程天数",
+        "价格信息",
+        "团型规格"
+      ],
+      "callout_text": "填写必填项",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/travelProduct/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "83115f357d848ef49d2e649cfaca8cf3a933d27ab571c24b9f57daf7fd944ee6",
+      "cdp_required_field_labels": [
+        "主目的地",
+        "行程天数",
+        "价格信息",
+        "团型规格"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "ae4afdea7db426701eef37ef9f9ed0d09b516d87ccc03ae92d6fcd67298980ea",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_景观小品_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_景观小品_参数面板截图.png",
+      "source_sha256": "912a0f0df73d7ab021028e3e7b6de756aab27524727a4a7759063e829674fbac",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_景观小品_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_景观小品_参数面板关键帧.png",
+      "output_sha256": "b359fda60ca2fa0052171dfaf725990753ac4854b4dd6622e2dbdd09d44e0818",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "景观小品"
+      ],
+      "feature": "景观小品",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "行业",
+        "主题"
+      ],
+      "callout_text": "行业+主题",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/landscapeSketch/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "329b583e574aec06eaeecf8e0b731c63c14e922c092ec2746857842542f65e95",
+      "cdp_required_field_labels": [
+        "行业",
+        "主题"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "6e2c7b1e2aa4ecae3602d4d0a11df889755c94e15d5b6971898a4c67fbe10bc7",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_标识标牌_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_标识标牌_参数面板截图.png",
+      "source_sha256": "cc5350a6c0165047fefd0b4e7cbd78cc51dbede973a9b34027f074014993601f",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_标识标牌_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_标识标牌_参数面板关键帧.png",
+      "output_sha256": "2af007371a01fc31dc4ad3cca992c12a8eec79af42726a86d43253b915c504d6",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "标识标牌"
+      ],
+      "feature": "标识标牌",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "单位类别",
+        "单位名称"
+      ],
+      "callout_text": "单位类别+单位名称",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/signage/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "0946a354a75014ed1e0d0d725d40d1d1b35427ca0688aca79cc90acdcc5af879",
+      "cdp_required_field_labels": [
+        "单位类别",
+        "单位名称"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "4da5be3d6ee7e7fafcfd52b0e8f17830b303cf7e9aa7259714124502fdb10574",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_活动物料_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_活动物料_参数面板截图.png",
+      "source_sha256": "b52d3d7338dec9f8e80818d0a85f5f929874e9fbdec205e371f135591b37e30f",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_活动物料_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_活动物料_参数面板关键帧.png",
+      "output_sha256": "fd0e03c1d33153d007cd4b332de8858f3a7abc090ebf2d929022b7c7a3112316",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "活动物料"
+      ],
+      "feature": "活动物料",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "物料类型",
+        "行业",
+        "主标题",
+        "尺寸比例"
+      ],
+      "callout_text": "填写必填项",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/textToImageMainKV/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "712a85b08121ab87c55c6acbeff348a9bdac2816a944394f003921f1b6670465",
+      "cdp_required_field_labels": [
+        "物料类型",
+        "行业",
+        "主标题",
+        "尺寸比例"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "c777cdab7ef3f2e74545cd5d1e36ee896a9b110620b7cd33a06a84fc2e465747",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_活动美陈_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_活动美陈_参数面板截图.png",
+      "source_sha256": "a7c25e6b81ba04767a0df461b74668db4f76d413ded110a407b7cbc885a26e5c",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_活动美陈_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_活动美陈_参数面板关键帧.png",
+      "output_sha256": "b6bd1d4cd353e5b72ba11ad88e0275caa7774e90821cf0944ce41ea7c7a6b88f",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "活动美陈"
+      ],
+      "feature": "活动美陈",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "活动名称",
+        "活动主题",
+        "活动类型",
+        "场景",
+        "室内/室外",
+        "场景选择",
+        "空间类型"
+      ],
+      "callout_text": "填写必填项",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/activityDecoration/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "c62f563856f024bca4f46e6a0e4b5fef639bb54f40b618bc41cbe889f0df9b4c",
+      "cdp_required_field_labels": [
+        "活动名称",
+        "活动主题",
+        "活动类型",
+        "场景选择",
+        "空间类型"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "c70458d23bfb034d01be2306ed07f21e906660a953369dfee88d8cfdf4457af8",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_海报_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_海报_参数面板截图.png",
+      "source_sha256": "9c402372f025626596432adc5b5ab64ca6445464b17f6433971e539ff876d521",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_海报_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_海报_参数面板关键帧.png",
+      "output_sha256": "7b276fca00c9ebe108912820fb55d2c60bdd858f44ff6bc5d205e5b7ffea7437",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "海报"
+      ],
+      "feature": "海报",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "海报描述",
+        "版式"
+      ],
+      "callout_text": "海报描述+版式",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/textToImagePoster/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "a69bc102b06967eaee2bdbeed5de1d97988771dbf12fd0a198731b3029f37e8c",
+      "cdp_required_field_labels": [
+        "海报描述"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "1dd8ace73a9f9ae2ea6da25c4475b6f37676c5eb586142ae3a3ab9d85cb96d21",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_电商_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_电商_参数面板截图.png",
+      "source_sha256": "d287782c98d04578c8f0235234c476fe03af2721019d5a80011bf3d19f6653b5",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_电商_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_电商_参数面板关键帧.png",
+      "output_sha256": "495a67d873ca3733e8ccda5746c05e2aabd3fd4aba8475f8f457a71c3a530341",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "电商"
+      ],
+      "feature": "电商",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "产品名称",
+        "产品品类",
+        "比例",
+        "上传商品图"
+      ],
+      "callout_text": "填写必填项",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/textToImageEcommerce/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "28c8bf1046043dd3908187cf4aaa95cbaae8aba7849c8581147e1cee076ce90b",
+      "cdp_required_field_labels": [
+        "上传商品图",
+        "产品名称",
+        "产品品类"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "2337f2a7b5316663d2e8f565546ed74e534eca952595d97e9bf4446b1f986158",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_美陈_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_美陈_参数面板截图.png",
+      "source_sha256": "b17826bc611739d0c05cc5217eb37c9750fce34c4847d4e54ff94fba9f48402b",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_美陈_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_美陈_参数面板关键帧.png",
+      "output_sha256": "b179c05e1ca5276e276650ed32812475080afec1b8e809548814d4da81117d6e",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "美陈"
+      ],
+      "feature": "美陈",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "行业",
+        "主题"
+      ],
+      "callout_text": "行业+主题",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/visualMerchandising/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "777ecdd64d417adf444f9466ebd1f3b0bd36f23cf058f6a28a3c65ebda053b92",
+      "cdp_required_field_labels": [
+        "行业",
+        "主题"
+      ],
+      "cdp_unmatched_field_labels": [],
+      "prompt_sha256": "17ed8e2b1a322857e7a028fdfd0cbf44d7920abeb86009f3f3856a0b2a68ebce",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_门头招牌_参数面板截图.png",
+      "source_filename": "柯幻熊猫_文生图_门头招牌_参数面板截图.png",
+      "source_sha256": "163f5e16906df14d08073635a48f1deeccdef100bd5c6acf6dc697ed77f7cf2c",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_门头招牌_参数面板关键帧.png",
+      "output_filename": "柯幻熊猫_文生图_门头招牌_参数面板关键帧.png",
+      "output_sha256": "4b40d0b804902030ebcf4280209503e8bb892fd5a6d84c6bf80ee20c61d68eba",
+      "width": 1024,
+      "height": 1792,
+      "site": "柯幻熊猫",
+      "module": "文生图",
+      "feature_path": [
+        "门头招牌"
+      ],
+      "feature": "门头招牌",
+      "annotation_style": "dynamic_required_field_handwritten_callout",
+      "required_field_labels": [
+        "招牌名称",
+        "行业",
+        "经营定位"
+      ],
+      "callout_text": "招牌名称+行业+经营定位",
+      "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+      "frontend_source_path": "C:/Users/CNGG/Documents/video_generate/wanxiang-frontend/src/views/textToSvg/components/LeftFormPanel.vue",
+      "frontend_source_sha256": "2b3c014b904d0763380b16aeb348ceec7767fde64843d745ee6f7ab8c228c20d",
+      "cdp_required_field_labels": [
+        "招牌名称",
+        "行业",
+        "背景底板字体材质经营定位",
+        "经营定位"
+      ],
+      "cdp_unmatched_field_labels": [
+        "背景底板字体材质经营定位"
+      ],
+      "prompt_sha256": "cc0012874539af2330fda4e5fa9923d523f47a2c39175eaa5bcc4c39ecf7020b",
+      "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null,
+      "quality_status": "human_approved",
+      "status": "generated",
+      "quality_checks": [
+        "human_reviewed",
+        "parameter_layout_reviewed"
+      ]
+    }
+  ],
+  "errors": [],
+  "reviewed_at": "2026-07-13T07:38:03.068883+00:00",
+  "review_status": "human_approved"
+}

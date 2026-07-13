@@ -16,11 +16,14 @@ from video_agent.contracts import (
     AudioConfig,
     BeatSpan,
     Claim,
+    ClaimCue,
     CueBinding,
     DurationPolicy,
     EvidenceClass,
     Narration,
     NarrationBeat,
+    OverlayLayout,
+    PhraseAnchor,
     Provenance,
     ShotPlan,
     TimeRef,
@@ -62,6 +65,7 @@ def _timing() -> TimingLock:
         duration_ms=1000,
         duration_frames=30,
         tokens=[TokenTiming(token_id="tok", text="展示", start_ms=0, end_ms=1000, start_frame=0, end_frame=30, beat_id="beat_1")],
+        phrase_anchors=[PhraseAnchor(anchor_id="claim_anchor", text="展示真实结果", token_ids=["tok"], hit_frame=6, beat_id="beat_1", claim_ids=["claim_result"])],
         beat_spans=[BeatSpan(beat_id="beat_1", token_ids=["tok"], start_frame=0, end_frame=30)],
     )
 
@@ -91,7 +95,7 @@ def test_compiler_and_renderer_support_multishot_beat_transition_and_overlay(tmp
     narration = Narration(
         case_id="demo",
         claims=[Claim(claim_id="claim_result", text="展示真实结果", supporting_asset_ids=[red.asset_id])],
-        beats=[NarrationBeat(beat_id="beat_1", spoken_text="展示真实结果", claim_ids=["claim_result"])],
+        beats=[NarrationBeat(beat_id="beat_1", spoken_text="展示真实结果", claim_cues=[ClaimCue(claim_id="claim_result", phrase="展示真实结果")])],
     )
     visual = VisualPlan(
         case_id="demo",
@@ -124,6 +128,7 @@ def test_compiler_and_renderer_support_multishot_beat_transition_and_overlay(tmp
                 template="result_showcase",
                 asset_bindings={"primary": green.asset_id},
                 motion="scale_in",
+                overlay_layout=OverlayLayout(x=0.02, y=0.35, w=0.25, h=0.2),
             ),
         ],
     )
@@ -145,7 +150,7 @@ def test_compiler_rejects_claim_without_visible_supporting_asset(tmp_path: Path)
     narration = Narration(
         case_id="demo",
         claims=[Claim(claim_id="claim_result", text="展示真实结果", supporting_asset_ids=[red.asset_id])],
-        beats=[NarrationBeat(beat_id="beat_1", spoken_text="展示真实结果", claim_ids=["claim_result"])],
+        beats=[NarrationBeat(beat_id="beat_1", spoken_text="展示真实结果", claim_cues=[ClaimCue(claim_id="claim_result", phrase="展示真实结果")])],
     )
     visual = VisualPlan(
         case_id="demo",
@@ -165,6 +170,26 @@ def test_compiler_rejects_claim_without_visible_supporting_asset(tmp_path: Path)
         _compile(tmp_path, visual, narration, catalog)
 
 
+def test_compiler_rejects_supporting_shot_that_misses_claim_anchor(tmp_path: Path) -> None:
+    red = _asset(tmp_path / "red.png", "asset_red", (240, 20, 20))
+    green = _asset(tmp_path / "green.png", "asset_green", (20, 220, 20))
+    catalog = AssetCatalog(catalog_id="demo", generated_at="now", source_root="assets", assets=[red, green])
+    narration = Narration(
+        case_id="demo",
+        claims=[Claim(claim_id="claim_result", text="展示真实结果", supporting_asset_ids=[red.asset_id])],
+        beats=[NarrationBeat(beat_id="beat_1", spoken_text="展示真实结果", claim_cues=[ClaimCue(claim_id="claim_result", phrase="展示真实结果")])],
+    )
+    visual = VisualPlan(
+        case_id="demo",
+        shots=[
+            ShotPlan(shot_id="support_too_early", beat_ids=["beat_1"], start=TimeRef(anchor_id="timeline_start"), end=TimeRef(anchor_id="beat_start:beat_1", offset_frames=5), template="result_showcase", asset_bindings={"primary": red.asset_id}, claim_ids=["claim_result"]),
+            ShotPlan(shot_id="visible_at_claim", beat_ids=["beat_1"], start=TimeRef(anchor_id="beat_start:beat_1", offset_frames=5), end=TimeRef(anchor_id="timeline_end"), template="result_showcase", asset_bindings={"primary": green.asset_id}),
+        ],
+    )
+    with pytest.raises(ValueError, match="not visibly supported at frame 6"):
+        _compile(tmp_path, visual, narration, catalog)
+
+
 def test_multitrack_plan_renders_real_mp4(tmp_path: Path) -> None:
     red = _asset(tmp_path / "red.png", "asset_red", (240, 20, 20))
     green = _asset(tmp_path / "green.png", "asset_green", (20, 220, 20))
@@ -180,7 +205,7 @@ def test_multitrack_plan_renders_real_mp4(tmp_path: Path) -> None:
                 end=TimeRef(anchor_id="beat_start:beat_1", offset_frames=15),
                 template="result_showcase",
                 asset_bindings={"primary": red.asset_id},
-                cue_bindings=[CueBinding(action="visual.enter", anchor_id="beat_start:beat_1")],
+                cue_bindings=[CueBinding(action=f"visual.enter.{index}", anchor_id="beat_start:beat_1", offset_frames=index) for index in range(9)],
             ),
             ShotPlan(
                 shot_id="green",
@@ -208,4 +233,5 @@ def test_multitrack_plan_renders_real_mp4(tmp_path: Path) -> None:
     assert any(stream["codec_type"] == "audio" for stream in streams)
     report = run_final_qa(plan, output, tmp_path)
     assert report.status == "passed", [(check.check_id, check.message, check.details) for check in report.checks if check.status == "failed"]
-    assert (tmp_path / "final" / "cue_contact_sheet.jpg").is_file()
+    assert (tmp_path / "final" / "cue_contact_sheet_001.jpg").is_file()
+    assert (tmp_path / "final" / "cue_contact_sheet_002.jpg").is_file()
