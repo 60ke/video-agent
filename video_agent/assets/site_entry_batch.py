@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import cv2
+import numpy as np
 from PIL import Image
 
 from video_agent.assets.site_derivatives import RENDERER_VERSION, generate_feature_entry_keyframe
@@ -39,6 +41,66 @@ def parse_site_entry_filename(path: Path) -> SiteEntrySource:
 
 def _output_name(source: SiteEntrySource) -> str:
     return source.path.name.replace("功能入口截图", "功能入口关键帧")
+
+
+def _build_callout_layers(output: Path) -> dict[str, Any]:
+    """Compatibility helper for existing prepared keyframes and renderer tests.
+
+    New batches emit the base and transparent callout layer directly from CDP coordinates.
+    This extractor remains for legacy approved keyframes that only contain a composited red
+    hand-drawn circle. It deliberately ignores red components in the brand header.
+    """
+    rgba = cv2.imdecode(np.fromfile(output, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+    if rgba is None:
+        raise ValueError(f"unable to read approved feature-entry image: {output}")
+    if rgba.ndim == 2:
+        rgba = cv2.cvtColor(rgba, cv2.COLOR_GRAY2BGRA)
+    elif rgba.shape[2] == 3:
+        rgba = cv2.cvtColor(rgba, cv2.COLOR_BGR2BGRA)
+    b, g, r, _ = cv2.split(rgba)
+    red = ((r > 175) & (r.astype(np.float32) > g * 1.55) & (r.astype(np.float32) > b * 1.55)).astype(np.uint8)
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(red, 8)
+    if count <= 1:
+        raise ValueError(f"approved feature-entry image has no isolated red callout: {output.name}")
+    candidates = [
+        component
+        for component in range(1, count)
+        if int(stats[component, cv2.CC_STAT_AREA]) >= 20
+        and int(stats[component, cv2.CC_STAT_TOP]) >= round(rgba.shape[0] * 0.12)
+    ]
+    if not candidates:
+        raise ValueError(f"approved feature-entry image has no callout outside the brand header: {output.name}")
+    component_area = sum(int(stats[component, cv2.CC_STAT_AREA]) for component in candidates)
+    if component_area < 300:
+        raise ValueError(f"red callout components are too small: {output.name}/{component_area}px")
+    mask = np.where(np.isin(labels, candidates), 255, 0).astype(np.uint8)
+    mask = cv2.dilate(mask, np.ones((5, 5), np.uint8), iterations=1)
+
+    layer = np.zeros_like(rgba)
+    layer[:, :, :3] = rgba[:, :, :3]
+    layer[:, :, 3] = mask
+    repair_mask = cv2.dilate(mask, np.ones((13, 13), np.uint8), iterations=1)
+    base_bgr = cv2.inpaint(rgba[:, :, :3], repair_mask, 7, cv2.INPAINT_TELEA)
+    base = cv2.cvtColor(base_bgr, cv2.COLOR_BGR2BGRA)
+
+    layer_dir = output.parent / "layers"
+    layer_dir.mkdir(parents=True, exist_ok=True)
+    base_path = layer_dir / output.name.replace("关键帧", "无圈底图")
+    layer_path = layer_dir / output.name.replace("关键帧", "圈选层")
+    base_ok, base_buffer = cv2.imencode(".png", base)
+    layer_ok, layer_buffer = cv2.imencode(".png", layer)
+    if not base_ok or not layer_ok:
+        raise OSError(f"unable to encode callout layers for {output.name}")
+    base_buffer.tofile(base_path)
+    layer_buffer.tofile(layer_path)
+    return {
+        "callout_base_path": base_path.resolve().as_posix(),
+        "callout_base_sha256": sha256_file(base_path),
+        "callout_layer_path": layer_path.resolve().as_posix(),
+        "callout_layer_sha256": sha256_file(layer_path),
+        "callout_component_area": component_area,
+        "callout_layer_method": "red_stroke_components_below_brand_header_v2",
+    }
 
 
 def _target_callout(source: SiteEntrySource, callouts: dict[str, Any]) -> tuple[dict[str, float], dict[str, float] | None, dict[str, Any]]:
