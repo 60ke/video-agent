@@ -17,6 +17,10 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -33,7 +37,15 @@ jobs:
       - name: Compile
         run: python -m compileall -q video_agent
       - name: Test
-        run: python -m pytest
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest]
+        id: tests
+        continue-on-error: true
+        run: python -m pytest -q --tb=short --junitxml=pytest-results.xml
+      - name: Upload pytest results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results-${{ matrix.os }}
+          path: pytest-results.xml
+      - name: Enforce pytest result
+        if: steps.tests.outcome == 'failure'
+        run: python -c "raise SystemExit(1)"
