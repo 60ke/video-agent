@@ -1,6 +1,6 @@
 # CDP Capture
 
-`cdp-capture` is now a website screenshot material capture tool. It keeps Chrome login/profile support and captures clean website states plus callout metadata. It does not record browser videos and does not encode MP4 assets for the video pipeline.
+`cdp-capture` is a website screenshot material capture tool. It keeps Chrome login/profile support and captures clean website states plus callout metadata. It does not record browser videos and does not encode MP4 assets for the video pipeline.
 
 ## Install
 
@@ -45,7 +45,7 @@ The output filenames follow the site material naming policy, for example:
 柯幻熊猫_文生图_图文广告_车贴_参数面板截图.png
 ```
 
-`_callouts.json` stores target boxes and semantic hints. The V3 deterministic renderer uses those hints to crop the relevant panel and align highlight/click effects to word-level cues. Website UI is not redrawn by GPT Image.
+`_callouts.json` stores source-image-normalized target boxes and semantic hints. These coordinates are consumed only by offline deterministic derivative tools such as `site-entry-batch` and `site-params-batch`. They never enter `VisualPlan` or `RenderPlan`, and the runtime Renderer does not read them. Website UI is never redrawn by GPT Image.
 
 ## Capture Contract
 
@@ -55,7 +55,7 @@ The output filenames follow the site material naming policy, for example:
 - If a generation workflow is requested and the saved profile is not logged in, refuse capture instead of running an anonymous flow.
 - For 文生图 modules, use `references/site_profiles/kehuanxiongmao_text_to_image_modules.json` as the source of truth for route, label, and page title.
 - For `图文广告`, include the extra child layer in the filename path: `柯幻熊猫_文生图_图文广告_<子功能>_<截图类型>.png`.
-- Parameter screenshots may fall back to the full page if a precise panel crop is unstable; GPT image can repair the 9:16 layout later.
+- Parameter screenshots may fall back to the full page if a precise panel crop is unstable. The offline deterministic site derivative tool performs the 9:16 crop and callout composition without rewriting UI pixels or text.
 
 ## Result Authenticity
 

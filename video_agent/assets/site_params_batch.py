@@ -9,10 +9,9 @@ from typing import Any, Collection
 
 from PIL import Image
 
-from video_agent.ai.gpt_image import edit_image
-from video_agent.assets.materializer import _prompt
-from video_agent.contracts import DeriveKind
-from video_agent.io import load_json, sha256_file, utc_now, write_json_atomic
+from video_agent.assets.materializer import _prompt  # noqa: F401 - compatibility for callers/tests
+from video_agent.assets.site_derivatives import RENDERER_VERSION, generate_parameter_keyframe
+from video_agent.io import load_json, sha256_file, sha256_json, utc_now, write_json_atomic
 
 
 SUFFIX = "_参数面板截图"
@@ -212,6 +211,26 @@ def _output_name(source: SiteParamsSource) -> str:
     return source.path.name.replace("参数面板截图", "参数面板关键帧")
 
 
+def _field_boxes(source: SiteParamsSource, annotation: RequiredFieldsAnnotation, callouts: dict[str, Any]) -> list[dict[str, float]]:
+    item = callouts.get("items", {}).get(source.path.name, {}) if isinstance(callouts, dict) else {}
+    raw = item.get("callouts", []) if isinstance(item, dict) else []
+    boxes: list[dict[str, float]] = []
+    seen: set[str] = set()
+    for callout in raw if isinstance(raw, list) else []:
+        if not isinstance(callout, dict) or callout.get("intent") != "required_field" or not isinstance(callout.get("box"), dict):
+            continue
+        label = str(callout.get("target_label") or "").replace("*", "").replace("＊", "").strip()
+        if label not in annotation.labels:
+            continue
+        key = sha256_json(callout["box"])
+        if key not in seen:
+            seen.add(key)
+            boxes.append(callout["box"])
+    if not boxes:
+        raise ValueError(f"CDP callout registry has no verified required-field boxes for {source.path.name}")
+    return boxes
+
+
 def generate_site_params_keyframes(
     repo_root: Path,
     source_dir: Path,
@@ -236,22 +255,6 @@ def generate_site_params_keyframes(
     manifest_path = output_dir / "manifest.json"
     previous = load_json(manifest_path) if manifest_path.is_file() else {}
     callouts = load_json(source_dir / "_callouts.json")
-    recipe_prompt, template_sha256 = _prompt(repo_root, DeriveKind.SITE_PARAMS_KEYFRAME, "{batch_instruction}")
-
-    def write_manifest(results: list[dict[str, Any]], errors: list[dict[str, str]]) -> None:
-        write_json_atomic(
-            manifest_path,
-            {
-                "schema_version": 1,
-                "generated_at": utc_now(),
-                "workflow": "site_params_gpt_image_batch",
-                "annotation_style": "dynamic_required_field_handwritten_callout",
-                "source_dir": source_dir.resolve().as_posix(),
-                "output_dir": output_dir.resolve().as_posix(),
-                "assets": sorted(results, key=lambda item: item["source_filename"]),
-                "errors": errors,
-            },
-        )
 
     selected_source_paths = {source.path.resolve().as_posix() for source in sources}
     results: list[dict[str, Any]] = [
@@ -260,108 +263,124 @@ def generate_site_params_keyframes(
         if isinstance(item, dict) and item.get("source_path") not in selected_source_paths
     ]
     errors: list[dict[str, str]] = []
-    pending: list[tuple[SiteParamsSource, RequiredFieldsAnnotation, Path, str, str, str]] = []
+    pending: list[tuple[SiteParamsSource, RequiredFieldsAnnotation, list[dict[str, float]], Path, str, str]] = []
+
     for source in sources:
         annotation = _required_fields_annotation(repo_root, source, callouts)
-        instruction = _instruction(source, annotation)
-        prompt = recipe_prompt.replace("{batch_instruction}", instruction)
         source_sha256 = sha256_file(source.path)
-        prompt_sha256 = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         output = output_dir / _output_name(source)
         source_path = source.path.resolve().as_posix()
         old = next((item for item in previous.get("assets", []) if isinstance(item, dict) and item.get("source_path") == source_path), None)
+        if not force and output.is_file() and old is None:
+            with Image.open(output) as image:
+                width, height = image.size
+                image.verify()
+            results.append(
+                {
+                    "source_path": source_path,
+                    "source_filename": source.path.name,
+                    "source_sha256": source_sha256,
+                    "output_path": output.resolve().as_posix(),
+                    "output_filename": output.name,
+                    "output_sha256": sha256_file(output),
+                    "width": width,
+                    "height": height,
+                    "site": source.site,
+                    "module": source.module,
+                    "feature_path": list(source.feature_path),
+                    "feature": source.feature,
+                    "annotation_style": "legacy_recovered_parameter_keyframe",
+                    "required_field_labels": list(annotation.labels),
+                    "callout_text": annotation.callout_text,
+                    "frontend_source_path": annotation.frontend_source_path,
+                    "frontend_source_sha256": annotation.frontend_source_sha256,
+                    "cdp_required_field_labels": list(annotation.cdp_labels),
+                    "cdp_unmatched_field_labels": list(annotation.cdp_unmatched_labels),
+                    "recipe_sha256": sha256_json({"legacy_recovered": source_sha256}),
+                    "provider": "recovered_interrupted_batch",
+                    "model": "unknown",
+                    "response_id": None,
+                    "quality_status": "unreviewed",
+                    "status": "recovered",
+                }
+            )
+            continue
+        boxes = _field_boxes(source, annotation, callouts)
+        recipe_sha256 = sha256_json(
+            {
+                "renderer": RENDERER_VERSION,
+                "boxes": boxes,
+                "callout_text": annotation.callout_text,
+                "frontend_source_sha256": annotation.frontend_source_sha256,
+            }
+        )
         if (
             not force
             and old
             and old.get("source_sha256") == source_sha256
-            and old.get("prompt_sha256") == prompt_sha256
+            and old.get("recipe_sha256") == recipe_sha256
             and output.is_file()
             and old.get("output_sha256") == sha256_file(output)
         ):
             results.append({**old, "status": "cached"})
             continue
+        pending.append((source, annotation, boxes, output, source_sha256, recipe_sha256))
 
-        # A previous interrupted batch may have already produced a valid image.
-        # Reconstruct its manifest entry rather than spending another model request.
-        if not force and output.is_file():
-            try:
-                with Image.open(output) as image:
-                    width, height = image.size
-                    image.verify()
-                results.append(
-                    {
-                        "source_path": source_path,
-                        "source_filename": source.path.name,
-                        "source_sha256": source_sha256,
-                        "output_path": output.resolve().as_posix(),
-                        "output_filename": output.name,
-                        "output_sha256": sha256_file(output),
-                        "width": width,
-                        "height": height,
-                        "site": source.site,
-                        "module": source.module,
-                        "feature_path": list(source.feature_path),
-                        "feature": source.feature,
-                        "annotation_style": "dynamic_required_field_handwritten_callout",
-                        "required_field_labels": list(annotation.labels),
-                        "callout_text": annotation.callout_text,
-                        "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
-                        "frontend_source_path": annotation.frontend_source_path,
-                        "frontend_source_sha256": annotation.frontend_source_sha256,
-                        "cdp_required_field_labels": list(annotation.cdp_labels),
-                        "cdp_unmatched_field_labels": list(annotation.cdp_unmatched_labels),
-                        "prompt_sha256": prompt_sha256,
-                        "prompt_template_sha256": template_sha256,
-                        "provider": "recovered_interrupted_batch",
-                        "model": "unknown",
-                        "response_id": None,
-                        "quality_status": "unreviewed",
-                        "status": "recovered",
-                    }
-                )
-                continue
-            except Exception:  # noqa: BLE001
-                output.unlink(missing_ok=True)
-        pending.append((source, annotation, output, prompt, source_sha256, prompt_sha256))
+    def write_manifest() -> None:
+        write_json_atomic(
+            manifest_path,
+            {
+                "schema_version": 2,
+                "generated_at": utc_now(),
+                "workflow": "site_params_deterministic_batch",
+                "annotation_style": "deterministic_required_field_callout",
+                "renderer": RENDERER_VERSION,
+                "source_dir": source_dir.resolve().as_posix(),
+                "output_dir": output_dir.resolve().as_posix(),
+                "assets": sorted(results, key=lambda item: item["source_filename"]),
+                "errors": errors,
+            },
+        )
 
-    write_manifest(results, errors)
+    write_manifest()
 
-    def generate(item: tuple[SiteParamsSource, RequiredFieldsAnnotation, Path, str, str, str]) -> dict[str, Any]:
-        source, annotation, output, prompt, source_sha256, prompt_sha256 = item
-        result = edit_image(repo_root, source.path, prompt)
-        output.write_bytes(result.content)
+    def generate(
+        item: tuple[SiteParamsSource, RequiredFieldsAnnotation, list[dict[str, float]], Path, str, str]
+    ) -> dict[str, Any]:
+        source, annotation, boxes, output, source_sha256, recipe_sha256 = item
+        layer_metadata = generate_parameter_keyframe(source.path, output, boxes, annotation.callout_text)
         with Image.open(output) as image:
             width, height = image.size
             image.verify()
         return {
-                "source_path": source.path.resolve().as_posix(),
-                "source_filename": source.path.name,
-                "source_sha256": source_sha256,
-                "output_path": output.resolve().as_posix(),
-                "output_filename": output.name,
-                "output_sha256": sha256_file(output),
-                "width": width,
-                "height": height,
-                "site": source.site,
-                "module": source.module,
-                "feature_path": list(source.feature_path),
-                "feature": source.feature,
-                "annotation_style": "dynamic_required_field_handwritten_callout",
-                "required_field_labels": list(annotation.labels),
-                "callout_text": annotation.callout_text,
-                "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
-                "frontend_source_path": annotation.frontend_source_path,
-                "frontend_source_sha256": annotation.frontend_source_sha256,
-                "cdp_required_field_labels": list(annotation.cdp_labels),
-                "cdp_unmatched_field_labels": list(annotation.cdp_unmatched_labels),
-                "prompt_sha256": prompt_sha256,
-                "prompt_template_sha256": template_sha256,
-                "provider": result.provider,
-                "model": result.model,
-                "response_id": result.response_id,
-                "quality_status": "unreviewed",
-                "status": "generated",
-            }
+            "source_path": source.path.resolve().as_posix(),
+            "source_filename": source.path.name,
+            "source_sha256": source_sha256,
+            "output_path": output.resolve().as_posix(),
+            "output_filename": output.name,
+            "output_sha256": sha256_file(output),
+            "width": width,
+            "height": height,
+            "site": source.site,
+            "module": source.module,
+            "feature_path": list(source.feature_path),
+            "feature": source.feature,
+            "annotation_style": "deterministic_required_field_callout",
+            "required_field_labels": list(annotation.labels),
+            "callout_text": annotation.callout_text,
+            "callout_source": "cdp_coordinates_validated_against_frontend_source",
+            "frontend_source_path": annotation.frontend_source_path,
+            "frontend_source_sha256": annotation.frontend_source_sha256,
+            "cdp_required_field_labels": list(annotation.cdp_labels),
+            "cdp_unmatched_field_labels": list(annotation.cdp_unmatched_labels),
+            "recipe_sha256": recipe_sha256,
+            "provider": "deterministic_pillow",
+            "model": RENDERER_VERSION,
+            "response_id": None,
+            "quality_status": "unreviewed",
+            "status": "generated",
+            **layer_metadata,
+        }
 
     with ThreadPoolExecutor(max_workers=max(1, workers)) as executor:
         futures = {executor.submit(generate, item): item[0] for item in pending}
@@ -371,7 +390,7 @@ def generate_site_params_keyframes(
                 results.append(future.result())
             except Exception as exc:  # noqa: BLE001
                 errors.append({"source_filename": source.path.name, "type": exc.__class__.__name__, "message": str(exc)})
-            write_manifest(results, errors)
+            write_manifest()
 
     if errors:
         raise RuntimeError(f"site-params batch completed with {len(errors)} errors; see {manifest_path}")
@@ -403,6 +422,11 @@ def approve_site_params_manifest(manifest_path: Path) -> dict[str, int]:
         actual_sha256 = sha256_file(output)
         if not expected_sha256 or actual_sha256 != expected_sha256:
             raise ValueError(f"parameter-panel output hash mismatch: {output}")
+        layer_value = str(asset.get("callout_layer_path") or "")
+        if layer_value:
+            layer = Path(layer_value)
+            if not layer.is_file() or sha256_file(layer) != str(asset.get("callout_layer_sha256") or ""):
+                raise ValueError(f"parameter-panel callout layer failed integrity check: {layer}")
         asset["quality_status"] = "human_approved"
         checks = asset.setdefault("quality_checks", [])
         for check in ("human_reviewed", "parameter_layout_reviewed"):
