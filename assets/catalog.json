@@ -1,7 +1,7 @@
 {
   "schema_version": 3,
   "catalog_id": "catalog_video_agent_assets_v3",
-  "generated_at": "2026-07-13T08:39:13.309634+00:00",
+  "generated_at": "2026-07-13T11:24:15.969449+00:00",
   "source_root": "assets",
   "assets": [
     {
@@ -10945,13 +10945,13 @@
       }
     },
     {
-      "asset_id": "asset_brand_ip_static_dbfcd846ffcb",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-1104-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "sha256": "dbfcd846ffcb02f8207e39c48879c9656f827cc1dc9eef47704e88f7f1936f2a",
+      "asset_id": "asset_brand_ip_static_c4ed140cbe5b",
+      "path": "assets/brand/kehuanxiongmao/ip/static/图层 1.png",
+      "sha256": "c4ed140cbe5b7d3e71b05a84b2cef262c80dadb53d00ce66295a7baa07c470cd",
       "media_type": "image",
-      "filename": "jimeng-2026-02-10-1104-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "width": 2560,
-      "height": 1440,
+      "filename": "图层 1.png",
+      "width": 3051,
+      "height": 3039,
       "semantic_path": [
         "品牌",
         "柯幻熊猫",
@@ -10959,223 +10959,14 @@
       ],
       "role": "brand_ip_static",
       "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "official_brand_identity"
+      ],
       "tags": [
         "柯幻熊猫",
         "品牌IP",
         "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_4d2cc0cafa3b",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-1233-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "sha256": "4d2cc0cafa3b41bb4dfdf5cb321eba81fa8177c228aa4368558255d3b257f379",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-1233-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_3f109c04ae0c",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-1518-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
-      "sha256": "3f109c04ae0ca4239c306c4f270da51a54b13f007f3761cf995731e181853be5",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-1518-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_c0a580414a83",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-2090-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "sha256": "c0a580414a8303be442401994bc97783046a4cb470440d0ad09bec1f12f23cc7",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-2090-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_6a787e5be74e",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-2340-生成3D风格ip  科技感  生成不同的动作.png",
-      "sha256": "6a787e5be74e9b35e8dd823abce8b8486ed108475d7393a9cc60d3a0c069a168",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-2340-生成3D风格ip  科技感  生成不同的动作.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_e66e3ca742d1",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-2653-生成3D风格ip  科技感  生成不同的动作 导出透明png 奔跑跳跃   各种....png",
-      "sha256": "e66e3ca742d12686a51f63349d6cd93640385e0fba2562da26fc25b1f47b41d8",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-2653-生成3D风格ip  科技感  生成不同的动作 导出透明png 奔跑跳跃   各种....png",
-      "width": 5404,
-      "height": 3040,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跳跃"
       ],
       "identity_group": "柯幻熊猫",
       "visual_anchors": [],
@@ -11199,10 +10990,10 @@
     },
     {
       "asset_id": "asset_brand_ip_static_a9fc88419a82",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-2847-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_平板_01.png",
       "sha256": "a9fc88419a82217223cb4dd4773e01327d39243a69f6d59169f77dde45abef19",
       "media_type": "image",
-      "filename": "jimeng-2026-02-10-2847-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
+      "filename": "柯幻熊猫_平板_01.png",
       "width": 2560,
       "height": 1440,
       "semantic_path": [
@@ -11217,7 +11008,8 @@
       "tags": [
         "柯幻熊猫",
         "品牌IP",
-        "静态"
+        "静态",
+        "平板"
       ],
       "identity_group": "柯幻熊猫",
       "visual_anchors": [],
@@ -11240,11 +11032,11 @@
       }
     },
     {
-      "asset_id": "asset_brand_ip_static_498e58284f98",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-2853-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "sha256": "498e58284f98c8f4550d8c1807dd4f9c2c34e03b7134337abc014ac8fa81b457",
+      "asset_id": "asset_brand_ip_static_c274e080948d",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_平板_02.png",
+      "sha256": "c274e080948dc5e458b73977e7b5005beaaf8662fab21f985302bc9547e2b272",
       "media_type": "image",
-      "filename": "jimeng-2026-02-10-2853-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
+      "filename": "柯幻熊猫_平板_02.png",
       "width": 2560,
       "height": 1440,
       "semantic_path": [
@@ -11259,7 +11051,8 @@
       "tags": [
         "柯幻熊猫",
         "品牌IP",
-        "静态"
+        "静态",
+        "平板"
       ],
       "identity_group": "柯幻熊猫",
       "visual_anchors": [],
@@ -11282,11 +11075,11 @@
       }
     },
     {
-      "asset_id": "asset_brand_ip_static_26662b4ef44d",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-3052-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "sha256": "26662b4ef44d43fb0f382231607e0498715a5819f2b43337dc42ead5e78db3e2",
+      "asset_id": "asset_brand_ip_static_6a787e5be74e",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_挥手_01.png",
+      "sha256": "6a787e5be74e9b35e8dd823abce8b8486ed108475d7393a9cc60d3a0c069a168",
       "media_type": "image",
-      "filename": "jimeng-2026-02-10-3052-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
+      "filename": "柯幻熊猫_挥手_01.png",
       "width": 2560,
       "height": 1440,
       "semantic_path": [
@@ -11301,7 +11094,8 @@
       "tags": [
         "柯幻熊猫",
         "品牌IP",
-        "静态"
+        "静态",
+        "挥手"
       ],
       "identity_group": "柯幻熊猫",
       "visual_anchors": [],
@@ -11325,10 +11119,10 @@
     },
     {
       "asset_id": "asset_brand_ip_static_a6eeb37b5917",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-3307-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_挥手_02.png",
       "sha256": "a6eeb37b5917c7224aeaf1fe0740103e474b92fd39f50de0a7e4bf4f314db129",
       "media_type": "image",
-      "filename": "jimeng-2026-02-10-3307-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
+      "filename": "柯幻熊猫_挥手_02.png",
       "width": 2560,
       "height": 1440,
       "semantic_path": [
@@ -11343,175 +11137,8 @@
       "tags": [
         "柯幻熊猫",
         "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_3e48e56de309",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-3829-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "sha256": "3e48e56de3095d39dd70ffcdbf7898d6dee46322764dd91c478b85f1ff120186",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-3829-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_ddc9eba88f3a",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-4048-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "sha256": "ddc9eba88f3a819321c12a9cf01b554e9732e15b726ead1ccbe62e4d1e3efd79",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-4048-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_e97e3f393a22",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-4151-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
-      "sha256": "e97e3f393a2243ebf04c4b95fa88f81db72043a780352ba7d7a80f23c21344b5",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-4151-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_dfc73463db18",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-4457-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "sha256": "dfc73463db186953abf88c82cb4b3fb5254a3585f0e3c451bdfef8206f77dab0",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-4457-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
+        "静态",
+        "挥手"
       ],
       "identity_group": "柯幻熊猫",
       "visual_anchors": [],
@@ -11535,12 +11162,665 @@
     },
     {
       "asset_id": "asset_brand_ip_static_5ad56423c4e9",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-4612-生成3D风格ip  科技感  生成不同的动作 导出透明png 奔跑跳跃   各种....png",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_挥手_03.png",
       "sha256": "5ad56423c4e995ea58402e0d6b469de43bab24bda1b88d29e1c2fec5149025d1",
       "media_type": "image",
-      "filename": "jimeng-2026-02-10-4612-生成3D风格ip  科技感  生成不同的动作 导出透明png 奔跑跳跃   各种....png",
+      "filename": "柯幻熊猫_挥手_03.png",
       "width": 5404,
       "height": 3040,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "挥手"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_dfc73463db18",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_挥手_护目镜_01.png",
+      "sha256": "dfc73463db186953abf88c82cb4b3fb5254a3585f0e3c451bdfef8206f77dab0",
+      "media_type": "image",
+      "filename": "柯幻熊猫_挥手_护目镜_01.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "挥手",
+        "护目镜"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_0dcc663f00be",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_挥手_护目镜_02.png",
+      "sha256": "0dcc663f00be0635ca059b47abe8dca70eca1e9ea101b05f3dd5eebcfc4542c2",
+      "media_type": "image",
+      "filename": "柯幻熊猫_挥手_护目镜_02.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "挥手",
+        "护目镜"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_e97e3f393a22",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_无人机_01.png",
+      "sha256": "e97e3f393a2243ebf04c4b95fa88f81db72043a780352ba7d7a80f23c21344b5",
+      "media_type": "image",
+      "filename": "柯幻熊猫_无人机_01.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "无人机"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_ddc9eba88f3a",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_比心_01.png",
+      "sha256": "ddc9eba88f3a819321c12a9cf01b554e9732e15b726ead1ccbe62e4d1e3efd79",
+      "media_type": "image",
+      "filename": "柯幻熊猫_比心_01.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "比心"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_dbfcd846ffcb",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_01.png",
+      "sha256": "dbfcd846ffcb02f8207e39c48879c9656f827cc1dc9eef47704e88f7f1936f2a",
+      "media_type": "image",
+      "filename": "柯幻熊猫_跑步_01.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "跑步"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_c0a580414a83",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_02.png",
+      "sha256": "c0a580414a8303be442401994bc97783046a4cb470440d0ad09bec1f12f23cc7",
+      "media_type": "image",
+      "filename": "柯幻熊猫_跑步_02.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "跑步"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_e66e3ca742d1",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_03.png",
+      "sha256": "e66e3ca742d12686a51f63349d6cd93640385e0fba2562da26fc25b1f47b41d8",
+      "media_type": "image",
+      "filename": "柯幻熊猫_跑步_03.png",
+      "width": 5404,
+      "height": 3040,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "跑步"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_49ee48abd1fd",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_04.png",
+      "sha256": "49ee48abd1fd4235ded8b28cbe8975c36b98b90bfb57f7f82d123c58302f4462",
+      "media_type": "image",
+      "filename": "柯幻熊猫_跑步_04.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "跑步"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_3f109c04ae0c",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_平板_01.png",
+      "sha256": "3f109c04ae0ca4239c306c4f270da51a54b13f007f3761cf995731e181853be5",
+      "media_type": "image",
+      "filename": "柯幻熊猫_跑步_平板_01.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "跑步",
+        "平板"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_a7315caf0088",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_平板_02.png",
+      "sha256": "a7315caf0088323bd5280743d2b36314c276136b58e89cdbe7dda8464c581ce3",
+      "media_type": "image",
+      "filename": "柯幻熊猫_跑步_平板_02.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "跑步",
+        "平板"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_4d2cc0cafa3b",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_护目镜_01.png",
+      "sha256": "4d2cc0cafa3b41bb4dfdf5cb321eba81fa8177c228aa4368558255d3b257f379",
+      "media_type": "image",
+      "filename": "柯幻熊猫_跑步_护目镜_01.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "跑步",
+        "护目镜"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_cbebec0870f0",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_护目镜_02.png",
+      "sha256": "cbebec0870f008ecbc747b39320f666ddca0b9a911f9b3de10e10cafd8080686",
+      "media_type": "image",
+      "filename": "柯幻熊猫_跑步_护目镜_02.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "跑步",
+        "护目镜"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_17128f738577",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_护目镜_03.png",
+      "sha256": "17128f738577d8bc41a17d446f2eb46792a4dfcaec79735d96f45a10dd1d3272",
+      "media_type": "image",
+      "filename": "柯幻熊猫_跑步_护目镜_03.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "跑步",
+        "护目镜"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_c574c5d043ac",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_护目镜_04.png",
+      "sha256": "c574c5d043acf5ff260f373c63aff18616f930968fa47f7dc805ebc251b71989",
+      "media_type": "image",
+      "filename": "柯幻熊猫_跑步_护目镜_04.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_ip_static"
+      ],
+      "role": "brand_ip_static",
+      "production_eligible": true,
+      "evidence_class": "E3_decorative",
+      "claims": [],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "静态",
+        "跑步",
+        "护目镜"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_brand_ip_static_3e48e56de309",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跳跃_01.png",
+      "sha256": "3e48e56de3095d39dd70ffcdbf7898d6dee46322764dd91c478b85f1ff120186",
+      "media_type": "image",
+      "filename": "柯幻熊猫_跳跃_01.png",
+      "width": 2560,
+      "height": 1440,
       "semantic_path": [
         "品牌",
         "柯幻熊猫",
@@ -11577,11 +11857,11 @@
       }
     },
     {
-      "asset_id": "asset_brand_ip_static_cbebec0870f0",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-5466-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "sha256": "cbebec0870f008ecbc747b39320f666ddca0b9a911f9b3de10e10cafd8080686",
+      "asset_id": "asset_brand_ip_static_498e58284f98",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跳跃_护目镜_01.png",
+      "sha256": "498e58284f98c8f4550d8c1807dd4f9c2c34e03b7134337abc014ac8fa81b457",
       "media_type": "image",
-      "filename": "jimeng-2026-02-10-5466-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
+      "filename": "柯幻熊猫_跳跃_护目镜_01.png",
       "width": 2560,
       "height": 1440,
       "semantic_path": [
@@ -11596,7 +11876,9 @@
       "tags": [
         "柯幻熊猫",
         "品牌IP",
-        "静态"
+        "静态",
+        "跳跃",
+        "护目镜"
       ],
       "identity_group": "柯幻熊猫",
       "visual_anchors": [],
@@ -11619,11 +11901,11 @@
       }
     },
     {
-      "asset_id": "asset_brand_ip_static_49ee48abd1fd",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-6273-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "sha256": "49ee48abd1fd4235ded8b28cbe8975c36b98b90bfb57f7f82d123c58302f4462",
+      "asset_id": "asset_brand_ip_static_26662b4ef44d",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跳跃_护目镜_02.png",
+      "sha256": "26662b4ef44d43fb0f382231607e0498715a5819f2b43337dc42ead5e78db3e2",
       "media_type": "image",
-      "filename": "jimeng-2026-02-10-6273-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
+      "filename": "柯幻熊猫_跳跃_护目镜_02.png",
       "width": 2560,
       "height": 1440,
       "semantic_path": [
@@ -11638,217 +11920,9 @@
       "tags": [
         "柯幻熊猫",
         "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_c274e080948d",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-6544-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
-      "sha256": "c274e080948dc5e458b73977e7b5005beaaf8662fab21f985302bc9547e2b272",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-6544-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_17128f738577",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-7027-生成3D风格ip  科技感  生成不同的动作.png",
-      "sha256": "17128f738577d8bc41a17d446f2eb46792a4dfcaec79735d96f45a10dd1d3272",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-7027-生成3D风格ip  科技感  生成不同的动作.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_0dcc663f00be",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-7168-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "sha256": "0dcc663f00be0635ca059b47abe8dca70eca1e9ea101b05f3dd5eebcfc4542c2",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-7168-生成3D风格ip  科技风   生成不同的动作  可爱   动感  导出透明pn....png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_c574c5d043ac",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-9225-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
-      "sha256": "c574c5d043acf5ff260f373c63aff18616f930968fa47f7dc805ebc251b71989",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-9225-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_a7315caf0088",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-9590-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
-      "sha256": "a7315caf0088323bd5280743d2b36314c276136b58e89cdbe7dda8464c581ce3",
-      "media_type": "image",
-      "filename": "jimeng-2026-02-10-9590-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
+        "静态",
+        "跳跃",
+        "护目镜"
       ],
       "identity_group": "柯幻熊猫",
       "visual_anchors": [],
@@ -11872,10 +11946,10 @@
     },
     {
       "asset_id": "asset_brand_ip_static_0ec36a605a52",
-      "path": "assets/brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-9600-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
+      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_闪电_01.png",
       "sha256": "0ec36a605a52d20aea8dfcbc01ced667ece08cb3081a16417bc28375336d8073",
       "media_type": "image",
-      "filename": "jimeng-2026-02-10-9600-此ip形象是一个智能体的吉祥物，生成3D风格ip， 科技风，生成不同的动作，拿着....png",
+      "filename": "柯幻熊猫_闪电_01.png",
       "width": 2560,
       "height": 1440,
       "semantic_path": [
@@ -11890,51 +11964,8 @@
       "tags": [
         "柯幻熊猫",
         "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_c4ed140cbe5b",
-      "path": "assets/brand/kehuanxiongmao/ip/static/图层 1.png",
-      "sha256": "c4ed140cbe5b7d3e71b05a84b2cef262c80dadb53d00ce66295a7baa07c470cd",
-      "media_type": "image",
-      "filename": "图层 1.png",
-      "width": 3051,
-      "height": 3039,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E0_source_evidence",
-      "claims": [
-        "official_brand_identity"
-      ],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
+        "静态",
+        "闪电"
       ],
       "identity_group": "柯幻熊猫",
       "visual_anchors": [],
@@ -12310,11 +12341,54 @@
         "duration_ms": null,
         "mime_type": "image/jpeg"
       }
+    },
+    {
+      "asset_id": "asset_brand_logo_c8a4bd8fd3c7",
+      "path": "assets/brand/kehuanxiongmao/logo/柯幻熊猫_LOGO.png",
+      "sha256": "c8a4bd8fd3c721e9a9f28962c6dee0f1cd8a79bb19e638ae35ee99f5fc3b4d9e",
+      "media_type": "image",
+      "filename": "柯幻熊猫_LOGO.png",
+      "width": 1182,
+      "height": 1182,
+      "semantic_path": [
+        "品牌",
+        "柯幻熊猫",
+        "brand_logo"
+      ],
+      "role": "brand_logo",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "official_brand_identity"
+      ],
+      "tags": [
+        "柯幻熊猫",
+        "品牌IP",
+        "Logo"
+      ],
+      "identity_group": "柯幻熊猫",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "brand_ip_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "fps": null,
+        "frame_count": null,
+        "duration_ms": null,
+        "mime_type": "image/png"
+      }
     }
   ],
-  "source_catalog_sha256": "c6fedb6ba5c28b41217cbebc02833d181359687f292921c92c38546e45dc6108",
+  "source_catalog_sha256": "4ddd2557007f9fffbf4897f8d6a2684c96f5ab56127199ecc5b3163dc7f5b659",
   "warnings": [
-    "unrecognized site filename: 柯幻熊猫_AI工具_功能列表截图.png",
-    "duplicate brand asset skipped: brand/kehuanxiongmao/ip/static/jimeng-2026-02-10-7878-生成3D风格ip  科技感  生成不同的动作 导出透明png 奔跑跳跃   各种....png"
+    "unrecognized site filename: 柯幻熊猫_AI工具_功能列表截图.png"
   ]
 }

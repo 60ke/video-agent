@@ -224,7 +224,7 @@ def _brand_role(path: Path, brand_dir: Path) -> tuple[str, str, list[str]]:
         action = "挥手" if "挥手" in name else "跑步" if "跑步" in name else "动态"
         return "brand_ip_video", "video", tags + ["视频", action]
     action_tags = []
-    for action in ("挥手", "跑步", "跳跃", "护目镜", "平板", "无人机", "比心"):
+    for action in ("挥手", "跑步", "跳跃", "护目镜", "平板", "无人机", "比心", "闪电"):
         if action in name:
             action_tags.append(action)
     if name.startswith("熊猫定"):

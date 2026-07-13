@@ -127,6 +127,9 @@ Put the title, subtitle, main result subject, logo, and every important element 
 REFERENCES:
 The reference sheet contains {reference_count} approved images labelled A, B, C. Prefer a result image as the hero. Website UI may only be a small supporting element. Preserve the referenced design, product, brand, and result content; do not invent unrelated UI, brands, products, people, or generated results.
 
+BRAND LOGO:
+If any reference image is a brand logo (identified by its square aspect ratio and clean logomark), reproduce it pixel-faithfully in the cover. Do not redraw, restyle, recolor, simplify, or invent a different logo. Place the brand logo as a small badge in a corner or near the title, never as the main hero. The official brand logo in the references is the ONLY logo allowed on the cover.
+
 DESIGN:
 Mobile-feed readability, high contrast, strong hierarchy, lively but clean short-video feature-seeding composition. Style hint: {spec.style_hint}. Do not add extra marketing copy, watermarks, fake interface text, or decorative paragraphs.
 """.strip()
