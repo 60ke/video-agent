@@ -30,14 +30,27 @@ jobs:
       - name: Ruff
         run: ruff check video_agent tests
       - name: Pytest
-        run: pytest -q
-      - name: Upload IP parameter previews
+        id: pytest
+        continue-on-error: true
+        run: |
+          set +e
+          pytest -q 2>&1 | tee pytest.log
+          status=${PIPESTATUS[0]}
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+      - name: Upload validation diagnostics and IP previews
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ip-params-flower-text-previews
+          name: ip-params-flower-text-diagnostics
+          if-no-files-found: warn
           path: |
+            pytest.log
             assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_IP形象_参数面板关键帧.png
             assets/derived/sites/柯幻熊猫/文生图/参数面板/layers/柯幻熊猫_文生图_IP形象_参数面板无花字底图.png
             assets/derived/sites/柯幻熊猫/文生图/参数面板/layers/柯幻熊猫_文生图_IP形象_参数面板花字透明层.png
             assets/derived/sites/柯幻熊猫/文生图/参数面板/stages/柯幻熊猫_文生图_IP形象_参数面板花字阶段1.png
             assets/derived/sites/柯幻熊猫/文生图/参数面板/stages/柯幻熊猫_文生图_IP形象_参数面板花字阶段2.png
+      - name: Enforce pytest result
+        if: always()
+        run: test "${{ steps.pytest.outputs.status }}" = "0"
