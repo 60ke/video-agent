@@ -227,7 +227,21 @@ class FrameRenderer:
             if frame < animation.start_frame:
                 return base
             layer = self.callout_layers[asset_id].copy()
-            if frame < animation.hit_frame:
+            if animation.kind == "flower_text_fade_sequence":
+                total = max(1, animation.hit_frame - animation.start_frame)
+                local = max(0, min(total, frame - animation.start_frame))
+                first_end = max(1, round(total * 0.40))
+                second_start = max(first_end, round(total * 0.62))
+                stage1_opacity = 0.55
+                if local < first_end:
+                    opacity = stage1_opacity * ease_out_cubic(local / first_end)
+                elif local < second_start:
+                    opacity = stage1_opacity
+                else:
+                    denominator = max(1, total - second_start)
+                    opacity = stage1_opacity + (1.0 - stage1_opacity) * ease_out_cubic((local - second_start) / denominator)
+                layer.putalpha(layer.getchannel("A").point(lambda value: round(value * max(0.0, min(1.0, opacity)))))
+            elif frame < animation.hit_frame:
                 progress = max(0.0, min(1.0, (frame - animation.start_frame) / (animation.hit_frame - animation.start_frame)))
                 alpha = layer.getchannel("A")
                 bbox = alpha.getbbox()
@@ -348,7 +362,11 @@ class FrameRenderer:
                 scale = 0.94 + 0.06 * ease_out_cubic(min(1.0, progress / 0.22))
         elif shot.motion == "scale_out":
             scale = 1.06 - 0.06 * ease_out_cubic(min(1.0, progress / 0.22))
-        if shot.callout_animation and shot.callout_animation.hit_frame <= frame < shot.callout_animation.hit_frame + 8:
+        if (
+            shot.callout_animation
+            and shot.callout_animation.kind == "handdrawn_circle_reveal"
+            and shot.callout_animation.hit_frame <= frame < shot.callout_animation.hit_frame + 8
+        ):
             pulse_progress = (frame - shot.callout_animation.hit_frame) / 8
             pulse = math.sin(math.pi * pulse_progress)
             scale *= 1.0 + (shot.callout_animation.finish_pulse_scale - 1.0) * pulse
