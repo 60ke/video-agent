@@ -28,10 +28,21 @@ jobs:
       - name: Verify Ubuntu Chinese font resolution
         if: runner.os == 'Linux'
         run: fc-match -f '%{family}\n%{file}\n' 'Noto Sans CJK SC' | tee font-match.txt && grep -q 'Noto Sans CJK' font-match.txt
+      - name: Install Windows FFmpeg
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install ffmpeg -y --no-progress
+          $ffmpegBin = Get-ChildItem "$env:ChocolateyInstall\lib\ffmpeg\tools" -Recurse -Filter ffmpeg.exe | Select-Object -First 1 -ExpandProperty DirectoryName
+          if (-not $ffmpegBin) { throw "Chocolatey installed FFmpeg but ffmpeg.exe was not found" }
+          $ffmpegBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & "$ffmpegBin\ffmpeg.exe" -version
       - name: Install
         run: python -m pip install -e ".[dev]"
       - name: Compile
         run: python -m compileall -q video_agent
+      - name: Ruff
+        run: ruff check video_agent tests
       - name: Test
         run: python -m pytest
     strategy:

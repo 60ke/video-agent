@@ -346,6 +346,8 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
             if quality_status not in approved_statuses:
                 continue
             path = Path(str(item.get("output_path") or ""))
+            if not path.is_absolute():
+                path = assets_root.parent / path
             if not path.is_file():
                 warnings.append(f"approved derived params keyframe missing: {path}")
                 continue
@@ -384,6 +386,17 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                         "annotation_style": item.get("annotation_style"),
                         "required_field_labels": item.get("required_field_labels", []),
                         "workflow": manifest.get("workflow"),
+                        "callout_base_path": item.get("callout_base_path"),
+                        "callout_base_sha256": item.get("callout_base_sha256"),
+                        "callout_layer_path": item.get("callout_layer_path"),
+                        "callout_layer_sha256": item.get("callout_layer_sha256"),
+                        "callout_layer_method": item.get("callout_layer_method"),
+                        "flower_text_stage1_path": item.get("flower_text_stage1_path"),
+                        "flower_text_stage1_sha256": item.get("flower_text_stage1_sha256"),
+                        "flower_text_stage2_path": item.get("flower_text_stage2_path"),
+                        "flower_text_stage2_sha256": item.get("flower_text_stage2_sha256"),
+                        "animation_kind": item.get("animation_kind"),
+                        "animation_duration_frames": item.get("animation_duration_frames", 18),
                     },
                 )
             )

@@ -407,9 +407,22 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                 )
             callout_anchor_id: str | None = None
             callout_offset = 0
-            has_prepared_callout = template == "ui_feature_entry" and asset.role == "feature_entry"
-            if has_prepared_callout:
-                animation_frames = CalloutAnimation().duration_frames
+            prepared_callout: CalloutAnimation | None = None
+            if template == "ui_feature_entry" and asset.role == "feature_entry":
+                prepared_callout = CalloutAnimation()
+            elif (
+                template == "ui_params_focus"
+                and asset.role == "feature_form_params"
+                and asset.metadata.get("callout_base_path")
+                and asset.metadata.get("callout_layer_path")
+            ):
+                prepared_callout = CalloutAnimation(
+                    kind="flower_text_fade_sequence",
+                    duration_frames=int(asset.metadata.get("animation_duration_frames", 18)),
+                    finish_pulse_scale=1.0,
+                )
+            if prepared_callout:
+                animation_frames = prepared_callout.duration_frames
                 stable_hold_frames = round(timing.fps * CALLOUT_STABLE_HOLD_SECONDS)
                 earliest_hit = span.start_frame + start_offset + animation_frames
                 latest_hit = span.start_frame + end_offset - stable_hold_frames
@@ -423,10 +436,10 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                     callout_offset = callout_hit - span.start_frame
                 cue_bindings.append(
                     CueBinding(
-                        action="callout.complete",
+                        action=prepared_callout.completion_action,
                         anchor_id=callout_anchor_id,
                         offset_frames=callout_offset,
-                        sfx="mouse_click",
+                        sfx="swish" if prepared_callout.kind == "flower_text_fade_sequence" else "mouse_click",
                     )
                 )
             for phrase in phrases_by_beat[beat.beat_id]:
@@ -473,7 +486,7 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                     motion=motion,
                     transition_in=transition,
                     long_hold_reason=long_hold,
-                    callout_animation=CalloutAnimation() if has_prepared_callout else None,
+                    callout_animation=prepared_callout,
                 )
             )
     return VisualPlan(case_id=case_id, shots=shots)

@@ -53,7 +53,7 @@ class OverlayLayout(Contract):
 
 
 class CalloutAnimation(Contract):
-    kind: Literal["handdrawn_circle_reveal"] = "handdrawn_circle_reveal"
+    kind: Literal["handdrawn_circle_reveal", "flower_text_fade_sequence"] = "handdrawn_circle_reveal"
     duration_frames: int = Field(default=18, ge=8, le=45)
     completion_action: str = "callout.complete"
     finish_pulse_scale: float = Field(default=1.018, ge=1.0, le=1.08)

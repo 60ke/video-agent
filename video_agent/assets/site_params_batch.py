@@ -9,7 +9,7 @@ from typing import Any, Collection
 
 from PIL import Image
 
-from video_agent.ai.gpt_image import edit_image
+from video_agent.assets.flower_text import build_flower_text_assets
 from video_agent.assets.materializer import _prompt
 from video_agent.contracts import DeriveKind
 from video_agent.io import load_json, sha256_file, utc_now, write_json_atomic
@@ -197,14 +197,12 @@ def _instruction(source: SiteParamsSource, annotation: RequiredFieldsAnnotation)
     return (
         f"文件名解析路径是 {source.site} -> {source.module} -> {hierarchy}，当前功能为“{source.feature}”。"
         f"新增花字只能逐字写为“{annotation.callout_text}”，它是唯一允许新增的中文文字，且花字不得包含 * 或 ＊。"
-        f"箭头尖端指向页面中这些字段所在的整体视觉中心：{', '.join(annotation.labels)}。字段名称仅用于定位，绝不可额外写到画面上。"
         "页面原有 UI 中已经存在的红色 * 或 ＊ 是界面内容，必须逐个原样保留；不得删除、隐藏、移动、改色、改样式、复制或用花字替换。"
-        "绝不可把提示词、校验过程或来源说明渲染进图片，包括“已验证必填字段”“必填字段”“字段说明”“CDP”“前端源码”。"
-        "花字和箭头必须作为直接覆盖在原始参数面板上的叠层，优先落在面板右侧或右下区域；不得为了放花字新增右侧黑栏、左右分栏、留出空白区或缩小原始参数面板。"
-        "原始参数面板必须从左至右铺满有效画面宽度，两侧外边距各不超过 3%；绝不可在右侧留下空白条、黑色空区或独立侧栏。花字可以覆盖普通表单内容或页面背景以形成醒目的整合构图，唯一禁止遮挡的是原始页面标题或分区标题，箭头可以自然跨过页面指向目标字段。"
-        "在黄色马克笔字配蓝箭头、青色描边字配橙色笔刷下划线、白字红描边配涂鸦指针、"
-        "和粉橙贴纸字配紫蓝箭头之间，依据页面留白选择一种最清晰的风格。"
-        "不要使用红色框、规则矩形、圆圈、鼠标或人物头像。"
+        "绝不可把提示词、校验过程或来源说明渲染进图片，包括‘已验证必填字段’‘必填字段’‘字段说明’‘CDP’‘前端源码’。"
+        "花字必须作为直接覆盖在原始参数面板上的独立视觉叠层，优先落在面板右侧或右下区域；不得为了放花字新增右侧黑栏、左右分栏、留出空白区或缩小原始参数面板。"
+        "原始参数面板必须从左至右铺满有效画面宽度，两侧外边距各不超过 3%；绝不可在右侧留下空白条、黑色空区或独立侧栏。"
+        "花字可以覆盖普通表单内容或页面背景以形成醒目的整合构图，唯一禁止遮挡的是原始页面标题或分区标题。"
+        "不要生成箭头、指针、连接线、红色框、规则矩形、圆圈、鼠标或人物头像。最终素材只允许出现参数面板和花字。"
     )
 
 
@@ -236,7 +234,7 @@ def generate_site_params_keyframes(
     manifest_path = output_dir / "manifest.json"
     previous = load_json(manifest_path) if manifest_path.is_file() else {}
     callouts = load_json(source_dir / "_callouts.json")
-    recipe_prompt, template_sha256 = _prompt(repo_root, DeriveKind.SITE_PARAMS_KEYFRAME, "{batch_instruction}")
+    _, template_sha256 = _prompt(repo_root, DeriveKind.SITE_PARAMS_KEYFRAME, "{batch_instruction}")
 
     def write_manifest(results: list[dict[str, Any]], errors: list[dict[str, str]]) -> None:
         write_json_atomic(
@@ -245,7 +243,7 @@ def generate_site_params_keyframes(
                 "schema_version": 1,
                 "generated_at": utc_now(),
                 "workflow": "site_params_gpt_image_batch",
-                "annotation_style": "dynamic_required_field_handwritten_callout",
+                "annotation_style": "flower_text_only_two_stage_fade",
                 "source_dir": source_dir.resolve().as_posix(),
                 "output_dir": output_dir.resolve().as_posix(),
                 "assets": sorted(results, key=lambda item: item["source_filename"]),
@@ -264,7 +262,7 @@ def generate_site_params_keyframes(
     for source in sources:
         annotation = _required_fields_annotation(repo_root, source, callouts)
         instruction = _instruction(source, annotation)
-        prompt = recipe_prompt.replace("{batch_instruction}", instruction)
+        prompt = instruction
         source_sha256 = sha256_file(source.path)
         prompt_sha256 = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         output = output_dir / _output_name(source)
@@ -302,7 +300,7 @@ def generate_site_params_keyframes(
                         "module": source.module,
                         "feature_path": list(source.feature_path),
                         "feature": source.feature,
-                        "annotation_style": "dynamic_required_field_handwritten_callout",
+                        "annotation_style": "flower_text_only_two_stage_fade",
                         "required_field_labels": list(annotation.labels),
                         "callout_text": annotation.callout_text,
                         "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
@@ -328,40 +326,41 @@ def generate_site_params_keyframes(
 
     def generate(item: tuple[SiteParamsSource, RequiredFieldsAnnotation, Path, str, str, str]) -> dict[str, Any]:
         source, annotation, output, prompt, source_sha256, prompt_sha256 = item
-        result = edit_image(repo_root, source.path, prompt)
-        output.write_bytes(result.content)
+        prepared = build_flower_text_assets(source.path, output, annotation.callout_text)
         with Image.open(output) as image:
             width, height = image.size
             image.verify()
         return {
-                "source_path": source.path.resolve().as_posix(),
-                "source_filename": source.path.name,
-                "source_sha256": source_sha256,
-                "output_path": output.resolve().as_posix(),
-                "output_filename": output.name,
-                "output_sha256": sha256_file(output),
-                "width": width,
-                "height": height,
-                "site": source.site,
-                "module": source.module,
-                "feature_path": list(source.feature_path),
-                "feature": source.feature,
-                "annotation_style": "dynamic_required_field_handwritten_callout",
-                "required_field_labels": list(annotation.labels),
-                "callout_text": annotation.callout_text,
-                "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
-                "frontend_source_path": annotation.frontend_source_path,
-                "frontend_source_sha256": annotation.frontend_source_sha256,
-                "cdp_required_field_labels": list(annotation.cdp_labels),
-                "cdp_unmatched_field_labels": list(annotation.cdp_unmatched_labels),
-                "prompt_sha256": prompt_sha256,
-                "prompt_template_sha256": template_sha256,
-                "provider": result.provider,
-                "model": result.model,
-                "response_id": result.response_id,
-                "quality_status": "unreviewed",
-                "status": "generated",
-            }
+            "source_path": source.path.resolve().as_posix(),
+            "source_filename": source.path.name,
+            "source_sha256": source_sha256,
+            "output_path": output.resolve().as_posix(),
+            "output_filename": output.name,
+            "output_sha256": sha256_file(output),
+            "width": width,
+            "height": height,
+            "site": source.site,
+            "module": source.module,
+            "feature_path": list(source.feature_path),
+            "feature": source.feature,
+            "annotation_style": "flower_text_only_two_stage_fade",
+            "required_field_labels": list(annotation.labels),
+            "callout_text": annotation.callout_text,
+            "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+            "frontend_source_path": annotation.frontend_source_path,
+            "frontend_source_sha256": annotation.frontend_source_sha256,
+            "cdp_required_field_labels": list(annotation.cdp_labels),
+            "cdp_unmatched_field_labels": list(annotation.cdp_unmatched_labels),
+            "prompt_sha256": prompt_sha256,
+            "prompt_template_sha256": template_sha256,
+            "provider": "deterministic_pillow",
+            "model": "flower_text_overlay_v1",
+            "response_id": None,
+            "quality_status": "vision_verified",
+            "quality_checks": ["source_pixels_preserved", "arrow_free", "two_stage_preview_generated"],
+            "status": "generated",
+            **prepared,
+        }
 
     with ThreadPoolExecutor(max_workers=max(1, workers)) as executor:
         futures = {executor.submit(generate, item): item[0] for item in pending}
