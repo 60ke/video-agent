@@ -35,8 +35,8 @@ jobs:
           from pathlib import Path
           path = Path('video_agent/assets/site_params_batch.py')
           text = path.read_text(encoding='utf-8')
-          text = text.replace("当前功能为‘{source.feature}’。", "当前功能为“ + '“' + "{source.feature}" + '”' + "。")
-          text = text.replace("新增花字只能逐字写为‘{annotation.callout_text}’", "新增花字只能逐字写为“ + '“' + "{annotation.callout_text}" + '”')
+          text = text.replace("当前功能为‘{source.feature}’。", "当前功能为\u201c{source.feature}\u201d。")
+          text = text.replace("新增花字只能逐字写为‘{annotation.callout_text}’", "新增花字只能逐字写为\u201c{annotation.callout_text}\u201d")
           path.write_text(text, encoding='utf-8')
           PY
       - name: Compile
