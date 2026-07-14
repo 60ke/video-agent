@@ -38,7 +38,7 @@ def _font(size: int) -> ImageFont.FreeTypeFont:
         ).stdout.strip()
         if resolved and Path(resolved).is_file():
             return ImageFont.truetype(resolved, size=size)
-    raise FileNotFoundError("no supported Chinese font found for flower-text assets")
+    return ImageFont.load_default(size=size)
 
 
 def _lines(text: str) -> list[str]:
