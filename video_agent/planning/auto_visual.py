@@ -12,6 +12,7 @@ TIMELINE_END_ANCHOR = "timeline_end"
 APPROVED_STATUSES = {"machine_checked", "vision_verified", "human_approved"}
 MAX_REPRESENTATIVE_VISUALS = 3
 MIN_VISUAL_SECONDS = {
+    "feature_entry_marker": 1.2,
     "ui_feature_entry": 1.5,
     "ui_params_focus": 2.2,
     "result_showcase": 1.2,
@@ -21,8 +22,8 @@ MIN_VISUAL_SECONDS = {
 
 
 def _minimum_visual_frames(asset: Asset, template: str, fps: int) -> int:
-    del asset
-    return max(1, round(fps * MIN_VISUAL_SECONDS.get(template, 1.2)))
+    key = "feature_entry_marker" if template == "ui_feature_entry" and asset.role == "feature_entry" else template
+    return max(1, round(fps * MIN_VISUAL_SECONDS.get(key, 1.2)))
 
 
 def _representative_candidates(candidates: list[tuple[Asset, str]], count: int) -> list[tuple[Asset, str]]:
@@ -211,7 +212,7 @@ def _assets_for_beat(
             return [(asset, "ui_feature_entry") for asset in matched_entries]
         if roles["feature_entry"]:
             return [(roles["feature_entry"][0], "ui_feature_entry")]
-        raise ValueError("approved GPT Image feature-entry keyframe is required; source website screenshots cannot be used")
+        raise ValueError("production feature-entry keyframe is required; source website screenshots cannot be used")
     results = _matching_results(intent, slots, roles, used_results)
     if results:
         return [(asset, "result_showcase") for asset in results[:3]]
@@ -461,6 +462,8 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                 used_results.add(asset.asset_id)
             is_first = not shots
             is_last = beat is narration.beats[-1] and index == len(schedule) - 1
+            if is_last and not locked and timing.duration_frames > span.end_frame:
+                absolute_end = timing.duration_frames
             start = (
                 TimeRef(anchor_id=TIMELINE_START_ANCHOR)
                 if absolute_start == 0
