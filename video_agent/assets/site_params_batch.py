@@ -195,8 +195,8 @@ def _required_fields_annotation(repo_root: Path, source: SiteParamsSource, callo
 def _instruction(source: SiteParamsSource, annotation: RequiredFieldsAnnotation) -> str:
     hierarchy = " -> ".join(source.feature_path)
     return (
-        f"文件名解析路径是 {source.site} -> {source.module} -> {hierarchy}，当前功能为‘{source.feature}’。"
-        f"新增花字只能逐字写为‘{annotation.callout_text}’，它是唯一允许新增的中文文字，且花字不得包含 * 或 ＊。"
+        f"文件名解析路径是 {source.site} -> {source.module} -> {hierarchy}，当前功能为“{source.feature}”。"
+        f"新增花字只能逐字写为“{annotation.callout_text}”，它是唯一允许新增的中文文字，且花字不得包含 * 或 ＊。"
         "页面原有 UI 中已经存在的红色 * 或 ＊ 是界面内容，必须逐个原样保留；不得删除、隐藏、移动、改色、改样式、复制或用花字替换。"
         "绝不可把提示词、校验过程或来源说明渲染进图片，包括‘已验证必填字段’‘必填字段’‘字段说明’‘CDP’‘前端源码’。"
         "花字必须作为直接覆盖在原始参数面板上的独立视觉叠层，优先落在面板右侧或右下区域；不得为了放花字新增右侧黑栏、左右分栏、留出空白区或缩小原始参数面板。"
