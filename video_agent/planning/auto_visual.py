@@ -2,18 +2,16 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from video_agent.contracts import Asset, AssetCatalog, CalloutAnimation, CueBinding, Narration, ShotPlan, TimeRef, TimingLock, TransitionIn, VisualPlan
+from video_agent.compiler.evidence import resolves_to_supporting_asset
+from video_agent.contracts import Asset, AssetCatalog, CueBinding, Narration, ShotPlan, TimeRef, TimingLock, TransitionIn, VisualPlan
 
 
 BEAT_START_ANCHOR_PREFIX = "beat_start:"
-BEAT_END_ANCHOR_PREFIX = "beat_end:"
 TIMELINE_START_ANCHOR = "timeline_start"
 TIMELINE_END_ANCHOR = "timeline_end"
 APPROVED_STATUSES = {"machine_checked", "vision_verified", "human_approved"}
 MAX_REPRESENTATIVE_VISUALS = 3
-CALLOUT_STABLE_HOLD_SECONDS = 0.6
 MIN_VISUAL_SECONDS = {
-    "feature_entry_callout": 1.2,
     "ui_feature_entry": 1.5,
     "ui_params_focus": 2.2,
     "result_showcase": 1.2,
@@ -23,8 +21,8 @@ MIN_VISUAL_SECONDS = {
 
 
 def _minimum_visual_frames(asset: Asset, template: str, fps: int) -> int:
-    key = "feature_entry_callout" if template == "ui_feature_entry" and asset.role == "feature_entry" else template
-    return max(1, round(fps * MIN_VISUAL_SECONDS.get(key, 1.2)))
+    del asset
+    return max(1, round(fps * MIN_VISUAL_SECONDS.get(template, 1.2)))
 
 
 def _representative_candidates(candidates: list[tuple[Asset, str]], count: int) -> list[tuple[Asset, str]]:
@@ -118,22 +116,17 @@ def _matching_results(intent: str, slots: list[str], roles: dict[str, list[Asset
         return " ".join(asset.semantic_path + asset.tags + asset.claims + [asset.filename]).lower().replace(" ", "")
 
     def _matched_term(asset: Asset) -> str | None:
-        h = _haystack(asset)
+        haystack = _haystack(asset)
         for term in terms:
-            if term and term in h:
+            if term and term in haystack:
                 return term
         return None
 
-    matching = [a for a in results if _matched_term(a) is not None] if terms else list(results)
+    matching = [asset for asset in results if _matched_term(asset) is not None] if terms else list(results)
     if not matching:
         return []
-    pool = matching
-    fresh = [a for a in pool if a.asset_id not in used]
-    pool = fresh or pool
-
-    # Prioritise one result per matched term first, so that a beat mentioning
-    # "宠物服务" + "科技办公" picks one from each industry instead of two
-    # from the same industry.
+    fresh = [asset for asset in matching if asset.asset_id not in used]
+    pool = fresh or matching
     if not terms:
         return pool
     seen_terms: set[str] = set()
@@ -218,7 +211,7 @@ def _assets_for_beat(
             return [(asset, "ui_feature_entry") for asset in matched_entries]
         if roles["feature_entry"]:
             return [(roles["feature_entry"][0], "ui_feature_entry")]
-        raise ValueError("approved production feature-entry keyframe is required; source website screenshots cannot be used")
+        raise ValueError("approved GPT Image feature-entry keyframe is required; source website screenshots cannot be used")
     results = _matching_results(intent, slots, roles, used_results)
     if results:
         return [(asset, "result_showcase") for asset in results[:3]]
@@ -277,19 +270,22 @@ def _semantic_sfx(template: str, phrase: str) -> str | None:
         return "typing"
     if any(word in normalized for word in ("上传", "导入", "参考图", "实景图", "点击")):
         return "mouse_click"
-    if template == "ui_feature_entry":
-        return "mouse_click"
-    if template == "ui_params_focus":
+    if template in {"ui_feature_entry", "ui_params_focus"}:
         return "mouse_click"
     if template == "result_showcase":
         return "swish"
     return None
 
 
-def _claim_ids_for_asset(narration: Narration, beat_id: str, asset_id: str) -> list[str]:
-    beat = next(beat for beat in narration.beats if beat.beat_id == beat_id)
-    by_id = {claim.claim_id: claim for claim in narration.claims}
-    return [cue.claim_id for cue in beat.claim_cues if asset_id in by_id[cue.claim_id].supporting_asset_ids]
+def _claim_ids_for_asset(narration: Narration, beat_id: str, asset_id: str, catalog: AssetCatalog) -> list[str]:
+    beat = next(item for item in narration.beats if item.beat_id == beat_id)
+    claims = {claim.claim_id: claim for claim in narration.claims}
+    asset_by_id = {asset.asset_id: asset for asset in catalog.assets}
+    return [
+        cue.claim_id
+        for cue in beat.claim_cues
+        if resolves_to_supporting_asset(asset_id, set(claims[cue.claim_id].supporting_asset_ids), asset_by_id)
+    ]
 
 
 def _transition(template: str, first_shot: bool) -> TransitionIn:
@@ -302,13 +298,80 @@ def _transition(template: str, first_shot: bool) -> TransitionIn:
     return TransitionIn(kind="crossfade", duration_frames=6)
 
 
+def _windowed_assets(catalog: AssetCatalog, beat_id: str, start_frame: int, end_frame: int) -> list[tuple[Asset, str, int, int]]:
+    scheduled: list[tuple[Asset, str, int, int]] = []
+    for asset in catalog.assets:
+        metadata = asset.metadata
+        if metadata.get("beat_id") != beat_id:
+            continue
+        preferred_start = metadata.get("preferred_start_frame")
+        preferred_end = metadata.get("preferred_end_frame")
+        if preferred_start is None and preferred_end is None:
+            continue
+        if preferred_start is None or preferred_end is None:
+            raise ValueError(f"materialized asset has an incomplete preferred window: {asset.asset_id}")
+        preferred_start = int(preferred_start)
+        preferred_end = int(preferred_end)
+        if not (start_frame <= preferred_start < preferred_end <= end_frame):
+            raise ValueError(
+                f"materialized asset window is outside {beat_id}: {asset.asset_id}/{preferred_start}-{preferred_end}"
+            )
+        if asset.quality.status not in APPROVED_STATUSES or not asset.production_eligible:
+            raise ValueError(f"materialized asset for locked window is not approved: {asset.asset_id}/{asset.quality.status}")
+        scheduled.append((asset, _template_for_asset(asset), preferred_start, preferred_end))
+    scheduled.sort(key=lambda item: (item[2], item[3], item[0].asset_id))
+    for previous, current in zip(scheduled, scheduled[1:], strict=False):
+        if current[2] < previous[3]:
+            raise ValueError(
+                f"materialized preferred windows overlap in {beat_id}: {previous[0].asset_id} and {current[0].asset_id}"
+            )
+    return scheduled
+
+
+def _schedule_with_locked_windows(
+    candidates: list[tuple[Asset, str]],
+    locked: list[tuple[Asset, str, int, int]],
+    start_frame: int,
+    end_frame: int,
+    *,
+    all_required: bool,
+    beat_id: str,
+) -> list[tuple[Asset, str, int, int]]:
+    locked_ids = {asset.asset_id for asset, _, _, _ in locked}
+    base_candidates = [candidate for candidate in candidates if candidate[0].asset_id not in locked_ids]
+    gaps: list[tuple[int, int]] = []
+    cursor = start_frame
+    for _, _, locked_start, locked_end in locked:
+        if cursor < locked_start:
+            gaps.append((cursor, locked_start))
+        cursor = locked_end
+    if cursor < end_frame:
+        gaps.append((cursor, end_frame))
+
+    if gaps and not base_candidates:
+        raise ValueError(f"locked materialized windows leave uncovered time with no base visual in {beat_id}")
+    if all_required and len(base_candidates) > len(gaps):
+        raise ValueError(f"locked materialized windows leave too few intervals for required claim visuals in {beat_id}")
+
+    if not gaps:
+        return locked
+    if all_required:
+        selected = base_candidates
+    else:
+        selected = _representative_candidates(base_candidates, min(len(gaps), len(base_candidates)))
+    base_schedule = [
+        (*selected[index % len(selected)], gap_start, gap_end)
+        for index, (gap_start, gap_end) in enumerate(gaps)
+    ]
+    return sorted([*base_schedule, *locked], key=lambda item: (item[2], item[3], item[0].asset_id))
+
+
 def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLock, catalog: AssetCatalog) -> VisualPlan:
     roles = _role_assets(catalog)
     phrases_by_beat = defaultdict(list)
     for anchor in timing.phrase_anchors:
         phrases_by_beat[anchor.beat_id].append(anchor)
     spans = {span.beat_id: span for span in timing.beat_spans}
-    beat_index = {beat.beat_id: index for index, beat in enumerate(narration.beats)}
     shots: list[ShotPlan] = []
     used_results: set[str] = set()
 
@@ -327,65 +390,92 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                 hit_phrases=beat.hit_phrases,
             )
         )
-        candidates = _fit_visual_candidates(
-            candidates,
-            span.end_frame - span.start_frame,
-            timing.fps,
-            all_required=bool(claim_assets) or beat.visual_strategy == "enumerated_results",
-            beat_id=beat.beat_id,
-        )
-        enumerated_anchors = (
-            [_matching_phrase_anchor(asset, phrases_by_beat[beat.beat_id]) for asset, _ in candidates]
-            if beat.visual_strategy == "enumerated_results"
-            else []
-        )
-        if enumerated_anchors and any(anchor is None for anchor in enumerated_anchors):
-            raise ValueError(f"enumerated result phrase anchors are incomplete in {beat.beat_id}")
-        count = len(candidates)
-        for index, (asset, template) in enumerate(candidates):
+        locked = _windowed_assets(catalog, beat.beat_id, span.start_frame, span.end_frame)
+        if locked:
+            schedule = _schedule_with_locked_windows(
+                candidates,
+                locked,
+                span.start_frame,
+                span.end_frame,
+                all_required=bool(claim_assets) or beat.visual_strategy == "enumerated_results",
+                beat_id=beat.beat_id,
+            )
+        else:
+            candidates = _fit_visual_candidates(
+                candidates,
+                span.end_frame - span.start_frame,
+                timing.fps,
+                all_required=bool(claim_assets) or beat.visual_strategy == "enumerated_results",
+                beat_id=beat.beat_id,
+            )
+            enumerated_anchors = (
+                [_matching_phrase_anchor(asset, phrases_by_beat[beat.beat_id]) for asset, _ in candidates]
+                if beat.visual_strategy == "enumerated_results"
+                else []
+            )
+            if enumerated_anchors and any(anchor is None for anchor in enumerated_anchors):
+                raise ValueError(f"enumerated result phrase anchors are incomplete in {beat.beat_id}")
+            count = len(candidates)
+            schedule = []
+            for index, (asset, template) in enumerate(candidates):
+                if claim_assets:
+                    claim_anchor_frames = sorted(
+                        anchor.hit_frame
+                        for anchor in phrases_by_beat[beat.beat_id]
+                        if set(anchor.claim_ids).intersection(claim_assets[index][2])
+                    )
+                    hit = claim_anchor_frames[0]
+                    previous_hit = (
+                        max(
+                            anchor.hit_frame
+                            for anchor in phrases_by_beat[beat.beat_id]
+                            if set(anchor.claim_ids).intersection(claim_assets[index - 1][2])
+                        )
+                        if index
+                        else span.start_frame
+                    )
+                    next_hit = (
+                        min(
+                            anchor.hit_frame
+                            for anchor in phrases_by_beat[beat.beat_id]
+                            if set(anchor.claim_ids).intersection(claim_assets[index + 1][2])
+                        )
+                        if index + 1 < count
+                        else span.end_frame
+                    )
+                    absolute_start = span.start_frame if index == 0 else round((previous_hit + hit) / 2)
+                    absolute_end = span.end_frame if index == count - 1 else round((hit + next_hit) / 2)
+                elif enumerated_anchors:
+                    hit = enumerated_anchors[index].hit_frame
+                    previous_hit = enumerated_anchors[index - 1].hit_frame if index else span.start_frame
+                    next_hit = enumerated_anchors[index + 1].hit_frame if index + 1 < count else span.end_frame
+                    absolute_start = span.start_frame if index == 0 else round((previous_hit + hit) / 2)
+                    absolute_end = span.end_frame if index == count - 1 else round((hit + next_hit) / 2)
+                else:
+                    absolute_start = span.start_frame + round((span.end_frame - span.start_frame) * index / count)
+                    absolute_end = span.start_frame + round((span.end_frame - span.start_frame) * (index + 1) / count)
+                schedule.append((asset, template, absolute_start, absolute_end))
+
+        for index, (asset, template, absolute_start, absolute_end) in enumerate(schedule):
             if template == "result_showcase":
                 used_results.add(asset.asset_id)
-            if claim_assets:
-                claim_anchor_frames = sorted(
-                    anchor.hit_frame
-                    for anchor in phrases_by_beat[beat.beat_id]
-                    if set(anchor.claim_ids).intersection(claim_assets[index][2])
-                )
-                hit = claim_anchor_frames[0]
-                previous_hit = (
-                    max(anchor.hit_frame for anchor in phrases_by_beat[beat.beat_id] if set(anchor.claim_ids).intersection(claim_assets[index - 1][2]))
-                    if index
-                    else span.start_frame
-                )
-                next_hit = (
-                    min(anchor.hit_frame for anchor in phrases_by_beat[beat.beat_id] if set(anchor.claim_ids).intersection(claim_assets[index + 1][2]))
-                    if index + 1 < count
-                    else span.end_frame
-                )
-                start_offset = 0 if index == 0 else round(((previous_hit + hit) / 2) - span.start_frame)
-                end_offset = span.end_frame - span.start_frame if index == count - 1 else round(((hit + next_hit) / 2) - span.start_frame)
-            elif enumerated_anchors:
-                hit = enumerated_anchors[index].hit_frame
-                previous_hit = enumerated_anchors[index - 1].hit_frame if index else span.start_frame
-                next_hit = enumerated_anchors[index + 1].hit_frame if index + 1 < count else span.end_frame
-                start_offset = 0 if index == 0 else round(((previous_hit + hit) / 2) - span.start_frame)
-                end_offset = span.end_frame - span.start_frame if index == count - 1 else round(((hit + next_hit) / 2) - span.start_frame)
-            else:
-                start_offset = round((span.end_frame - span.start_frame) * index / count)
-                end_offset = round((span.end_frame - span.start_frame) * (index + 1) / count)
             is_first = not shots
-            is_last = beat is narration.beats[-1] and index == count - 1
+            is_last = beat is narration.beats[-1] and index == len(schedule) - 1
             start = (
                 TimeRef(anchor_id=TIMELINE_START_ANCHOR)
-                if is_first
-                else TimeRef(anchor_id=f"{BEAT_START_ANCHOR_PREFIX}{beat.beat_id}", offset_frames=start_offset)
+                if absolute_start == 0
+                else TimeRef(
+                    anchor_id=f"{BEAT_START_ANCHOR_PREFIX}{beat.beat_id}",
+                    offset_frames=absolute_start - span.start_frame,
+                )
             )
             end = (
                 TimeRef(anchor_id=TIMELINE_END_ANCHOR)
-                if is_last
-                else TimeRef(anchor_id=f"{BEAT_START_ANCHOR_PREFIX}{narration.beats[beat_index[beat.beat_id] + 1].beat_id}")
-                if index == count - 1
-                else TimeRef(anchor_id=f"{BEAT_START_ANCHOR_PREFIX}{beat.beat_id}", offset_frames=end_offset)
+                if absolute_end == timing.duration_frames
+                else TimeRef(
+                    anchor_id=f"{BEAT_START_ANCHOR_PREFIX}{beat.beat_id}",
+                    offset_frames=absolute_end - span.start_frame,
+                )
             )
             cue_bindings: list[CueBinding] = []
             transition = _transition(template, is_first)
@@ -401,36 +491,12 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                     CueBinding(
                         action="visual.enter",
                         anchor_id=f"{BEAT_START_ANCHOR_PREFIX}{beat.beat_id}",
-                        offset_frames=start_offset,
+                        offset_frames=absolute_start - span.start_frame,
                         sfx=entrance_sfx,
                     )
                 )
-            callout_anchor_id: str | None = None
-            callout_offset = 0
-            has_prepared_callout = template == "ui_feature_entry" and asset.role == "feature_entry"
-            if has_prepared_callout:
-                animation_frames = CalloutAnimation().duration_frames
-                stable_hold_frames = round(timing.fps * CALLOUT_STABLE_HOLD_SECONDS)
-                earliest_hit = span.start_frame + start_offset + animation_frames
-                latest_hit = span.start_frame + end_offset - stable_hold_frames
-                target_anchor = _matching_phrase_anchor(asset, phrases_by_beat[beat.beat_id])
-                target_hit = target_anchor.hit_frame if target_anchor else earliest_hit
-                callout_hit = max(earliest_hit, min(latest_hit, target_hit))
-                if target_anchor and callout_hit == target_anchor.hit_frame:
-                    callout_anchor_id = target_anchor.anchor_id
-                else:
-                    callout_anchor_id = f"{BEAT_START_ANCHOR_PREFIX}{beat.beat_id}"
-                    callout_offset = callout_hit - span.start_frame
-                cue_bindings.append(
-                    CueBinding(
-                        action="callout.complete",
-                        anchor_id=callout_anchor_id,
-                        offset_frames=callout_offset,
-                        sfx="mouse_click",
-                    )
-                )
             for phrase in phrases_by_beat[beat.beat_id]:
-                if not (span.start_frame + start_offset <= phrase.hit_frame < span.start_frame + end_offset):
+                if not (absolute_start <= phrase.hit_frame < absolute_end):
                     continue
                 cue_bindings.append(
                     CueBinding(
@@ -444,14 +510,6 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                     )
                 )
             motion = "scale_in" if template in {"ui_params_focus", "ui_feature_entry"} else "fade_in" if template == "brand_ip_cutaway" else "none"
-            absolute_start = 0 if is_first else span.start_frame + start_offset
-            absolute_end = (
-                timing.duration_frames
-                if is_last
-                else spans[narration.beats[beat_index[beat.beat_id] + 1].beat_id].start_frame
-                if index == count - 1
-                else span.start_frame + end_offset
-            )
             duration = absolute_end - absolute_start
             long_hold = "reading" if duration > timing.fps * 2.2 and template == "ui_params_focus" else None
             if duration > timing.fps * 2.2 and template in {"result_showcase", "brand_ip_cutaway", "ui_feature_entry"}:
@@ -467,13 +525,12 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                     end=end,
                     template=template,
                     asset_bindings={"primary": asset.asset_id},
-                    claim_ids=_claim_ids_for_asset(narration, beat.beat_id, asset.asset_id),
+                    claim_ids=_claim_ids_for_asset(narration, beat.beat_id, asset.asset_id, catalog),
                     cue_bindings=cue_bindings,
                     energy="high" if not shots else "medium",
                     motion=motion,
                     transition_in=transition,
                     long_hold_reason=long_hold,
-                    callout_animation=CalloutAnimation() if has_prepared_callout else None,
                 )
             )
     return VisualPlan(case_id=case_id, shots=shots)
