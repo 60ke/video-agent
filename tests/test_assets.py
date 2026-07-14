@@ -283,6 +283,35 @@ def test_catalog_registers_brand_media_and_deduplicates_by_hash(tmp_path: Path) 
     assert {asset.role for asset in snapshot.assets} == {"brand_logo", "brand_ip_static", "brand_ip_animation"}
 
 
+def test_catalog_registers_external_reference_material(tmp_path: Path) -> None:
+    assets = tmp_path / "assets"
+    _png(assets / "references" / "柯幻熊猫_文生图_文化墙_实景图_参考图_01.png")
+    (assets / "references" / "_外部导入_index.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "asset_filename": "柯幻熊猫_文生图_文化墙_实景图_参考图_01.png",
+                        "feature_path": ["文生图", "文化墙"],
+                        "reference_label": "实景图",
+                    }
+                ]
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    (assets / "sites").mkdir()
+    (assets / "results").mkdir()
+    (assets / "outro").mkdir()
+
+    catalog = build_catalog(assets)
+
+    reference = next(asset for asset in catalog.assets if asset.role == "reference_image")
+    assert reference.semantic_path == ["文生图", "文化墙"]
+    assert reference.tags == ["实景图", "参考图"]
+
+
 def test_semantic_derivative_cannot_support_fact_claim() -> None:
     with pytest.raises(ValidationError, match="cannot support factual claims"):
         Asset(

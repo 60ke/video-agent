@@ -184,6 +184,19 @@ def compile_render_plan(
             raise ValueError(f"motion is not allowed in V3: {shot.motion}")
         if shot.template not in TEMPLATE_ALLOWLIST:
             raise ValueError(f"template is not implemented in V3: {shot.template}")
+        if shot.template == "reference_to_result":
+            reference_id = shot.asset_bindings.get("reference")
+            result_id = shot.asset_bindings.get("result")
+            if not reference_id or not result_id or set(shot.asset_bindings) != {"reference", "result"}:
+                raise ValueError(f"reference_to_result requires exactly reference and result bindings: {shot.shot_id}")
+            reference = asset_by_id.get(reference_id)
+            result = asset_by_id.get(result_id)
+            if reference is None or result is None:
+                raise ValueError(f"reference_to_result bindings are missing from catalog: {shot.shot_id}")
+            if reference.role != "reference_image" or result.role != "result_image":
+                raise ValueError(f"reference_to_result requires reference_image plus result_image: {shot.shot_id}")
+            if reference.semantic_path != result.semantic_path:
+                raise ValueError(f"reference_to_result requires matching feature paths: {shot.shot_id}")
         if shot.template in TEXT_DENSE_TEMPLATES and shot.motion not in TEXT_DENSE_MOTION_ALLOWLIST:
             raise ValueError(f"motion {shot.motion!r} distorts text-dense template {shot.template!r}")
         missing_assets = [asset_id for asset_id in shot.asset_ids if asset_id not in asset_by_id]

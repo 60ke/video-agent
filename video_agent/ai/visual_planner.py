@@ -7,12 +7,16 @@ from video_agent.ai.prompt_loader import load_prompt
 from video_agent.ai.story_planner import PLANNER_APPROVED_STATUSES
 from video_agent.ai.text_client import OpenAICompatibleTextClient
 from video_agent.contracts import Asset, AssetCatalog, CaseConfig, Narration, TimingLock, VisualPlan
+from video_agent.planning.auto_visual import _requires_reference_comparison
 
 
 def _candidate_assets(case: CaseConfig, narration: Narration, catalog: AssetCatalog, limit: int = 12) -> list[Asset]:
     """Return a bounded, review-approved multimodal packet in stable order."""
 
     preferred_roles = {"site_home", "feature_entry", "feature_list", "feature_form_params", "result_image", "brand_logo", "brand_ip_static"}
+    comparison_requested = any(_requires_reference_comparison(beat.spoken_text, beat.asset_slots) for beat in narration.beats)
+    if comparison_requested:
+        preferred_roles.add("reference_image")
     candidates = [
         asset
         for asset in catalog.assets

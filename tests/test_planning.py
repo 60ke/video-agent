@@ -16,7 +16,7 @@ from video_agent.contracts import (
     Provenance,
     VisualAnchor,
 )
-from video_agent.planning.auto_visual import _assets_for_beat, _fit_visual_candidates
+from video_agent.planning.auto_visual import _assets_for_beat, _fit_visual_candidates, _reference_to_result_pair
 from video_agent.ai.visual_planner import _candidate_assets
 
 
@@ -67,6 +67,29 @@ def test_result_selection_prefers_matching_industry_tag() -> None:
     )
     assert candidates[0][0].asset_id == medical.asset_id
     assert candidates[0][1] == "result_showcase"
+
+
+def test_reference_pair_requires_explicit_comparison_copy() -> None:
+    result = _asset().model_copy(
+        update={"asset_id": "asset_result_culture", "role": "result_image", "semantic_path": ["文生图", "文化墙"], "tags": ["医院文化"]}
+    )
+    reference = result.model_copy(
+        update={"asset_id": "asset_reference_culture", "role": "reference_image", "tags": ["实景图", "医院文化"]}
+    )
+    roles = {"result_image": [result], "reference_image": [reference]}
+
+    assert _reference_to_result_pair("展示文化墙效果。", ["文化墙"], roles, set()) is None
+    pair = _reference_to_result_pair("先看实景图，再看文化墙生成效果。", ["文化墙", "实景图"], roles, set())
+    assert pair == (reference, result)
+
+
+def test_reference_pair_never_crosses_feature_paths() -> None:
+    result = _asset().model_copy(update={"asset_id": "asset_result_culture", "role": "result_image", "semantic_path": ["文生图", "文化墙"]})
+    reference = result.model_copy(
+        update={"asset_id": "asset_reference_logo", "role": "reference_image", "semantic_path": ["文生图", "LOGO"]}
+    )
+
+    assert _reference_to_result_pair("实景图和生成效果对比。", ["文化墙", "实景图"], {"result_image": [result], "reference_image": [reference]}, set()) is None
 
 
 def test_feature_entry_never_falls_back_to_result_or_source_screenshot() -> None:
@@ -225,6 +248,19 @@ def test_multimodal_packet_excludes_unreviewed_assets() -> None:
     narration = Narration(case_id="demo", beats=[NarrationBeat(beat_id="beat_1", spoken_text="测试")])
     selected = _candidate_assets(CaseConfig(case_id="demo", goal="测试", feature_path=["文生图", "VI"]), narration, catalog)
     assert [asset.asset_id for asset in selected] == [approved.asset_id]
+
+
+def test_multimodal_packet_includes_reference_only_for_explicit_comparison_copy() -> None:
+    result = _asset().model_copy(update={"asset_id": "asset_result", "role": "result_image"})
+    reference = result.model_copy(update={"asset_id": "asset_reference", "role": "reference_image"})
+    catalog = AssetCatalog(catalog_id="fixture", generated_at="now", source_root="assets", assets=[result, reference])
+    case = CaseConfig(case_id="demo", goal="测试", feature_path=["文生图", "VI"])
+
+    normal = Narration(case_id="demo", beats=[NarrationBeat(beat_id="beat_1", spoken_text="展示效果")])
+    comparison = Narration(case_id="demo", beats=[NarrationBeat(beat_id="beat_1", spoken_text="实景图和生成效果对比")])
+
+    assert [asset.asset_id for asset in _candidate_assets(case, normal, catalog)] == [result.asset_id]
+    assert {asset.asset_id for asset in _candidate_assets(case, comparison, catalog)} == {result.asset_id, reference.asset_id}
 
 
 def test_multimodal_packet_never_drops_claim_evidence_at_limit() -> None:

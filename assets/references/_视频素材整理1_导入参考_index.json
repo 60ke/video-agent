@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "status": "ready",
+  "library": "assets/references",
+  "source_library": "C:/Users/CNGG/Documents/视频素材整理1",
+  "workflow": "external_video_material_import",
+  "asset_count": 17,
+  "assets": [
+    {
+      "asset_filename": "柯幻熊猫_文生图_LOGO_logo界面_参考图_01.png",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "reference_label": "logo界面",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/logo界面.png",
+      "source_sha256": "25d6b97d35e2568b81557ab353935322e7db29d0894f7a0e6bfd83c405b02b04",
+      "width": 1870,
+      "height": 954
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_VI_mainui_参考图_01.png",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "reference_label": "mainui",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/main-ui.png",
+      "source_sha256": "c01cd1090489f8f2b0d0c115ad15ac3e2c4388b2cf3d04c3df5364a45c295b9e",
+      "width": 1850,
+      "height": 954
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_VI_videsign_参考图_01.png",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "reference_label": "videsign",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/vi-design.png",
+      "source_sha256": "96c2458e0f6f50813bc4c4cc1b35145a3200ae9d0ce6ebb35052cc31cc1f2d3f",
+      "width": 327,
+      "height": 192
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_VI_viinterface_参考图_01.png",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "reference_label": "viinterface",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/vi-interface.png",
+      "source_sha256": "a4f76ea90dd144fa18c8b26846560b926b78f054c792daf14550ad002396fd59",
+      "width": 1869,
+      "height": 949
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_LOGO_主界面_参考图_01.png",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "reference_label": "主界面",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/主界面.png",
+      "source_sha256": "45fed4cf9726e28b3361454dfd9f03fd1a96eb862945a64b9435199f30f414a5",
+      "width": 1857,
+      "height": 954
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_文化墙_实景图_参考图_01.png",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "reference_label": "实景图",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/实景图.png",
+      "source_sha256": "4876fdf61b4f41c872fedd0e368c1c806160e800ed7ad9b41572f1d69b33ec9e",
+      "width": 2752,
+      "height": 1536
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_文化墙_平面图_参考图_01.jpg",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "reference_label": "平面图",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/平面图.jpg",
+      "source_sha256": "7c49bf7142d80e53d172e48aa04c684e21e5a12d15bb3f3e2f5c5c8fd6c30346",
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_文化墙_文化墙修改界面1_参考图_01.jpg",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "reference_label": "文化墙修改界面1",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/文化墙修改界面1.jpg",
+      "source_sha256": "6bf07e4ea783a41b2eaf2d4754417edbdc7dd86f7906287613366458fe62a056",
+      "width": 1920,
+      "height": 911
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_文化墙_文化墙修改页面2_参考图_01.jpg",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "reference_label": "文化墙修改页面2",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/文化墙修改页面2.jpg",
+      "source_sha256": "a19d903107d8011da214f2c8a5bc1777959023d19abdd5dbd1617f75cdcddb16",
+      "width": 1872,
+      "height": 954
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_文化墙_网站文化墙界面_参考图_01.png",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "reference_label": "网站文化墙界面",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/网站文化墙界面.png",
+      "source_sha256": "0a18a03aa0e3c7e46ebbcf30fa816dbd0add3f2919b155f1cd08cad87bc06677",
+      "width": 1866,
+      "height": 947
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_电商_售后服务_参考图_01.png",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "reference_label": "售后服务",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/电商/售后服务.png",
+      "source_sha256": "567121271a0dba6aef23bb7481554b5b36d6dc3643fda6f9816d15969f627014",
+      "width": 376,
+      "height": 439
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_电商_图层5_参考图_01.png",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "reference_label": "图层5",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/电商/图层 5.png",
+      "source_sha256": "66a46868b018741bdadbebf52c5f1c4de619f20dd2ca16795972ad324f626025",
+      "width": 389,
+      "height": 870
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_电商_应用场景_参考图_01.png",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "reference_label": "应用场景",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/电商/应用场景.png",
+      "source_sha256": "4c67b0dbe9529f205e8d857226e0590aca403a783bb275902bddff03e8d86b43",
+      "width": 394,
+      "height": 498
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_电商_网站文生图电商上传界面1_参考图_01.jpg",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "reference_label": "网站文生图电商上传界面1",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/电商/网站文生图电商上传界面1.jpg",
+      "source_sha256": "8c28b6478d8db18a00e18a1345900b23c9c6d2f367d1bfabafc98c4da5b54297",
+      "width": 1872,
+      "height": 964
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_电商_规格信息_参考图_01.png",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "reference_label": "规格信息",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/电商/规格信息.png",
+      "source_sha256": "ce2fc895854f6c26502b1b590eb125da0760246d4a07b9938b2be5ab16d956f0",
+      "width": 345,
+      "height": 364
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_操作景观小品界面_操作景观小品界面_参考图_01.jpg",
+      "feature_path": [
+        "文生图",
+        "操作景观小品界面"
+      ],
+      "reference_label": "操作景观小品界面",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/综合/操作景观小品界面.jpg",
+      "source_sha256": "52680b4bbee135ee1fd5996207a8992b493ddd58eea4a38f3d2e7a3707763f32",
+      "width": 1872,
+      "height": 964
+    },
+    {
+      "asset_filename": "柯幻熊猫_文生图_美陈_美陈界面_参考图_01.png",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "reference_label": "美陈界面",
+      "content_type": "curated_external_reference",
+      "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/美陈/美陈界面.png",
+      "source_sha256": "0db39cc67924b404d9aa262d0dc3290f3e993513fc2845742f40699867169d0d",
+      "width": 1871,
+      "height": 954
+    }
+  ]
+}

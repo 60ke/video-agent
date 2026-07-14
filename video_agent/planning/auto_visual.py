@@ -20,6 +20,19 @@ MIN_VISUAL_SECONDS = {
     "reference_to_result": 1.5,
     "brand_ip_cutaway": 1.2,
 }
+REFERENCE_COMPARISON_TERMS = (
+    "实景图",
+    "实景参考",
+    "参考图",
+    "现场照片",
+    "改造前",
+    "改造后",
+    "生成前",
+    "生成后",
+    "前后对比",
+    "效果对比",
+    "对比图",
+)
 
 
 def _minimum_visual_frames(asset: Asset, template: str, fps: int) -> int:
@@ -149,6 +162,27 @@ def _matching_results(intent: str, slots: list[str], roles: dict[str, list[Asset
     return prioritized + leftovers
 
 
+def _requires_reference_comparison(text: str, slots: list[str]) -> bool:
+    intent = " ".join([text, *slots]).lower().replace(" ", "")
+    return any(term in intent for term in REFERENCE_COMPARISON_TERMS)
+
+
+def _reference_to_result_pair(text: str, slots: list[str], roles: dict[str, list[Asset]], used: set[str]) -> tuple[Asset, Asset] | None:
+    """Return a same-feature reference/result pair only for explicit comparison copy."""
+
+    if not _requires_reference_comparison(text, slots):
+        return None
+    results = _matching_results(text, slots, roles, used)
+    references = roles.get("reference_image", [])
+    if not results or not references:
+        return None
+    for result in results:
+        same_feature = [reference for reference in references if reference.semantic_path == result.semantic_path]
+        if same_feature:
+            return same_feature[0], result
+    return None
+
+
 def _feature_result_matches(term: str, asset: Asset) -> bool:
     normalized = term.lower().replace(" ", "")
     feature_labels = [item.lower().replace(" ", "") for item in asset.semantic_path[1:] if item]
@@ -219,6 +253,9 @@ def _assets_for_beat(
         if roles["feature_entry"]:
             return [(roles["feature_entry"][0], "ui_feature_entry")]
         raise ValueError("approved production feature-entry keyframe is required; source website screenshots cannot be used")
+    comparison = _reference_to_result_pair(beat_text, slots, roles, used_results)
+    if comparison:
+        return [(comparison[1], "reference_to_result")]
     results = _matching_results(intent, slots, roles, used_results)
     if results:
         return [(asset, "result_showcase") for asset in results[:3]]
@@ -327,6 +364,7 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                 hit_phrases=beat.hit_phrases,
             )
         )
+        comparison = _reference_to_result_pair(beat.spoken_text, beat.asset_slots, roles, used_results) if not claim_assets else None
         candidates = _fit_visual_candidates(
             candidates,
             span.end_frame - span.start_frame,
@@ -458,6 +496,12 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                 long_hold = "appreciation"
             if is_last and timing.duration_frames > span.end_frame:
                 long_hold = "pause"
+            asset_bindings = {"primary": asset.asset_id}
+            if template == "reference_to_result":
+                if comparison is None or comparison[1].asset_id != asset.asset_id:
+                    raise ValueError(f"reference comparison pair is missing for {beat.beat_id}")
+                reference, result = comparison
+                asset_bindings = {"reference": reference.asset_id, "result": result.asset_id}
             shots.append(
                 ShotPlan(
                     shot_id=f"shot_{len(shots) + 1:03d}",
@@ -466,7 +510,7 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                     start=start,
                     end=end,
                     template=template,
-                    asset_bindings={"primary": asset.asset_id},
+                    asset_bindings=asset_bindings,
                     claim_ids=_claim_ids_for_asset(narration, beat.beat_id, asset.asset_id),
                     cue_bindings=cue_bindings,
                     energy="high" if not shots else "medium",

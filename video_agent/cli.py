@@ -8,6 +8,7 @@ from typing import Any
 from video_agent.assets import build_catalog
 from video_agent.assets.site_entry_batch import approve_site_entry_manifest, generate_site_entry_keyframes
 from video_agent.assets.site_params_batch import approve_site_params_manifest, generate_site_params_keyframes
+from video_agent.assets.video_material_import import import_video_material_images
 from video_agent.audio.register import register_sfx_library
 from video_agent.contracts import AssetCatalog, CaseConfig
 from video_agent.cover import postprocess_cover
@@ -123,6 +124,11 @@ def command_site_params_approve(args: argparse.Namespace) -> dict[str, Any]:
     return {"ok": True, **result, "manifest": manifest.as_posix()}
 
 
+def command_import_video_materials(args: argparse.Namespace) -> dict[str, Any]:
+    result = import_video_material_images(Path(__file__).resolve().parents[1], Path(args.source).resolve())
+    return {"ok": True, **result}
+
+
 def command_cover_postprocess(args: argparse.Namespace) -> dict[str, Any]:
     case_dir = Path(args.case).resolve()
     run_id = args.run or load_json(case_dir / "latest_run.json")["run_id"]
@@ -216,6 +222,11 @@ def build_parser() -> argparse.ArgumentParser:
     approve_params.add_argument("--json", dest="sub_json", action="store_true")
     approve_params.add_argument("--manifest", default="assets/derived/sites/柯幻熊猫/文生图/参数面板/manifest.json")
     approve_params.set_defaults(handler=command_site_params_approve)
+
+    import_materials = sub.add_parser("import-video-materials", help="Import and register curated external image materials")
+    import_materials.add_argument("--json", dest="sub_json", action="store_true")
+    import_materials.add_argument("--source", required=True)
+    import_materials.set_defaults(handler=command_import_video_materials)
 
     cover = sub.add_parser("cover-postprocess", help="Generate a V2-style GPT Image cover and prepend exactly one frame after rendering")
     cover.add_argument("--json", dest="sub_json", action="store_true")

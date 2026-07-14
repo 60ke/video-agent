@@ -1,0 +1,1242 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-14T00:40:15.524404+00:00",
+  "source_directory": "C:/Users/CNGG/Documents/视频素材整理1",
+  "workflow": "external_video_material_import",
+  "records": [
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/logo界面.png",
+      "source_sha256": "25d6b97d35e2568b81557ab353935322e7db29d0894f7a0e6bfd83c405b02b04",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "logo界面",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_LOGO_logo界面_参考图_01.png",
+      "output_sha256": "25d6b97d35e2568b81557ab353935322e7db29d0894f7a0e6bfd83c405b02b04"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/effect-1.png",
+      "source_sha256": "34d197604a988378d494bda418f1330abddd7d517411227eba9cbc68a7ebd969",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "effect1",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_VI_半克星球_结果图_01.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/effect-2.png",
+      "source_sha256": "49a7ef8bd33f5304a20d33a0d9b798ea2ae29fa2ad99a7141f0bfaca2b8dfdbd",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "effect2",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_VI_八马茶业_结果图_08.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/effect-3.png",
+      "source_sha256": "06c58d5e2cc409645dd6ed749f9b2170b10bf6e78d0401a5fe740a48545952eb",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "effect3",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_VI_可喜文化_结果图_09.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/effect-4.png",
+      "source_sha256": "fbc7b060ffc2b93c99324af844fbe696ee923585a1d431e1db6717c02d24415d",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "effect4",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_VI_幼虎足球_结果图_15.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/main-ui.png",
+      "source_sha256": "c01cd1090489f8f2b0d0c115ad15ac3e2c4388b2cf3d04c3df5364a45c295b9e",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "mainui",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_VI_mainui_参考图_01.png",
+      "output_sha256": "c01cd1090489f8f2b0d0c115ad15ac3e2c4388b2cf3d04c3df5364a45c295b9e"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/vi-design.png",
+      "source_sha256": "96c2458e0f6f50813bc4c4cc1b35145a3200ae9d0ce6ebb35052cc31cc1f2d3f",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "videsign",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_VI_videsign_参考图_01.png",
+      "output_sha256": "96c2458e0f6f50813bc4c4cc1b35145a3200ae9d0ce6ebb35052cc31cc1f2d3f"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/vi-interface.png",
+      "source_sha256": "a4f76ea90dd144fa18c8b26846560b926b78f054c792daf14550ad002396fd59",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "viinterface",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_VI_viinterface_参考图_01.png",
+      "output_sha256": "a4f76ea90dd144fa18c8b26846560b926b78f054c792daf14550ad002396fd59"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/logo界面.png",
+      "source_sha256": "25d6b97d35e2568b81557ab353935322e7db29d0894f7a0e6bfd83c405b02b04",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "logo界面",
+      "kind": "参考图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/logo界面.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/主界面.png",
+      "source_sha256": "45fed4cf9726e28b3361454dfd9f03fd1a96eb862945a64b9435199f30f414a5",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "主界面",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_LOGO_主界面_参考图_01.png",
+      "output_sha256": "45fed4cf9726e28b3361454dfd9f03fd1a96eb862945a64b9435199f30f414a5"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/交通出行.png",
+      "source_sha256": "680f0cc6f31233978b6e90360a8ebe8a53f93f1567a28959d8afac82f4e46600",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "交通出行",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_LOGO_交通出行_结果图_01.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/体育.png",
+      "source_sha256": "8565ee4def7441bc637bbee8157659790d04f00272037bdc806e0179eac57ac6",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "体育",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_LOGO_体育_结果图_02.png",
+      "output_sha256": "8565ee4def7441bc637bbee8157659790d04f00272037bdc806e0179eac57ac6"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/口腔.png",
+      "source_sha256": "cc4f5d9e06c73a246d832d64ebf7c50358c7e971308dde53cb75d8b26a3d770c",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "口腔",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_LOGO_口腔_结果图_01.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/娱乐潮玩.png",
+      "source_sha256": "042663588682ec016b0421f51e7897cab2ec3234fa042fed7d4f65deaede3702",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "娱乐潮玩",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_LOGO_娱乐潮玩_结果图_01.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/效果图.png",
+      "source_sha256": "1c7c17653d24b20091c107eb9f314e02d654b13c37b5bc80a9b14788886eea9b",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "效果图",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_LOGO_宠物服务_结果图_02.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/文旅.png",
+      "source_sha256": "de8ae91d4ef5dc257ddcb46ff8fe59a808eee32804aa3bf18abaf1330b70d417",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "文旅",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_LOGO_文旅_结果图_01.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/服务.png",
+      "source_sha256": "b928a3d5489bffdc3e96a6817a364722858bf452c106536fa6d5e6ee847b5191",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "服务",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_LOGO_服务_结果图_01.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/母婴服务.png",
+      "source_sha256": "c7d9c41fd2813ce4a8236ddb2f2ca39cdeafee0f998d27294b189d6b67c65b9d",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "母婴服务",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_LOGO_母婴服务_结果图_01.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/科技办公.png",
+      "source_sha256": "30e41d8ee3a5dfb51af7ca1c9fdda18fe2a7cc64965a879f4eed8f81772d595f",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "科技办公",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_LOGO_科技办公_结果图_01.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/餐饮美食.png",
+      "source_sha256": "f910222fcf42495897827efd52ee3d4398541937985d131dd117efbfa40bba64",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "餐饮美食",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_LOGO_餐饮美食_结果图_01.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/主界面.png",
+      "source_sha256": "45fed4cf9726e28b3361454dfd9f03fd1a96eb862945a64b9435199f30f414a5",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "主界面",
+      "kind": "参考图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/主界面.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/交通出行.png",
+      "source_sha256": "680f0cc6f31233978b6e90360a8ebe8a53f93f1567a28959d8afac82f4e46600",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "交通出行",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/交通出行.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/体育.png",
+      "source_sha256": "8565ee4def7441bc637bbee8157659790d04f00272037bdc806e0179eac57ac6",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "体育",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/体育.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/口腔.png",
+      "source_sha256": "cc4f5d9e06c73a246d832d64ebf7c50358c7e971308dde53cb75d8b26a3d770c",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "口腔",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/口腔.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/娱乐潮玩.png",
+      "source_sha256": "042663588682ec016b0421f51e7897cab2ec3234fa042fed7d4f65deaede3702",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "娱乐潮玩",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/娱乐潮玩.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/效果图.png",
+      "source_sha256": "1c7c17653d24b20091c107eb9f314e02d654b13c37b5bc80a9b14788886eea9b",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "效果图",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/效果图.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/文旅.png",
+      "source_sha256": "de8ae91d4ef5dc257ddcb46ff8fe59a808eee32804aa3bf18abaf1330b70d417",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "文旅",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/文旅.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/服务.png",
+      "source_sha256": "b928a3d5489bffdc3e96a6817a364722858bf452c106536fa6d5e6ee847b5191",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "服务",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/服务.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/母婴服务.png",
+      "source_sha256": "c7d9c41fd2813ce4a8236ddb2f2ca39cdeafee0f998d27294b189d6b67c65b9d",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "母婴服务",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/母婴服务.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/科技办公.png",
+      "source_sha256": "30e41d8ee3a5dfb51af7ca1c9fdda18fe2a7cc64965a879f4eed8f81772d595f",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "科技办公",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/科技办公.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/餐饮美食.png",
+      "source_sha256": "f910222fcf42495897827efd52ee3d4398541937985d131dd117efbfa40bba64",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "餐饮美食",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/餐饮美食.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/VI/IP形象.png",
+      "source_sha256": "3e5dbee2e8e38b6fb6f5f1b656cf0b277340f30f5e2979b992a39b3d4ab37eb9",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "IP形象",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_VI_IP形象_结果图_01.png",
+      "output_sha256": "3e5dbee2e8e38b6fb6f5f1b656cf0b277340f30f5e2979b992a39b3d4ab37eb9"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/VI/VI效果图 (1).png",
+      "source_sha256": "34d197604a988378d494bda418f1330abddd7d517411227eba9cbc68a7ebd969",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "VI效果图",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/effect-1.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/VI/VI效果图 (2).png",
+      "source_sha256": "49a7ef8bd33f5304a20d33a0d9b798ea2ae29fa2ad99a7141f0bfaca2b8dfdbd",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "VI效果图",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/effect-2.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/VI/VI效果图 (3).png",
+      "source_sha256": "06c58d5e2cc409645dd6ed749f9b2170b10bf6e78d0401a5fe740a48545952eb",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "VI效果图",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/effect-3.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/VI/VI效果图 (4).png",
+      "source_sha256": "fbc7b060ffc2b93c99324af844fbe696ee923585a1d431e1db6717c02d24415d",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "VI效果图",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/effect-4.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/VI/VI界面.png",
+      "source_sha256": "a4f76ea90dd144fa18c8b26846560b926b78f054c792daf14550ad002396fd59",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "VI界面",
+      "kind": "参考图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/vi-interface.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/VI/VI设计.png",
+      "source_sha256": "96c2458e0f6f50813bc4c4cc1b35145a3200ae9d0ce6ebb35052cc31cc1f2d3f",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "VI设计",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/vi-design.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/VI/主界面2.png",
+      "source_sha256": "c01cd1090489f8f2b0d0c115ad15ac3e2c4388b2cf3d04c3df5364a45c295b9e",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "主界面2",
+      "kind": "参考图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/main-ui.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/VI/包装.png",
+      "source_sha256": "1e3e6bd3110d56201b70e5f6ca9d20edcea4114a4fafd00a911147e4fb3ecfe5",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "包装",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_VI_包装_结果图_01.png",
+      "output_sha256": "1e3e6bd3110d56201b70e5f6ca9d20edcea4114a4fafd00a911147e4fb3ecfe5"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/VI/景观小品 2.png",
+      "source_sha256": "36282243152eb9bc6a7b7a91f6c6fe2ac3983728d4e7ba80d35f972c7904f55e",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "景观小品2",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_VI_景观小品2_结果图_01.png",
+      "output_sha256": "36282243152eb9bc6a7b7a91f6c6fe2ac3983728d4e7ba80d35f972c7904f55e"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/VI/美陈.png",
+      "source_sha256": "94eb6634392503872151615f9352bfd0f58f6583599b408033d1ba21d98bd6a7",
+      "feature_path": [
+        "文生图",
+        "VI"
+      ],
+      "label": "美陈",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_VI_美陈_结果图_01.png",
+      "output_sha256": "94eb6634392503872151615f9352bfd0f58f6583599b408033d1ba21d98bd6a7"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/品牌LOGO.png",
+      "source_sha256": "b928a3d5489bffdc3e96a6817a364722858bf452c106536fa6d5e6ee847b5191",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "品牌LOGO",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/服务.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/实景图.png",
+      "source_sha256": "4876fdf61b4f41c872fedd0e368c1c806160e800ed7ad9b41572f1d69b33ec9e",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "实景图",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_文化墙_实景图_参考图_01.png",
+      "output_sha256": "4876fdf61b4f41c872fedd0e368c1c806160e800ed7ad9b41572f1d69b33ec9e"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/平面图.jpg",
+      "source_sha256": "7c49bf7142d80e53d172e48aa04c684e21e5a12d15bb3f3e2f5c5c8fd6c30346",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "平面图",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_文化墙_平面图_参考图_01.jpg",
+      "output_sha256": "7c49bf7142d80e53d172e48aa04c684e21e5a12d15bb3f3e2f5c5c8fd6c30346"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/效果图.png",
+      "source_sha256": "941559ffb3d7727a62de10146e5a854a90ffc0db94f1096b57b1d12279a15998",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "效果图",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_效果图_结果图_01.png",
+      "output_sha256": "941559ffb3d7727a62de10146e5a854a90ffc0db94f1096b57b1d12279a15998"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/文化墙.png",
+      "source_sha256": "2a7a8e36a3b28910b43a9b4f971934a17f47e972ce1e9e8b8afb68b0df29932a",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "文化墙",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_医院文化_结果图_03.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/文化墙1.png",
+      "source_sha256": "8752a5f9188d3c4eedd7669bc4b0859ce620245c8c28af9bacc9f89e679a2d96",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "文化墙1",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_社区服务_结果图_01.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/文化墙2.png",
+      "source_sha256": "87e354216ebbc5163ef21485a647b49cd084f24740205baeba89755c43adc3f1",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "文化墙2",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_职工之家_结果图_04.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/文化墙3.png",
+      "source_sha256": "67f7363c4abc18da18fba8cfa85f310ccf898a6b25d18068c7c18f3de255e8ae",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "文化墙3",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_文化墙3_结果图_01.png",
+      "output_sha256": "67f7363c4abc18da18fba8cfa85f310ccf898a6b25d18068c7c18f3de255e8ae"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/文化墙修改界面1.jpg",
+      "source_sha256": "6bf07e4ea783a41b2eaf2d4754417edbdc7dd86f7906287613366458fe62a056",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "文化墙修改界面1",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_文化墙_文化墙修改界面1_参考图_01.jpg",
+      "output_sha256": "6bf07e4ea783a41b2eaf2d4754417edbdc7dd86f7906287613366458fe62a056"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/文化墙修改页面2.jpg",
+      "source_sha256": "a19d903107d8011da214f2c8a5bc1777959023d19abdd5dbd1617f75cdcddb16",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "文化墙修改页面2",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_文化墙_文化墙修改页面2_参考图_01.jpg",
+      "output_sha256": "a19d903107d8011da214f2c8a5bc1777959023d19abdd5dbd1617f75cdcddb16"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/景观小品.png",
+      "source_sha256": "e53b59ce10b01e8d2ed6f386d7f50196bf027cb7e9abba8d925b49084582f02e",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "景观小品",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_景观小品_结果图_01.png",
+      "output_sha256": "e53b59ce10b01e8d2ed6f386d7f50196bf027cb7e9abba8d925b49084582f02e"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/柯幻熊猫IP.png",
+      "source_sha256": "c274e080948dc5e458b73977e7b5005beaaf8662fab21f985302bc9547e2b272",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "柯幻熊猫IP",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_柯幻熊猫IP_结果图_01.png",
+      "output_sha256": "c274e080948dc5e458b73977e7b5005beaaf8662fab21f985302bc9547e2b272"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/活动物料.png",
+      "source_sha256": "83edbd4346c9fffad4dc20905cf0e7741d795f63ed3e17e10277a55a8f7fc593",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "活动物料",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_活动物料_结果图_01.png",
+      "output_sha256": "83edbd4346c9fffad4dc20905cf0e7741d795f63ed3e17e10277a55a8f7fc593"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/电商.png",
+      "source_sha256": "494559fa4f721b0c43d6fe315654d017f9130c22385868f220a55f47496d176a",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "电商",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_电商_结果图_01.png",
+      "output_sha256": "494559fa4f721b0c43d6fe315654d017f9130c22385868f220a55f47496d176a"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/网站主界面.png",
+      "source_sha256": "c01cd1090489f8f2b0d0c115ad15ac3e2c4388b2cf3d04c3df5364a45c295b9e",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "网站主界面",
+      "kind": "参考图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/main-ui.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/网站文化墙界面.png",
+      "source_sha256": "0a18a03aa0e3c7e46ebbcf30fa816dbd0add3f2919b155f1cd08cad87bc06677",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "网站文化墙界面",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_文化墙_网站文化墙界面_参考图_01.png",
+      "output_sha256": "0a18a03aa0e3c7e46ebbcf30fa816dbd0add3f2919b155f1cd08cad87bc06677"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/门店招牌.png",
+      "source_sha256": "331b29cd7b42ceac8c9e68730b91e4ac2badb4da2880b47e272411a015a32059",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "门店招牌",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_门店招牌_结果图_01.png",
+      "output_sha256": "331b29cd7b42ceac8c9e68730b91e4ac2badb4da2880b47e272411a015a32059"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/主KV.png",
+      "source_sha256": "b13bfa771487d097ed406137721aa66178484bec6f3bf03ac1f5714f32e46199",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "主KV",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_电商_主KV_结果图_01.png",
+      "output_sha256": "b13bfa771487d097ed406137721aa66178484bec6f3bf03ac1f5714f32e46199"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/主界面2.png",
+      "source_sha256": "c01cd1090489f8f2b0d0c115ad15ac3e2c4388b2cf3d04c3df5364a45c295b9e",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "主界面2",
+      "kind": "参考图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/main-ui.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/售后服务.png",
+      "source_sha256": "567121271a0dba6aef23bb7481554b5b36d6dc3643fda6f9816d15969f627014",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "售后服务",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_电商_售后服务_参考图_01.png",
+      "output_sha256": "567121271a0dba6aef23bb7481554b5b36d6dc3643fda6f9816d15969f627014"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/图层 5.png",
+      "source_sha256": "66a46868b018741bdadbebf52c5f1c4de619f20dd2ca16795972ad324f626025",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "图层5",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_电商_图层5_参考图_01.png",
+      "output_sha256": "66a46868b018741bdadbebf52c5f1c4de619f20dd2ca16795972ad324f626025"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/应用场景.png",
+      "source_sha256": "4c67b0dbe9529f205e8d857226e0590aca403a783bb275902bddff03e8d86b43",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "应用场景",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_电商_应用场景_参考图_01.png",
+      "output_sha256": "4c67b0dbe9529f205e8d857226e0590aca403a783bb275902bddff03e8d86b43"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/开头展示 (1).png",
+      "source_sha256": "6f5293b7b2eefbc67c299f4b716e4bfb8941b76dd444faf0d8388da078038f71",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "开头展示",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_电商_开头展示_结果图_01.png",
+      "output_sha256": "6f5293b7b2eefbc67c299f4b716e4bfb8941b76dd444faf0d8388da078038f71"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/开头展示 (2).png",
+      "source_sha256": "d4dd4a96a040da9a5a2db2057a6404f5a43fbacf37f358ea57c3a636ddbc7f53",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "开头展示",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_电商_开头展示_结果图_02.png",
+      "output_sha256": "d4dd4a96a040da9a5a2db2057a6404f5a43fbacf37f358ea57c3a636ddbc7f53"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/电商 (1).jpg",
+      "source_sha256": "1743c9fe5d9eb2389c786a050872e2f79bcc9d84cfeeda987814fe668560d1e9",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "电商",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_电商_电商_结果图_01.jpg",
+      "output_sha256": "1743c9fe5d9eb2389c786a050872e2f79bcc9d84cfeeda987814fe668560d1e9"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/电商 (1).png",
+      "source_sha256": "2100c8e222860b55172e5e8b0419f3acdd24185783a5965094c624381240f446",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "电商",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_电商_电商_结果图_01.png",
+      "output_sha256": "2100c8e222860b55172e5e8b0419f3acdd24185783a5965094c624381240f446"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/电商 (2).png",
+      "source_sha256": "494559fa4f721b0c43d6fe315654d017f9130c22385868f220a55f47496d176a",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "电商",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/电商.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/电商 (3).png",
+      "source_sha256": "a571e9579d6c08219934f4c3c912f4839d8e6a708738990abf36911f95ece719",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "电商",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_电商_电商_结果图_02.png",
+      "output_sha256": "a571e9579d6c08219934f4c3c912f4839d8e6a708738990abf36911f95ece719"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/网站文生图电商上传界面1.jpg",
+      "source_sha256": "8c28b6478d8db18a00e18a1345900b23c9c6d2f367d1bfabafc98c4da5b54297",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "网站文生图电商上传界面1",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_电商_网站文生图电商上传界面1_参考图_01.jpg",
+      "output_sha256": "8c28b6478d8db18a00e18a1345900b23c9c6d2f367d1bfabafc98c4da5b54297"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/规格信息.png",
+      "source_sha256": "ce2fc895854f6c26502b1b590eb125da0760246d4a07b9938b2be5ab16d956f0",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "规格信息",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_电商_规格信息_参考图_01.png",
+      "output_sha256": "ce2fc895854f6c26502b1b590eb125da0760246d4a07b9938b2be5ab16d956f0"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/IP形象.png",
+      "source_sha256": "00e8e714cf39c08cc5d1e51e16bce18a96173f31fea7f7ee5e4bba76c2d2cedf",
+      "feature_path": [
+        "文生图",
+        "IP形象"
+      ],
+      "label": "IP形象",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_IP形象_电小侠_结果图_04.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/LOGO.png",
+      "source_sha256": "30e41d8ee3a5dfb51af7ca1c9fdda18fe2a7cc64965a879f4eed8f81772d595f",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "label": "LOGO",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/科技办公.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/主界面2.png",
+      "source_sha256": "c01cd1090489f8f2b0d0c115ad15ac3e2c4388b2cf3d04c3df5364a45c295b9e",
+      "feature_path": [
+        "文生图",
+        "主界面2"
+      ],
+      "label": "主界面2",
+      "kind": "参考图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/main-ui.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/包装.png",
+      "source_sha256": "4e44a592a2e6e5c3e19678d0def4cb4bec0c790c5dbb540b2bd823ed5104f860",
+      "feature_path": [
+        "文生图",
+        "包装"
+      ],
+      "label": "包装",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_包装_包装_结果图_01.png",
+      "output_sha256": "4e44a592a2e6e5c3e19678d0def4cb4bec0c790c5dbb540b2bd823ed5104f860"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/操作景观小品界面.jpg",
+      "source_sha256": "52680b4bbee135ee1fd5996207a8992b493ddd58eea4a38f3d2e7a3707763f32",
+      "feature_path": [
+        "文生图",
+        "操作景观小品界面"
+      ],
+      "label": "操作景观小品界面",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_操作景观小品界面_操作景观小品界面_参考图_01.jpg",
+      "output_sha256": "52680b4bbee135ee1fd5996207a8992b493ddd58eea4a38f3d2e7a3707763f32"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/文化墙.png",
+      "source_sha256": "10621582f6e1de2831be011a027db0e419a6a06e263d06afa98c381916f03a45",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "label": "文化墙",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_文化墙_结果图_01.png",
+      "output_sha256": "10621582f6e1de2831be011a027db0e419a6a06e263d06afa98c381916f03a45"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/景观小品.png",
+      "source_sha256": "e4dfef5e81b328eab0d4f578a443f1f2245a8c37aeb00efed93df01aad3a2b5a",
+      "feature_path": [
+        "文生图",
+        "景观小品"
+      ],
+      "label": "景观小品",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_景观小品_景观小品_结果图_01.png",
+      "output_sha256": "e4dfef5e81b328eab0d4f578a443f1f2245a8c37aeb00efed93df01aad3a2b5a"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/标识标牌.png",
+      "source_sha256": "8561cd325b2f470e1ac8a62f208d1bdbb72493b32a64cda3847ec503cd8d7089",
+      "feature_path": [
+        "文生图",
+        "标识标牌"
+      ],
+      "label": "标识标牌",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_标识标牌_标识标牌_结果图_01.png",
+      "output_sha256": "8561cd325b2f470e1ac8a62f208d1bdbb72493b32a64cda3847ec503cd8d7089"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/海报.png",
+      "source_sha256": "f5108e51b0bff8d4ee6efbc7711df9f562483f41ce893e1551078e9fbb96dffb",
+      "feature_path": [
+        "文生图",
+        "海报"
+      ],
+      "label": "海报",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_海报_海报_结果图_01.png",
+      "output_sha256": "f5108e51b0bff8d4ee6efbc7711df9f562483f41ce893e1551078e9fbb96dffb"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/电商.png",
+      "source_sha256": "59c4df2ac0a57a56d3b711a041b6609ca3d786acc0ee5816d99e4a6b6b094da7",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "label": "电商",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_电商_电商_结果图_03.png",
+      "output_sha256": "59c4df2ac0a57a56d3b711a041b6609ca3d786acc0ee5816d99e4a6b6b094da7"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/美陈.png",
+      "source_sha256": "d17cdb7a61e656345505c6a7059382e3d0dbbf6060724c8dbacbcc8f248593fe",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "美陈",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_美陈_美陈_结果图_01.png",
+      "output_sha256": "d17cdb7a61e656345505c6a7059382e3d0dbbf6060724c8dbacbcc8f248593fe"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/门头.png",
+      "source_sha256": "a133f87f6b75af7426e2065917e281a0f942fb8e463004a1f318b9a52d491102",
+      "feature_path": [
+        "文生图",
+        "门头招牌"
+      ],
+      "label": "门头",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_门头招牌_门头_结果图_01.png",
+      "output_sha256": "a133f87f6b75af7426e2065917e281a0f942fb8e463004a1f318b9a52d491102"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/IP.png",
+      "source_sha256": "96e9f29c35e169d105ee654626585d32a66e384cf208049f319b4faae0e801fb",
+      "feature_path": [
+        "文生图",
+        "IP形象"
+      ],
+      "label": "IP",
+      "kind": "结果图",
+      "status": "already_registered",
+      "canonical_output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_IP形象_菜小鸟_结果图_02.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/LOGO.png",
+      "source_sha256": "dde920b68aa4191620c8b455912d860facada4e2e40f156e454eaeb4c6f70b1f",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "LOGO",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_美陈_LOGO_结果图_01.png",
+      "output_sha256": "dde920b68aa4191620c8b455912d860facada4e2e40f156e454eaeb4c6f70b1f"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/主界面2.png",
+      "source_sha256": "c01cd1090489f8f2b0d0c115ad15ac3e2c4388b2cf3d04c3df5364a45c295b9e",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "主界面2",
+      "kind": "参考图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/main-ui.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/主题公园.png",
+      "source_sha256": "b7f64694c2b026ff88ce93f1e7b82c162d07bf94a52be7954781968f6760d70e",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "主题公园",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_美陈_主题公园_结果图_01.png",
+      "output_sha256": "b7f64694c2b026ff88ce93f1e7b82c162d07bf94a52be7954781968f6760d70e"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/文化墙.png",
+      "source_sha256": "2a7a8e36a3b28910b43a9b4f971934a17f47e972ce1e9e8b8afb68b0df29932a",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "文化墙",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/文化墙.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/海报.png",
+      "source_sha256": "44be75fe14e4f0b35ede50636fc70df5af46ce9d02146aa97078880e0e40b422",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "海报",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_美陈_海报_结果图_01.png",
+      "output_sha256": "44be75fe14e4f0b35ede50636fc70df5af46ce9d02146aa97078880e0e40b422"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/电商.png",
+      "source_sha256": "a571e9579d6c08219934f4c3c912f4839d8e6a708738990abf36911f95ece719",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "电商",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/电商/电商 (3).png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/美陈 (1).png",
+      "source_sha256": "c1d93d40e3b5495a6af4f3b33d35f4ead9fad738f1d5689ac4e0a12cee585d9d",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "美陈",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_美陈_美陈_结果图_02.png",
+      "output_sha256": "c1d93d40e3b5495a6af4f3b33d35f4ead9fad738f1d5689ac4e0a12cee585d9d"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/美陈 (2).png",
+      "source_sha256": "9aa5fdf4aed7e9aec3151aa62293eb3455ad10acd09bdfa537fef04359ac6a07",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "美陈",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_美陈_美陈_结果图_03.png",
+      "output_sha256": "9aa5fdf4aed7e9aec3151aa62293eb3455ad10acd09bdfa537fef04359ac6a07"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/美陈 (3).png",
+      "source_sha256": "d17cdb7a61e656345505c6a7059382e3d0dbbf6060724c8dbacbcc8f248593fe",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "美陈",
+      "kind": "结果图",
+      "status": "duplicate_source",
+      "canonical_source_path": "C:/Users/CNGG/Documents/视频素材整理1/综合/美陈.png"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/美陈 (4).png",
+      "source_sha256": "e1ec1f8521aa4211950c37cc5c2cf8a5bf260304b12f176e4f4c72eb8497327f",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "美陈",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_美陈_美陈_结果图_04.png",
+      "output_sha256": "e1ec1f8521aa4211950c37cc5c2cf8a5bf260304b12f176e4f4c72eb8497327f"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/美陈.png",
+      "source_sha256": "2d4dbe125206f5a7a09ecebec903adb73dd5c96ea50cbb9529ae501014fe0154",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "美陈",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_美陈_美陈_结果图_05.png",
+      "output_sha256": "2d4dbe125206f5a7a09ecebec903adb73dd5c96ea50cbb9529ae501014fe0154"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/美陈界面.png",
+      "source_sha256": "0db39cc67924b404d9aa262d0dc3290f3e993513fc2845742f40699867169d0d",
+      "feature_path": [
+        "文生图",
+        "美陈"
+      ],
+      "label": "美陈界面",
+      "kind": "参考图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/references/柯幻熊猫_文生图_美陈_美陈界面_参考图_01.png",
+      "output_sha256": "0db39cc67924b404d9aa262d0dc3290f3e993513fc2845742f40699867169d0d"
+    },
+    {
+      "source_path": "C:/Users/CNGG/Documents/视频素材整理1/美陈/门头.png",
+      "source_sha256": "35a6432e3c43970b5d3d1811a4e8b9e90ca5ead82815bbed20d6f11659d6d6e1",
+      "feature_path": [
+        "文生图",
+        "门头招牌"
+      ],
+      "label": "门头",
+      "kind": "结果图",
+      "status": "imported",
+      "output_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_门头招牌_门头_结果图_02.png",
+      "output_sha256": "35a6432e3c43970b5d3d1811a4e8b9e90ca5ead82815bbed20d6f11659d6d6e1"
+    }
+  ],
+  "summary": {
+    "discovered": 98,
+    "imported_results": 34,
+    "imported_references": 17,
+    "duplicate_source": 29,
+    "already_registered": 18
+  }
+}

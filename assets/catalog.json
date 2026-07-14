@@ -1,7 +1,7 @@
 {
   "schema_version": 3,
   "catalog_id": "catalog_video_agent_assets_v3",
-  "generated_at": "2026-07-13T11:24:15.969449+00:00",
+  "generated_at": "2026-07-14T00:50:47.396865+00:00",
   "source_root": "assets",
   "assets": [
     {
@@ -9383,6 +9383,651 @@
       }
     },
     {
+      "asset_id": "asset_result_4c2b8b1267e4",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_logo_结果图_01.png",
+      "sha256": "4c2b8b1267e4ab2c7e96c28c715eb3983412d7c98209e66205840ec2da711f5f",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_logo_结果图_01.png",
+      "width": 1152,
+      "height": 519,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "logo案例"
+      ],
+      "tags": [
+        "logo"
+      ],
+      "identity_group": "logo",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "logo",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_fe04f139d518",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_logo文字_结果图_01.png",
+      "sha256": "fe04f139d5182054b22b514929363afe9beb8d1a8799d0a444813661d2c0d883",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_logo文字_结果图_01.png",
+      "width": 451,
+      "height": 150,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "logo文字案例"
+      ],
+      "tags": [
+        "logo文字"
+      ],
+      "identity_group": "logo文字",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "logo文字",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_fb3569d11e61",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_screenshot1780559638957_结果图_01.jpg",
+      "sha256": "fb3569d11e6192b0c35965d4a36f92816ccb3af83bd7fd7dcc1d257a13bdc49b",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_screenshot1780559638957_结果图_01.jpg",
+      "width": 1872,
+      "height": 964,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "screenshot1780559638957案例"
+      ],
+      "tags": [
+        "screenshot1780559638957"
+      ],
+      "identity_group": "screenshot1780559638957",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "screenshot1780559638957",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_result_02e9afaad69f",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_videoframe813_结果图_01.png",
+      "sha256": "02e9afaad69f27ff8509d1d242f9324e0711718e0b417ecccf09cb16a4d0e407",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_videoframe813_结果图_01.png",
+      "width": 1080,
+      "height": 1920,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "videoframe813案例"
+      ],
+      "tags": [
+        "videoframe813"
+      ],
+      "identity_group": "videoframe813",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "videoframe813",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_66dd5eed4806",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_三视图_结果图_01.png",
+      "sha256": "66dd5eed4806e548bd6e1b716ab3f95826ab4fb0448b83c74ffdc68915489241",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_三视图_结果图_01.png",
+      "width": 489,
+      "height": 335,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "三视图案例"
+      ],
+      "tags": [
+        "三视图"
+      ],
+      "identity_group": "三视图",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "三视图",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_65f0e5838ec8",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_产品_结果图_01.png",
+      "sha256": "65f0e5838ec877e97738e18d512bf006f8164151f00fca1a7b60d07f7c9d5930",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_产品_结果图_01.png",
+      "width": 1092,
+      "height": 439,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "产品案例"
+      ],
+      "tags": [
+        "产品"
+      ],
+      "identity_group": "产品",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "产品",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_0192a40537e2",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_动作造型_结果图_01.png",
+      "sha256": "0192a40537e2342c94d1749dbcfb9c53f4e50b65849b212844626cf0afc3c4cb",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_动作造型_结果图_01.png",
+      "width": 1112,
+      "height": 259,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "动作造型案例"
+      ],
+      "tags": [
+        "动作造型"
+      ],
+      "identity_group": "动作造型",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "动作造型",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_b24cfa0a592b",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_更多衍生作品_结果图_01.png",
+      "sha256": "b24cfa0a592be29bd16c5caca14523e4518b2d60ed2898c3dfd5fe16952e0640",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_更多衍生作品_结果图_01.png",
+      "width": 1112,
+      "height": 221,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "更多衍生作品案例"
+      ],
+      "tags": [
+        "更多衍生作品"
+      ],
+      "identity_group": "更多衍生作品",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "更多衍生作品",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_fb98ab4f65a6",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_服装延展_结果图_01.png",
+      "sha256": "fb98ab4f65a69c628c6a5161857adbbe13a93991324847671c835807688c96ad",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_服装延展_结果图_01.png",
+      "width": 526,
+      "height": 346,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "服装延展案例"
+      ],
+      "tags": [
+        "服装延展"
+      ],
+      "identity_group": "服装延展",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "服装延展",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_358b2160aeb6",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_标准色_结果图_01.png",
+      "sha256": "358b2160aeb671a177fc829c40ecee310ff7d9d7c7fc4f02550d55c510bedb30",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_标准色_结果图_01.png",
+      "width": 232,
+      "height": 334,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "标准色案例"
+      ],
+      "tags": [
+        "标准色"
+      ],
+      "identity_group": "标准色",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "标准色",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_cc24391af04b",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_细节展示_结果图_01.png",
+      "sha256": "cc24391af04b57ab322c5ca429680e6dc0aebb4a4d371a6070d71289ffc6c0a3",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_细节展示_结果图_01.png",
+      "width": 382,
+      "height": 336,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "细节展示案例"
+      ],
+      "tags": [
+        "细节展示"
+      ],
+      "identity_group": "细节展示",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "细节展示",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_491f1fd71c72",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_衍生作品展示_结果图_01.png",
+      "sha256": "491f1fd71c72e36988dcec6da4a5a57c17ccc61c6d30905ebedd1be5d7ec807f",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_衍生作品展示_结果图_01.png",
+      "width": 1112,
+      "height": 213,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "衍生作品展示案例"
+      ],
+      "tags": [
+        "衍生作品展示"
+      ],
+      "identity_group": "衍生作品展示",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "衍生作品展示",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_eea55a6375e7",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_表情包1_结果图_01.png",
+      "sha256": "eea55a6375e754968b719941ad67b0174a3f2df23e0cfedaaf35e96cf9c9a9ce",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_表情包1_结果图_01.png",
+      "width": 489,
+      "height": 335,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "表情包1案例"
+      ],
+      "tags": [
+        "表情包1"
+      ],
+      "identity_group": "表情包1",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "表情包1",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_6ce33abbc388",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_表情包_结果图_01.png",
+      "sha256": "6ce33abbc388358cb31e765bd2f18dfe901459edfe80dc03af182979f33406bf",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_表情包_结果图_01.png",
+      "width": 581,
+      "height": 346,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "表情包案例"
+      ],
+      "tags": [
+        "表情包"
+      ],
+      "identity_group": "表情包",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "表情包",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_6792ae7a9b89",
+      "path": "assets/results/柯幻熊猫_文生图_IP设计_设计元素提取_结果图_01.png",
+      "sha256": "6792ae7a9b899e623451139c3ab8bdf324c86a0c7f647ec96f9ed4ae74b17e19",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_设计元素提取_结果图_01.png",
+      "width": 1110,
+      "height": 112,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "IP设计结果展示",
+        "设计元素提取案例"
+      ],
+      "tags": [
+        "设计元素提取"
+      ],
+      "identity_group": "设计元素提取",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "设计元素提取",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
       "asset_id": "asset_result_680f0cc6f312",
       "path": "assets/results/柯幻熊猫_文生图_LOGO_交通出行_结果图_01.png",
       "sha256": "680f0cc6f31233978b6e90360a8ebe8a53f93f1567a28959d8afac82f4e46600",
@@ -9464,6 +10109,49 @@
         "variant_label": "体育",
         "variant_kind": "industry_scene",
         "content_type": "logo_result_board",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_8565ee4def74",
+      "path": "assets/results/柯幻熊猫_文生图_LOGO_体育_结果图_02.png",
+      "sha256": "8565ee4def7441bc637bbee8157659790d04f00272037bdc806e0179eac57ac6",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_LOGO_体育_结果图_02.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "LOGO结果展示",
+        "体育案例"
+      ],
+      "tags": [
+        "体育"
+      ],
+      "identity_group": "体育",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "体育",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
         "mime_type": "image/png"
       }
     },
@@ -10023,6 +10711,49 @@
       }
     },
     {
+      "asset_id": "asset_result_3e5dbee2e8e3",
+      "path": "assets/results/柯幻熊猫_文生图_VI_IP形象_结果图_01.png",
+      "sha256": "3e5dbee2e8e38b6fb6f5f1b656cf0b277340f30f5e2979b992a39b3d4ab37eb9",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_VI_IP形象_结果图_01.png",
+      "width": 327,
+      "height": 192,
+      "semantic_path": [
+        "文生图",
+        "VI"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "VI结果展示",
+        "IP形象案例"
+      ],
+      "tags": [
+        "IP形象"
+      ],
+      "identity_group": "IP形象",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "IP形象",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
       "asset_id": "asset_result_ccf8072b0bd1",
       "path": "assets/results/柯幻熊猫_文生图_VI_TATA木门_结果图_07.png",
       "sha256": "ccf8072b0bd1b2d1680e149134f369a9fafc8fe3a53da479de61bc29d795b7fe",
@@ -10154,6 +10885,49 @@
         "variant_label": "勇士地盘",
         "variant_kind": "brand_case",
         "content_type": "vi_system_board",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_1e3e6bd3110d",
+      "path": "assets/results/柯幻熊猫_文生图_VI_包装_结果图_01.png",
+      "sha256": "1e3e6bd3110d56201b70e5f6ca9d20edcea4114a4fafd00a911147e4fb3ecfe5",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_VI_包装_结果图_01.png",
+      "width": 327,
+      "height": 192,
+      "semantic_path": [
+        "文生图",
+        "VI"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "VI结果展示",
+        "包装案例"
+      ],
+      "tags": [
+        "包装"
+      ],
+      "identity_group": "包装",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "包装",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
         "mime_type": "image/png"
       }
     },
@@ -10428,6 +11202,49 @@
       }
     },
     {
+      "asset_id": "asset_result_36282243152e",
+      "path": "assets/results/柯幻熊猫_文生图_VI_景观小品2_结果图_01.png",
+      "sha256": "36282243152eb9bc6a7b7a91f6c6fe2ac3983728d4e7ba80d35f972c7904f55e",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_VI_景观小品2_结果图_01.png",
+      "width": 327,
+      "height": 192,
+      "semantic_path": [
+        "文生图",
+        "VI"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "VI结果展示",
+        "景观小品2案例"
+      ],
+      "tags": [
+        "景观小品2"
+      ],
+      "identity_group": "景观小品2",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "景观小品2",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
       "asset_id": "asset_result_65fb07021502",
       "path": "assets/results/柯幻熊猫_文生图_VI_沐光能源_结果图_03.png",
       "sha256": "65fb0702150241641db5b66d439877b070ba2c256f81bb4187a43be5991464b5",
@@ -10608,6 +11425,49 @@
       }
     },
     {
+      "asset_id": "asset_result_94eb66343925",
+      "path": "assets/results/柯幻熊猫_文生图_VI_美陈_结果图_01.png",
+      "sha256": "94eb6634392503872151615f9352bfd0f58f6583599b408033d1ba21d98bd6a7",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_VI_美陈_结果图_01.png",
+      "width": 327,
+      "height": 192,
+      "semantic_path": [
+        "文生图",
+        "VI"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "VI结果展示",
+        "美陈案例"
+      ],
+      "tags": [
+        "美陈"
+      ],
+      "identity_group": "美陈",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "美陈",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
       "asset_id": "asset_result_1b7a6a7943c3",
       "path": "assets/results/柯幻熊猫_文生图_VI_肌氮健身_结果图_05.png",
       "sha256": "1b7a6a7943c3e834a03942d6a087dc56dc839538736edf35db7c65df1cd4d72e",
@@ -10743,6 +11603,49 @@
       }
     },
     {
+      "asset_id": "asset_result_4e44a592a2e6",
+      "path": "assets/results/柯幻熊猫_文生图_包装_包装_结果图_01.png",
+      "sha256": "4e44a592a2e6e5c3e19678d0def4cb4bec0c790c5dbb540b2bd823ed5104f860",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_包装_包装_结果图_01.png",
+      "width": 1280,
+      "height": 720,
+      "semantic_path": [
+        "文生图",
+        "包装"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "包装结果展示",
+        "包装案例"
+      ],
+      "tags": [
+        "包装"
+      ],
+      "identity_group": "包装",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "包装",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
       "asset_id": "asset_result_2a7a8e36a3b2",
       "path": "assets/results/柯幻熊猫_文生图_文化墙_医院文化_结果图_03.png",
       "sha256": "2a7a8e36a3b28910b43a9b4f971934a17f47e972ce1e9e8b8afb68b0df29932a",
@@ -10782,6 +11685,307 @@
         "variant_label": "医院文化",
         "variant_kind": "industry_scene",
         "content_type": "installed_culture_wall",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_941559ffb3d7",
+      "path": "assets/results/柯幻熊猫_文生图_文化墙_效果图_结果图_01.png",
+      "sha256": "941559ffb3d7727a62de10146e5a854a90ffc0db94f1096b57b1d12279a15998",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_效果图_结果图_01.png",
+      "width": 3840,
+      "height": 2160,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "文化墙结果展示",
+        "效果图案例"
+      ],
+      "tags": [
+        "效果图"
+      ],
+      "identity_group": "效果图",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "效果图",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_67f7363c4abc",
+      "path": "assets/results/柯幻熊猫_文生图_文化墙_文化墙3_结果图_01.png",
+      "sha256": "67f7363c4abc18da18fba8cfa85f310ccf898a6b25d18068c7c18f3de255e8ae",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_文化墙3_结果图_01.png",
+      "width": 1020,
+      "height": 565,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "文化墙结果展示",
+        "文化墙3案例"
+      ],
+      "tags": [
+        "文化墙3"
+      ],
+      "identity_group": "文化墙3",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "文化墙3",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_10621582f6e1",
+      "path": "assets/results/柯幻熊猫_文生图_文化墙_文化墙_结果图_01.png",
+      "sha256": "10621582f6e1de2831be011a027db0e419a6a06e263d06afa98c381916f03a45",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_文化墙_结果图_01.png",
+      "width": 1280,
+      "height": 720,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "文化墙结果展示",
+        "文化墙案例"
+      ],
+      "tags": [
+        "文化墙"
+      ],
+      "identity_group": "文化墙",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "文化墙",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_e53b59ce10b0",
+      "path": "assets/results/柯幻熊猫_文生图_文化墙_景观小品_结果图_01.png",
+      "sha256": "e53b59ce10b01e8d2ed6f386d7f50196bf027cb7e9abba8d925b49084582f02e",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_景观小品_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "文化墙结果展示",
+        "景观小品案例"
+      ],
+      "tags": [
+        "景观小品"
+      ],
+      "identity_group": "景观小品",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "景观小品",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_c274e080948d",
+      "path": "assets/results/柯幻熊猫_文生图_文化墙_柯幻熊猫IP_结果图_01.png",
+      "sha256": "c274e080948dc5e458b73977e7b5005beaaf8662fab21f985302bc9547e2b272",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_柯幻熊猫IP_结果图_01.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "文化墙结果展示",
+        "柯幻熊猫IP案例"
+      ],
+      "tags": [
+        "柯幻熊猫IP"
+      ],
+      "identity_group": "柯幻熊猫IP",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "柯幻熊猫IP",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_83edbd4346c9",
+      "path": "assets/results/柯幻熊猫_文生图_文化墙_活动物料_结果图_01.png",
+      "sha256": "83edbd4346c9fffad4dc20905cf0e7741d795f63ed3e17e10277a55a8f7fc593",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_活动物料_结果图_01.png",
+      "width": 1024,
+      "height": 1536,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "文化墙结果展示",
+        "活动物料案例"
+      ],
+      "tags": [
+        "活动物料"
+      ],
+      "identity_group": "活动物料",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "活动物料",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_494559fa4f72",
+      "path": "assets/results/柯幻熊猫_文生图_文化墙_电商_结果图_01.png",
+      "sha256": "494559fa4f721b0c43d6fe315654d017f9130c22385868f220a55f47496d176a",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_电商_结果图_01.png",
+      "width": 1152,
+      "height": 2048,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "文化墙结果展示",
+        "电商案例"
+      ],
+      "tags": [
+        "电商"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "电商",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
         "mime_type": "image/png"
       }
     },
@@ -10868,6 +12072,3166 @@
         "variant_label": "职工之家",
         "variant_kind": "industry_scene",
         "content_type": "installed_culture_wall",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_331b29cd7b42",
+      "path": "assets/results/柯幻熊猫_文生图_文化墙_门店招牌_结果图_01.png",
+      "sha256": "331b29cd7b42ceac8c9e68730b91e4ac2badb4da2880b47e272411a015a32059",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_门店招牌_结果图_01.png",
+      "width": 1536,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "文化墙结果展示",
+        "门店招牌案例"
+      ],
+      "tags": [
+        "门店招牌"
+      ],
+      "identity_group": "门店招牌",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "门店招牌",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_cbf280f92987",
+      "path": "assets/results/柯幻熊猫_文生图_景观小品_LOGO_结果图_01.png",
+      "sha256": "cbf280f92987424986c6c29a757e43280acf706113fc08cc059c63bdbc4d29ed",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_景观小品_LOGO_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "景观小品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "景观小品结果展示",
+        "LOGO案例"
+      ],
+      "tags": [
+        "LOGO"
+      ],
+      "identity_group": "LOGO",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "LOGO",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_729a8d7e4611",
+      "path": "assets/results/柯幻熊猫_文生图_景观小品_十几个1_结果图_01.png",
+      "sha256": "729a8d7e46119dc5fde93206dd980927791c67abada0d8fcc52c5f6892c389ef",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_景观小品_十几个1_结果图_01.png",
+      "width": 1013,
+      "height": 572,
+      "semantic_path": [
+        "文生图",
+        "景观小品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "景观小品结果展示",
+        "十几个1案例"
+      ],
+      "tags": [
+        "十几个1"
+      ],
+      "identity_group": "十几个1",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "十几个1",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_02472a353d11",
+      "path": "assets/results/柯幻熊猫_文生图_景观小品_十几个_结果图_01.png",
+      "sha256": "02472a353d115f77a413108c2ad56782d93e96d9849f11209128c653a8c08378",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_景观小品_十几个_结果图_01.png",
+      "width": 1280,
+      "height": 720,
+      "semantic_path": [
+        "文生图",
+        "景观小品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "景观小品结果展示",
+        "十几个案例"
+      ],
+      "tags": [
+        "十几个"
+      ],
+      "identity_group": "十几个",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "十几个",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_ff1abaf242b6",
+      "path": "assets/results/柯幻熊猫_文生图_景观小品_文化墙_结果图_01.png",
+      "sha256": "ff1abaf242b66234ece48302b3158f06a91b992aa60d523fdec52f0434d8bc16",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_景观小品_文化墙_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "景观小品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "景观小品结果展示",
+        "文化墙案例"
+      ],
+      "tags": [
+        "文化墙"
+      ],
+      "identity_group": "文化墙",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "文化墙",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_e4dfef5e81b3",
+      "path": "assets/results/柯幻熊猫_文生图_景观小品_景观小品_结果图_01.png",
+      "sha256": "e4dfef5e81b328eab0d4f578a443f1f2245a8c37aeb00efed93df01aad3a2b5a",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_景观小品_景观小品_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "景观小品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "景观小品结果展示",
+        "景观小品案例"
+      ],
+      "tags": [
+        "景观小品"
+      ],
+      "identity_group": "景观小品",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "景观小品",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_41fc3652735c",
+      "path": "assets/results/柯幻熊猫_文生图_景观小品_景观平面_结果图_01.png",
+      "sha256": "41fc3652735c23ffb1300fe408347a87f7398efdd10e8164e9370e7d55b7e587",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_景观小品_景观平面_结果图_01.png",
+      "width": 1672,
+      "height": 941,
+      "semantic_path": [
+        "文生图",
+        "景观小品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "景观小品结果展示",
+        "景观平面案例"
+      ],
+      "tags": [
+        "景观平面"
+      ],
+      "identity_group": "景观平面",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "景观平面",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_d0911c1fe8ea",
+      "path": "assets/results/柯幻熊猫_文生图_景观小品_景观效果图_结果图_01.png",
+      "sha256": "d0911c1fe8ea63639ecd33a758bd512ef8135bcda9b1e1284fc363bedf92ceb3",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_景观小品_景观效果图_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "景观小品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "景观小品结果展示",
+        "景观效果图案例"
+      ],
+      "tags": [
+        "景观效果图"
+      ],
+      "identity_group": "景观效果图",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "景观效果图",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_e0106bb8d7ea",
+      "path": "assets/results/柯幻熊猫_文生图_景观小品_标识标牌_结果图_01.png",
+      "sha256": "e0106bb8d7ead3ad039f61c3e310f12345f85412b0a28077546d1eafa8316e42",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_景观小品_标识标牌_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "景观小品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "景观小品结果展示",
+        "标识标牌案例"
+      ],
+      "tags": [
+        "标识标牌"
+      ],
+      "identity_group": "标识标牌",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "标识标牌",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_5f99f89a9d30",
+      "path": "assets/results/柯幻熊猫_文生图_景观小品_门头_结果图_01.png",
+      "sha256": "5f99f89a9d307f710eed1c5c9124717e2bbb2a31b42b86cc598c9ef9e2c67b3c",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_景观小品_门头_结果图_01.png",
+      "width": 1672,
+      "height": 941,
+      "semantic_path": [
+        "文生图",
+        "景观小品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "景观小品结果展示",
+        "门头案例"
+      ],
+      "tags": [
+        "门头"
+      ],
+      "identity_group": "门头",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "门头",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_a9fc88419a82",
+      "path": "assets/results/柯幻熊猫_文生图_标识标牌_LOGO_结果图_01.png",
+      "sha256": "a9fc88419a82217223cb4dd4773e01327d39243a69f6d59169f77dde45abef19",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_标识标牌_LOGO_结果图_01.png",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "文生图",
+        "标识标牌"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "标识标牌结果展示",
+        "LOGO案例"
+      ],
+      "tags": [
+        "LOGO"
+      ],
+      "identity_group": "LOGO",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "LOGO",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_240cd460ae2e",
+      "path": "assets/results/柯幻熊猫_文生图_标识标牌_十几个广告设计_结果图_01.png",
+      "sha256": "240cd460ae2ecb1878c1ef6dd6eab91796796121e4f44e5e018eb4e873c080ad",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_标识标牌_十几个广告设计_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "标识标牌"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "标识标牌结果展示",
+        "十几个广告设计案例"
+      ],
+      "tags": [
+        "十几个广告设计"
+      ],
+      "identity_group": "十几个广告设计",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "十几个广告设计",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_417ceabf5787",
+      "path": "assets/results/柯幻熊猫_文生图_标识标牌_十几个广告设计_结果图_02.png",
+      "sha256": "417ceabf5787d91adfe0c6552c40a17c74ec01174e265ff61d03ea2b12b350fc",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_标识标牌_十几个广告设计_结果图_02.png",
+      "width": 1280,
+      "height": 720,
+      "semantic_path": [
+        "文生图",
+        "标识标牌"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "标识标牌结果展示",
+        "十几个广告设计案例"
+      ],
+      "tags": [
+        "十几个广告设计"
+      ],
+      "identity_group": "十几个广告设计",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "十几个广告设计",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_17cce61e20f4",
+      "path": "assets/results/柯幻熊猫_文生图_标识标牌_十几个广告设计_结果图_03.png",
+      "sha256": "17cce61e20f4e534f57d59d52dbc04603710d3d258c4a81091c8423d3101a3d3",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_标识标牌_十几个广告设计_结果图_03.png",
+      "width": 1152,
+      "height": 2048,
+      "semantic_path": [
+        "文生图",
+        "标识标牌"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "标识标牌结果展示",
+        "十几个广告设计案例"
+      ],
+      "tags": [
+        "十几个广告设计"
+      ],
+      "identity_group": "十几个广告设计",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "十几个广告设计",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_5a68940121b6",
+      "path": "assets/results/柯幻熊猫_文生图_标识标牌_文化墙_结果图_01.png",
+      "sha256": "5a68940121b619a29afcdcae48d67054ea9231d73ee871b42564ddd89085c4f5",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_标识标牌_文化墙_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "标识标牌"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "标识标牌结果展示",
+        "文化墙案例"
+      ],
+      "tags": [
+        "文化墙"
+      ],
+      "identity_group": "文化墙",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "文化墙",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_8561cd325b2f",
+      "path": "assets/results/柯幻熊猫_文生图_标识标牌_标识标牌_结果图_01.png",
+      "sha256": "8561cd325b2f470e1ac8a62f208d1bdbb72493b32a64cda3847ec503cd8d7089",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_标识标牌_标识标牌_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "标识标牌"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "标识标牌结果展示",
+        "标识标牌案例"
+      ],
+      "tags": [
+        "标识标牌"
+      ],
+      "identity_group": "标识标牌",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "标识标牌",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_0b39267354a6",
+      "path": "assets/results/柯幻熊猫_文生图_标识标牌_标识标牌效果图_结果图_01.png",
+      "sha256": "0b39267354a6cb3a75f3aa17de1304cb39434d1345385907628f3ffaacc36c9b",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_标识标牌_标识标牌效果图_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "标识标牌"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "标识标牌结果展示",
+        "标识标牌效果图案例"
+      ],
+      "tags": [
+        "标识标牌效果图"
+      ],
+      "identity_group": "标识标牌效果图",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "标识标牌效果图",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_e4b3286c7596",
+      "path": "assets/results/柯幻熊猫_文生图_标识标牌_海报_结果图_01.png",
+      "sha256": "e4b3286c7596603b627dad7d9397f3ffb66859aec4ff6b04c4a78a55d1abf890",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_标识标牌_海报_结果图_01.png",
+      "width": 1280,
+      "height": 720,
+      "semantic_path": [
+        "文生图",
+        "标识标牌"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "标识标牌结果展示",
+        "海报案例"
+      ],
+      "tags": [
+        "海报"
+      ],
+      "identity_group": "海报",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "海报",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_71606cdbb2fe",
+      "path": "assets/results/柯幻熊猫_文生图_标识标牌_电商_结果图_01.png",
+      "sha256": "71606cdbb2fea865bfa7283b83bdf2cf83617160f8e928ea5991d9568523626b",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_标识标牌_电商_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "标识标牌"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "标识标牌结果展示",
+        "电商案例"
+      ],
+      "tags": [
+        "电商"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "电商",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_f5108e51b0bf",
+      "path": "assets/results/柯幻熊猫_文生图_海报_海报_结果图_01.png",
+      "sha256": "f5108e51b0bff8d4ee6efbc7711df9f562483f41ce893e1551078e9fbb96dffb",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_海报_海报_结果图_01.png",
+      "width": 800,
+      "height": 450,
+      "semantic_path": [
+        "文生图",
+        "海报"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "海报结果展示",
+        "海报案例"
+      ],
+      "tags": [
+        "海报"
+      ],
+      "identity_group": "海报",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "海报",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_b13bfa771487",
+      "path": "assets/results/柯幻熊猫_文生图_电商_主KV_结果图_01.png",
+      "sha256": "b13bfa771487d097ed406137721aa66178484bec6f3bf03ac1f5714f32e46199",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_电商_主KV_结果图_01.png",
+      "width": 397,
+      "height": 601,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "电商结果展示",
+        "主KV案例"
+      ],
+      "tags": [
+        "主KV"
+      ],
+      "identity_group": "主KV",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "主KV",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_6f5293b7b2ee",
+      "path": "assets/results/柯幻熊猫_文生图_电商_开头展示_结果图_01.png",
+      "sha256": "6f5293b7b2eefbc67c299f4b716e4bfb8941b76dd444faf0d8388da078038f71",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_电商_开头展示_结果图_01.png",
+      "width": 515,
+      "height": 2831,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "电商结果展示",
+        "开头展示案例"
+      ],
+      "tags": [
+        "开头展示"
+      ],
+      "identity_group": "开头展示",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "开头展示",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_d4dd4a96a040",
+      "path": "assets/results/柯幻熊猫_文生图_电商_开头展示_结果图_02.png",
+      "sha256": "d4dd4a96a040da9a5a2db2057a6404f5a43fbacf37f358ea57c3a636ddbc7f53",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_电商_开头展示_结果图_02.png",
+      "width": 515,
+      "height": 2836,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "电商结果展示",
+        "开头展示案例"
+      ],
+      "tags": [
+        "开头展示"
+      ],
+      "identity_group": "开头展示",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "开头展示",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_1743c9fe5d9e",
+      "path": "assets/results/柯幻熊猫_文生图_电商_电商_结果图_01.jpg",
+      "sha256": "1743c9fe5d9eb2389c786a050872e2f79bcc9d84cfeeda987814fe668560d1e9",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_电商_电商_结果图_01.jpg",
+      "width": 906,
+      "height": 1610,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "电商结果展示",
+        "电商案例"
+      ],
+      "tags": [
+        "电商"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "电商",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_result_2100c8e22286",
+      "path": "assets/results/柯幻熊猫_文生图_电商_电商_结果图_01.png",
+      "sha256": "2100c8e222860b55172e5e8b0419f3acdd24185783a5965094c624381240f446",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_电商_电商_结果图_01.png",
+      "width": 1152,
+      "height": 2048,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "电商结果展示",
+        "电商案例"
+      ],
+      "tags": [
+        "电商"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "电商",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_a571e9579d6c",
+      "path": "assets/results/柯幻熊猫_文生图_电商_电商_结果图_02.png",
+      "sha256": "a571e9579d6c08219934f4c3c912f4839d8e6a708738990abf36911f95ece719",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_电商_电商_结果图_02.png",
+      "width": 1152,
+      "height": 2048,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "电商结果展示",
+        "电商案例"
+      ],
+      "tags": [
+        "电商"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "电商",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_59c4df2ac0a5",
+      "path": "assets/results/柯幻熊猫_文生图_电商_电商_结果图_03.png",
+      "sha256": "59c4df2ac0a57a56d3b711a041b6609ca3d786acc0ee5816d99e4a6b6b094da7",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_电商_电商_结果图_03.png",
+      "width": 1280,
+      "height": 720,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "电商结果展示",
+        "电商案例"
+      ],
+      "tags": [
+        "电商"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "电商",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_dde920b68aa4",
+      "path": "assets/results/柯幻熊猫_文生图_美陈_LOGO_结果图_01.png",
+      "sha256": "dde920b68aa4191620c8b455912d860facada4e2e40f156e454eaeb4c6f70b1f",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_美陈_LOGO_结果图_01.png",
+      "width": 1280,
+      "height": 720,
+      "semantic_path": [
+        "文生图",
+        "美陈"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "美陈结果展示",
+        "LOGO案例"
+      ],
+      "tags": [
+        "LOGO"
+      ],
+      "identity_group": "LOGO",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "LOGO",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_b7f64694c2b0",
+      "path": "assets/results/柯幻熊猫_文生图_美陈_主题公园_结果图_01.png",
+      "sha256": "b7f64694c2b026ff88ce93f1e7b82c162d07bf94a52be7954781968f6760d70e",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_美陈_主题公园_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "美陈"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "美陈结果展示",
+        "主题公园案例"
+      ],
+      "tags": [
+        "主题公园"
+      ],
+      "identity_group": "主题公园",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "主题公园",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_44be75fe14e4",
+      "path": "assets/results/柯幻熊猫_文生图_美陈_海报_结果图_01.png",
+      "sha256": "44be75fe14e4f0b35ede50636fc70df5af46ce9d02146aa97078880e0e40b422",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_美陈_海报_结果图_01.png",
+      "width": 720,
+      "height": 1280,
+      "semantic_path": [
+        "文生图",
+        "美陈"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "美陈结果展示",
+        "海报案例"
+      ],
+      "tags": [
+        "海报"
+      ],
+      "identity_group": "海报",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "海报",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_d17cdb7a61e6",
+      "path": "assets/results/柯幻熊猫_文生图_美陈_美陈_结果图_01.png",
+      "sha256": "d17cdb7a61e656345505c6a7059382e3d0dbbf6060724c8dbacbcc8f248593fe",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_美陈_美陈_结果图_01.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "美陈"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "美陈结果展示",
+        "美陈案例"
+      ],
+      "tags": [
+        "美陈"
+      ],
+      "identity_group": "美陈",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "美陈",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_c1d93d40e3b5",
+      "path": "assets/results/柯幻熊猫_文生图_美陈_美陈_结果图_02.png",
+      "sha256": "c1d93d40e3b5495a6af4f3b33d35f4ead9fad738f1d5689ac4e0a12cee585d9d",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_美陈_美陈_结果图_02.png",
+      "width": 1015,
+      "height": 571,
+      "semantic_path": [
+        "文生图",
+        "美陈"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "美陈结果展示",
+        "美陈案例"
+      ],
+      "tags": [
+        "美陈"
+      ],
+      "identity_group": "美陈",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "美陈",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_9aa5fdf4aed7",
+      "path": "assets/results/柯幻熊猫_文生图_美陈_美陈_结果图_03.png",
+      "sha256": "9aa5fdf4aed7e9aec3151aa62293eb3455ad10acd09bdfa537fef04359ac6a07",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_美陈_美陈_结果图_03.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "美陈"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "美陈结果展示",
+        "美陈案例"
+      ],
+      "tags": [
+        "美陈"
+      ],
+      "identity_group": "美陈",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "美陈",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_e1ec1f8521aa",
+      "path": "assets/results/柯幻熊猫_文生图_美陈_美陈_结果图_04.png",
+      "sha256": "e1ec1f8521aa4211950c37cc5c2cf8a5bf260304b12f176e4f4c72eb8497327f",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_美陈_美陈_结果图_04.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "美陈"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "美陈结果展示",
+        "美陈案例"
+      ],
+      "tags": [
+        "美陈"
+      ],
+      "identity_group": "美陈",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "美陈",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_2d4dbe125206",
+      "path": "assets/results/柯幻熊猫_文生图_美陈_美陈_结果图_05.png",
+      "sha256": "2d4dbe125206f5a7a09ecebec903adb73dd5c96ea50cbb9529ae501014fe0154",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_美陈_美陈_结果图_05.png",
+      "width": 2048,
+      "height": 1152,
+      "semantic_path": [
+        "文生图",
+        "美陈"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "美陈结果展示",
+        "美陈案例"
+      ],
+      "tags": [
+        "美陈"
+      ],
+      "identity_group": "美陈",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "美陈",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_02e54dc58a3f",
+      "path": "assets/results/柯幻熊猫_文生图_门头_企业_结果图_01.jpeg",
+      "sha256": "02e54dc58a3f80bce7a8dd3e2d3a157593e603ab291987201d144d5ff67f4b61",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_企业_结果图_01.jpeg",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "企业案例"
+      ],
+      "tags": [
+        "企业"
+      ],
+      "identity_group": "企业",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "企业",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_result_a83dd73d7b10",
+      "path": "assets/results/柯幻熊猫_文生图_门头_娱乐_结果图_01.png",
+      "sha256": "a83dd73d7b10683f0efc9fc60621a43982000a89457f94e421ab87f2e040195d",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_娱乐_结果图_01.png",
+      "width": 1448,
+      "height": 1086,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "娱乐案例"
+      ],
+      "tags": [
+        "娱乐"
+      ],
+      "identity_group": "娱乐",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "娱乐",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_b370c7a1b0a4",
+      "path": "assets/results/柯幻熊猫_文生图_门头_平面_结果图_01.png",
+      "sha256": "b370c7a1b0a444b3a45c7dc7890dae228a65de58f20475755b50cfddc66730d7",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_平面_结果图_01.png",
+      "width": 1535,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "平面案例"
+      ],
+      "tags": [
+        "平面"
+      ],
+      "identity_group": "平面",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "平面",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_6faf96831205",
+      "path": "assets/results/柯幻熊猫_文生图_门头_开头1_结果图_01.jpg",
+      "sha256": "6faf96831205a3f85b58f0cce09a7a036f6045800bd3e42b29bafe2ba8f22591",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_开头1_结果图_01.jpg",
+      "width": 1537,
+      "height": 1023,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "开头1案例"
+      ],
+      "tags": [
+        "开头1"
+      ],
+      "identity_group": "开头1",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "开头1",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_result_8ac4e163fc3b",
+      "path": "assets/results/柯幻熊猫_文生图_门头_开头_结果图_01.png",
+      "sha256": "8ac4e163fc3bccc691e2474dfd3f549d07b5d2599626f2ce7175a9fb060fd9a6",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_开头_结果图_01.png",
+      "width": 1535,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "开头案例"
+      ],
+      "tags": [
+        "开头"
+      ],
+      "identity_group": "开头",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "开头",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_dc5a8611819d",
+      "path": "assets/results/柯幻熊猫_文生图_门头_汽车_结果图_01.jpeg",
+      "sha256": "dc5a8611819db9fa6f5fe144f0093453c902893c485d2cb87bf5096769f33fb8",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_汽车_结果图_01.jpeg",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "汽车案例"
+      ],
+      "tags": [
+        "汽车"
+      ],
+      "identity_group": "汽车",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "汽车",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_result_6fe05c9b0b36",
+      "path": "assets/results/柯幻熊猫_文生图_门头_烟酒店_结果图_01.png",
+      "sha256": "6fe05c9b0b36fd51df76e3b0b58f99ae5b7bf6d0b3b99983cd3d2b1fb629a310",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_烟酒店_结果图_01.png",
+      "width": 1448,
+      "height": 1086,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "烟酒店案例"
+      ],
+      "tags": [
+        "烟酒店"
+      ],
+      "identity_group": "烟酒店",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "烟酒店",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_c760222b10f6",
+      "path": "assets/results/柯幻熊猫_文生图_门头_社区_结果图_01.jpeg",
+      "sha256": "c760222b10f65fc6a8c632ad51e41f33c0c628d65a94d8b45ff29e1e55d59e84",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_社区_结果图_01.jpeg",
+      "width": 2560,
+      "height": 1440,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "社区案例"
+      ],
+      "tags": [
+        "社区"
+      ],
+      "identity_group": "社区",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "社区",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_result_363e425e70a1",
+      "path": "assets/results/柯幻熊猫_文生图_门头_素材拼凑_结果图_01.png",
+      "sha256": "363e425e70a127729641d011d9a97ec5b08b87bb142d58252a124bc4db4939bc",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_素材拼凑_结果图_01.png",
+      "width": 1535,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "素材拼凑案例"
+      ],
+      "tags": [
+        "素材拼凑"
+      ],
+      "identity_group": "素材拼凑",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "素材拼凑",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_31244fd63b2c",
+      "path": "assets/results/柯幻熊猫_文生图_门头_素材拼凑_结果图_02.png",
+      "sha256": "31244fd63b2c828ab2f1f18651a2f34ebfe2ad5923364d2e87ffac6105a04339",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_素材拼凑_结果图_02.png",
+      "width": 1672,
+      "height": 941,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "素材拼凑案例"
+      ],
+      "tags": [
+        "素材拼凑"
+      ],
+      "identity_group": "素材拼凑",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "素材拼凑",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_57ba9fa77fb0",
+      "path": "assets/results/柯幻熊猫_文生图_门头_素材拼凑_结果图_03.png",
+      "sha256": "57ba9fa77fb005486c244697e9f4ab1ac0461b87f785c5d2a904073d1f632cf9",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_素材拼凑_结果图_03.png",
+      "width": 1535,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "素材拼凑案例"
+      ],
+      "tags": [
+        "素材拼凑"
+      ],
+      "identity_group": "素材拼凑",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "素材拼凑",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_480279870868",
+      "path": "assets/results/柯幻熊猫_文生图_门头_结尾1_结果图_01.png",
+      "sha256": "480279870868f48ce7b0fae4dae6842d13d0b4b2691885e6916d187114666e68",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_结尾1_结果图_01.png",
+      "width": 833,
+      "height": 468,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "结尾1案例"
+      ],
+      "tags": [
+        "结尾1"
+      ],
+      "identity_group": "结尾1",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "结尾1",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_f69ee7a42915",
+      "path": "assets/results/柯幻熊猫_文生图_门头_结尾_结果图_01.png",
+      "sha256": "f69ee7a42915d15551f145935f56632a3b62599bf5fb80f9c2ccf567ec8d78b0",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_结尾_结果图_01.png",
+      "width": 1672,
+      "height": 941,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "结尾案例"
+      ],
+      "tags": [
+        "结尾"
+      ],
+      "identity_group": "结尾",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "结尾",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_27ef0981c1c7",
+      "path": "assets/results/柯幻熊猫_文生图_门头_酒店等行业_结果图_01.png",
+      "sha256": "27ef0981c1c77bf65f3c33e8632062af5c4bd8c8e153f837270f5fe927e69398",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_酒店等行业_结果图_01.png",
+      "width": 833,
+      "height": 468,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "酒店等行业案例"
+      ],
+      "tags": [
+        "酒店等行业"
+      ],
+      "identity_group": "酒店等行业",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "酒店等行业",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_16f98eafe089",
+      "path": "assets/results/柯幻熊猫_文生图_门头_门头效果图_结果图_01.png",
+      "sha256": "16f98eafe08955bca8c87a6aa70826402a9435f705fbf0d6aaef75647a8c62bd",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_门头效果图_结果图_01.png",
+      "width": 1536,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头结果展示",
+        "门头效果图案例"
+      ],
+      "tags": [
+        "门头效果图"
+      ],
+      "identity_group": "门头效果图",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "门头效果图",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_a133f87f6b75",
+      "path": "assets/results/柯幻熊猫_文生图_门头招牌_门头_结果图_01.png",
+      "sha256": "a133f87f6b75af7426e2065917e281a0f942fb8e463004a1f318b9a52d491102",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头招牌_门头_结果图_01.png",
+      "width": 1536,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "门头招牌"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头招牌结果展示",
+        "门头案例"
+      ],
+      "tags": [
+        "门头"
+      ],
+      "identity_group": "门头",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "门头",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_result_35a6432e3c43",
+      "path": "assets/results/柯幻熊猫_文生图_门头招牌_门头_结果图_02.png",
+      "sha256": "35a6432e3c43970b5d3d1811a4e8b9e90ca5ead82815bbed20d6f11659d6d6e1",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头招牌_门头_结果图_02.png",
+      "width": 1672,
+      "height": 941,
+      "semantic_path": [
+        "文生图",
+        "门头招牌"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_result_image",
+        "门头招牌结果展示",
+        "门头案例"
+      ],
+      "tags": [
+        "门头"
+      ],
+      "identity_group": "门头",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_result_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "variant_label": "门头",
+        "variant_kind": "external_video_material",
+        "content_type": "curated_external_result",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_0fe46f654032",
+      "path": "assets/references/柯幻熊猫_文生图_IP设计_图层2_参考图_01.png",
+      "sha256": "0fe46f654032f648dfc7b427db489ca0a03c631aee57b694ce6f8f6fdb3b313d",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_IP设计_图层2_参考图_01.png",
+      "width": 904,
+      "height": 1159,
+      "semantic_path": [
+        "文生图",
+        "IP设计"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> IP设计参考素材"
+      ],
+      "tags": [
+        "图层2",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "图层2",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理2/IP设计/素材/图层 2.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_25d6b97d35e2",
+      "path": "assets/references/柯幻熊猫_文生图_LOGO_logo界面_参考图_01.png",
+      "sha256": "25d6b97d35e2568b81557ab353935322e7db29d0894f7a0e6bfd83c405b02b04",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_LOGO_logo界面_参考图_01.png",
+      "width": 1870,
+      "height": 954,
+      "semantic_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> LOGO参考素材"
+      ],
+      "tags": [
+        "logo界面",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "logo界面",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/logo界面.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_45fed4cf9726",
+      "path": "assets/references/柯幻熊猫_文生图_LOGO_主界面_参考图_01.png",
+      "sha256": "45fed4cf9726e28b3361454dfd9f03fd1a96eb862945a64b9435199f30f414a5",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_LOGO_主界面_参考图_01.png",
+      "width": 1857,
+      "height": 954,
+      "semantic_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> LOGO参考素材"
+      ],
+      "tags": [
+        "主界面",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "主界面",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/videos/ai-logo-designer/assets/主界面.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_c01cd1090489",
+      "path": "assets/references/柯幻熊猫_文生图_VI_mainui_参考图_01.png",
+      "sha256": "c01cd1090489f8f2b0d0c115ad15ac3e2c4388b2cf3d04c3df5364a45c295b9e",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_VI_mainui_参考图_01.png",
+      "width": 1850,
+      "height": 954,
+      "semantic_path": [
+        "文生图",
+        "VI"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> VI参考素材"
+      ],
+      "tags": [
+        "mainui",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "mainui",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/main-ui.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_96c2458e0f6f",
+      "path": "assets/references/柯幻熊猫_文生图_VI_videsign_参考图_01.png",
+      "sha256": "96c2458e0f6f50813bc4c4cc1b35145a3200ae9d0ce6ebb35052cc31cc1f2d3f",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_VI_videsign_参考图_01.png",
+      "width": 327,
+      "height": 192,
+      "semantic_path": [
+        "文生图",
+        "VI"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> VI参考素材"
+      ],
+      "tags": [
+        "videsign",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "videsign",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/vi-design.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_a4f76ea90dd1",
+      "path": "assets/references/柯幻熊猫_文生图_VI_viinterface_参考图_01.png",
+      "sha256": "a4f76ea90dd144fa18c8b26846560b926b78f054c792daf14550ad002396fd59",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_VI_viinterface_参考图_01.png",
+      "width": 1869,
+      "height": 949,
+      "semantic_path": [
+        "文生图",
+        "VI"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> VI参考素材"
+      ],
+      "tags": [
+        "viinterface",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "viinterface",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/LOGO/vi-project/assets/vi-interface.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_52680b4bbee1",
+      "path": "assets/references/柯幻熊猫_文生图_操作景观小品界面_操作景观小品界面_参考图_01.jpg",
+      "sha256": "52680b4bbee135ee1fd5996207a8992b493ddd58eea4a38f3d2e7a3707763f32",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_操作景观小品界面_操作景观小品界面_参考图_01.jpg",
+      "width": 1872,
+      "height": 964,
+      "semantic_path": [
+        "文生图",
+        "操作景观小品界面"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 操作景观小品界面参考素材"
+      ],
+      "tags": [
+        "操作景观小品界面",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "操作景观小品界面",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/综合/操作景观小品界面.jpg",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_reference_4876fdf61b4f",
+      "path": "assets/references/柯幻熊猫_文生图_文化墙_实景图_参考图_01.png",
+      "sha256": "4876fdf61b4f41c872fedd0e368c1c806160e800ed7ad9b41572f1d69b33ec9e",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_实景图_参考图_01.png",
+      "width": 2752,
+      "height": 1536,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 文化墙参考素材"
+      ],
+      "tags": [
+        "实景图",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "实景图",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/实景图.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_7c49bf7142d8",
+      "path": "assets/references/柯幻熊猫_文生图_文化墙_平面图_参考图_01.jpg",
+      "sha256": "7c49bf7142d80e53d172e48aa04c684e21e5a12d15bb3f3e2f5c5c8fd6c30346",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_平面图_参考图_01.jpg",
+      "width": 1672,
+      "height": 941,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 文化墙参考素材"
+      ],
+      "tags": [
+        "平面图",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "平面图",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/平面图.jpg",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_reference_6bf07e4ea783",
+      "path": "assets/references/柯幻熊猫_文生图_文化墙_文化墙修改界面1_参考图_01.jpg",
+      "sha256": "6bf07e4ea783a41b2eaf2d4754417edbdc7dd86f7906287613366458fe62a056",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_文化墙修改界面1_参考图_01.jpg",
+      "width": 1920,
+      "height": 911,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 文化墙参考素材"
+      ],
+      "tags": [
+        "文化墙修改界面1",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "文化墙修改界面1",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/文化墙修改界面1.jpg",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_reference_a19d903107d8",
+      "path": "assets/references/柯幻熊猫_文生图_文化墙_文化墙修改页面2_参考图_01.jpg",
+      "sha256": "a19d903107d8011da214f2c8a5bc1777959023d19abdd5dbd1617f75cdcddb16",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_文化墙修改页面2_参考图_01.jpg",
+      "width": 1872,
+      "height": 954,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 文化墙参考素材"
+      ],
+      "tags": [
+        "文化墙修改页面2",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "文化墙修改页面2",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/文化墙修改页面2.jpg",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_reference_0a18a03aa0e3",
+      "path": "assets/references/柯幻熊猫_文生图_文化墙_网站文化墙界面_参考图_01.png",
+      "sha256": "0a18a03aa0e3c7e46ebbcf30fa816dbd0add3f2919b155f1cd08cad87bc06677",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_网站文化墙界面_参考图_01.png",
+      "width": 1866,
+      "height": 947,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 文化墙参考素材"
+      ],
+      "tags": [
+        "网站文化墙界面",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "网站文化墙界面",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/网站文化墙界面.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_abc84fd26f0c",
+      "path": "assets/references/柯幻熊猫_文生图_景观小品_景观小品修改_参考图_01.png",
+      "sha256": "abc84fd26f0c6a6871fee5778ccdf3b035a1d89771dec397eb9d4522e414fdf2",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_景观小品_景观小品修改_参考图_01.png",
+      "width": 1872,
+      "height": 964,
+      "semantic_path": [
+        "文生图",
+        "景观小品"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 景观小品参考素材"
+      ],
+      "tags": [
+        "景观小品修改",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "景观小品修改",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理2/景观小品/素材/景观小品修改.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_b4e3c11c6ff6",
+      "path": "assets/references/柯幻熊猫_文生图_标识标牌_口腔健康中心属性界面_参考图_01.jpg",
+      "sha256": "b4e3c11c6ff6a19d2afd2d33ea4a4dcb3bc41de3944bb25d114f1b91176f7af0",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_标识标牌_口腔健康中心属性界面_参考图_01.jpg",
+      "width": 461,
+      "height": 233,
+      "semantic_path": [
+        "文生图",
+        "标识标牌"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 标识标牌参考素材"
+      ],
+      "tags": [
+        "口腔健康中心属性界面",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "口腔健康中心属性界面",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理2/标识标牌/素材/口腔健康中心——属性界面.jpg",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_reference_7f391a836722",
+      "path": "assets/references/柯幻熊猫_文生图_标识标牌_界面_参考图_01.jpg",
+      "sha256": "7f391a836722a078136808a271bad44b88d993c9293c04723e1ed4537a5d8a88",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_标识标牌_界面_参考图_01.jpg",
+      "width": 1872,
+      "height": 964,
+      "semantic_path": [
+        "文生图",
+        "标识标牌"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 标识标牌参考素材"
+      ],
+      "tags": [
+        "界面",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "界面",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理2/标识标牌/素材/界面.jpg",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_reference_567121271a0d",
+      "path": "assets/references/柯幻熊猫_文生图_电商_售后服务_参考图_01.png",
+      "sha256": "567121271a0dba6aef23bb7481554b5b36d6dc3643fda6f9816d15969f627014",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_电商_售后服务_参考图_01.png",
+      "width": 376,
+      "height": 439,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 电商参考素材"
+      ],
+      "tags": [
+        "售后服务",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "售后服务",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/电商/售后服务.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_66a46868b018",
+      "path": "assets/references/柯幻熊猫_文生图_电商_图层5_参考图_01.png",
+      "sha256": "66a46868b018741bdadbebf52c5f1c4de619f20dd2ca16795972ad324f626025",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_电商_图层5_参考图_01.png",
+      "width": 389,
+      "height": 870,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 电商参考素材"
+      ],
+      "tags": [
+        "图层5",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "图层5",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/电商/图层 5.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_4c67b0dbe952",
+      "path": "assets/references/柯幻熊猫_文生图_电商_应用场景_参考图_01.png",
+      "sha256": "4c67b0dbe9529f205e8d857226e0590aca403a783bb275902bddff03e8d86b43",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_电商_应用场景_参考图_01.png",
+      "width": 394,
+      "height": 498,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 电商参考素材"
+      ],
+      "tags": [
+        "应用场景",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "应用场景",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/电商/应用场景.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_8c28b6478d8d",
+      "path": "assets/references/柯幻熊猫_文生图_电商_网站文生图电商上传界面1_参考图_01.jpg",
+      "sha256": "8c28b6478d8db18a00e18a1345900b23c9c6d2f367d1bfabafc98c4da5b54297",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_电商_网站文生图电商上传界面1_参考图_01.jpg",
+      "width": 1872,
+      "height": 964,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 电商参考素材"
+      ],
+      "tags": [
+        "网站文生图电商上传界面1",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "网站文生图电商上传界面1",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/电商/网站文生图电商上传界面1.jpg",
+        "mime_type": "image/jpeg"
+      }
+    },
+    {
+      "asset_id": "asset_reference_ce2fc895854f",
+      "path": "assets/references/柯幻熊猫_文生图_电商_规格信息_参考图_01.png",
+      "sha256": "ce2fc895854f6c26502b1b590eb125da0760246d4a07b9938b2be5ab16d956f0",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_电商_规格信息_参考图_01.png",
+      "width": 345,
+      "height": 364,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 电商参考素材"
+      ],
+      "tags": [
+        "规格信息",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "规格信息",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/电商/规格信息.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_0db39cc67924",
+      "path": "assets/references/柯幻熊猫_文生图_美陈_美陈界面_参考图_01.png",
+      "sha256": "0db39cc67924b404d9aa262d0dc3290f3e993513fc2845742f40699867169d0d",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_美陈_美陈界面_参考图_01.png",
+      "width": 1871,
+      "height": 954,
+      "semantic_path": [
+        "文生图",
+        "美陈"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 美陈参考素材"
+      ],
+      "tags": [
+        "美陈界面",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "美陈界面",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/美陈/美陈界面.png",
+        "mime_type": "image/png"
+      }
+    },
+    {
+      "asset_id": "asset_reference_eb2c8a377eaf",
+      "path": "assets/references/柯幻熊猫_文生图_门头_门头界面_参考图_01.png",
+      "sha256": "eb2c8a377eaf530489c5a867564eae48d8c0733b27a57a6b12689dacdde7db7d",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_门头_门头界面_参考图_01.png",
+      "width": 1869,
+      "height": 951,
+      "semantic_path": [
+        "文生图",
+        "门头"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "curated_reference_image",
+        "文生图 -> 门头参考素材"
+      ],
+      "tags": [
+        "门头界面",
+        "参考图"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "external_reference_library",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "reference_label": "门头界面",
+        "content_type": "curated_external_reference",
+        "source_staging": "C:/Users/CNGG/Documents/视频素材整理2/门头/素材/门头界面.png",
         "mime_type": "image/png"
       }
     },
@@ -12387,7 +16751,7 @@
       }
     }
   ],
-  "source_catalog_sha256": "4ddd2557007f9fffbf4897f8d6a2684c96f5ab56127199ecc5b3163dc7f5b659",
+  "source_catalog_sha256": "7c58cd251978874c6c944c1dac955410c4d8b02b3105a2bd9a2119e47511bd76",
   "warnings": [
     "unrecognized site filename: 柯幻熊猫_AI工具_功能列表截图.png"
   ]

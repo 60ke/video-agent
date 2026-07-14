@@ -153,6 +153,16 @@ def _result_metadata(results_dir: Path) -> dict[str, dict[str, Any]]:
     return by_filename
 
 
+def _reference_metadata(references_dir: Path) -> dict[str, dict[str, Any]]:
+    by_filename: dict[str, dict[str, Any]] = {}
+    for path in sorted(references_dir.glob("_*index.json")):
+        payload = _load_json(path)
+        for item in payload.get("assets", []) if isinstance(payload.get("assets"), list) else []:
+            if isinstance(item, dict) and item.get("asset_filename"):
+                by_filename[str(item["asset_filename"])] = item
+    return by_filename
+
+
 def _site_semantics(path: Path) -> tuple[list[str], str, list[str]]:
     parts = path.stem.split("_")
     warnings: list[str] = []
@@ -198,6 +208,8 @@ def _result_semantics(path: Path, metadata: dict[str, Any]) -> tuple[list[str], 
 
 
 def _iter_media(root: Path) -> Iterable[Path]:
+    if not root.is_dir():
+        return
     for child in sorted(root.iterdir(), key=lambda value: value.name):
         if child.is_file() and child.suffix.lower() in IMAGE_SUFFIXES | VIDEO_SUFFIXES:
             yield child
@@ -236,12 +248,14 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
     assets_root = assets_root.resolve()
     sites_dir = assets_root / "sites"
     results_dir = assets_root / "results"
+    references_dir = assets_root / "references"
     outro_dir = assets_root / "outro"
     brand_dir = assets_root / "brand"
     derived_site_manifest = assets_root / "derived" / "sites" / "柯幻熊猫" / "文生图" / "功能入口" / "manifest.json"
     derived_params_manifest = assets_root / "derived" / "sites" / "柯幻熊猫" / "文生图" / "参数面板" / "manifest.json"
     callouts = _load_json(sites_dir / "_callouts.json")
     result_meta = _result_metadata(results_dir)
+    reference_meta = _reference_metadata(references_dir)
     assets: list[Asset] = []
     warnings: list[str] = []
     approved_param_source_hashes: set[str] = set()
@@ -413,6 +427,38 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                     "variant_label": variant,
                     "variant_kind": metadata.get("variant_kind"),
                     "content_type": metadata.get("content_type"),
+                    "mime_type": mimetypes.guess_type(path.name)[0],
+                },
+            )
+        )
+
+    for path in _iter_media(references_dir):
+        digest = sha256_file(path)
+        width, height, checks = _image_size(path)
+        metadata = reference_meta.get(path.name, {})
+        feature_path = metadata.get("feature_path")
+        semantic_path = [str(item) for item in feature_path] if isinstance(feature_path, list) and feature_path else ["文生图", "参考素材"]
+        label = str(metadata.get("reference_label") or path.stem).strip()
+        assets.append(
+            Asset(
+                asset_id=_asset_id("reference", digest),
+                path=path.relative_to(assets_root.parent).as_posix(),
+                sha256=digest,
+                filename=path.name,
+                width=width,
+                height=height,
+                semantic_path=semantic_path,
+                role="reference_image",
+                production_eligible=True,
+                evidence_class=EvidenceClass.SOURCE,
+                claims=["curated_reference_image", f"{' -> '.join(semantic_path)}参考素材"],
+                tags=[label, "参考图"],
+                quality=AssetQuality(status="machine_checked" if width and height else "rejected", readable=True if width and height else False, checks=checks),
+                provenance=Provenance(origin="external_reference_library"),
+                metadata={
+                    "reference_label": label,
+                    "content_type": metadata.get("content_type"),
+                    "source_staging": metadata.get("source_staging"),
                     "mime_type": mimetypes.guess_type(path.name)[0],
                 },
             )
