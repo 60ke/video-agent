@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - agent/params-flower-text-animation
+  pull_request:
+    branches:
+      - master
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
@@ -15,6 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: agent/params-flower-text-animation
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -38,4 +43,4 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add video_agent tests assets/derived/sites/柯幻熊猫/文生图/参数面板
           git commit -m 'Implement parameter flower-text fade animation'
-          git push
+          git push origin HEAD:agent/params-flower-text-animation
