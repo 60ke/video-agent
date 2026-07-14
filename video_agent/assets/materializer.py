@@ -218,7 +218,7 @@ def materialize_assets(
             raise ValueError(f"unsupported derive kind: {request.derive_kind.value}")
         if parent.provenance.origin == "site_screenshot_library":
             if request.derive_kind not in SITE_KINDS:
-                raise ValueError("website screenshots may only use GPT Image site keyframe recipes")
+                raise ValueError("website screenshots cannot be redrawn outside GPT Image site keyframe recipes")
         elif request.derive_kind in SITE_KINDS:
             raise ValueError("site keyframe requests require a website screenshot source")
         if request.derive_kind in FAITHFUL_KINDS and any(
