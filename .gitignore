@@ -16,6 +16,8 @@ cdp-poc/profiles/*
 cdp-capture/output/*
 cdp-capture/profiles/*
 cdp-capture/node_modules/*
+remotion/node_modules/
+remotion/public/runs/
 output/
 .codex-remote-attachments/
 wanxiang-frontend/

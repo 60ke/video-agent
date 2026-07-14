@@ -61,6 +61,7 @@ def _usable_images(catalog: AssetCatalog) -> list[Asset]:
         if asset.media_type == "image"
         and asset.production_eligible
         and asset.quality.status in APPROVED_STATUSES
+        and not (asset.role == "feature_form_params" and asset.metadata.get("sequence_role") != "base")
     ]
 
 

@@ -17,10 +17,7 @@ class RenderAsset(Contract):
     fps: float | None = Field(default=None, gt=0)
     frame_count: int | None = Field(default=None, gt=0)
     duration_ms: int | None = Field(default=None, gt=0)
-    callout_base_path: str | None = None
-    callout_base_sha256: str | None = None
-    callout_layer_path: str | None = None
-    callout_layer_sha256: str | None = None
+    accent_color: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
 
 
 class CompiledCue(Contract):
@@ -32,16 +29,24 @@ class CompiledCue(Contract):
     hold_frames: int = Field(default=12, ge=0)
 
 
-class CompiledCalloutAnimation(Contract):
-    kind: str
+class CompiledParameterFrameSequence(Contract):
+    sequence_id: str = Field(min_length=1)
+    base_asset_id: str = Field(min_length=1)
+    stage_asset_id: str = Field(min_length=1)
+    final_asset_id: str = Field(min_length=1)
     start_frame: int = Field(ge=0)
+    stage_frame: int = Field(ge=0)
     hit_frame: int = Field(ge=0)
-    finish_pulse_scale: float = Field(default=1.018, ge=1.0, le=1.08)
+    minimum_hold_frames: int = Field(ge=1)
+    crossfade_frames: int = Field(ge=1)
+    timing_source: str
+    matched_keywords: list[dict[str, int | str]] = Field(default_factory=list)
+    timing_adjustment_reason: str | None = None
 
     @model_validator(mode="after")
-    def valid_range(self) -> "CompiledCalloutAnimation":
-        if self.hit_frame <= self.start_frame:
-            raise ValueError("callout animation must have a positive frame range")
+    def valid_range(self) -> "CompiledParameterFrameSequence":
+        if not self.start_frame < self.stage_frame < self.hit_frame:
+            raise ValueError("parameter frame sequence must progress base, stage, final")
         return self
 
 
@@ -59,7 +64,7 @@ class RenderShot(Contract):
     transition_in: dict[str, int | str] = Field(default_factory=lambda: {"kind": "cut", "duration_frames": 0})
     long_hold_reason: str | None = None
     overlay_layout: dict[str, float | int | str] | None = None
-    callout_animation: CompiledCalloutAnimation | None = None
+    parameter_sequence: CompiledParameterFrameSequence | None = None
 
     @property
     def asset_ids(self) -> list[str]:

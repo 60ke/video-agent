@@ -9,7 +9,6 @@ from functools import lru_cache
 from pathlib import Path
 
 import cv2
-import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont, ImageSequence
 
 from video_agent.compiler.subtitles import fullwidth_units
@@ -92,44 +91,6 @@ def _paste_shadow(canvas: Image.Image, card: Image.Image, position: tuple[int, i
     canvas.alpha_composite(card, position)
 
 
-def _perspective_card(card: Image.Image, width: int, height: int, progress: float) -> Image.Image:
-    final_width = width * 0.78
-    final_height = min(1240, final_width * card.height / max(card.width, 1))
-    start_width = final_width * 0.78
-    start_height = final_height * 0.78
-    eased = ease_out_cubic(progress)
-    current_width = start_width + (final_width - start_width) * eased
-    current_height = start_height + (final_height - start_height) * eased
-    center_x = width * (0.49 + 0.01 * eased)
-    center_y = height * 0.48
-    skew = (1.0 - eased) * 70
-    corner_offset = 20 * (1.0 - eased)
-    left = center_x - current_width / 2
-    right = center_x + current_width / 2
-    top = center_y - current_height / 2
-    bottom = center_y + current_height / 2
-    destination = np.float32(
-        [
-            [left + corner_offset, top + skew],
-            [right - corner_offset * 0.6, top],
-            [right, bottom - corner_offset * 0.4],
-            [left - corner_offset * 0.7, bottom + skew * 0.35],
-        ]
-    )
-    source = np.float32([[0, 0], [card.width - 1, 0], [card.width - 1, card.height - 1], [0, card.height - 1]])
-    matrix = cv2.getPerspectiveTransform(source, destination)
-    rgba = np.array(card.convert("RGBA"))
-    warped = cv2.warpPerspective(rgba, matrix, (width, height), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
-    return Image.fromarray(warped, "RGBA")
-
-
-def _flat_perspective_endpoint(card: Image.Image, width: int, height: int) -> tuple[Image.Image, tuple[int, int]]:
-    final_width = int(round(width * 0.78))
-    final_height = min(1240, int(round(final_width * card.height / max(card.width, 1))))
-    resized = card.resize((final_width, final_height), Image.Resampling.LANCZOS)
-    return resized, ((width - final_width) // 2, int(round(height * 0.48 - final_height / 2)))
-
-
 class FrameRenderer:
     def __init__(self, plan: RenderPlan) -> None:
         self.plan = plan
@@ -141,16 +102,6 @@ class FrameRenderer:
             asset.asset_id: Image.open(asset.path).convert("RGBA")
             for asset in plan.assets
             if asset.media_type == "image"
-        }
-        self.callout_bases = {
-            asset.asset_id: Image.open(asset.callout_base_path).convert("RGBA")
-            for asset in plan.assets
-            if asset.callout_base_path
-        }
-        self.callout_layers = {
-            asset.asset_id: Image.open(asset.callout_layer_path).convert("RGBA")
-            for asset in plan.assets
-            if asset.callout_layer_path
         }
         self.gif_frames: dict[str, list[Image.Image]] = {}
         self.video_captures: dict[str, cv2.VideoCapture] = {}
@@ -180,10 +131,6 @@ class FrameRenderer:
 
     def close(self) -> None:
         for image in self.images.values():
-            image.close()
-        for image in self.callout_bases.values():
-            image.close()
-        for image in self.callout_layers.values():
             image.close()
         for frames in self.gif_frames.values():
             for image in frames:
@@ -221,22 +168,6 @@ class FrameRenderer:
         asset = self.assets[asset_id]
         if asset.media_type == "video":
             return self._motion_frame(asset_id, shot, frame)
-        if shot.callout_animation and asset_id in self.callout_bases and asset_id in self.callout_layers:
-            base = self.callout_bases[asset_id].copy()
-            animation = shot.callout_animation
-            if frame < animation.start_frame:
-                return base
-            layer = self.callout_layers[asset_id].copy()
-            if frame < animation.hit_frame:
-                progress = max(0.0, min(1.0, (frame - animation.start_frame) / (animation.hit_frame - animation.start_frame)))
-                alpha = layer.getchannel("A")
-                bbox = alpha.getbbox()
-                if bbox:
-                    reveal = Image.new("L", layer.size)
-                    ImageDraw.Draw(reveal).pieslice(bbox, start=-18, end=-18 + 360 * ease_out_cubic(progress), fill=255)
-                    layer.putalpha(ImageChops.multiply(alpha, reveal))
-            base.alpha_composite(layer)
-            return base
         return self.images[asset_id]
 
     def _active_shot(self, frame: int) -> RenderShot:
@@ -250,26 +181,43 @@ class FrameRenderer:
         cue = self.plan.subtitles[index]
         return cue if cue.start_frame <= frame < cue.end_frame else None
 
-    def _card_for_asset(self, shot: RenderShot, frame: int, asset_id: str) -> Image.Image:
-        image = self._source_for_asset(shot, asset_id, frame)
-        asset = self.assets[asset_id]
+    def _card_from_image(self, shot: RenderShot, image: Image.Image, *, cache_key: tuple[str, str] | None = None) -> Image.Image:
         stage = self.profile.content_safe
         max_stage = (
             PixelRect(self.profile.critical_safe.x, 270, self.profile.critical_safe.w, 1260)
             if shot.template == "ui_params_focus"
             else PixelRect(stage.x, 290, stage.w, 1250)
         )
-        cache_key = (asset_id, shot.template)
-        cacheable = asset.media_type == "image" and shot.callout_animation is None
-        if cacheable and cache_key not in self.card_cache:
+        if cache_key is not None and cache_key not in self.card_cache:
             card, _ = _fit(image, PixelRect(0, 0, max_stage.w, max_stage.h))
             self.card_cache[cache_key] = _rounded_card(card, radius=26)
-        if cacheable:
+        if cache_key is not None:
             card = self.card_cache[cache_key].copy()
         else:
             fitted, _ = _fit(image, PixelRect(0, 0, max_stage.w, max_stage.h))
             card = _rounded_card(fitted, radius=26)
         return card
+
+    def _card_for_asset(self, shot: RenderShot, frame: int, asset_id: str) -> Image.Image:
+        image = self._source_for_asset(shot, asset_id, frame)
+        asset = self.assets[asset_id]
+        cache_key = (asset_id, shot.template) if asset.media_type == "image" else None
+        return self._card_from_image(shot, image, cache_key=cache_key)
+
+    def _parameter_sequence_image(self, shot: RenderShot, frame: int) -> Image.Image:
+        sequence = shot.parameter_sequence
+        if sequence is None:
+            raise ValueError("parameter sequence was requested for a shot without sequence metadata")
+        base = self.images[sequence.base_asset_id]
+        if frame < sequence.start_frame:
+            return base
+        if frame < sequence.stage_frame:
+            progress = (frame - sequence.start_frame) / max(1, sequence.stage_frame - sequence.start_frame)
+            return Image.blend(base, self.images[sequence.stage_asset_id], ease_out_cubic(progress))
+        if frame < sequence.hit_frame:
+            progress = (frame - sequence.stage_frame) / max(1, sequence.hit_frame - sequence.stage_frame)
+            return Image.blend(self.images[sequence.stage_asset_id], self.images[sequence.final_asset_id], ease_out_cubic(progress))
+        return self.images[sequence.final_asset_id]
 
     def _comparison_card(self, shot: RenderShot, frame: int) -> Image.Image:
         reference_id = shot.asset_bindings.get("reference")
@@ -291,6 +239,8 @@ class FrameRenderer:
     def _card_for_shot(self, shot: RenderShot, frame: int) -> Image.Image:
         if shot.template == "reference_to_result":
             return self._comparison_card(shot, frame)
+        if shot.parameter_sequence:
+            return self._card_from_image(shot, self._parameter_sequence_image(shot, frame))
         asset_id = shot.asset_bindings.get("primary") or next(iter(shot.asset_bindings.values()))
         return self._card_for_asset(shot, frame, asset_id)
 
@@ -307,18 +257,6 @@ class FrameRenderer:
         progress = max(0.0, min(1.0, (frame - shot.start_frame) / duration))
         card = self._card_for_shot(shot, frame)
         overlay_layout = shot.overlay_layout if shot.track == "overlay" else None
-        if shot.motion == "perspective_push_in":
-            entrance_ratio = 0.18
-            if progress < entrance_ratio:
-                entrance_progress = min(1.0, progress / entrance_ratio)
-                warped = _perspective_card(card, self.plan.width, self.plan.height, entrance_progress)
-                if alpha_multiplier < 1.0:
-                    warped.putalpha(warped.getchannel("A").point(lambda value: int(value * alpha_multiplier)))
-                canvas.alpha_composite(warped, (x_offset, 0))
-            else:
-                settled, settled_position = _flat_perspective_endpoint(card, self.plan.width, self.plan.height)
-                _paste_shadow(canvas, settled, (settled_position[0] + x_offset, settled_position[1]))
-            return
         if overlay_layout:
             stage = self.profile.content_safe
             box = PixelRect(
@@ -348,10 +286,6 @@ class FrameRenderer:
                 scale = 0.94 + 0.06 * ease_out_cubic(min(1.0, progress / 0.22))
         elif shot.motion == "scale_out":
             scale = 1.06 - 0.06 * ease_out_cubic(min(1.0, progress / 0.22))
-        if shot.callout_animation and shot.callout_animation.hit_frame <= frame < shot.callout_animation.hit_frame + 8:
-            pulse_progress = (frame - shot.callout_animation.hit_frame) / 8
-            pulse = math.sin(math.pi * pulse_progress)
-            scale *= 1.0 + (shot.callout_animation.finish_pulse_scale - 1.0) * pulse
         if not math.isclose(scale, 1.0):
             center = (position[0] + card.width / 2, position[1] + card.height / 2)
             resized = card.resize((int(card.width * scale), int(card.height * scale)), Image.Resampling.LANCZOS)

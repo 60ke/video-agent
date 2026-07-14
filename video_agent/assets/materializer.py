@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageFilter
 
 from video_agent.ai.gpt_image import edit_image
 from video_agent.ai.prompt_loader import load_prompt
@@ -23,14 +23,12 @@ CANVAS_SIZE = (1080, 1920)
 SITE_KINDS = {
     DeriveKind.SITE_HOME_KEYFRAME,
     DeriveKind.SITE_FEATURE_ENTRY_KEYFRAME,
-    DeriveKind.SITE_PARAMS_KEYFRAME,
 }
 FAITHFUL_KINDS = {
     DeriveKind.CROP_AND_REFRAME,
     DeriveKind.RESULT_DETAIL_CROP,
     DeriveKind.RESULT_VERTICAL_LAYOUT,
     DeriveKind.RESULT_COLLECTION,
-    DeriveKind.CALLOUT_OVERLAY,
 }
 GPT_KINDS = SITE_KINDS | {
     DeriveKind.CANVAS_EXTEND,
@@ -46,7 +44,6 @@ def _prompt(repo_root: Path, kind: DeriveKind, instruction: str) -> tuple[str, s
         DeriveKind.CANVAS_EXTEND: "Extend only the surrounding canvas; keep the source image itself unchanged and fully visible.",
         DeriveKind.SITE_HOME_KEYFRAME: "Create a close, readable 9:16 keyframe from the website's first viewport only. Let the 文生图 module occupy most of the safe screen and make it the visual focus using an elegant integrated highlight. Crop away the lower case-resource library and unrelated below-the-fold content. Preserve visible UI, Chinese text, colors, and layout relationships; do not invent or rewrite content.",
         DeriveKind.SITE_FEATURE_ENTRY_KEYFRAME: "Create a close, readable 9:16 keyframe from the website's upper first viewport. The left 文生图 navigation item and its open hover menu are the required subject; do not treat the homepage shortcut pills as the navigation entry. Let the hover menu occupy most of the safe screen. Add exactly one conspicuous red hand-drawn double-stroke circle or ellipse around the named target item inside the hover menu. Adapt the shape naturally to the target text and keep generous breathing room. The mark may overlap empty menu spacing naturally, but it must not enclose or visually point to any adjacent label. Do not use a rigid table-cell rectangle. Crop away the lower case-resource library and unrelated below-the-fold content. Do not invent UI, rewrite Chinese text, add a fake cursor, or change the selected feature. The generated image is the final visual marker; do not create or imply a separate reveal layer.",
-        DeriveKind.SITE_PARAMS_KEYFRAME: "Create a readable, interactive 9:16 parameter-panel keyframe. Preserve the original complete required-input area and the 开始生成 button, enlarge the panel for legibility, and preserve every visible UI field and Chinese label without rewriting content. The panel is the composition: crop and scale it to span the full usable frame width from left to right, with at most a 3% outer margin on either side. The output must never contain a blank right-side strip, right-side black space, side column, letterbox, split-screen, or any empty area that makes the parameter panel look narrow. Preserve every original red required asterisk/star symbol already visible in the UI exactly where it is. Render the injected callout text exactly, with no * character, and draw one hand-drawn curved arrow toward the supplied field area. Treat the callout and arrow as a bold integrated overlay directly on top of the original parameter panel; do not reserve an empty region for it. The injected callout text is the only new Chinese text allowed in the image. Never render source, validation, provenance, or instruction language such as 已验证必填字段, 必填字段, 字段说明, CDP, or 前端源码. Do not add people, avatars, fake cursor clicks, extra UI, red boxes, or invented field names. The generated image is the final visual marker; do not create a separate animation layer.",
         DeriveKind.LOGO_ISOLATE_SEMANTIC: "Create a semantic presentation of the existing logo on a clean background; do not claim pixel-perfect extraction.",
         DeriveKind.BRAND_IP_SUBTITLE_BREAK: "Create a restrained brand interlude using only the visible brand or IP element from the source.",
         DeriveKind.IDENTITY_TO_SYSTEM_TRANSITION: "Compose the visible identity element and the original complete design system as a clear before-to-system frame.",
@@ -155,30 +152,6 @@ def _collection(sources: list[Path], output: Path) -> None:
     canvas.save(output, format="PNG")
 
 
-def _callout_overlay(source: Path, output: Path, asset: Asset) -> None:
-    with Image.open(source) as opened:
-        image = opened.convert("RGBA")
-        layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
-        draw = ImageDraw.Draw(layer)
-        anchors = asset.visual_anchors[:1]
-        if not anchors:
-            raise ValueError(f"callout_overlay requires a visual anchor: {asset.asset_id}")
-        rect = anchors[0].rect
-        x0 = round((rect.x - rect.w * 0.25) * image.width)
-        y0 = round((rect.y - rect.h * 0.45) * image.height)
-        x1 = round((rect.x + rect.w * 1.25) * image.width)
-        y1 = round((rect.y + rect.h * 1.45) * image.height)
-        for offset, width in ((0, 8), (7, 4)):
-            draw.ellipse((x0 - offset, y0 + offset, x1 + offset, y1 - offset), outline=(235, 45, 45, 255), width=width)
-        composed = Image.alpha_composite(image, layer).convert("RGB")
-        temporary = output.with_suffix(".source.png")
-        composed.save(temporary, format="PNG")
-        try:
-            _vertical_layout(temporary, output)
-        finally:
-            temporary.unlink(missing_ok=True)
-
-
 def _faithful_output(kind: DeriveKind, source: Path, output: Path, parent: Asset, related_sources: list[Path]) -> None:
     if kind == DeriveKind.CROP_AND_REFRAME:
         _deterministic_reframe(source, output)
@@ -188,8 +161,6 @@ def _faithful_output(kind: DeriveKind, source: Path, output: Path, parent: Asset
         _vertical_layout(source, output)
     elif kind == DeriveKind.RESULT_COLLECTION:
         _collection([source, *related_sources], output)
-    elif kind == DeriveKind.CALLOUT_OVERLAY:
-        _callout_overlay(source, output, parent)
     else:  # pragma: no cover - guarded by caller
         raise ValueError(f"unsupported faithful derive kind: {kind.value}")
 
@@ -260,7 +231,6 @@ def materialize_assets(
             output_role = {
                 DeriveKind.SITE_HOME_KEYFRAME: "site_home",
                 DeriveKind.SITE_FEATURE_ENTRY_KEYFRAME: "feature_entry",
-                DeriveKind.SITE_PARAMS_KEYFRAME: "feature_form_params",
             }.get(request.derive_kind, parent.role)
         derived.append(
             Asset(

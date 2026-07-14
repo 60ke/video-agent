@@ -128,7 +128,7 @@ def validate_render_plan(plan: RenderPlan) -> list[CheckResult]:
     for shot in plan.shots:
         if shot.track != "base":
             continue
-        required = 1.2 if shot.template == "ui_feature_entry" and shot.callout_animation else minimum_seconds.get(shot.template, 1.5 if shot.template == "ui_feature_entry" else 0.0)
+        required = minimum_seconds.get(shot.template, 1.5 if shot.template == "ui_feature_entry" else 0.0)
         actual = (shot.end_frame - shot.start_frame) / plan.fps
         if actual + 1e-6 < required:
             readability_errors.append(f"{shot.shot_id}:{actual:.3f}s<{required:.3f}s")
@@ -139,16 +139,22 @@ def validate_render_plan(plan: RenderPlan) -> list[CheckResult]:
             message=", ".join(readability_errors),
         )
     )
-    callout_hold_errors = [
-        f"{shot.shot_id}:{(shot.end_frame - shot.callout_animation.hit_frame) / plan.fps:.3f}s"
-        for shot in plan.shots
-        if shot.callout_animation and shot.end_frame - shot.callout_animation.hit_frame < round(plan.fps * 0.6)
-    ]
+    sequence_errors = []
+    for shot in plan.shots:
+        sequence = shot.parameter_sequence
+        if sequence is None:
+            continue
+        if sequence.hit_frame > shot.end_frame - sequence.minimum_hold_frames:
+            sequence_errors.append(f"hold:{shot.shot_id}")
+        if sequence.start_frame < shot.start_frame or sequence.hit_frame > shot.end_frame:
+            sequence_errors.append(f"range:{shot.shot_id}")
+        if not sequence.start_frame < sequence.stage_frame < sequence.hit_frame:
+            sequence_errors.append(f"order:{shot.shot_id}")
     checks.append(
         CheckResult(
-            check_id="callout_stable_hold",
-            status="failed" if callout_hold_errors else "passed",
-            message=", ".join(callout_hold_errors),
+            check_id="parameter_sequence_timing",
+            status="failed" if sequence_errors else "passed",
+            message=", ".join(sequence_errors),
         )
     )
     timeline_errors = []

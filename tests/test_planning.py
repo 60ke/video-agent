@@ -6,17 +6,21 @@ from video_agent.contracts import (
     Asset,
     AssetCatalog,
     AssetQuality,
+    BeatSpan,
     CaseConfig,
     Claim,
     ClaimCue,
     EvidenceClass,
     Narration,
     NarrationBeat,
+    PhraseAnchor,
     NormalizedRect,
     Provenance,
+    TimingLock,
+    TokenTiming,
     VisualAnchor,
 )
-from video_agent.planning.auto_visual import _assets_for_beat, _fit_visual_candidates, _reference_to_result_pair
+from video_agent.planning.auto_visual import _assets_for_beat, _fit_visual_candidates, _reference_to_result_pair, build_auto_visual_plan
 from video_agent.ai.visual_planner import _candidate_assets
 
 
@@ -184,6 +188,97 @@ def test_enumerated_results_fail_instead_of_using_filename_false_positive() -> N
             visual_strategy="enumerated_results",
             hit_phrases=["电商"],
         )
+
+
+def test_auto_planner_splits_spoken_feature_enumeration_into_anchor_locked_result_shots() -> None:
+    feature_names = ["文化墙", "门店招牌", "景观小品", "美陈", "LOGO"]
+    spoken_names = ["文化墙", "门店招牌", "景观小品", "商业美陈", "品牌logo"]
+    assets = [
+        _asset().model_copy(
+            update={
+                "asset_id": f"result_{index}",
+                "role": "result_image",
+                "semantic_path": ["文生图", feature],
+                "filename": f"{feature}_结果图.png",
+                "provenance": Provenance(origin="curated_result_library"),
+            }
+        )
+        for index, feature in enumerate(feature_names)
+    ]
+    narration = Narration(
+        case_id="demo",
+        beats=[NarrationBeat(beat_id="beat_1", spoken_text="文化墙、门店招牌、景观小品、商业美陈、品牌logo。", asset_slots=spoken_names)],
+    )
+    anchors = [
+        PhraseAnchor(anchor_id=f"anchor_{index}", text=phrase, token_ids=["tok_1"], hit_frame=10 + index * 45, beat_id="beat_1")
+        for index, phrase in enumerate(spoken_names)
+    ]
+    timing = TimingLock(
+        case_id="demo",
+        audio_path="voice.wav",
+        audio_sha256="a" * 64,
+        fps=30,
+        duration_ms=8000,
+        duration_frames=240,
+        tokens=[TokenTiming(token_id="tok_1", text=narration.spoken_text, start_ms=0, end_ms=8000, start_frame=0, end_frame=240, beat_id="beat_1")],
+        phrase_anchors=anchors,
+        beat_spans=[BeatSpan(beat_id="beat_1", token_ids=["tok_1"], start_frame=0, end_frame=240)],
+    )
+
+    visual = build_auto_visual_plan("demo", narration, timing, AssetCatalog(catalog_id="demo", generated_at="now", source_root="assets", assets=assets))
+
+    assert [shot.asset_bindings["primary"] for shot in visual.shots] == [f"result_{index}" for index in range(5)]
+    assert [shot.transition_in.kind for shot in visual.shots] == ["cut", "slide_left", "slide_left", "slide_left", "slide_left"]
+    for shot, anchor in zip(visual.shots, anchors, strict=True):
+        start = shot.start.offset_frames or 0
+        end = shot.end.offset_frames or timing.duration_frames
+        assert start <= anchor.hit_frame < end
+
+
+def test_auto_planner_keeps_navigation_enumeration_on_feature_entry_flow() -> None:
+    entry = _asset().model_copy(update={"asset_id": "entry_culture", "role": "feature_entry", "semantic_path": ["文生图", "文化墙"]})
+    result = entry.model_copy(update={"asset_id": "result_culture", "role": "result_image", "provenance": Provenance(origin="curated_result_library")})
+    narration = Narration(case_id="demo", beats=[NarrationBeat(beat_id="beat_1", spoken_text="点击进入文化墙、LOGO功能。", asset_slots=["文化墙", "LOGO"])])
+    timing = TimingLock(
+        case_id="demo", audio_path="voice.wav", audio_sha256="a" * 64, fps=30, duration_ms=3000, duration_frames=90,
+        tokens=[TokenTiming(token_id="tok_1", text=narration.spoken_text, start_ms=0, end_ms=3000, start_frame=0, end_frame=90, beat_id="beat_1")],
+        phrase_anchors=[PhraseAnchor(anchor_id="culture", text="文化墙", token_ids=["tok_1"], hit_frame=12, beat_id="beat_1")],
+        beat_spans=[BeatSpan(beat_id="beat_1", token_ids=["tok_1"], start_frame=0, end_frame=90)],
+    )
+
+    visual = build_auto_visual_plan("demo", narration, timing, AssetCatalog(catalog_id="demo", generated_at="now", source_root="assets", assets=[entry, result]))
+
+    assert visual.shots[0].template == "ui_feature_entry"
+    assert visual.shots[0].asset_bindings["primary"] == entry.asset_id
+
+
+def test_auto_planner_uses_site_home_for_ambiguous_opening_and_results_for_ambiguous_tail() -> None:
+    home = _asset().model_copy(update={"asset_id": "site_home", "role": "site_home", "semantic_path": ["柯幻熊猫"]})
+    result = _asset().model_copy(update={"asset_id": "result", "role": "result_image", "provenance": Provenance(origin="curated_result_library")})
+    narration = Narration(
+        case_id="demo",
+        beats=[
+            NarrationBeat(beat_id="beat_1", spoken_text="这件事其实很简单。"),
+            NarrationBeat(beat_id="beat_2", spoken_text="现在就试试看。"),
+        ],
+    )
+    timing = TimingLock(
+        case_id="demo", audio_path="voice.wav", audio_sha256="a" * 64, fps=30, duration_ms=6000, duration_frames=180,
+        tokens=[
+            TokenTiming(token_id="tok_1", text="这件事其实很简单。", start_ms=0, end_ms=3000, start_frame=0, end_frame=90, beat_id="beat_1"),
+            TokenTiming(token_id="tok_2", text="现在就试试看。", start_ms=3000, end_ms=6000, start_frame=90, end_frame=180, beat_id="beat_2"),
+        ],
+        beat_spans=[
+            BeatSpan(beat_id="beat_1", token_ids=["tok_1"], start_frame=0, end_frame=90),
+            BeatSpan(beat_id="beat_2", token_ids=["tok_2"], start_frame=90, end_frame=180),
+        ],
+    )
+
+    visual = build_auto_visual_plan("demo", narration, timing, AssetCatalog(catalog_id="demo", generated_at="now", source_root="assets", assets=[home, result]))
+
+    assert visual.shots[0].asset_bindings["primary"] == home.asset_id
+    assert visual.shots[0].motion == "page_turn_3d"
+    assert visual.shots[-1].asset_bindings["primary"] == result.asset_id
 
 
 def test_readability_budget_selects_representative_visuals() -> None:

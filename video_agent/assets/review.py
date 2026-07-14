@@ -14,7 +14,6 @@ FAITHFUL_DERIVE_KINDS = {
     DeriveKind.RESULT_DETAIL_CROP.value,
     DeriveKind.RESULT_VERTICAL_LAYOUT.value,
     DeriveKind.RESULT_COLLECTION.value,
-    DeriveKind.CALLOUT_OVERLAY.value,
 }
 MATERIALIZED_ORIGINS = {
     "deterministic_faithful_derivative",
@@ -99,6 +98,13 @@ def review_materialized_assets(repo_root: Path, catalog: AssetCatalog) -> tuple[
             asset.quality.readable = True
             asset.quality.rejection_reason = None
             for check in ("image_decode_ok", "sha256_verified", "provenance_verified", "faithful_recipe_checked"):
+                _append_check(asset, check)
+            counts["passed"] += 1
+            status = "passed"
+        elif asset.quality.status in {"human_approved", "vision_verified"}:
+            asset.quality.readable = True
+            asset.quality.rejection_reason = None
+            for check in ("image_decode_ok", "sha256_verified", "prior_approval_preserved"):
                 _append_check(asset, check)
             counts["passed"] += 1
             status = "passed"

@@ -1,7 +1,15 @@
 from __future__ import annotations
 
-from video_agent.assets.review import FAITHFUL_DERIVE_KINDS
-from video_agent.contracts import Asset, EvidenceClass, Narration, VisualPlan
+from video_agent.contracts import Asset, DeriveKind, EvidenceClass, Narration, VisualPlan
+
+
+# Keep the compiler independent from the assets package. Importing
+# ``video_agent.assets.review`` initializes materialization and planning, which
+# creates a circular dependency when the renderer imports compiler helpers.
+FAITHFUL_DERIVE_KINDS = {
+    DeriveKind.CROP_AND_REFRAME.value,
+    DeriveKind.RESULT_DETAIL_CROP.value,
+}
 
 
 def resolves_to_supporting_asset(

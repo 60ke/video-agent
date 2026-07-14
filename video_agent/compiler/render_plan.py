@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import colorsys
 from dataclasses import dataclass
 from pathlib import Path
+
+from PIL import Image
 
 from video_agent.audio import merge_sfx_profile
 from video_agent.compiler.evidence import validate_claim_bindings
@@ -10,8 +13,8 @@ from video_agent.contracts import (
     AssetCatalog,
     AudioConfig,
     AudioTrack,
-    CompiledCalloutAnimation,
     CompiledCue,
+    CompiledParameterFrameSequence,
     DurationPolicy,
     Narration,
     RenderAsset,
@@ -20,10 +23,22 @@ from video_agent.contracts import (
     TimingLock,
     VisualPlan,
 )
-from video_agent.io import sha256_file
+from video_agent.planning.parameter_sequence import compile_parameter_sequence_timing
 
 
-MOTION_ALLOWLIST = {"none", "fade_in", "fade_out", "scale_in", "scale_out", "perspective_push_in"}
+MOTION_ALLOWLIST = {
+    "none",
+    "fade_in",
+    "fade_out",
+    "scale_in",
+    "scale_out",
+    "image_pan_scan",
+    "detail_push_in",
+    "result_reveal",
+    "full_bleed_to_safe_card",
+    "page_turn_3d",
+    "brand_breath",
+}
 TEMPLATE_ALLOWLIST = {"ui_params_focus", "ui_feature_entry", "result_showcase", "brand_ip_cutaway", "reference_to_result"}
 TEXT_DENSE_TEMPLATES = {"ui_params_focus"}
 TEXT_DENSE_MOTION_ALLOWLIST = {"none", "fade_in", "fade_out", "scale_in", "scale_out"}
@@ -31,6 +46,33 @@ BEAT_START_ANCHOR_PREFIX = "beat_start:"
 BEAT_END_ANCHOR_PREFIX = "beat_end:"
 TIMELINE_START_ANCHOR = "timeline_start"
 TIMELINE_END_ANCHOR = "timeline_end"
+
+
+def _accent_color(path: Path) -> str | None:
+    """Choose a stable saturated palette color for a picture-led entrance."""
+
+    try:
+        with Image.open(path) as source:
+            image = source.convert("RGB")
+            image.thumbnail((96, 96))
+            palette = image.quantize(colors=12, method=Image.Quantize.MEDIANCUT).convert("RGB")
+            colors = palette.getcolors(maxcolors=96 * 96) or []
+    except OSError:
+        return None
+    best: tuple[float, tuple[float, float, float]] | None = None
+    for count, rgb in colors:
+        red, green, blue = rgb
+        hue, saturation, value = colorsys.rgb_to_hsv(red / 255, green / 255, blue / 255)
+        if value < 0.22 or saturation < 0.20:
+            continue
+        score = count * saturation**2 * (0.45 + value)
+        if best is None or score > best[0]:
+            best = (score, (hue, saturation, value))
+    if best is None:
+        return None
+    hue, saturation, value = best[1]
+    red, green, blue = colorsys.hsv_to_rgb(hue, max(0.62, saturation), max(0.82, value))
+    return f"#{round(red * 255):02x}{round(green * 255):02x}{round(blue * 255):02x}"
 
 
 @dataclass(frozen=True)
@@ -237,27 +279,28 @@ def compile_render_plan(
                         priority=source.priority,
                     )
                 )
-        compiled_callout = None
-        if shot.callout_animation:
-            completion = next((cue for cue in cues if cue.action == shot.callout_animation.completion_action), None)
-            if completion is None:
-                raise ValueError(f"callout animation has no completion cue: {shot.shot_id}")
-            primary_id = shot.asset_bindings.get("primary")
-            primary = asset_by_id.get(primary_id or "")
-            if primary is None:
-                raise ValueError(f"callout animation requires a primary asset: {shot.shot_id}")
-            required = ("callout_base_path", "callout_base_sha256", "callout_layer_path", "callout_layer_sha256")
-            missing_callout = [key for key in required if not primary.metadata.get(key)]
-            if missing_callout:
-                raise ValueError(f"callout animation asset is missing prepared layers: {primary.asset_id}/{missing_callout}")
-            callout_start = max(start_frame, completion.hit_frame - shot.callout_animation.duration_frames)
-            if callout_start >= completion.hit_frame:
-                raise ValueError(f"callout completion cue is too early: {shot.shot_id}")
-            compiled_callout = CompiledCalloutAnimation(
-                kind=shot.callout_animation.kind,
-                start_frame=callout_start,
-                hit_frame=completion.hit_frame,
-                finish_pulse_scale=shot.callout_animation.finish_pulse_scale,
+        compiled_sequence = None
+        if shot.parameter_sequence:
+            sequence = shot.parameter_sequence
+            expected = {
+                "base": sequence.base_asset_id,
+                "stage": sequence.stage_asset_id,
+                "final": sequence.final_asset_id,
+            }
+            if shot.asset_bindings != expected:
+                raise ValueError(f"parameter sequence bindings do not match sequence contract: {shot.shot_id}")
+            timing_result = compile_parameter_sequence_timing(
+                required_field_labels=sequence.required_field_labels,
+                anchors=[anchor for anchor in timing.phrase_anchors if anchor.beat_id in shot.beat_ids],
+                shot_start_frame=start_frame,
+                shot_end_frame=end_frame,
+            )
+            compiled_sequence = CompiledParameterFrameSequence(
+                sequence_id=sequence.sequence_id,
+                base_asset_id=sequence.base_asset_id,
+                stage_asset_id=sequence.stage_asset_id,
+                final_asset_id=sequence.final_asset_id,
+                **timing_result.__dict__,
             )
         render_shots.append(
             RenderShot(
@@ -274,7 +317,7 @@ def compile_render_plan(
                 transition_in=shot.transition_in.model_dump(mode="json"),
                 long_hold_reason=shot.long_hold_reason,
                 overlay_layout=shot.overlay_layout.model_dump(mode="json") if shot.overlay_layout else None,
-                callout_animation=compiled_callout,
+                parameter_sequence=compiled_sequence,
             )
         )
         used_asset_ids.update(shot.asset_ids)
@@ -307,32 +350,19 @@ def compile_render_plan(
             raise ValueError(f"render asset is not valid visual media: {asset_id}")
         if asset.media_type == "video" and asset.role not in {"brand_ip_animation", "brand_ip_video"}:
             raise ValueError(f"video asset is not approved for deterministic rendering: {asset_id}")
-        callout_paths: dict[str, str | None] = {"base": None, "layer": None}
-        for label in callout_paths:
-            path_value = asset.metadata.get(f"callout_{label}_path")
-            digest = asset.metadata.get(f"callout_{label}_sha256")
-            if not path_value:
-                continue
-            path = Path(str(path_value))
-            path = path if path.is_absolute() else repo_root / path
-            if not path.is_file() or sha256_file(path) != digest:
-                raise ValueError(f"prepared callout {label} failed integrity check: {asset.asset_id}")
-            callout_paths[label] = path.resolve().as_posix()
+        source_path = (repo_root / asset.path).resolve()
         render_assets.append(
             RenderAsset(
                 asset_id=asset_id,
-                path=(repo_root / asset.path).resolve().as_posix(),
+                path=source_path.as_posix(),
                 sha256=asset.sha256,
-                callout_base_path=callout_paths["base"],
-                callout_base_sha256=asset.metadata.get("callout_base_sha256"),
-                callout_layer_path=callout_paths["layer"],
-                callout_layer_sha256=asset.metadata.get("callout_layer_sha256"),
                 width=asset.width,
                 height=asset.height,
                 media_type=asset.media_type,
                 fps=asset.metadata.get("fps"),
                 frame_count=asset.metadata.get("frame_count"),
                 duration_ms=asset.metadata.get("duration_ms"),
+                accent_color=_accent_color(source_path) if asset.media_type == "image" else None,
             )
         )
 
@@ -352,6 +382,7 @@ def compile_render_plan(
         subtitles=compile_subtitles(timing),
         audio_tracks=audio_tracks,
         style={
+            "render_backend": "remotion",
             "subtitle_font_size": 64,
             "subtitle_font_min": 58,
             "subtitle_font_max": 68,

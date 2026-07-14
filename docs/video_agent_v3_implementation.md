@@ -46,6 +46,19 @@ catalog
 - 语义 SFX profile、Voice/BGM/SFX 多轨混音和最终 MP4 QA；
 - 可选多模态 Visual Planner 与 Contact Sheet Vision Critic；
 - `--resume` 记录并校验阶段 input/output SHA256，从首个失效阶段继续。
+- Remotion 独立渲染工程：Python 输出不可变 `RenderPlan`，Remotion 执行竖屏画面、字幕、转场与图片镜头，FFmpeg 继续完成音频混音和最终编码。
+- 动效模板收敛为 `image_pan_scan`、`detail_push_in`、`result_reveal`、`page_turn_3d`、`brand_breath`，参数页仍只允许等比缩放、淡变与三态全画面切换。
+
+## 2.1 Remotion 渲染层
+
+`remotion/` 是唯一的 React 视频合成工程。`RenderPlan.style.render_backend=remotion` 时，`video_agent.render` 会：
+
+1. 将计划内媒体复制到 `remotion/public/runs/<case>_<run>/assets/`；
+2. 写入同目录的 `timeline.json`，以静态资源相对路径驱动 `VerticalDemo`；
+3. 由 Remotion 输出无声 H.264 画面；
+4. 由 FFmpeg 叠加 Voice、BGM、SFX，并执行最终响度与编码控制。
+
+安装前端依赖：`cd remotion && npm install`。本地预览：`npm run studio`。Python Renderer 只保留为没有声明 `render_backend` 的测试计划的轻量回退，主生产计划默认使用 Remotion。
 
 ## 3. 主动补素材
 
@@ -65,7 +78,7 @@ catalog
 - `2.5–4s`：3 个状态；
 - `>4s`：按时长扩展，最多 4 个状态。
 
-规则版自动密度请求默认生成确定性 E1。Case 中已有的 `materialization_source` 会与自动请求合并，冲突 request ID 直接失败。网站入口和参数页可通过显式 `SITE_HOME_KEYFRAME`、`SITE_FEATURE_ENTRY_KEYFRAME`、`SITE_PARAMS_KEYFRAME` 请求或独立批处理调用 GPT Image。
+规则版自动密度请求默认生成确定性 E1。Case 中已有的 `materialization_source` 会与自动请求合并，冲突 request ID 直接失败。网站首页和功能入口可通过显式 `SITE_HOME_KEYFRAME`、`SITE_FEATURE_ENTRY_KEYFRAME` 请求；参数页只能通过三态 sequence 生成与人工审批进入生产池。
 
 Materializer 将目标窗口写入派生 Asset metadata。Auto Visual Planner 必须：
 
@@ -100,7 +113,9 @@ asset_catalog.json
 5. 运行时 Renderer 不读取网页坐标，不提取红色像素，不生成透明圈选层，不播放 reveal 动画；
 6. 网站标记关键帧属于 E2，不能承担事实 Claim，必须审核后使用。
 
-`site-entry-batch` 将文件名中的功能路径转为 GPT Image 编辑指令，要求镜头拉近并突出唯一目标。`site-params-batch` 使用前端源码和 CDP 采集结果确认必填字段，再让 GPT Image 在完整参数面板上生成花字和箭头。两类生成文件均写入 manifest，人工审批后进入生产素材池。
+`site-entry-batch` 将文件名中的功能路径转为 GPT Image 编辑指令，要求镜头拉近并突出唯一目标。参数页使用 `site-params-sequence`：它先生成干净的 `base`，再生成花字完成态 `final`，离线配准后生成 `stage`。三张图都是完整 1080x1920 图片；`site-params-sequence-approve` 是唯一的生产准入，人工确认前它们不会进入 Catalog。
+
+参数镜头只绑定同一 sequence 的 `base/stage/final`。Compiler 使用当前镜头内的词级锚点，把最后一个匹配的必填字段结束帧作为花字完成帧；没有匹配时使用默认节奏。Renderer 只在完整帧之间做两次确定性交叉渐变，不读取 CDP 坐标，也不在运行时绘制标记或文字。
 
 ## 5. 证据继承
 

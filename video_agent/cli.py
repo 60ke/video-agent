@@ -7,7 +7,7 @@ from typing import Any
 
 from video_agent.assets import build_catalog
 from video_agent.assets.site_entry_batch import approve_site_entry_manifest, generate_site_entry_keyframes
-from video_agent.assets.site_params_batch import approve_site_params_manifest, generate_site_params_keyframes
+from video_agent.assets.site_params_sequence import approve_parameter_frame_sequences, generate_parameter_frame_sequences
 from video_agent.assets.video_material_import import import_video_material_images
 from video_agent.audio.register import register_sfx_library
 from video_agent.contracts import AssetCatalog, CaseConfig
@@ -105,8 +105,8 @@ def command_site_entry_approve(args: argparse.Namespace) -> dict[str, Any]:
     return {"ok": True, **result, "manifest": Path(args.manifest).resolve().as_posix()}
 
 
-def command_site_params_batch(args: argparse.Namespace) -> dict[str, Any]:
-    result = generate_site_params_keyframes(
+def command_site_params_sequence(args: argparse.Namespace) -> dict[str, Any]:
+    result = generate_parameter_frame_sequences(
         Path(__file__).resolve().parents[1],
         Path(args.source).resolve(),
         Path(args.output).resolve(),
@@ -118,9 +118,9 @@ def command_site_params_batch(args: argparse.Namespace) -> dict[str, Any]:
     return {"ok": True, **result}
 
 
-def command_site_params_approve(args: argparse.Namespace) -> dict[str, Any]:
+def command_site_params_sequence_approve(args: argparse.Namespace) -> dict[str, Any]:
     manifest = Path(args.manifest).resolve()
-    result = approve_site_params_manifest(manifest)
+    result = approve_parameter_frame_sequences(manifest)
     return {"ok": True, **result, "manifest": manifest.as_posix()}
 
 
@@ -208,20 +208,20 @@ def build_parser() -> argparse.ArgumentParser:
     approve_entries.add_argument("--manifest", default="assets/derived/sites/柯幻熊猫/文生图/功能入口/manifest.json")
     approve_entries.set_defaults(handler=command_site_entry_approve)
 
-    site_params = sub.add_parser("site-params-batch", help="Generate GPT Image parameter-panel keyframes with field-group callouts")
+    site_params = sub.add_parser("site-params-sequence", help="Generate complete base, stage, and final parameter-page flower-text frames")
     site_params.add_argument("--json", dest="sub_json", action="store_true")
     site_params.add_argument("--source", default="assets/sites")
-    site_params.add_argument("--output", default="assets/derived/sites/柯幻熊猫/文生图/参数面板")
+    site_params.add_argument("--output", default="assets/derived/sites/柯幻熊猫/文生图/参数面板序列")
     site_params.add_argument("--include")
     site_params.add_argument("--exclude", action="append", default=[])
     site_params.add_argument("--workers", type=int, default=2)
     site_params.add_argument("--force", action="store_true")
-    site_params.set_defaults(handler=command_site_params_batch)
+    site_params.set_defaults(handler=command_site_params_sequence)
 
-    approve_params = sub.add_parser("site-params-approve", help="Mark every generated parameter-panel keyframe as human approved")
+    approve_params = sub.add_parser("site-params-sequence-approve", help="Mark every generated parameter frame sequence as human approved")
     approve_params.add_argument("--json", dest="sub_json", action="store_true")
-    approve_params.add_argument("--manifest", default="assets/derived/sites/柯幻熊猫/文生图/参数面板/manifest.json")
-    approve_params.set_defaults(handler=command_site_params_approve)
+    approve_params.add_argument("--manifest", default="assets/derived/sites/柯幻熊猫/文生图/参数面板序列/manifest.json")
+    approve_params.set_defaults(handler=command_site_params_sequence_approve)
 
     import_materials = sub.add_parser("import-video-materials", help="Import and register curated external image materials")
     import_materials.add_argument("--json", dest="sub_json", action="store_true")

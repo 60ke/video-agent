@@ -52,11 +52,15 @@ class OverlayLayout(Contract):
         return self
 
 
-class CalloutAnimation(Contract):
-    kind: Literal["handdrawn_circle_reveal"] = "handdrawn_circle_reveal"
-    duration_frames: int = Field(default=18, ge=8, le=45)
-    completion_action: str = "callout.complete"
-    finish_pulse_scale: float = Field(default=1.018, ge=1.0, le=1.08)
+class ParameterFrameSequence(Contract):
+    """A human-approved set of complete parameter-page keyframes."""
+
+    sequence_id: str = Field(min_length=1)
+    base_asset_id: str = Field(min_length=1)
+    stage_asset_id: str = Field(min_length=1)
+    final_asset_id: str = Field(min_length=1)
+    required_field_labels: list[str] = Field(min_length=1)
+    callout_text: str = Field(min_length=1)
 
 
 class ShotPlan(Contract):
@@ -70,12 +74,24 @@ class ShotPlan(Contract):
     claim_ids: list[str] = Field(default_factory=list)
     cue_bindings: list[CueBinding] = Field(default_factory=list)
     energy: Literal["low", "medium", "high"] = "medium"
-    motion: Literal["none", "fade_in", "fade_out", "scale_in", "scale_out", "perspective_push_in"] = "none"
+    motion: Literal[
+        "none",
+        "fade_in",
+        "fade_out",
+        "scale_in",
+        "scale_out",
+        "image_pan_scan",
+        "detail_push_in",
+        "result_reveal",
+        "full_bleed_to_safe_card",
+        "page_turn_3d",
+        "brand_breath",
+    ] = "none"
     transition_in: TransitionIn = Field(default_factory=TransitionIn)
     evidence_policy: str = "source_pixels_visible"
     long_hold_reason: Literal["reading", "appreciation", "pause"] | None = None
     overlay_layout: OverlayLayout | None = None
-    callout_animation: CalloutAnimation | None = None
+    parameter_sequence: ParameterFrameSequence | None = None
 
     @property
     def asset_ids(self) -> list[str]:
@@ -89,6 +105,10 @@ class ShotPlan(Contract):
             raise ValueError("overlay shots require overlay_layout")
         if self.track == "base" and self.overlay_layout is not None:
             raise ValueError("base shots cannot define overlay_layout")
+        if self.parameter_sequence is not None and self.template != "ui_params_focus":
+            raise ValueError("parameter frame sequences require ui_params_focus")
+        if self.template == "ui_params_focus" and self.parameter_sequence is None:
+            raise ValueError("ui_params_focus requires a parameter frame sequence")
         return self
 
 

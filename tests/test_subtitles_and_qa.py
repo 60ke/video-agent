@@ -7,7 +7,7 @@ from video_agent.compiler.subtitles import compile_subtitles, fullwidth_units
 from video_agent.contracts import (
     AudioTrack,
     BeatSpan,
-    CompiledCalloutAnimation,
+    CompiledParameterFrameSequence,
     CueBinding,
     RenderAsset,
     RenderPlan,
@@ -92,7 +92,7 @@ def test_qa_rejects_forbidden_motion_and_long_subtitle() -> None:
     assert checks["subtitle_single_line_10_units"].status == "failed"
 
 
-def test_qa_rejects_perspective_on_text_dense_ui() -> None:
+def test_qa_rejects_3d_turn_on_text_dense_ui() -> None:
     plan = RenderPlan(
         case_id="demo",
         run_id="run",
@@ -106,7 +106,7 @@ def test_qa_rejects_perspective_on_text_dense_ui() -> None:
                 asset_bindings={"primary": "asset"},
                 start_frame=0,
                 end_frame=30,
-                motion="perspective_push_in",
+                motion="page_turn_3d",
             )
         ],
         subtitles=[],
@@ -116,21 +116,25 @@ def test_qa_rejects_perspective_on_text_dense_ui() -> None:
     assert checks["text_dense_motion_safe"].status == "failed"
 
 
-def test_qa_rejects_short_reading_time_and_late_callout() -> None:
+def test_qa_rejects_short_reading_time_and_late_parameter_sequence() -> None:
     plan = RenderPlan(
         case_id="demo",
         run_id="run",
         frame_count=30,
-        assets=[RenderAsset(asset_id="asset", path="demo.png", sha256="a" * 64, width=100, height=100)],
+        assets=[RenderAsset(asset_id=item, path="demo.png", sha256="a" * 64, width=100, height=100) for item in ("base", "stage", "final")],
         shots=[
             RenderShot(
                 shot_id="entry",
                 beat_ids=["beat"],
-                template="ui_feature_entry",
-                asset_bindings={"primary": "asset"},
+                template="ui_params_focus",
+                asset_bindings={"base": "base", "stage": "stage", "final": "final"},
                 start_frame=0,
                 end_frame=30,
-                callout_animation=CompiledCalloutAnimation(kind="handdrawn_circle_reveal", start_frame=8, hit_frame=20),
+                parameter_sequence=CompiledParameterFrameSequence(
+                    sequence_id="params", base_asset_id="base", stage_asset_id="stage", final_asset_id="final",
+                    start_frame=8, stage_frame=14, hit_frame=26, minimum_hold_frames=10, crossfade_frames=3,
+                    timing_source="keyword_end",
+                ),
             )
         ],
         subtitles=[],
@@ -140,7 +144,7 @@ def test_qa_rejects_short_reading_time_and_late_callout() -> None:
     checks = {check.check_id: check for check in validate_render_plan(plan)}
 
     assert checks["template_readability_duration"].status == "failed"
-    assert checks["callout_stable_hold"].status == "failed"
+    assert checks["parameter_sequence_timing"].status == "failed"
 
 
 def test_overlay_layout_rejects_douyin_rail_and_subtitle_slots() -> None:

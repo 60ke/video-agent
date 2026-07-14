@@ -9,11 +9,11 @@ from PIL import Image
 
 from video_agent.ai.gpt_image import ImageEditResult
 from video_agent.assets import review_materialized_assets
-from video_agent.assets.site_params_batch import RequiredFieldsAnnotation, generate_site_params_keyframes
+from video_agent.assets.site_params_batch import RequiredFieldsAnnotation
 from video_agent.compiler import render_plan, validate_claim_bindings
 from video_agent.compiler.evidence import resolves_to_supporting_asset
 from video_agent.contracts import Asset, AssetCatalog, AssetQuality, DeriveKind, EvidenceClass, Provenance
-from video_agent.io import sha256_file
+from video_agent.io import load_json, sha256_file
 
 
 def _png(path: Path, size: tuple[int, int] = (64, 64)) -> None:
@@ -138,16 +138,47 @@ def test_asset_review_rejects_hash_and_dimension_mismatches(tmp_path: Path) -> N
     assert statuses[bad_size.asset_id] == "rejected"
 
 
+def test_asset_review_preserves_prior_human_approval_for_semantic_assets(tmp_path: Path) -> None:
+    source_path = tmp_path / "source.png"
+    keyframe_path = tmp_path / "keyframe.png"
+    for path in (source_path, keyframe_path):
+        _png(path)
+
+    source = _asset(
+        "asset_source",
+        source_path,
+        evidence=EvidenceClass.SOURCE,
+        origin="site_screenshot_library",
+    )
+    keyframe = _asset(
+        "asset_site_keyframe",
+        keyframe_path,
+        evidence=EvidenceClass.SEMANTIC,
+        origin="gpt_image_site_keyframe",
+        parent_ids=[source.asset_id],
+    )
+    keyframe.quality.status = "human_approved"
+    keyframe.quality.checks = ["human_reviewed"]
+
+    reviewed, report = review_materialized_assets(
+        tmp_path,
+        AssetCatalog(catalog_id="review", generated_at="now", source_root=".", assets=[source, keyframe]),
+    )
+
+    approved = next(asset for asset in reviewed.assets if asset.asset_id == keyframe.asset_id)
+    assert approved.quality.status == "human_approved"
+    assert "prior_approval_preserved" in approved.quality.checks
+    assert report["counts"]["passed"] == 1
+    assert report["counts"]["needs_review"] == 0
+
+
 def test_corrupt_untracked_parameter_keyframe_is_regenerated(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     source_dir = tmp_path / "assets" / "sites"
     output_dir = tmp_path / "assets" / "derived"
     filename = "柯幻熊猫_文生图_美陈_参数面板截图.png"
     source = source_dir / filename
-    output = output_dir / filename.replace("参数面板截图", "参数面板关键帧")
     _png(source, (320, 180))
     source_dir.joinpath("_callouts.json").write_text(json.dumps({"items": {}}, ensure_ascii=False), encoding="utf-8")
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_bytes(b"corrupt-image")
 
     annotation = RequiredFieldsAnnotation(
         labels=("行业",),
@@ -157,18 +188,31 @@ def test_corrupt_untracked_parameter_keyframe_is_regenerated(tmp_path: Path, mon
         cdp_labels=("行业",),
         cdp_unmatched_labels=(),
     )
-    monkeypatch.setattr("video_agent.assets.site_params_batch._required_fields_annotation", lambda *_: annotation)
+    monkeypatch.setattr("video_agent.assets.site_params_sequence._required_fields_annotation", lambda *_: annotation)
     buffer = BytesIO()
     Image.new("RGB", (1080, 1920), (30, 40, 50)).save(buffer, format="PNG")
     monkeypatch.setattr(
-        "video_agent.assets.site_params_batch.edit_image",
+        "video_agent.assets.site_params_sequence.edit_image",
         lambda *_: ImageEditResult(content=buffer.getvalue(), provider="test", model="gpt-image-test", response_id="img_1"),
     )
 
-    result = generate_site_params_keyframes(Path(__file__).resolve().parents[1], source_dir, output_dir, include=filename)
+    from video_agent.assets.site_params_sequence import generate_parameter_frame_sequences
+
+    final_buffer = BytesIO()
+    final_image = Image.new("RGB", (1080, 1920), (30, 40, 50))
+    final_image.paste((255, 220, 40), (700, 900, 940, 1040))
+    final_image.save(final_buffer, format="PNG")
+    responses = iter((buffer.getvalue(), final_buffer.getvalue()))
+    monkeypatch.setattr(
+        "video_agent.assets.site_params_sequence.edit_image",
+        lambda *_: ImageEditResult(content=next(responses), provider="test", model="gpt-image-test", response_id="img_1"),
+    )
+    result = generate_parameter_frame_sequences(Path(__file__).resolve().parents[1], source_dir, output_dir, include=filename)
 
     assert result["generated"] == 1
-    assert result["recovered"] == 0
+    assert result["cached"] == 0
+    manifest = load_json(Path(result["manifest"]))
+    output = Path(manifest["sequences"][0]["frames"]["base"]["path"])
     with Image.open(output) as image:
         assert image.size == (1080, 1920)
         image.verify()

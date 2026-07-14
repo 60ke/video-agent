@@ -75,6 +75,19 @@ def test_word_timing_is_strict_and_frame_locked(tmp_path: Path) -> None:
         build_timing_lock("timing_case", narration, broken, audio, len(raw) * 120, 30)
 
 
+def test_timing_lock_infers_word_anchors_for_spoken_feature_enumeration(tmp_path: Path) -> None:
+    audio = tmp_path / "voice.mp3"
+    audio.write_bytes(b"synthetic-audio")
+    narration = Narration(
+        case_id="enumeration_case",
+        beats=[NarrationBeat(beat_id="beat_001", spoken_text="文化墙、门店招牌、景观小品、商业美陈、品牌logo。")],
+    )
+
+    timing = build_timing_lock("enumeration_case", narration, _tokens(narration.spoken_text), audio, len(narration.spoken_text) * 120, 30)
+
+    assert [anchor.text for anchor in timing.phrase_anchors] == ["文化墙", "门店招牌", "景观小品", "商业美陈", "品牌logo"]
+
+
 def test_word_timing_allows_only_punctuation_omission_and_restores_it(tmp_path: Path) -> None:
     audio = tmp_path / "voice.mp3"
     audio.write_bytes(b"synthetic-audio")

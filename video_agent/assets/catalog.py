@@ -252,23 +252,12 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
     outro_dir = assets_root / "outro"
     brand_dir = assets_root / "brand"
     derived_site_manifest = assets_root / "derived" / "sites" / "柯幻熊猫" / "文生图" / "功能入口" / "manifest.json"
-    derived_params_manifest = assets_root / "derived" / "sites" / "柯幻熊猫" / "文生图" / "参数面板" / "manifest.json"
+    derived_params_manifest = assets_root / "derived" / "sites" / "柯幻熊猫" / "文生图" / "参数面板序列" / "manifest.json"
     callouts = _load_json(sites_dir / "_callouts.json")
     result_meta = _result_metadata(results_dir)
     reference_meta = _reference_metadata(references_dir)
     assets: list[Asset] = []
     warnings: list[str] = []
-    approved_param_source_hashes: set[str] = set()
-    if derived_params_manifest.is_file():
-        params_manifest = _load_json(derived_params_manifest)
-        approved_param_source_hashes = {
-            str(item.get("source_sha256"))
-            for item in params_manifest.get("assets", [])
-            if isinstance(item, dict)
-            and item.get("quality_status") in {"vision_verified", "human_approved"}
-            and item.get("source_sha256")
-        }
-
     for path in _iter_media(sites_dir):
         digest = sha256_file(path)
         width, height, checks = _image_size(path)
@@ -285,8 +274,7 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                 height=height,
                 semantic_path=semantic_path,
                 role=role,
-                production_eligible=role != "feature_entry"
-                and not (role == "feature_form_params" and digest in approved_param_source_hashes),
+                production_eligible=role not in {"feature_entry", "feature_form_params"},
                 evidence_class=EvidenceClass.SOURCE,
                 claims=["real_website_screenshot", role],
                 tags=[semantic_path[-1]] if semantic_path else [],
@@ -341,66 +329,56 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                         "source_sha256": item.get("source_sha256"),
                         "annotation_style": item.get("annotation_style"),
                         "workflow": manifest.get("workflow"),
-                        "callout_base_path": item.get("callout_base_path"),
-                        "callout_base_sha256": item.get("callout_base_sha256"),
-                        "callout_layer_path": item.get("callout_layer_path"),
-                        "callout_layer_sha256": item.get("callout_layer_sha256"),
-                        "callout_layer_method": item.get("callout_layer_method"),
                     },
                 )
             )
 
     if derived_params_manifest.is_file():
         manifest = _load_json(derived_params_manifest)
-        approved_statuses = {"vision_verified", "human_approved"}
-        for item in manifest.get("assets", []) if isinstance(manifest.get("assets"), list) else []:
-            if not isinstance(item, dict):
+        for item in manifest.get("sequences", []) if isinstance(manifest.get("sequences"), list) else []:
+            if not isinstance(item, dict) or item.get("quality_status") != "human_approved":
                 continue
-            quality_status = str(item.get("quality_status") or "")
-            if quality_status not in approved_statuses:
+            frames = item.get("frames", {})
+            if not isinstance(frames, dict) or any(not isinstance(frames.get(state), dict) for state in ("base", "stage", "final")):
+                warnings.append(f"incomplete approved parameter sequence: {item.get('sequence_id')}")
                 continue
-            path = Path(str(item.get("output_path") or ""))
-            if not path.is_file():
-                warnings.append(f"approved derived params keyframe missing: {path}")
+            if any(frames[state].get("quality_status") != "human_approved" for state in ("base", "stage", "final")):
+                warnings.append(f"unapproved frame in parameter sequence: {item.get('sequence_id')}")
                 continue
-            digest = sha256_file(path)
-            if digest != str(item.get("output_sha256") or ""):
-                warnings.append(f"approved derived params keyframe hash mismatch: {path.name}")
+            paths = {state: Path(str(frames[state].get("path") or "")) for state in ("base", "stage", "final")}
+            if any(not path.is_file() for path in paths.values()):
+                warnings.append(f"approved parameter sequence file missing: {item.get('sequence_id')}")
                 continue
-            width, height, checks = _image_size(path)
+            digests = {state: sha256_file(path) for state, path in paths.items()}
+            if any(digests[state] != frames[state].get("sha256") for state in paths):
+                warnings.append(f"approved parameter sequence hash mismatch: {item.get('sequence_id')}")
+                continue
+            asset_ids = {state: _asset_id("site_params_sequence", digest) for state, digest in digests.items()}
             semantic_path = [str(item.get("module") or "文生图"), *[str(part) for part in item.get("feature_path", [])]]
-            assets.append(
-                Asset(
-                    asset_id=_asset_id("site_params_keyframe", digest),
-                    path=path.relative_to(assets_root.parent).as_posix(),
-                    sha256=digest,
-                    filename=path.name,
-                    width=width,
-                    height=height,
-                    semantic_path=semantic_path,
-                    role="feature_form_params",
-                    production_eligible=True,
-                    evidence_class=EvidenceClass.SEMANTIC,
-                    claims=[],
-                    tags=[str(item.get("feature") or semantic_path[-1]), "9:16", "参数面板", "必填项引导"],
-                    quality=AssetQuality(status=quality_status, readable=True, checks=checks + list(item.get("quality_checks", []))),
-                    provenance=Provenance(
-                        origin="gpt_image_site_keyframe",
-                        parent_asset_ids=[_asset_id("site", str(item.get("source_sha256") or ""))],
-                        provider=item.get("provider"),
-                        model=item.get("model"),
-                        prompt_sha256=item.get("prompt_sha256"),
-                        response_id=item.get("response_id"),
-                    ),
-                    metadata={
-                        "source_path": item.get("source_path"),
-                        "source_sha256": item.get("source_sha256"),
-                        "annotation_style": item.get("annotation_style"),
-                        "required_field_labels": item.get("required_field_labels", []),
-                        "workflow": manifest.get("workflow"),
-                    },
+            for state in ("base", "stage", "final"):
+                path = paths[state]
+                width, height, checks = _image_size(path)
+                frame = frames[state]
+                assets.append(
+                    Asset(
+                        asset_id=asset_ids[state], path=path.relative_to(assets_root.parent).as_posix(), sha256=digests[state],
+                        filename=path.name, width=width, height=height, semantic_path=semantic_path, role="feature_form_params",
+                        production_eligible=True, evidence_class=EvidenceClass.SEMANTIC, claims=[],
+                        tags=[str(item.get("feature") or semantic_path[-1]), "9:16", "参数面板", "花字序列", state],
+                        quality=AssetQuality(status="human_approved", readable=True, checks=checks + list(frame.get("quality_checks", []))),
+                        provenance=Provenance(
+                            origin="gpt_image_site_keyframe" if frame.get("origin") == "gpt_image_edit" else "deterministic_faithful_derivative",
+                            parent_asset_ids=[_asset_id("site", str(item.get("source_sha256") or ""))], provider=frame.get("provider"),
+                            model=frame.get("model"), prompt_sha256=item.get("prompt_sha256"), response_id=frame.get("response_id"),
+                        ),
+                        metadata={
+                            "workflow": manifest.get("workflow"), "sequence_id": item.get("sequence_id"), "sequence_role": state,
+                            "sequence_asset_ids": asset_ids, "required_field_labels": item.get("required_field_labels", []),
+                            "callout_text": item.get("callout_text"), "source_path": item.get("source_path"),
+                            "source_sha256": item.get("source_sha256"), "registration": item.get("registration", {}),
+                        },
+                    )
                 )
-            )
 
     for path in _iter_media(results_dir):
         digest = sha256_file(path)

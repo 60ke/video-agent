@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 
 from video_agent.compiler.evidence import resolves_to_supporting_asset
-from video_agent.contracts import Asset, AssetCatalog, CueBinding, Narration, ShotPlan, TimeRef, TimingLock, TransitionIn, VisualPlan
+from video_agent.contracts import Asset, AssetCatalog, CueBinding, Narration, ParameterFrameSequence, ShotPlan, TimeRef, TimingLock, TransitionIn, VisualPlan
 
 
 BEAT_START_ANCHOR_PREFIX = "beat_start:"
@@ -11,6 +11,23 @@ TIMELINE_START_ANCHOR = "timeline_start"
 TIMELINE_END_ANCHOR = "timeline_end"
 APPROVED_STATUSES = {"machine_checked", "vision_verified", "human_approved"}
 MAX_REPRESENTATIVE_VISUALS = 3
+ENUMERATED_GENERIC_TERMS = {
+    "真实结果",
+    "多结果",
+    "结果",
+    "展示",
+    "设计方案",
+    "功能",
+    "功能总览",
+}
+# Spoken copy naturally uses a few product-facing aliases that are different
+# from the canonical feature names used by the material catalog.
+FEATURE_TERM_ALIASES = {
+    "门店招牌": ("门店招牌", "门头招牌"),
+    "品牌logo": ("品牌logo", "logo"),
+    "品牌标志": ("品牌标志", "logo"),
+    "商业美陈": ("商业美陈", "美陈"),
+}
 MIN_VISUAL_SECONDS = {
     "feature_entry_marker": 1.2,
     "ui_feature_entry": 1.5,
@@ -31,6 +48,22 @@ REFERENCE_COMPARISON_TERMS = (
     "前后对比",
     "效果对比",
     "对比图",
+)
+OPENING_EXPLICIT_VISUAL_TERMS = (
+    "首页",
+    "主页",
+    "网站首页",
+    "参数",
+    "输入",
+    "上传",
+    "点击",
+    "进入",
+    "选择",
+    "功能入口",
+    "真实结果",
+    "生成效果",
+    "案例",
+    "参考图",
 )
 
 
@@ -80,15 +113,25 @@ def _fit_visual_candidates(
     return selected
 
 
+def _normalized_term(value: str) -> str:
+    return "".join(value.lower().split()).replace("_", "").replace("*", "")
+
+
+def _feature_terms(term: str) -> tuple[str, ...]:
+    normalized = _normalized_term(term)
+    return FEATURE_TERM_ALIASES.get(normalized, (normalized,))
+
+
 def _matching_phrase_anchor(asset: Asset, anchors: list[object]) -> object | None:
-    labels = [*asset.semantic_path[1:], *asset.tags, asset.filename]
-    normalized_labels = [label.lower().replace(" ", "") for label in labels if label]
+    # Timing anchors bind to structured catalog semantics (feature path and
+    # curator tags), never a coincidental word in a filename.
+    labels = [_normalized_term(label) for label in [*asset.semantic_path[1:], *asset.tags] if label]
     matches = [
         anchor
         for anchor in anchors
         if any(
-            anchor.text.lower().replace(" ", "") in label or label in anchor.text.lower().replace(" ", "")
-            for label in normalized_labels
+            any(term in label or label in term for term in _feature_terms(anchor.text))
+            for label in labels
         )
     ]
     return matches[0] if matches else None
@@ -101,6 +144,8 @@ def _role_assets(catalog: AssetCatalog) -> dict[str, list[Asset]]:
             continue
         usable_media = asset.media_type == "image" or asset.role in {"brand_ip_animation", "brand_ip_video"}
         if asset.quality.status in APPROVED_STATUSES and usable_media:
+            if asset.role == "feature_form_params" and asset.metadata.get("sequence_role") != "base":
+                continue
             roles[asset.role].append(asset)
     for assets in roles.values():
         assets.sort(key=lambda asset: (asset.provenance.origin != "gpt_image_site_keyframe", asset.filename, asset.asset_id))
@@ -108,7 +153,7 @@ def _role_assets(catalog: AssetCatalog) -> dict[str, list[Asset]]:
 
 
 def _brand_cutaway(intent: str, roles: dict[str, list[Asset]]) -> Asset | None:
-    is_cta = any(word in intent for word in ("评论", "关注", "点赞", "收藏", "告诉我", "想看", "下期", "再见", "体验", "挑战一天", "真的可以"))
+    is_cta = any(word in intent for word in ("评论", "关注", "点赞", "收藏", "告诉我", "想看", "下期", "再见", "挑战一天", "真的可以"))
     is_transition = any(word in intent for word in ("生成中", "等待", "稍等", "马上生成", "正在生成"))
     if not is_cta and not is_transition:
         return None
@@ -117,6 +162,15 @@ def _brand_cutaway(intent: str, roles: dict[str, list[Asset]]) -> Asset | None:
         return None
     preferred_action = "挥手" if is_cta else "跑步"
     return next((asset for asset in candidates if preferred_action in " ".join(asset.tags + [asset.filename])), candidates[0])
+
+
+def _opening_defaults_to_home(beat: object, roles: dict[str, list[Asset]]) -> bool:
+    """Use the site home for an unqualified opening instead of a mascot cutaway."""
+
+    if not roles.get("site_home") or beat.visual_strategy == "enumerated_results" or beat.claim_cues:
+        return False
+    intent = " ".join([beat.spoken_text, *beat.asset_slots]).lower()
+    return not any(term in intent for term in OPENING_EXPLICIT_VISUAL_TERMS)
 
 
 def _matching_results(intent: str, slots: list[str], roles: dict[str, list[Asset]], used: set[str]) -> list[Asset]:
@@ -178,9 +232,12 @@ def _reference_to_result_pair(text: str, slots: list[str], roles: dict[str, list
 
 
 def _feature_result_matches(term: str, asset: Asset) -> bool:
-    normalized = term.lower().replace(" ", "")
-    feature_labels = [item.lower().replace(" ", "") for item in asset.semantic_path[1:] if item]
-    return any(normalized in label or label in normalized for label in feature_labels)
+    feature_labels = [_normalized_term(item) for item in [*asset.semantic_path[1:], *asset.tags] if item]
+    return any(
+        candidate in label or label in candidate
+        for candidate in _feature_terms(term)
+        for label in feature_labels
+    )
 
 
 def _enumerated_results(hit_phrases: list[str], roles: dict[str, list[Asset]], used: set[str]) -> list[Asset]:
@@ -196,6 +253,26 @@ def _enumerated_results(hit_phrases: list[str], roles: dict[str, list[Asset]], u
             selected.append(candidate)
     if missing:
         raise ValueError("enumerated result assets are missing for: " + ", ".join(missing))
+    return selected
+
+
+def _enumerated_result_pairs(anchors: list[object], roles: dict[str, list[Asset]], used: set[str]) -> list[tuple[Asset, object]]:
+    """Resolve each spoken feature anchor to one distinct result image.
+
+    The anchor travels with the chosen material until scheduling, so a broad
+    feature such as ``美陈`` cannot later attach itself to a different phrase.
+    """
+
+    selected: list[tuple[Asset, object]] = []
+    for anchor in anchors:
+        phrase = _normalized_term(anchor.text)
+        if not phrase or phrase in ENUMERATED_GENERIC_TERMS:
+            continue
+        matches = [asset for asset in roles["result_image"] if _feature_result_matches(anchor.text, asset)]
+        fresh = [asset for asset in matches if asset.asset_id not in used and all(asset.asset_id != item[0].asset_id for item in selected)]
+        candidate = next(iter(fresh or [asset for asset in matches if all(asset.asset_id != item[0].asset_id for item in selected)]), None)
+        if candidate is not None:
+            selected.append((candidate, anchor))
     return selected
 
 
@@ -235,8 +312,10 @@ def _assets_for_beat(
         return [(brand_asset, "brand_ip_cutaway")]
     if any(word in intent for word in ("首页", "主页", "网站首页", "home")) and roles["site_home"]:
         return [(roles["site_home"][0], "ui_feature_entry")]
-    if any(word in intent for word in ("参数", "输入", "param", "field", "upload")) and roles["feature_form_params"]:
-        return [(roles["feature_form_params"][0], "ui_params_focus")]
+    if any(word in intent for word in ("参数", "输入", "param", "field", "upload")):
+        if roles["feature_form_params"]:
+            return [(roles["feature_form_params"][0], "ui_params_focus")]
+        raise ValueError("a human-approved complete parameter frame sequence is required for a parameter-page beat")
     if any(word in intent for word in ("功能列表", "小功能", "功能总览")) and roles.get("feature_list"):
         return [(roles["feature_list"][0], "ui_feature_entry")]
     navigation_intent = any(word in intent for word in ("点击", "进入", "选择", "展开", "导航路径", "操作路径", "功能入口", "entry", "menu"))
@@ -326,9 +405,11 @@ def _claim_ids_for_asset(narration: Narration, beat_id: str, asset_id: str, cata
     ]
 
 
-def _transition(template: str, first_shot: bool) -> TransitionIn:
+def _transition(template: str, first_shot: bool, *, enumerated_result: bool = False) -> TransitionIn:
     if first_shot:
         return TransitionIn()
+    if enumerated_result:
+        return TransitionIn(kind="slide_left", duration_frames=8)
     if template == "ui_feature_entry":
         return TransitionIn(kind="slide_left", duration_frames=8)
     if template == "result_showcase":
@@ -413,12 +494,34 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
     shots: list[ShotPlan] = []
     used_results: set[str] = set()
 
-    for beat in narration.beats:
+    for beat_index, beat in enumerate(narration.beats):
         span = spans[beat.beat_id]
+        next_span = spans[narration.beats[beat_index + 1].beat_id] if beat_index + 1 < len(narration.beats) else None
         claim_assets = _claim_assets_for_beat(beat.beat_id, narration, catalog)
+        beat_anchors = sorted(phrases_by_beat[beat.beat_id], key=lambda anchor: anchor.hit_frame)
+        requested_anchors = [anchor for anchor in beat_anchors if anchor.text in beat.hit_phrases]
+        enumerated_pairs = _enumerated_result_pairs(
+            requested_anchors if beat.visual_strategy == "enumerated_results" else beat_anchors,
+            roles,
+            used_results,
+        )
+        beat_intent = " ".join([beat.spoken_text, *beat.asset_slots]).lower()
+        navigation_intent = any(word in beat_intent for word in ("点击", "进入", "选择", "展开", "导航路径", "操作路径", "功能入口", "entry", "menu"))
+        # Only result-showcase copy may infer enumeration. A navigation phrase
+        # can also name several features, but it must remain an entry flow.
+        is_enumerated = beat.visual_strategy == "enumerated_results" or (not navigation_intent and len(enumerated_pairs) >= 2)
+        if beat.visual_strategy == "enumerated_results" and len(enumerated_pairs) != len(beat.hit_phrases):
+            resolved = {anchor.text for _, anchor in enumerated_pairs}
+            missing = [phrase for phrase in beat.hit_phrases if phrase not in resolved]
+            raise ValueError("enumerated result assets are missing for: " + ", ".join(missing))
+        starts_with_home = beat_index == 0 and _opening_defaults_to_home(beat, roles)
         candidates = (
             [(asset, _template_for_asset(asset)) for asset, _, _ in claim_assets]
             if claim_assets
+            else [(roles["site_home"][0], "ui_feature_entry")]
+            if starts_with_home
+            else [(asset, "result_showcase") for asset, _ in enumerated_pairs]
+            if is_enumerated
             else _assets_for_beat(
                 beat.spoken_text,
                 beat.asset_slots,
@@ -436,7 +539,7 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                 locked,
                 span.start_frame,
                 span.end_frame,
-                all_required=bool(claim_assets) or beat.visual_strategy == "enumerated_results",
+                all_required=bool(claim_assets) or is_enumerated,
                 beat_id=beat.beat_id,
             )
         else:
@@ -444,14 +547,10 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                 candidates,
                 span.end_frame - span.start_frame,
                 timing.fps,
-                all_required=bool(claim_assets) or beat.visual_strategy == "enumerated_results",
+                all_required=bool(claim_assets) or is_enumerated,
                 beat_id=beat.beat_id,
             )
-            enumerated_anchors = (
-                [_matching_phrase_anchor(asset, phrases_by_beat[beat.beat_id]) for asset, _ in candidates]
-                if beat.visual_strategy == "enumerated_results"
-                else []
-            )
+            enumerated_anchors = [anchor for _, anchor in enumerated_pairs] if is_enumerated else []
             if enumerated_anchors and any(anchor is None for anchor in enumerated_anchors):
                 raise ValueError(f"enumerated result phrase anchors are incomplete in {beat.beat_id}")
             count = len(candidates)
@@ -499,30 +598,41 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
             if template == "result_showcase":
                 used_results.add(asset.asset_id)
             is_first = not shots
-            is_last = beat is narration.beats[-1] and index == len(schedule) - 1
-            if is_last and not locked and timing.duration_frames > span.end_frame:
-                absolute_end = timing.duration_frames
+            is_last = beat_index == len(narration.beats) - 1 and index == len(schedule) - 1
+            is_beat_tail = index == len(schedule) - 1
+            content_start = absolute_start
+            content_end = absolute_end
+            shot_start = 0 if is_first and absolute_start > 0 else absolute_start
+            shot_end = absolute_end
+            pause_hold = False
+            if is_last and timing.duration_frames > span.end_frame:
+                shot_end = timing.duration_frames
+                pause_hold = True
+            elif is_beat_tail and next_span is not None and shot_end < next_span.start_frame:
+                shot_end = next_span.start_frame
+                pause_hold = True
             start = (
                 TimeRef(anchor_id=TIMELINE_START_ANCHOR)
-                if absolute_start == 0
+                if shot_start == 0
                 else TimeRef(
                     anchor_id=f"{BEAT_START_ANCHOR_PREFIX}{beat.beat_id}",
-                    offset_frames=absolute_start - span.start_frame,
+                    offset_frames=shot_start - span.start_frame,
                 )
             )
-            end = (
-                TimeRef(anchor_id=TIMELINE_END_ANCHOR)
-                if absolute_end == timing.duration_frames
-                else TimeRef(
+            if shot_end == timing.duration_frames:
+                end = TimeRef(anchor_id=TIMELINE_END_ANCHOR)
+            elif pause_hold and next_span is not None and shot_end == next_span.start_frame:
+                end = TimeRef(anchor_id=f"{BEAT_START_ANCHOR_PREFIX}{narration.beats[beat_index + 1].beat_id}")
+            else:
+                end = TimeRef(
                     anchor_id=f"{BEAT_START_ANCHOR_PREFIX}{beat.beat_id}",
-                    offset_frames=absolute_end - span.start_frame,
+                    offset_frames=shot_end - span.start_frame,
                 )
-            )
             cue_bindings: list[CueBinding] = []
-            transition = _transition(template, is_first)
+            transition = _transition(template, is_first, enumerated_result=is_enumerated and template == "result_showcase")
             entrance_sfx = (
                 "transition_whoosh"
-                if template == "ui_feature_entry" and index == 0 and transition.kind in {"slide_left", "slide_right"}
+                if transition.kind in {"slide_left", "slide_right"}
                 else None
                 if template == "ui_feature_entry"
                 else _semantic_sfx(template, beat.spoken_text)
@@ -532,12 +642,12 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                     CueBinding(
                         action="visual.enter",
                         anchor_id=f"{BEAT_START_ANCHOR_PREFIX}{beat.beat_id}",
-                        offset_frames=absolute_start - span.start_frame,
+                        offset_frames=content_start - span.start_frame,
                         sfx=entrance_sfx,
                     )
                 )
             for phrase in phrases_by_beat[beat.beat_id]:
-                if not (absolute_start <= phrase.hit_frame < absolute_end):
+                if not (content_start <= phrase.hit_frame < content_end):
                     continue
                 cue_bindings.append(
                     CueBinding(
@@ -550,14 +660,44 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                         ),
                     )
                 )
-            motion = "scale_in" if template in {"ui_params_focus", "ui_feature_entry"} else "fade_in" if template == "brand_ip_cutaway" else "none"
-            duration = absolute_end - absolute_start
+            duration = shot_end - shot_start
+            motion = (
+                "scale_in"
+                if template == "ui_params_focus"
+                else "page_turn_3d"
+                if asset.role == "site_home"
+                else "detail_push_in"
+                if template == "ui_feature_entry"
+                else "full_bleed_to_safe_card"
+                if template == "result_showcase"
+                else "brand_breath"
+                if template == "brand_ip_cutaway"
+                else "none"
+            )
             long_hold = "reading" if duration > timing.fps * 2.2 and template == "ui_params_focus" else None
             if duration > timing.fps * 2.2 and template in {"result_showcase", "brand_ip_cutaway", "ui_feature_entry"}:
                 long_hold = "appreciation"
-            if is_last and timing.duration_frames > span.end_frame:
+            if pause_hold:
                 long_hold = "pause"
             asset_bindings = {"primary": asset.asset_id}
+            parameter_sequence = None
+            if template == "ui_params_focus":
+                sequence_ids = asset.metadata.get("sequence_asset_ids")
+                if not isinstance(sequence_ids, dict) or set(sequence_ids) != {"base", "stage", "final"}:
+                    raise ValueError(f"parameter-page asset has no complete approved frame sequence: {asset.asset_id}")
+                parameter_sequence = ParameterFrameSequence(
+                    sequence_id=str(asset.metadata.get("sequence_id") or ""),
+                    base_asset_id=str(sequence_ids["base"]),
+                    stage_asset_id=str(sequence_ids["stage"]),
+                    final_asset_id=str(sequence_ids["final"]),
+                    required_field_labels=[str(item) for item in asset.metadata.get("required_field_labels", [])],
+                    callout_text=str(asset.metadata.get("callout_text") or ""),
+                )
+                asset_bindings = {
+                    "base": parameter_sequence.base_asset_id,
+                    "stage": parameter_sequence.stage_asset_id,
+                    "final": parameter_sequence.final_asset_id,
+                }
             if template == "reference_to_result":
                 if comparison is None or comparison[1].asset_id != asset.asset_id:
                     raise ValueError(f"reference comparison pair is missing for {beat.beat_id}")
@@ -578,6 +718,7 @@ def build_auto_visual_plan(case_id: str, narration: Narration, timing: TimingLoc
                     motion=motion,
                     transition_in=transition,
                     long_hold_reason=long_hold,
+                    parameter_sequence=parameter_sequence,
                 )
             )
     return VisualPlan(case_id=case_id, shots=shots)

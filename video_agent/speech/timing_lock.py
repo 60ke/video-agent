@@ -12,6 +12,8 @@ from video_agent.io import sha256_file
 
 
 SPACE_RE = re.compile(r"\s+")
+ENUMERATION_SPLIT_RE = re.compile(r"[、,，]")
+AUTO_VISUAL_GENERIC_TERMS = {"真实结果", "多结果", "结果", "展示", "设计方案", "功能", "功能总览"}
 
 
 def normalize_text(text: str) -> str:
@@ -53,6 +55,30 @@ def ms_to_frame(milliseconds: int, fps: int) -> int:
 def _anchor_id(beat_id: str, phrase: str) -> str:
     digest = hashlib.sha256(f"{beat_id}|{phrase}".encode("utf-8")).hexdigest()[:10]
     return f"anchor_{digest}"
+
+
+def _visual_hit_phrases(beat: object) -> list[str]:
+    """Return explicit plus safely inferred feature phrases for word anchors."""
+
+    phrases = list(beat.hit_phrases)
+    # asset_slots are often canonical feature names and are a reliable fallback
+    # when an older narration omitted hit_phrases.
+    phrases.extend(slot for slot in beat.asset_slots if slot in beat.spoken_text)
+    # A spoken enumeration is also an unambiguous visual instruction. Keep only
+    # concise items so ordinary sentences do not accidentally become anchors.
+    if "、" in beat.spoken_text or "，" in beat.spoken_text or "," in beat.spoken_text:
+        for item in ENUMERATION_SPLIT_RE.split(beat.spoken_text):
+            item = re.sub(r"^(?:包括|比如|例如|还有|以及)", "", item).strip()
+            item = re.sub(r"(?:等(?:设计方案|方案|功能)?|设计方案|方案)$", "", item).strip()
+            item = item.rstrip("。！？!?")
+            if 2 <= len(item) <= 12:
+                phrases.append(item)
+    unique: list[str] = []
+    for phrase in phrases:
+        normalized = normalize_text(phrase)
+        if phrase and normalized not in AUTO_VISUAL_GENERIC_TERMS and phrase not in unique and phrase in beat.spoken_text:
+            unique.append(phrase)
+    return unique
 
 
 def build_timing_lock(
@@ -145,7 +171,7 @@ def build_timing_lock(
             size = len(normalize_text(token.text))
             local_offsets.append((local_cursor, local_cursor + size))
             local_cursor += size
-        phrase_claims: dict[str, list[str]] = {phrase: [] for phrase in beat.hit_phrases}
+        phrase_claims: dict[str, list[str]] = {phrase: [] for phrase in _visual_hit_phrases(beat)}
         for cue in beat.claim_cues:
             phrase_claims.setdefault(cue.phrase, []).append(cue.claim_id)
         for phrase, claim_ids in phrase_claims.items():

@@ -2,7 +2,10 @@
   "schema_version": 3,
   "status": "ready",
   "library": "assets/results",
-  "feature_path": ["文生图", "文化墙"],
+  "feature_path": [
+    "文生图",
+    "文化墙"
+  ],
   "feature_id": "culture_wall",
   "variant_kind": "industry_scene",
   "has_industry": true,
@@ -10,35 +13,56 @@
   "assets": [
     {
       "asset_filename": "柯幻熊猫_文生图_文化墙_社区服务_结果图_01.png",
-      "feature_path": ["文生图", "文化墙"],
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
       "feature_id": "culture_wall",
       "variant_kind": "industry_scene",
       "industry_label": "社区服务",
       "content_type": "installed_culture_wall",
       "sequence": "01",
-      "supported_claims": ["curated_result_image", "文化墙结果展示", "社区服务主题空间"],
+      "supported_claims": [
+        "curated_result_image",
+        "文化墙结果展示",
+        "社区服务主题空间"
+      ],
       "source_staging": "cases/kx_culture_wall_e2e_20260708/assets/results/柯幻熊猫_文生图_文化墙_社区服务_共建共享_002_结果图_横图_v1.png"
     },
     {
       "asset_filename": "柯幻熊猫_文生图_文化墙_医院文化_结果图_03.png",
-      "feature_path": ["文生图", "文化墙"],
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
       "feature_id": "culture_wall",
       "variant_kind": "industry_scene",
       "industry_label": "医院文化",
       "content_type": "installed_culture_wall",
       "sequence": "02",
-      "supported_claims": ["curated_result_image", "文化墙结果展示", "医院关怀主题空间"],
+      "supported_claims": [
+        "curated_result_image",
+        "文化墙结果展示",
+        "医院关怀主题空间"
+      ],
       "source_staging": "cases/kx_culture_wall_e2e_20260708/assets/results/柯幻熊猫_文生图_文化墙_医院文化_生命关怀_001_结果图_横图_v1.png"
     },
     {
       "asset_filename": "柯幻熊猫_文生图_文化墙_职工之家_结果图_04.png",
-      "feature_path": ["文生图", "文化墙"],
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
       "feature_id": "culture_wall",
       "variant_kind": "industry_scene",
       "industry_label": "职工之家",
       "content_type": "installed_culture_wall",
       "sequence": "03",
-      "supported_claims": ["curated_result_image", "文化墙结果展示", "职工之家主题空间"],
+      "supported_claims": [
+        "curated_result_image",
+        "文化墙结果展示",
+        "职工之家主题空间"
+      ],
       "source_staging": "cases/kx_culture_wall_e2e_20260708/assets/results/柯幻熊猫_文生图_文化墙_职工之家_工会活动_003_结果图_横图_v1.png"
     }
   ]

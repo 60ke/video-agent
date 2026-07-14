@@ -16,9 +16,9 @@ from .assets import (
 from .case import AudioConfig, CaseConfig, DurationPolicy, SemanticSfx, SfxDensityPolicy, VideoFormat, VoiceConfig
 from .narration import Claim, ClaimCue, Narration, NarrationBeat, PauseIntent
 from .qa import CheckResult, QaReport
-from .render import AudioTrack, CompiledCalloutAnimation, CompiledCue, RenderAsset, RenderPlan, RenderShot, SubtitleCue
+from .render import AudioTrack, CompiledCue, CompiledParameterFrameSequence, RenderAsset, RenderPlan, RenderShot, SubtitleCue
 from .timing import BeatSpan, PauseEvent, PhraseAnchor, TimingLock, TokenTiming
-from .visual import CalloutAnimation, CueBinding, OverlayLayout, ShotPlan, TimeRef, TransitionIn, VisualPlan
+from .visual import CueBinding, OverlayLayout, ParameterFrameSequence, ShotPlan, TimeRef, TransitionIn, VisualPlan
 
 __all__ = [
     "Asset",
@@ -33,9 +33,8 @@ __all__ = [
     "Claim",
     "ClaimCue",
     "CompiledCue",
-    "CompiledCalloutAnimation",
+    "CompiledParameterFrameSequence",
     "CueBinding",
-    "CalloutAnimation",
     "DurationPolicy",
     "DeriveKind",
     "DerivedAssetRequest",
@@ -45,6 +44,7 @@ __all__ = [
     "MaterializationPlan",
     "NormalizedRect",
     "OverlayLayout",
+    "ParameterFrameSequence",
     "PauseEvent",
     "PauseIntent",
     "PhraseAnchor",

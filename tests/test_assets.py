@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from io import BytesIO
 from pathlib import Path
 
 import pytest
@@ -8,15 +9,15 @@ from PIL import Image
 from pydantic import ValidationError
 
 from video_agent.assets import build_catalog, catalog_snapshot
+from video_agent.ai.gpt_image import ImageEditResult
 from video_agent.assets.materializer import materialize_assets
 from video_agent.assets.site_params_batch import (
     RequiredFieldsAnnotation,
     _callout_text,
     _instruction,
-    approve_site_params_manifest,
-    generate_site_params_keyframes,
     parse_site_params_filename,
 )
+from video_agent.assets.site_params_sequence import generate_parameter_frame_sequences
 from video_agent.contracts import (
     Asset,
     AssetCatalog,
@@ -80,15 +81,7 @@ def test_parameter_batch_include_preserves_unselected_manifest_assets(tmp_path: 
     _png(output_dir / "柯幻熊猫_文生图_美陈_参数面板关键帧.png")
     (output_dir / "manifest.json").write_text(
         json.dumps(
-            {
-                "assets": [
-                    {
-                        "source_path": (source_dir / "未选中_参数面板截图.png").resolve().as_posix(),
-                        "source_filename": "未选中_参数面板截图.png",
-                        "output_path": old_output.resolve().as_posix(),
-                    }
-                ]
-            },
+            {"sequences": [{"source_path": (source_dir / "未选中_参数面板截图.png").resolve().as_posix(), "sequence_id": "old"}]},
             ensure_ascii=False,
         ),
         encoding="utf-8",
@@ -102,13 +95,24 @@ def test_parameter_batch_include_preserves_unselected_manifest_assets(tmp_path: 
         cdp_labels=(),
         cdp_unmatched_labels=(),
     )
-    monkeypatch.setattr("video_agent.assets.site_params_batch._required_fields_annotation", lambda *_: annotation)
-    monkeypatch.setattr("video_agent.assets.site_params_batch._prompt", lambda *_: ("{batch_instruction}", "b" * 64))
+    from video_agent.assets.site_params_sequence import generate_parameter_frame_sequences
 
-    generate_site_params_keyframes(tmp_path, source_dir, output_dir, include=source_filename)
+    monkeypatch.setattr("video_agent.assets.site_params_sequence._required_fields_annotation", lambda *_: annotation)
+    response = BytesIO()
+    Image.new("RGB", (1080, 1920), (30, 40, 50)).save(response, format="PNG")
+    final_response = BytesIO()
+    final_image = Image.new("RGB", (1080, 1920), (30, 40, 50))
+    final_image.paste((255, 220, 40), (700, 900, 940, 1040))
+    final_image.save(final_response, format="PNG")
+    responses = iter((response.getvalue(), final_response.getvalue()))
+    monkeypatch.setattr(
+        "video_agent.assets.site_params_sequence.edit_image",
+        lambda *_: ImageEditResult(content=next(responses), provider="test", model="gpt-image-test", response_id="img_test"),
+    )
+    generate_parameter_frame_sequences(tmp_path, source_dir, output_dir, include=source_filename)
 
     manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
-    assert {item["source_filename"] for item in manifest["assets"]} == {"未选中_参数面板截图.png", source_filename}
+    assert {Path(item["source_path"]).name for item in manifest["sequences"]} == {"未选中_参数面板截图.png", source_filename}
 
 
 def test_parameter_batch_exclude_skips_locked_source(tmp_path: Path) -> None:
@@ -118,7 +122,7 @@ def test_parameter_batch_exclude_skips_locked_source(tmp_path: Path) -> None:
     (source_dir / "_callouts.json").write_text('{"items": {}}', encoding="utf-8")
 
     with pytest.raises(FileNotFoundError, match="no parameter-panel screenshots"):
-        generate_site_params_keyframes(
+        generate_parameter_frame_sequences(
             tmp_path,
             source_dir,
             tmp_path / "assets" / "derived",
@@ -126,16 +130,17 @@ def test_parameter_batch_exclude_skips_locked_source(tmp_path: Path) -> None:
         )
 
 
-def test_parameter_manifest_approval_checks_hash_and_marks_review(tmp_path: Path) -> None:
-    output = tmp_path / "参数面板关键帧.png"
-    _png(output)
+def test_parameter_sequence_manifest_approval_checks_hash_and_marks_review(tmp_path: Path) -> None:
+    outputs = {state: tmp_path / f"参数面板{state}.png" for state in ("base", "stage", "final")}
+    for output in outputs.values():
+        _png(output)
     from video_agent.io import sha256_file
 
     manifest_path = tmp_path / "manifest.json"
     manifest_path.write_text(
         json.dumps(
             {
-                "assets": [{"output_path": output.as_posix(), "output_sha256": sha256_file(output), "quality_status": "unreviewed"}],
+                "sequences": [{"sequence_id": "params", "frames": {state: {"path": path.as_posix(), "sha256": sha256_file(path)} for state, path in outputs.items()}}],
                 "errors": [],
             },
             ensure_ascii=False,
@@ -143,49 +148,57 @@ def test_parameter_manifest_approval_checks_hash_and_marks_review(tmp_path: Path
         encoding="utf-8",
     )
 
-    result = approve_site_params_manifest(manifest_path)
+    from video_agent.assets.site_params_sequence import approve_parameter_frame_sequences
+
+    result = approve_parameter_frame_sequences(manifest_path)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
     assert result == {"approved": 1}
-    assert manifest["review_status"] == "human_approved"
-    assert manifest["assets"][0]["quality_status"] == "human_approved"
-    assert manifest["assets"][0]["quality_checks"] == ["human_reviewed", "parameter_layout_reviewed"]
+    assert manifest["sequences"][0]["quality_status"] == "human_approved"
+    assert manifest["sequences"][0]["frames"]["base"]["quality_status"] == "human_approved"
 
 
 def test_approved_parameter_keyframe_replaces_raw_screenshot_in_production_pool(tmp_path: Path) -> None:
     assets = tmp_path / "assets"
     source = assets / "sites" / "柯幻熊猫_文生图_文化墙_参数面板截图.png"
-    derived = assets / "derived" / "sites" / "柯幻熊猫" / "文生图" / "参数面板" / "柯幻熊猫_文生图_文化墙_参数面板关键帧.png"
+    derived_dir = assets / "derived" / "sites" / "柯幻熊猫" / "文生图" / "参数面板序列" / "frames"
     _png(source)
-    _png(derived, (1080, 1920))
+    derived = {state: derived_dir / f"柯幻熊猫_文生图_文化墙_参数面板{label}.png" for state, label in {"base": "无花字图", "stage": "花字阶段图", "final": "花字完成图"}.items()}
+    for path in derived.values():
+        _png(path, (1080, 1920))
     (assets / "sites" / "_callouts.json").write_text('{"items": {}}', encoding="utf-8")
     (assets / "results").mkdir(parents=True)
     (assets / "outro").mkdir()
     from video_agent.io import sha256_file
 
     manifest = {
-        "workflow": "site_params_gpt_image_batch",
-        "assets": [
+        "workflow": "site_params_flower_text_frame_sequence",
+        "sequences": [
             {
+                "sequence_id": "params_文化墙",
                 "source_path": source.resolve().as_posix(),
                 "source_sha256": sha256_file(source),
-                "output_path": derived.resolve().as_posix(),
-                "output_sha256": sha256_file(derived),
                 "module": "文生图",
                 "feature_path": ["文化墙"],
                 "feature": "文化墙",
+                "required_field_labels": ["行业"],
+                "callout_text": "行业",
                 "quality_status": "human_approved",
+                "frames": {
+                    state: {"path": path.resolve().as_posix(), "sha256": sha256_file(path), "quality_status": "human_approved", "origin": "gpt_image_edit"}
+                    for state, path in derived.items()
+                },
             }
         ],
     }
-    (derived.parent / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+    (derived_dir.parent / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
 
     catalog = build_catalog(assets)
     params = [asset for asset in catalog.assets if asset.role == "feature_form_params"]
 
-    assert len(params) == 2
+    assert len(params) == 4
     assert next(asset for asset in params if asset.provenance.origin == "site_screenshot_library").production_eligible is False
-    prepared = next(asset for asset in params if asset.provenance.origin == "gpt_image_site_keyframe")
+    prepared = next(asset for asset in params if asset.metadata.get("sequence_role") == "base")
     assert prepared.production_eligible is True
     assert prepared.quality.status == "human_approved"
 

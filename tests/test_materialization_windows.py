@@ -143,7 +143,7 @@ def test_auto_visual_honors_materialized_preferred_windows(tmp_path: Path) -> No
     assert visual.shots[1].end.offset_frames == 100
     assert visual.shots[2].start.offset_frames == 100
     assert visual.shots[2].end.anchor_id == "timeline_end"
-    assert all(shot.callout_animation is None for shot in visual.shots)
+    assert all(shot.parameter_sequence is None for shot in visual.shots)
 
 
 def test_auto_visual_rejects_overlapping_materialized_windows(tmp_path: Path) -> None:
@@ -234,32 +234,6 @@ def test_site_keyframe_materialization_uses_gpt_image_and_requires_review(
     assert reviewed.assets[-1].quality.status == "unreviewed"
 
 
-def test_site_screenshot_cannot_use_deterministic_callout_overlay(tmp_path: Path) -> None:
-    source_path = tmp_path / "site.png"
-    _png(source_path)
-    source = _asset(
-        "asset_site_source",
-        source_path,
-        origin="site_screenshot_library",
-        evidence=EvidenceClass.SOURCE,
-        role="feature_entry",
-    )
-    catalog = AssetCatalog(catalog_id="catalog", generated_at="now", source_root=".", assets=[source])
-    plan = MaterializationPlan(
-        case_id="demo",
-        requests=[
-            DerivedAssetRequest(
-                request_id="legacy_callout",
-                source_asset_id=source.asset_id,
-                derive_kind=DeriveKind.CALLOUT_OVERLAY,
-            )
-        ],
-    )
-
-    with pytest.raises(ValueError, match="GPT Image site keyframe recipes"):
-        materialize_assets(Path(__file__).resolve().parents[1], catalog, plan, tmp_path / "derived")
-
-
 def test_site_entry_batch_outputs_final_gpt_image_without_layer_metadata(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -284,5 +258,3 @@ def test_site_entry_batch_outputs_final_gpt_image_without_layer_metadata(
 
     assert manifest["workflow"] == "site_feature_entry_gpt_image_batch"
     assert asset["provider"] == "test"
-    assert "callout_base_path" not in asset
-    assert "callout_layer_path" not in asset
