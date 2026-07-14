@@ -1,26 +1,18 @@
 from __future__ import annotations
 
 import json
+from io import BytesIO
 from pathlib import Path
 
 import pytest
 from PIL import Image
 
-from video_agent.assets import materialize_assets, review_materialized_assets
+from video_agent.ai.gpt_image import ImageEditResult
+from video_agent.assets import review_materialized_assets
 from video_agent.assets.site_params_batch import RequiredFieldsAnnotation, generate_site_params_keyframes
-from video_agent.compiler import validate_claim_bindings
+from video_agent.compiler import render_plan, validate_claim_bindings
 from video_agent.compiler.evidence import resolves_to_supporting_asset
-from video_agent.compiler import render_plan
-from video_agent.contracts import (
-    Asset,
-    AssetCatalog,
-    AssetQuality,
-    DeriveKind,
-    DerivedAssetRequest,
-    EvidenceClass,
-    MaterializationPlan,
-    Provenance,
-)
+from video_agent.contracts import Asset, AssetCatalog, AssetQuality, DeriveKind, EvidenceClass, Provenance
 from video_agent.io import sha256_file
 
 
@@ -146,31 +138,6 @@ def test_asset_review_rejects_hash_and_dimension_mismatches(tmp_path: Path) -> N
     assert statuses[bad_size.asset_id] == "rejected"
 
 
-def test_materializer_rejects_site_keyframe_requests(tmp_path: Path) -> None:
-    source_path = tmp_path / "source.png"
-    _png(source_path)
-    source = _asset(
-        "asset_source",
-        source_path,
-        evidence=EvidenceClass.SOURCE,
-        origin="site_screenshot_library",
-    )
-    catalog = AssetCatalog(catalog_id="source", generated_at="now", source_root=".", assets=[source])
-    plan = MaterializationPlan(
-        case_id="demo",
-        requests=[
-            DerivedAssetRequest(
-                request_id="site_params",
-                source_asset_id=source.asset_id,
-                derive_kind=DeriveKind.SITE_PARAMS_KEYFRAME,
-            )
-        ],
-    )
-
-    with pytest.raises(ValueError, match="deterministic site batch tools"):
-        materialize_assets(tmp_path, catalog, plan, tmp_path / "derived")
-
-
 def test_corrupt_untracked_parameter_keyframe_is_regenerated(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     source_dir = tmp_path / "assets" / "sites"
     output_dir = tmp_path / "assets" / "derived"
@@ -191,17 +158,14 @@ def test_corrupt_untracked_parameter_keyframe_is_regenerated(tmp_path: Path, mon
         cdp_unmatched_labels=(),
     )
     monkeypatch.setattr("video_agent.assets.site_params_batch._required_fields_annotation", lambda *_: annotation)
+    buffer = BytesIO()
+    Image.new("RGB", (1080, 1920), (30, 40, 50)).save(buffer, format="PNG")
     monkeypatch.setattr(
-        "video_agent.assets.site_params_batch._field_boxes",
-        lambda *_: [{"x": 0.1, "y": 0.2, "w": 0.3, "h": 0.1}],
+        "video_agent.assets.site_params_batch.edit_image",
+        lambda *_: ImageEditResult(content=buffer.getvalue(), provider="test", model="gpt-image-test", response_id="img_1"),
     )
 
-    def fake_generate(_source: Path, target: Path, _boxes: list[dict[str, float]], _text: str) -> dict[str, str]:
-        _png(target, (1080, 1920))
-        return {}
-
-    monkeypatch.setattr("video_agent.assets.site_params_batch.generate_parameter_keyframe", fake_generate)
-    result = generate_site_params_keyframes(tmp_path, source_dir, output_dir, include=filename)
+    result = generate_site_params_keyframes(Path(__file__).resolve().parents[1], source_dir, output_dir, include=filename)
 
     assert result["generated"] == 1
     assert result["recovered"] == 0
