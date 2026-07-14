@@ -8,9 +8,9 @@ from .base import Contract, VersionedContract
 
 
 class VideoFormat(Contract):
-    width: int = 1080
-    height: int = 1920
-    fps: int = 30
+    width: Literal[1080] = 1080
+    height: Literal[1920] = 1920
+    fps: Literal[30] = 30
 
 
 class DurationPolicy(Contract):
@@ -79,7 +79,7 @@ class CaseConfig(VersionedContract):
     duration_policy: DurationPolicy = Field(default_factory=DurationPolicy)
     voice: VoiceConfig = Field(default_factory=VoiceConfig)
     audio: AudioConfig = Field(default_factory=AudioConfig)
-    platform_profile: str = "douyin_portrait_v1"
+    platform_profile: Literal["douyin_portrait_v1"] = "douyin_portrait_v1"
     narration_source: str | None = None
     materialization_source: str | None = None
     visual_plan_source: str | None = None

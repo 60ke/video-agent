@@ -197,14 +197,13 @@ def _instruction(source: SiteParamsSource, annotation: RequiredFieldsAnnotation)
     return (
         f"文件名解析路径是 {source.site} -> {source.module} -> {hierarchy}，当前功能为“{source.feature}”。"
         f"新增花字只能逐字写为“{annotation.callout_text}”，它是唯一允许新增的中文文字，且花字不得包含 * 或 ＊。"
-        f"箭头尖端指向页面中这些字段所在的整体视觉中心：{', '.join(annotation.labels)}。字段名称仅用于定位，绝不可额外写到画面上。"
+        f"箭头指向这些字段所在区域：{', '.join(annotation.labels)}。字段名称只用于理解目标，不得额外写入画面。"
         "页面原有 UI 中已经存在的红色 * 或 ＊ 是界面内容，必须逐个原样保留；不得删除、隐藏、移动、改色、改样式、复制或用花字替换。"
         "绝不可把提示词、校验过程或来源说明渲染进图片，包括“已验证必填字段”“必填字段”“字段说明”“CDP”“前端源码”。"
-        "花字和箭头必须作为直接覆盖在原始参数面板上的叠层，优先落在面板右侧或右下区域；不得为了放花字新增右侧黑栏、左右分栏、留出空白区或缩小原始参数面板。"
-        "原始参数面板必须从左至右铺满有效画面宽度，两侧外边距各不超过 3%；绝不可在右侧留下空白条、黑色空区或独立侧栏。花字可以覆盖普通表单内容或页面背景以形成醒目的整合构图，唯一禁止遮挡的是原始页面标题或分区标题，箭头可以自然跨过页面指向目标字段。"
-        "在黄色马克笔字配蓝箭头、青色描边字配橙色笔刷下划线、白字红描边配涂鸦指针、"
-        "和粉橙贴纸字配紫蓝箭头之间，依据页面留白选择一种最清晰的风格。"
-        "不要使用红色框、规则矩形、圆圈、鼠标或人物头像。"
+        "花字和箭头应由 GPT Image 自然整合到原始参数面板，优先落在面板右侧或右下区域；不得新增右侧黑栏、左右分栏、空白区或缩小原始参数面板。"
+        "原始参数面板必须从左至右铺满有效画面宽度，两侧外边距各不超过 3%；绝不可在右侧留下空白条、黑色空区或独立侧栏。"
+        "花字可以覆盖普通表单内容或页面背景，唯一禁止遮挡的是原始页面标题或分区标题。"
+        "不要使用程序化红框、规则矩形、圆圈、鼠标、人物头像或单独的动画图层。"
     )
 
 
@@ -242,10 +241,10 @@ def generate_site_params_keyframes(
         write_json_atomic(
             manifest_path,
             {
-                "schema_version": 1,
+                "schema_version": 2,
                 "generated_at": utc_now(),
                 "workflow": "site_params_gpt_image_batch",
-                "annotation_style": "dynamic_required_field_handwritten_callout",
+                "annotation_style": "gpt_image_integrated_parameter_callout",
                 "source_dir": source_dir.resolve().as_posix(),
                 "output_dir": output_dir.resolve().as_posix(),
                 "assets": sorted(results, key=lambda item: item["source_filename"]),
@@ -254,7 +253,7 @@ def generate_site_params_keyframes(
         )
 
     selected_source_paths = {source.path.resolve().as_posix() for source in sources}
-    results: list[dict[str, Any]] = [
+    results = [
         item
         for item in previous.get("assets", [])
         if isinstance(item, dict) and item.get("source_path") not in selected_source_paths
@@ -263,8 +262,7 @@ def generate_site_params_keyframes(
     pending: list[tuple[SiteParamsSource, RequiredFieldsAnnotation, Path, str, str, str]] = []
     for source in sources:
         annotation = _required_fields_annotation(repo_root, source, callouts)
-        instruction = _instruction(source, annotation)
-        prompt = recipe_prompt.replace("{batch_instruction}", instruction)
+        prompt = recipe_prompt.replace("{batch_instruction}", _instruction(source, annotation))
         source_sha256 = sha256_file(source.path)
         prompt_sha256 = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         output = output_dir / _output_name(source)
@@ -280,9 +278,6 @@ def generate_site_params_keyframes(
         ):
             results.append({**old, "status": "cached"})
             continue
-
-        # A previous interrupted batch may have already produced a valid image.
-        # Reconstruct its manifest entry rather than spending another model request.
         if not force and output.is_file():
             try:
                 with Image.open(output) as image:
@@ -302,10 +297,10 @@ def generate_site_params_keyframes(
                         "module": source.module,
                         "feature_path": list(source.feature_path),
                         "feature": source.feature,
-                        "annotation_style": "dynamic_required_field_handwritten_callout",
+                        "annotation_style": "gpt_image_integrated_parameter_callout",
                         "required_field_labels": list(annotation.labels),
                         "callout_text": annotation.callout_text,
-                        "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
+                        "callout_source": "frontend_and_cdp_semantic_guidance",
                         "frontend_source_path": annotation.frontend_source_path,
                         "frontend_source_sha256": annotation.frontend_source_sha256,
                         "cdp_required_field_labels": list(annotation.cdp_labels),
@@ -334,34 +329,34 @@ def generate_site_params_keyframes(
             width, height = image.size
             image.verify()
         return {
-                "source_path": source.path.resolve().as_posix(),
-                "source_filename": source.path.name,
-                "source_sha256": source_sha256,
-                "output_path": output.resolve().as_posix(),
-                "output_filename": output.name,
-                "output_sha256": sha256_file(output),
-                "width": width,
-                "height": height,
-                "site": source.site,
-                "module": source.module,
-                "feature_path": list(source.feature_path),
-                "feature": source.feature,
-                "annotation_style": "dynamic_required_field_handwritten_callout",
-                "required_field_labels": list(annotation.labels),
-                "callout_text": annotation.callout_text,
-                "callout_source": "cdp_dom_required_fields_validated_against_frontend_source",
-                "frontend_source_path": annotation.frontend_source_path,
-                "frontend_source_sha256": annotation.frontend_source_sha256,
-                "cdp_required_field_labels": list(annotation.cdp_labels),
-                "cdp_unmatched_field_labels": list(annotation.cdp_unmatched_labels),
-                "prompt_sha256": prompt_sha256,
-                "prompt_template_sha256": template_sha256,
-                "provider": result.provider,
-                "model": result.model,
-                "response_id": result.response_id,
-                "quality_status": "unreviewed",
-                "status": "generated",
-            }
+            "source_path": source.path.resolve().as_posix(),
+            "source_filename": source.path.name,
+            "source_sha256": source_sha256,
+            "output_path": output.resolve().as_posix(),
+            "output_filename": output.name,
+            "output_sha256": sha256_file(output),
+            "width": width,
+            "height": height,
+            "site": source.site,
+            "module": source.module,
+            "feature_path": list(source.feature_path),
+            "feature": source.feature,
+            "annotation_style": "gpt_image_integrated_parameter_callout",
+            "required_field_labels": list(annotation.labels),
+            "callout_text": annotation.callout_text,
+            "callout_source": "frontend_and_cdp_semantic_guidance",
+            "frontend_source_path": annotation.frontend_source_path,
+            "frontend_source_sha256": annotation.frontend_source_sha256,
+            "cdp_required_field_labels": list(annotation.cdp_labels),
+            "cdp_unmatched_field_labels": list(annotation.cdp_unmatched_labels),
+            "prompt_sha256": prompt_sha256,
+            "prompt_template_sha256": template_sha256,
+            "provider": result.provider,
+            "model": result.model,
+            "response_id": result.response_id,
+            "quality_status": "unreviewed",
+            "status": "generated",
+        }
 
     with ThreadPoolExecutor(max_workers=max(1, workers)) as executor:
         futures = {executor.submit(generate, item): item[0] for item in pending}
@@ -391,7 +386,6 @@ def approve_site_params_manifest(manifest_path: Path) -> dict[str, int]:
         raise ValueError(f"invalid site-params manifest: {manifest_path}")
     if manifest.get("errors"):
         raise ValueError(f"site-params manifest still contains generation errors: {manifest_path}")
-
     approved = 0
     for asset in assets:
         if not isinstance(asset, dict):
@@ -400,8 +394,7 @@ def approve_site_params_manifest(manifest_path: Path) -> dict[str, int]:
         if not output.is_file():
             raise FileNotFoundError(f"approved parameter-panel output is missing: {output}")
         expected_sha256 = str(asset.get("output_sha256") or "")
-        actual_sha256 = sha256_file(output)
-        if not expected_sha256 or actual_sha256 != expected_sha256:
+        if not expected_sha256 or sha256_file(output) != expected_sha256:
             raise ValueError(f"parameter-panel output hash mismatch: {output}")
         asset["quality_status"] = "human_approved"
         checks = asset.setdefault("quality_checks", [])
@@ -409,7 +402,6 @@ def approve_site_params_manifest(manifest_path: Path) -> dict[str, int]:
             if check not in checks:
                 checks.append(check)
         approved += 1
-
     manifest["reviewed_at"] = utc_now()
     manifest["review_status"] = "human_approved"
     write_json_atomic(manifest_path, manifest)

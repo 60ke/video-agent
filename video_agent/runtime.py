@@ -9,7 +9,18 @@ from .contracts import CaseConfig
 from .io import load_model, write_json_atomic
 
 
-STAGES = ("catalog", "materialize", "narration", "speech", "visual", "compile", "render", "qa")
+STAGES = (
+    "catalog",
+    "narration",
+    "speech",
+    "visual_demand",
+    "materialize",
+    "asset_review",
+    "visual",
+    "compile",
+    "render",
+    "qa",
+)
 
 
 @dataclass(frozen=True)

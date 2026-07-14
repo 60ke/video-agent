@@ -5,14 +5,23 @@ from pathlib import Path
 from typing import Any
 
 from video_agent.ai.story_planner import plan_narration
-from video_agent.ai.visual_planner import plan_visual
 from video_agent.ai.visual_critic import review_contact_sheet
-from video_agent.assets import build_catalog, catalog_snapshot, materialize_assets
+from video_agent.ai.visual_planner import plan_visual
+from video_agent.assets import build_catalog, catalog_snapshot, materialize_assets, review_materialized_assets
 from video_agent.compiler import compile_render_plan
-from video_agent.contracts import AssetCatalog, MaterializationPlan, Narration, QaReport, RenderPlan, TimingLock, VisualPlan
+from video_agent.contracts import (
+    AssetCatalog,
+    MaterializationPlan,
+    Narration,
+    QaReport,
+    RenderPlan,
+    TimingLock,
+    VisualDemandPlan,
+    VisualPlan,
+)
 from video_agent.cover import postprocess_cover
 from video_agent.io import load_json, load_model, sha256_file, sha256_json, utc_now, write_json_atomic
-from video_agent.planning import build_auto_visual_plan
+from video_agent.planning import build_auto_visual_plan, build_visual_demand_plan
 from video_agent.qa import run_final_qa, validate_render_plan, validate_timing_lock
 from video_agent.render import render_video
 from video_agent.runtime import RunContext, STAGES
@@ -34,13 +43,13 @@ class Orchestrator:
             self.manifest.pop("error", None)
         else:
             self.manifest = {
-            "schema_version": 3,
-            "case_id": context.case.case_id,
-            "run_id": context.run_id,
-            "created_at": utc_now(),
-            "status": "running",
-            "stages": {},
-            "prompts": [],
+                "schema_version": 4,
+                "case_id": context.case.case_id,
+                "run_id": context.run_id,
+                "created_at": utc_now(),
+                "status": "running",
+                "stages": {},
+                "prompts": [],
             }
 
     def _record(
@@ -114,9 +123,24 @@ class Orchestrator:
                 if (self.context.repo_root / "assets" / "catalog.json").is_file()
                 else None,
             },
-            "materialize": {"case": case, "catalog": self._artifact_sha256("asset_catalog.source.json"), "source": self._source_sha256(self.context.case.materialization_source)},
-            "narration": {"case": case, "catalog": self._artifact_sha256("asset_catalog.json"), "source": self._source_sha256(self.context.case.narration_source)},
+            "narration": {
+                "case": case,
+                "catalog": self._artifact_sha256("asset_catalog.source.json"),
+                "source": self._source_sha256(self.context.case.narration_source),
+            },
             "speech": {"voice": case["voice"], "narration": self._artifact_sha256("narration.json")},
+            "visual_demand": {
+                "case": case,
+                "narration": self._artifact_sha256("narration.json"),
+                "timing": self._artifact_sha256("timing_lock.json"),
+                "catalog": self._artifact_sha256("asset_catalog.source.json"),
+                "manual_materialization": self._source_sha256(self.context.case.materialization_source),
+            },
+            "materialize": {
+                "catalog": self._artifact_sha256("asset_catalog.source.json"),
+                "visual_demand": self._artifact_sha256("visual_demand.json"),
+            },
+            "asset_review": {"catalog": self._artifact_sha256("asset_catalog.pending.json")},
             "visual": {
                 "mode": case["visual_planner_mode"],
                 "narration": self._artifact_sha256("narration.json"),
@@ -138,12 +162,13 @@ class Orchestrator:
                 "cover_enabled": case["cover_enabled"],
                 "cover_source": self._source_sha256(case["cover_source"]) if case["cover_enabled"] else None,
             },
-            "qa": {"plan": self._artifact_sha256("render_plan.json"), "video": self._artifact_sha256("final/video.mp4"), "vision_review_enabled": case["vision_review_enabled"]},
+            "qa": {
+                "plan": self._artifact_sha256("render_plan.json"),
+                "video": self._artifact_sha256("final/video.mp4"),
+                "vision_review_enabled": case["vision_review_enabled"],
+            },
         }
         return {**common, "stage": stage, "inputs": source_map[stage]}
-
-    def _stage_input_sha256(self, stage: str) -> str:
-        return sha256_json(self._stage_input_fingerprint(stage))
 
     def _can_resume_stage(self, stage: str, input_sha256: str) -> bool:
         item = self.manifest["stages"].get(stage)
@@ -170,9 +195,14 @@ class Orchestrator:
                 input_sha256 = sha256_json(input_fingerprint)
                 if from_stage is None and self._can_resume_stage(stage, input_sha256):
                     continue
-                method = getattr(self, f"stage_{stage}")
-                output = method()
-                self._record(stage, "completed", output if isinstance(output, Path) else None, input_sha256=input_sha256, input_fingerprint=input_fingerprint)
+                output = getattr(self, f"stage_{stage}")()
+                self._record(
+                    stage,
+                    "completed",
+                    output if isinstance(output, Path) else None,
+                    input_sha256=input_sha256,
+                    input_fingerprint=input_fingerprint,
+                )
                 if stage == "render" and isinstance(output, Path):
                     final_video = output
             self.manifest["status"] = "completed"
@@ -182,7 +212,13 @@ class Orchestrator:
         except Exception as exc:
             self.manifest["status"] = "failed"
             self.manifest["error"] = {"type": exc.__class__.__name__, "message": str(exc)}
-            self._record(stage, "failed", details={"type": exc.__class__.__name__, "message": str(exc)}, input_sha256=input_sha256, input_fingerprint=input_fingerprint)
+            self._record(
+                stage,
+                "failed",
+                details={"type": exc.__class__.__name__, "message": str(exc)},
+                input_sha256=input_sha256,
+                input_fingerprint=input_fingerprint,
+            )
             self.context.mark_latest("failed")
             raise
 
@@ -197,21 +233,8 @@ class Orchestrator:
         write_json_atomic(output, snapshot)
         return output
 
-    def stage_materialize(self) -> Path:
-        source = load_model(self.context.artifact("asset_catalog.source.json"), AssetCatalog)
-        if self.context.case.materialization_source:
-            plan = load_model(self.context.case_dir / self.context.case.materialization_source, MaterializationPlan)
-            if plan.case_id != self.context.case.case_id:
-                raise ValueError("materialization plan case_id differs from case.json")
-            catalog = materialize_assets(self.context.repo_root, source, plan, self.context.run_dir / "work" / "derived_assets")
-        else:
-            catalog = source
-        output = self.context.artifact("asset_catalog.json")
-        write_json_atomic(output, catalog)
-        return output
-
     def stage_narration(self) -> Path:
-        catalog = load_model(self.context.artifact("asset_catalog.json"), AssetCatalog)
+        catalog = load_model(self.context.artifact("asset_catalog.source.json"), AssetCatalog)
         if self.context.case.narration_source:
             narration = load_model(self.context.case_dir / self.context.case.narration_source, Narration)
         elif self.context.case.ai_enabled:
@@ -227,7 +250,11 @@ class Orchestrator:
 
     def stage_speech(self) -> Path:
         narration = load_model(self.context.artifact("narration.json"), Narration)
-        result = MinimaxClient(self.context.repo_root).synthesize(self.context.case, narration, self.context.run_dir / "work" / "speech")
+        result = MinimaxClient(self.context.repo_root).synthesize(
+            self.context.case,
+            narration,
+            self.context.run_dir / "work" / "speech",
+        )
         timing = build_timing_lock(
             self.context.case.case_id,
             narration,
@@ -246,6 +273,52 @@ class Orchestrator:
             raise ValueError("timing lock failed validation: " + "; ".join(item.check_id for item in failures))
         output = self.context.artifact("timing_lock.json")
         write_json_atomic(output, timing)
+        return output
+
+    def stage_visual_demand(self) -> Path:
+        narration = load_model(self.context.artifact("narration.json"), Narration)
+        timing = load_model(self.context.artifact("timing_lock.json"), TimingLock)
+        catalog = load_model(self.context.artifact("asset_catalog.source.json"), AssetCatalog)
+        plan = build_visual_demand_plan(self.context.case.case_id, narration, timing, catalog)
+
+        if self.context.case.materialization_source:
+            manual = load_model(self.context.case_dir / self.context.case.materialization_source, MaterializationPlan)
+            if manual.case_id != self.context.case.case_id:
+                raise ValueError("materialization plan case_id differs from case.json")
+            by_id = {request.request_id: request for request in plan.requests}
+            for request in manual.requests:
+                existing = by_id.get(request.request_id)
+                if existing and existing.model_dump(mode="json") != request.model_dump(mode="json"):
+                    raise ValueError(f"manual materialization request conflicts with automatic request: {request.request_id}")
+                if not existing:
+                    plan.requests.append(request)
+                    by_id[request.request_id] = request
+            plan.warnings.append(f"merged {len(manual.requests)} manual materialization requests")
+
+        output = self.context.artifact("visual_demand.json")
+        write_json_atomic(output, plan)
+        return output
+
+    def stage_materialize(self) -> Path:
+        source = load_model(self.context.artifact("asset_catalog.source.json"), AssetCatalog)
+        demand = load_model(self.context.artifact("visual_demand.json"), VisualDemandPlan)
+        if demand.case_id != self.context.case.case_id:
+            raise ValueError("visual demand case_id differs from case.json")
+        if demand.requests:
+            plan = MaterializationPlan(case_id=demand.case_id, requests=demand.requests)
+            catalog = materialize_assets(self.context.repo_root, source, plan, self.context.run_dir / "work" / "derived_assets")
+        else:
+            catalog = source
+        output = self.context.artifact("asset_catalog.pending.json")
+        write_json_atomic(output, catalog)
+        return output
+
+    def stage_asset_review(self) -> Path:
+        pending = load_model(self.context.artifact("asset_catalog.pending.json"), AssetCatalog)
+        catalog, report = review_materialized_assets(self.context.repo_root, pending)
+        write_json_atomic(self.context.artifact("asset_review_report.json"), report)
+        output = self.context.artifact("asset_catalog.json")
+        write_json_atomic(output, catalog)
         return output
 
     def stage_visual(self) -> Path:
@@ -295,7 +368,12 @@ class Orchestrator:
     def stage_render(self) -> Path:
         plan = load_model(self.context.artifact("render_plan.json"), RenderPlan)
         output = self.context.run_dir / "final" / "video.mp4"
-        render_video(plan, output, preset="veryfast" if self.context.case.quality == "draft" else "medium", crf=22 if self.context.case.quality == "draft" else 18)
+        render_video(
+            plan,
+            output,
+            preset="veryfast" if self.context.case.quality == "draft" else "medium",
+            crf=22 if self.context.case.quality == "draft" else 18,
+        )
         if self.context.case.cover_enabled:
             spec = self.context.case_dir / self.context.case.cover_source
             postprocess_cover(self.context.repo_root, self.context.case_dir, self.context.run_dir, spec)

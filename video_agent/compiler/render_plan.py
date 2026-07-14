@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from video_agent.audio import merge_sfx_profile
+from video_agent.compiler.evidence import validate_claim_bindings
 from video_agent.compiler.subtitles import compile_subtitles
 from video_agent.contracts import (
     AssetCatalog,
@@ -96,26 +97,6 @@ def _resolve_time(anchor_frames: dict[str, int], anchor_id: str, offset_frames: 
     return max(0, min(duration_frames, anchor_frames[anchor_id] + offset_frames))
 
 
-def _validate_claim_bindings(narration: Narration, visual: VisualPlan, asset_by_id: dict[str, object]) -> None:
-    claims = {claim.claim_id: claim for claim in narration.claims}
-    for shot in visual.shots:
-        for claim_id in shot.claim_ids:
-            claim = claims.get(claim_id)
-            if claim is None:
-                raise ValueError(f"shot references unknown claim: {claim_id}")
-            supporting = set(claim.supporting_asset_ids).intersection(shot.asset_ids)
-            if not supporting:
-                raise ValueError(f"claim {claim_id} is not supported by an asset visible in {shot.shot_id}")
-            invalid = [
-                asset_id
-                for asset_id in supporting
-                if getattr(asset_by_id[asset_id], "evidence_class") not in claim.required_evidence_classes
-            ]
-            if invalid:
-                raise ValueError(f"claim {claim_id} uses insufficient evidence in {shot.shot_id}: {invalid}")
-
-
-
 def _validate_claim_timing(narration: Narration, timing: TimingLock, shots: list[RenderShot]) -> None:
     anchors = {(anchor.beat_id, claim_id): anchor for anchor in timing.phrase_anchors for claim_id in anchor.claim_ids}
     for beat in narration.beats:
@@ -159,7 +140,7 @@ def compile_render_plan(
     anchor_by_id = {anchor.anchor_id: anchor for anchor in timing.phrase_anchors}
     anchor_frames = _timing_anchors(timing)
     asset_by_id = {asset.asset_id: asset for asset in catalog.assets}
-    _validate_claim_bindings(narration, visual, asset_by_id)
+    validate_claim_bindings(narration, visual, asset_by_id)
 
     audio_tracks = [
         AudioTrack(kind="voice", path=str(Path(timing.audio_path).resolve()), start_frame=0, gain_db=audio.voice_gain_db)

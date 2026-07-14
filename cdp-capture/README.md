@@ -1,6 +1,6 @@
 # CDP Capture
 
-`cdp-capture` is now a website screenshot material capture tool. It keeps Chrome login/profile support and captures clean website states plus callout metadata. It does not record browser videos and does not encode MP4 assets for the video pipeline.
+`cdp-capture` is a website screenshot material capture tool. It keeps Chrome login/profile support and captures clean website states plus structured target metadata. It does not record browser videos and does not encode MP4 assets for the video pipeline.
 
 ## Install
 
@@ -45,17 +45,18 @@ The output filenames follow the site material naming policy, for example:
 柯幻熊猫_文生图_图文广告_车贴_参数面板截图.png
 ```
 
-`_callouts.json` stores target boxes and semantic hints. The V3 deterministic renderer uses those hints to crop the relevant panel and align highlight/click effects to word-level cues. Website UI is not redrawn by GPT Image.
+`_callouts.json` stores source-image-normalized target boxes and semantic hints. The site batch tools may use these records, together with filename semantics and frontend source, to identify the intended target and build GPT Image instructions. The coordinates never enter `VisualPlan` or `RenderPlan`, and the runtime Renderer does not read them or draw callouts.
 
 ## Capture Contract
 
-- CDP captures clean screenshots and structured coordinates only.
-- Do not bake cursor effects, click rings, or red boxes into raw screenshots.
+- CDP captures clean screenshots and structured target metadata only.
+- Do not bake cursor effects, click rings, red boxes, arrows, or text callouts into raw screenshots.
 - Use the fixed `kehuanxiongmao` profile for 柯幻熊猫.
 - If a generation workflow is requested and the saved profile is not logged in, refuse capture instead of running an anonymous flow.
 - For 文生图 modules, use `references/site_profiles/kehuanxiongmao_text_to_image_modules.json` as the source of truth for route, label, and page title.
 - For `图文广告`, include the extra child layer in the filename path: `柯幻熊猫_文生图_图文广告_<子功能>_<截图类型>.png`.
-- Parameter screenshots may fall back to the full page if a precise panel crop is unstable; GPT image can repair the 9:16 layout later.
+- Parameter screenshots may fall back to the full page if a precise panel crop is unstable. GPT Image performs the final 9:16 reframing and integrated visual marker after the required fields are validated.
+- CDP boxes are guidance, not renderer instructions. Pillow/OpenCV must not recreate the deprecated coordinate-driven red-circle or transparent-layer route.
 
 ## Result Authenticity
 

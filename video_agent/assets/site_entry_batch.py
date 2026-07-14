@@ -6,8 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import cv2
-import numpy as np
 from PIL import Image
 
 from video_agent.ai.gpt_image import edit_image
@@ -17,6 +15,7 @@ from video_agent.io import load_json, sha256_file, utc_now, write_json_atomic
 
 
 SUFFIX = "_功能入口截图"
+IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg"}
 
 
 @dataclass(frozen=True)
@@ -50,68 +49,15 @@ def _instruction(source: SiteEntrySource) -> str:
     )
     return (
         f"文件名解析路径是 {source.site} -> {source.module} -> {hierarchy}，唯一目标文字是“{source.target}”。"
-        f"{nested}使用醒目的红色手绘双线圆圈或椭圆自然圈住“{source.target}”，根据文字长度自适应形状，"
-        "目标文字应位于标记视觉中心并保留呼吸空间。标记可以覆盖周围空白，但不能圈入、接触或指向相邻功能。"
-        "不要使用规则矩形，不要标注首页顶部快捷按钮，不要添加箭头、鼠标或解释文案。"
+        f"{nested}重新构图时拉近镜头，让展开菜单占据画面主体，并使用醒目的红色手绘双线圆圈或椭圆自然圈住“{source.target}”。"
+        "根据文字长度自适应形状，目标文字位于标记视觉中心并保留呼吸空间。"
+        "标记可以覆盖周围空白，但不能圈入、接触或指向相邻功能。"
+        "不要使用规则矩形，不要标注首页顶部快捷按钮，不要添加箭头、鼠标、分层动画或解释文案。"
     )
 
 
 def _output_name(source: SiteEntrySource) -> str:
     return source.path.name.replace("功能入口截图", "功能入口关键帧")
-
-
-def _build_callout_layers(output: Path) -> dict[str, Any]:
-    rgba = cv2.imdecode(np.fromfile(output, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
-    if rgba is None:
-        raise ValueError(f"unable to read approved feature-entry image: {output}")
-    if rgba.ndim == 2:
-        rgba = cv2.cvtColor(rgba, cv2.COLOR_GRAY2BGRA)
-    elif rgba.shape[2] == 3:
-        rgba = cv2.cvtColor(rgba, cv2.COLOR_BGR2BGRA)
-    b, g, r, _ = cv2.split(rgba)
-    red = ((r > 175) & (r.astype(np.float32) > g * 1.55) & (r.astype(np.float32) > b * 1.55)).astype(np.uint8)
-    count, labels, stats, _ = cv2.connectedComponentsWithStats(red, 8)
-    if count <= 1:
-        raise ValueError(f"approved feature-entry image has no isolated red callout: {output.name}")
-    candidates = [
-        component
-        for component in range(1, count)
-        if int(stats[component, cv2.CC_STAT_AREA]) >= 20
-        and int(stats[component, cv2.CC_STAT_TOP]) >= round(rgba.shape[0] * 0.12)
-    ]
-    if not candidates:
-        raise ValueError(f"approved feature-entry image has no callout outside the brand header: {output.name}")
-    component_area = sum(int(stats[component, cv2.CC_STAT_AREA]) for component in candidates)
-    if component_area < 300:
-        raise ValueError(f"red callout components are too small: {output.name}/{component_area}px")
-    mask = np.where(np.isin(labels, candidates), 255, 0).astype(np.uint8)
-    mask = cv2.dilate(mask, np.ones((5, 5), np.uint8), iterations=1)
-
-    layer = np.zeros_like(rgba)
-    layer[:, :, :3] = rgba[:, :, :3]
-    layer[:, :, 3] = mask
-    repair_mask = cv2.dilate(mask, np.ones((13, 13), np.uint8), iterations=1)
-    base_bgr = cv2.inpaint(rgba[:, :, :3], repair_mask, 7, cv2.INPAINT_TELEA)
-    base = cv2.cvtColor(base_bgr, cv2.COLOR_BGR2BGRA)
-
-    layer_dir = output.parent / "layers"
-    layer_dir.mkdir(parents=True, exist_ok=True)
-    base_path = layer_dir / output.name.replace("关键帧", "无圈底图")
-    layer_path = layer_dir / output.name.replace("关键帧", "圈选层")
-    base_ok, base_buffer = cv2.imencode(".png", base)
-    layer_ok, layer_buffer = cv2.imencode(".png", layer)
-    if not base_ok or not layer_ok:
-        raise OSError(f"unable to encode callout layers for {output.name}")
-    base_buffer.tofile(base_path)
-    layer_buffer.tofile(layer_path)
-    return {
-        "callout_base_path": base_path.resolve().as_posix(),
-        "callout_base_sha256": sha256_file(base_path),
-        "callout_layer_path": layer_path.resolve().as_posix(),
-        "callout_layer_sha256": sha256_file(layer_path),
-        "callout_component_area": component_area,
-        "callout_layer_method": "red_stroke_components_below_brand_header_v2",
-    }
 
 
 def generate_site_entry_keyframes(
@@ -125,14 +71,18 @@ def generate_site_entry_keyframes(
     sources = [
         parse_site_entry_filename(path)
         for path in sorted(source_dir.glob(f"*_文生图_*{SUFFIX}.*"))
-        if path.suffix.lower() in {".png", ".jpg", ".jpeg"}
+        if path.suffix.lower() in IMAGE_SUFFIXES
     ]
     if not sources:
         raise FileNotFoundError(f"no feature-entry screenshots found in {source_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = output_dir / "manifest.json"
     previous = load_json(manifest_path) if manifest_path.is_file() else {}
-    previous_by_source = {item["source_path"]: item for item in previous.get("assets", []) if isinstance(item, dict) and item.get("source_path")}
+    previous_by_source = {
+        item["source_path"]: item
+        for item in previous.get("assets", [])
+        if isinstance(item, dict) and item.get("source_path")
+    }
     recipe_prompt, template_sha256 = _prompt(repo_root, DeriveKind.SITE_FEATURE_ENTRY_KEYFRAME, "{batch_instruction}")
 
     results: list[dict[str, Any]] = []
@@ -143,7 +93,8 @@ def generate_site_entry_keyframes(
         source_sha256 = sha256_file(source.path)
         prompt_sha256 = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         output = output_dir / _output_name(source)
-        old = previous_by_source.get(source.path.resolve().as_posix())
+        source_path = source.path.resolve().as_posix()
+        old = previous_by_source.get(source_path)
         if (
             not force
             and old
@@ -154,6 +105,39 @@ def generate_site_entry_keyframes(
         ):
             results.append({**old, "status": "cached"})
             continue
+
+        if not force and output.is_file() and old is None:
+            try:
+                with Image.open(output) as image:
+                    width, height = image.size
+                    image.verify()
+                results.append(
+                    {
+                        "source_path": source_path,
+                        "source_filename": source.path.name,
+                        "source_sha256": source_sha256,
+                        "output_path": output.resolve().as_posix(),
+                        "output_filename": output.name,
+                        "output_sha256": sha256_file(output),
+                        "width": width,
+                        "height": height,
+                        "site": source.site,
+                        "module": source.module,
+                        "feature_path": list(source.feature_path),
+                        "target": source.target,
+                        "annotation_style": "gpt_image_integrated_feature_marker",
+                        "prompt_sha256": prompt_sha256,
+                        "prompt_template_sha256": template_sha256,
+                        "provider": "recovered_interrupted_batch",
+                        "model": "unknown",
+                        "response_id": None,
+                        "quality_status": "unreviewed",
+                        "status": "recovered",
+                    }
+                )
+                continue
+            except Exception:  # noqa: BLE001
+                output.unlink(missing_ok=True)
         pending.append((source, output, prompt, source_sha256, prompt_sha256))
 
     def generate(item: tuple[SiteEntrySource, Path, str, str, str]) -> dict[str, Any]:
@@ -176,7 +160,7 @@ def generate_site_entry_keyframes(
             "module": source.module,
             "feature_path": list(source.feature_path),
             "target": source.target,
-            "annotation_style": "red_hand_drawn_double_stroke_circle_or_ellipse",
+            "annotation_style": "gpt_image_integrated_feature_marker",
             "prompt_sha256": prompt_sha256,
             "prompt_template_sha256": template_sha256,
             "provider": result.provider,
@@ -198,10 +182,10 @@ def generate_site_entry_keyframes(
 
     results.sort(key=lambda item: item["source_filename"])
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": utc_now(),
         "workflow": "site_feature_entry_gpt_image_batch",
-        "annotation_style": "red_hand_drawn_double_stroke_circle_or_ellipse",
+        "annotation_style": "gpt_image_integrated_feature_marker",
         "source_dir": source_dir.resolve().as_posix(),
         "output_dir": output_dir.resolve().as_posix(),
         "assets": results,
@@ -210,7 +194,13 @@ def generate_site_entry_keyframes(
     write_json_atomic(manifest_path, manifest)
     if errors:
         raise RuntimeError(f"site-entry batch completed with {len(errors)} errors; see {manifest_path}")
-    return {"total": len(sources), "generated": len(pending), "cached": len(sources) - len(pending), "manifest": manifest_path.as_posix()}
+    return {
+        "total": len(sources),
+        "generated": sum(item.get("status") == "generated" for item in results),
+        "cached": sum(item.get("status") == "cached" for item in results),
+        "recovered": sum(item.get("status") == "recovered" for item in results),
+        "manifest": manifest_path.as_posix(),
+    }
 
 
 def approve_site_entry_manifest(manifest_path: Path) -> dict[str, int]:
@@ -218,6 +208,9 @@ def approve_site_entry_manifest(manifest_path: Path) -> dict[str, int]:
     assets = manifest.get("assets") if isinstance(manifest, dict) else None
     if not isinstance(assets, list):
         raise ValueError(f"invalid site-entry manifest: {manifest_path}")
+    if manifest.get("errors"):
+        raise ValueError(f"site-entry manifest still contains generation errors: {manifest_path}")
+
     approved = 0
     for asset in assets:
         if not isinstance(asset, dict):
@@ -225,14 +218,16 @@ def approve_site_entry_manifest(manifest_path: Path) -> dict[str, int]:
         output = Path(str(asset.get("output_path") or ""))
         if not output.is_file():
             raise FileNotFoundError(f"approved feature-entry output is missing: {output}")
-        asset.update(_build_callout_layers(output))
+        expected_sha256 = str(asset.get("output_sha256") or "")
+        if not expected_sha256 or sha256_file(output) != expected_sha256:
+            raise ValueError(f"feature-entry output hash mismatch: {output}")
         asset["quality_status"] = "human_approved"
         checks = asset.setdefault("quality_checks", [])
-        if "human_reviewed" not in checks:
-            checks.append("human_reviewed")
-        if "callout_layers_generated" not in checks:
-            checks.append("callout_layers_generated")
+        for check in ("human_reviewed", "feature_marker_reviewed"):
+            if check not in checks:
+                checks.append(check)
         approved += 1
+
     manifest["reviewed_at"] = utc_now()
     manifest["review_status"] = "human_approved"
     write_json_atomic(manifest_path, manifest)

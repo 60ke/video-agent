@@ -2,6 +2,7 @@ from .assets import (
     Asset,
     AssetCatalog,
     AssetQuality,
+    BeatVisualDemand,
     DeriveKind,
     DerivedAssetRequest,
     EvidenceClass,
@@ -9,6 +10,8 @@ from .assets import (
     NormalizedRect,
     Provenance,
     VisualAnchor,
+    VisualClaimAnchor,
+    VisualDemandPlan,
 )
 from .case import AudioConfig, CaseConfig, DurationPolicy, SemanticSfx, SfxDensityPolicy, VideoFormat, VoiceConfig
 from .narration import Claim, ClaimCue, Narration, NarrationBeat, PauseIntent
@@ -24,6 +27,7 @@ __all__ = [
     "AudioConfig",
     "AudioTrack",
     "BeatSpan",
+    "BeatVisualDemand",
     "CaseConfig",
     "CheckResult",
     "Claim",
@@ -58,6 +62,8 @@ __all__ = [
     "TokenTiming",
     "TransitionIn",
     "VideoFormat",
+    "VisualClaimAnchor",
+    "VisualDemandPlan",
     "VisualPlan",
     "VisualAnchor",
     "VoiceConfig",
