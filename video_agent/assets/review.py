@@ -16,6 +16,11 @@ FAITHFUL_DERIVE_KINDS = {
     DeriveKind.RESULT_COLLECTION.value,
     DeriveKind.CALLOUT_OVERLAY.value,
 }
+MATERIALIZED_ORIGINS = {
+    "deterministic_faithful_derivative",
+    "gpt_image_semantic_derivative",
+    "gpt_image_site_keyframe",
+}
 
 
 def _asset_path(repo_root: Path, asset: Asset) -> Path:
@@ -45,7 +50,7 @@ def review_materialized_assets(repo_root: Path, catalog: AssetCatalog) -> tuple[
     counts = {"passed": 0, "needs_review": 0, "rejected": 0, "unchanged": 0}
 
     for asset in catalog.assets:
-        if asset.provenance.origin not in {"deterministic_faithful_derivative", "gpt_image_semantic_derivative"}:
+        if asset.provenance.origin not in MATERIALIZED_ORIGINS:
             counts["unchanged"] += 1
             continue
 
@@ -98,6 +103,7 @@ def review_materialized_assets(repo_root: Path, catalog: AssetCatalog) -> tuple[
             counts["passed"] += 1
             status = "passed"
         else:
+            asset.quality.status = "unreviewed"
             _append_check(asset, "requires_visual_review")
             counts["needs_review"] += 1
             status = "needs_review"
