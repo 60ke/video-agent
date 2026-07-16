@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from video_agent.ai.asset_index import AIAssetIndex, resolve_ai_asset_refs
-from video_agent.ai.asset_selector import select_asset_candidates
+from video_agent.ai.asset_selector import _repair_exact_phrase_candidates, select_asset_candidates
 from video_agent.io import load_json
 from video_agent.contracts import (
     Asset,
@@ -48,11 +48,9 @@ def test_flash_contract_failure_falls_back_to_full_catalog_for_pro(tmp_path: Pat
         case_id="fallback_demo",
         beats=[NarrationBeat(beat_id="beat_001", spoken_text="主题公园")],
     )
-    index = AIAssetIndex.build(catalog.assets)
-    culture_ref = index.ref_for_asset(culture_wall)
     invalid = {
-        "beat_candidates": {"beat_001": [culture_ref]},
-        "phrase_candidates": {"beat_001": {"主题公园": [culture_ref]}},
+        "beat_candidates": {"beat_001": ["A9999"]},
+        "phrase_candidates": {"beat_001": {"主题公园": []}},
         "phrase_candidate_modes": {"beat_001": {"主题公园": "result_item"}},
         "relationship_needs": {"beat_001": []},
     }
@@ -159,3 +157,24 @@ def test_flash_selection_uses_asset_refs_and_reuses_cache(tmp_path: Path, monkey
     assert len(calls) == 1
     assert report == cached_report
     assert candidates.assets == cached_candidates.assets == [culture_wall]
+
+
+def test_exact_phrase_candidates_are_repaired_from_catalog_evidence() -> None:
+    sculpture = _asset("asset_result_sculpture", "雕塑小品")
+    landscape = _asset("asset_result_landscape", "景观小品")
+    index = AIAssetIndex.build([sculpture, landscape])
+    result = {
+        "beat_candidates": {"beat_001": [index.ref_for_asset(landscape)]},
+        "phrase_candidates": {"beat_001": {"雕塑小品": [index.ref_for_asset(landscape)]}},
+        "phrase_candidate_modes": {"beat_001": {"雕塑小品": "result_item"}},
+    }
+
+    repaired = _repair_exact_phrase_candidates(
+        result,
+        Narration(case_id="repair", beats=[NarrationBeat(beat_id="beat_001", spoken_text="雕塑小品")]),
+        index,
+    )
+
+    expected = index.ref_for_asset(sculpture)
+    assert repaired["phrase_candidates"]["beat_001"]["雕塑小品"] == [expected]
+    assert expected in repaired["beat_candidates"]["beat_001"]

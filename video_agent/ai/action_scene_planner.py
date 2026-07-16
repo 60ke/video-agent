@@ -14,6 +14,10 @@ from video_agent.ai.prompt_loader import load_prompt
 from video_agent.ai.text_client import OpenAICompatibleTextClient
 from video_agent.contracts import ActionScene, ActionScenePlan, AssetCatalog, CaseConfig, Narration, TimeRef, TimingLock
 from video_agent.io import load_json, sha256_json, write_json_atomic
+from video_agent.progress import get_logger
+
+
+logger = get_logger()
 
 
 def _asset_payload(catalog: AssetCatalog, asset_index: AIAssetIndex) -> dict[str, Any]:
@@ -66,6 +70,126 @@ def _semantic_phrase_position(narration: Narration, beat_ids: list[str], phrase:
                 return offset + local
         offset += len(compact_beat)
     raise ValueError(f"AI phrase does not occur verbatim in its declared beats: {phrase}")
+
+
+def _normalize_gallery_boundaries(result: dict[str, Any], narration: Narration) -> dict[str, Any]:
+    """Split gallery items at existing scene boundaries using spoken-text positions."""
+
+    normalized = json.loads(json.dumps(result, ensure_ascii=False))
+    scenes = normalized.get("scenes")
+    if not isinstance(scenes, list):
+        return normalized
+    split_counter = 0
+    for _ in range(100):
+        starts: list[int] = []
+        for index, scene in enumerate(scenes):
+            if not isinstance(scene, dict):
+                starts.append(starts[-1] if starts else 0)
+                continue
+            if index == 0:
+                starts.append(0)
+                continue
+            phrase = scene.get("start_phrase")
+            beat_ids = scene.get("beat_ids")
+            if not isinstance(phrase, str) or not isinstance(beat_ids, list):
+                starts.append(starts[-1] if starts else 0)
+                continue
+            starts.append(_semantic_phrase_position(narration, beat_ids, phrase))
+
+        repaired = False
+        for source_index, scene in enumerate(scenes):
+            if not isinstance(scene, dict) or scene.get("scene_kind") != "result_gallery":
+                continue
+            items = scene.get("gallery_items")
+            beat_ids = scene.get("beat_ids")
+            if not isinstance(items, list) or not isinstance(beat_ids, list):
+                continue
+            source_start = starts[source_index]
+            source_end = starts[source_index + 1] if source_index + 1 < len(starts) else 10**12
+            positioned = [
+                (_semantic_phrase_position(narration, beat_ids, str(item.get("phrase", ""))), item)
+                for item in items
+                if isinstance(item, dict) and isinstance(item.get("phrase"), str)
+            ]
+            earlier = [item for position, item in positioned if position < source_start]
+            if earlier:
+                raise ValueError(
+                    f"gallery contains items before its own start: {scene.get('scene_id')}/"
+                    f"{[item.get('phrase') for item in earlier]}"
+                )
+            later = [(position, item) for position, item in positioned if position >= source_end]
+            if not later:
+                continue
+            first_position = min(position for position, _ in later)
+            target_index = max(index for index, start in enumerate(starts) if start <= first_position)
+            group_end = starts[target_index + 1] if target_index + 1 < len(starts) else 10**12
+            group = [item for position, item in later if position < group_end]
+            retained = [item for position, item in positioned if source_start <= position < source_end]
+            if not retained:
+                raise ValueError(
+                    f"cannot repair gallery with no item inside its own interval: {scene.get('scene_id')}"
+                )
+            if len(retained) == 1:
+                scene["scene_kind"] = "result_detail"
+                scene["visual_purpose"] = "single_result_evidence"
+                scene["asset_bindings"] = {"primary": retained[0]["asset_id"]}
+                scene["gallery_items"] = []
+            else:
+                scene["asset_bindings"] = {
+                    f"item_{index:03d}": item["asset_id"]
+                    for index, item in enumerate(retained, start=1)
+                }
+                scene["gallery_items"] = retained
+
+            split_counter += 1
+            phrases = [str(item["phrase"]) for item in group]
+            split_scene = {
+                **scene,
+                "scene_id": f"scene_auto_split_{split_counter:03d}",
+                "scene_kind": "result_gallery" if len(group) > 1 else "result_detail",
+                "narrative_role": "body",
+                "visual_purpose": (
+                    "multi_result_evidence" if len(group) > 1 else "single_result_evidence"
+                ),
+                "semantic_phrase": "、".join(phrases),
+                "start_phrase": phrases[0],
+                "asset_terms": phrases,
+                "asset_bindings": (
+                    {
+                        f"item_{index:03d}": item["asset_id"]
+                        for index, item in enumerate(group, start=1)
+                    }
+                    if len(group) > 1
+                    else {"primary": group[0]["asset_id"]}
+                ),
+                "gallery_items": group if len(group) > 1 else [],
+                "derivation_request_ids": [],
+                "relationship_group_id": None,
+                "relationship_kind": None,
+                "fallback_policy": "exact",
+            }
+            scenes.insert(target_index + 1, split_scene)
+            logger.info(
+                "[场景编排] 自动拆分越界轮播 source=%s new=%s phrases=%s",
+                scene.get("scene_id"),
+                split_scene["scene_id"],
+                ",".join(phrases),
+            )
+            repaired = True
+            break
+        if not repaired:
+            break
+    else:  # pragma: no cover
+        raise ValueError("gallery boundary normalization exceeded its repair limit")
+
+    for scene in scenes:
+        if not isinstance(scene, dict) or scene.get("scene_kind") != "result_gallery":
+            continue
+        phrases = [item.get("phrase") for item in scene.get("gallery_items", []) if isinstance(item, dict)]
+        if len(phrases) > 1 and len(set(phrases)) != len(phrases):
+            scene["scene_kind"] = "result_gallery_summary"
+            logger.info("[场景编排] 重复单短语多图改为汇总轮播 scene=%s", scene.get("scene_id"))
+    return normalized
 
 
 def _validate_semantic_order(result: dict[str, Any], narration: Narration) -> None:
@@ -363,6 +487,26 @@ def _validate_asset_gap_decisions(result: dict[str, Any], selection_report: dict
         if isinstance(phrase_modes.get(beat_id, {}), dict)
         and phrase_modes[beat_id].get(phrase) == "result_item"
     }
+    resolved_existing = {
+        (beat_id, phrase)
+        for beat_id, phrase in all_empty
+        if any(
+            isinstance(scene, dict)
+            and scene.get("scene_kind") != "light_sweep_fallback"
+            and beat_id in scene.get("beat_ids", [])
+            and bool(
+                scene.get("asset_bindings")
+                or scene.get("gallery_items")
+                or scene.get("derivation_request_ids")
+            )
+            and (
+                scene.get("start_phrase") == phrase
+                or phrase in str(scene.get("semantic_phrase", ""))
+            )
+            for scene in result.get("scenes", [])
+        )
+    }
+    required_missing -= resolved_existing
     decisions = result.get("asset_gap_decisions", [])
     if not isinstance(decisions, list):
         raise ValueError("asset_gap_decisions must be an array")
@@ -371,6 +515,13 @@ def _validate_asset_gap_decisions(result: dict[str, Any], selection_report: dict
         if not isinstance(decision, dict):
             raise ValueError("asset_gap_decisions entries must be JSON objects")
         key = (str(decision.get("beat_id", "")), str(decision.get("phrase", "")))
+        if key not in all_empty or key in resolved_existing:
+            logger.info(
+                "[场景编排] 忽略已解决或非缺口决策 beat=%s phrase=%s",
+                key[0],
+                key[1],
+            )
+            continue
         if key in indexed:
             raise ValueError(f"duplicate asset gap decision: {key}")
         indexed[key] = decision
@@ -487,12 +638,18 @@ def plan_action_scenes(
     last_error: Exception | None = None
     for contract_attempt in range(3):
         try:
+            result = _normalize_gallery_boundaries(result, narration)
             _validate_semantic_order(result, narration)
             _validate_gallery_recall(result, selection_report)
             _validate_asset_gap_decisions(result, selection_report)
             resolved_result = resolve_ai_asset_refs(result, asset_index)
             plan = _compile_semantic_result(resolved_result, case.case_id, narration, timing)
             _validate_plan(plan, candidates, timing, narration)
+            if semantic_cache_path:
+                write_json_atomic(
+                    semantic_cache_path,
+                    {"schema_version": 1, "input_sha256": semantic_input_sha256, "result": result},
+                )
             break
         except (ValueError, TypeError) as exc:
             last_error = exc

@@ -109,6 +109,59 @@ def _validate_flash_result(
     return selected
 
 
+def _repair_exact_phrase_candidates(
+    result: dict[str, Any], narration: Narration, asset_index: AIAssetIndex
+) -> dict[str, Any]:
+    """Repair only catalog-provable exact result matches; never infer near synonyms."""
+
+    repaired = json.loads(json.dumps(result, ensure_ascii=False))
+    phrase_candidates = repaired.get("phrase_candidates")
+    phrase_modes = repaired.get("phrase_candidate_modes")
+    beat_candidates = repaired.get("beat_candidates")
+    if not isinstance(phrase_candidates, dict) or not isinstance(phrase_modes, dict):
+        return repaired
+    known_beats = {beat.beat_id for beat in narration.beats}
+    for beat_id, phrase_map in phrase_candidates.items():
+        if beat_id not in known_beats or not isinstance(phrase_map, dict):
+            continue
+        mode_map = phrase_modes.get(beat_id)
+        if not isinstance(mode_map, dict):
+            continue
+        for phrase, candidates in phrase_map.items():
+            if mode_map.get(phrase) != "result_item" or not isinstance(phrase, str):
+                continue
+            if not isinstance(candidates, list):
+                continue
+            exact_refs = [
+                asset_ref
+                for asset_ref, asset in asset_index.assets_by_ref.items()
+                if asset.role == "result_image"
+                and any(
+                    semantic_part in phrase or phrase in semantic_part
+                    for semantic_part in asset.semantic_path
+                )
+            ]
+            valid_returned = [
+                str(asset_ref)
+                for asset_ref in candidates
+                if str(asset_ref) in exact_refs
+            ]
+            canonical = list(dict.fromkeys([*valid_returned, *exact_refs]))
+            if canonical != candidates:
+                logger.info(
+                    "[素材粗筛] 程序修正精确短语候选 beat=%s phrase=%s count=%d",
+                    beat_id,
+                    phrase,
+                    len(canonical),
+                )
+                phrase_map[phrase] = canonical
+            if isinstance(beat_candidates, dict) and isinstance(beat_candidates.get(beat_id), list):
+                beat_candidates[beat_id] = list(
+                    dict.fromkeys([*beat_candidates[beat_id], *canonical])
+                )
+    return repaired
+
+
 def select_asset_candidates(
     repo_root: Path,
     case: CaseConfig,
@@ -223,6 +276,7 @@ def select_asset_candidates(
         model=client.coarse_model,
         thinking=False,
     )
+    raw_result = _repair_exact_phrase_candidates(raw_result, narration, asset_index)
     phrase_candidates = raw_result.get("phrase_candidates", {}) if isinstance(raw_result, dict) else {}
     has_empty_candidates = any(
         isinstance(candidates, list) and not candidates
@@ -253,6 +307,7 @@ def select_asset_candidates(
             model=client.coarse_model,
             thinking=False,
         )
+        raw_result = _repair_exact_phrase_candidates(raw_result, narration, asset_index)
     last_error: Exception | None = None
     flash_failed = False
     for contract_attempt in range(3):
@@ -292,6 +347,7 @@ def select_asset_candidates(
                 model=client.coarse_model,
                 thinking=False,
             )
+            raw_result = _repair_exact_phrase_candidates(raw_result, narration, asset_index)
     else:  # pragma: no cover - the loop either succeeds or raises
         raise ValueError(f"Flash asset selection correction failed: {last_error}")
     traces.append({"path": prompt.path.as_posix(), "sha256": prompt.sha256})
