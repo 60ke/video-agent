@@ -195,7 +195,7 @@ def _prepend_one_frame(body: Path, cover: Path, output: Path, fps: int) -> None:
         "-filter_complex",
         (
             f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps={fps},"
-            f"trim=duration={duration:.9f},setpts=PTS-STARTPTS[cv];"
+            "trim=end_frame=1,setpts=PTS-STARTPTS[cv];"
             f"anullsrc=r=48000:cl=stereo,atrim=duration={duration:.9f},asetpts=PTS-STARTPTS[ca];"
             f"[1:v]fps={fps},setpts=PTS-STARTPTS[bv];[1:a]aresample=48000,asetpts=PTS-STARTPTS[ba];"
             "[cv][ca][bv][ba]concat=n=2:v=1:a=1[v][a]"
