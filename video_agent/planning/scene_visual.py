@@ -137,7 +137,7 @@ def _motion(kind: str, primary: Asset, binding_count: int, config: dict[str, Any
         if selected:
             return str(selected)
     if kind == "site_home":
-        return str(primary.metadata.get("preferred_effect") or "paper_curl_flip")
+        return str(primary.metadata.get("preferred_effect") or "spring_card_pop")
     if kind == "feature_entry":
         return "detail_push_in"
     if kind == "parameter_input":

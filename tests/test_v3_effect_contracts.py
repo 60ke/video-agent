@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
 from video_agent.contracts import NarrationBeat, PauseIntent, ShotPlan, TimeRef
 from video_agent.effects import get_effect_policy
+from video_agent.io import load_json
 from video_agent.speech.pause_compiler import compile_beat_markup
 
 
@@ -34,6 +37,16 @@ def test_effect_policy_distinguishes_feedback_from_reading_hold() -> None:
     assert get_effect_policy("grid_reveal").readable_settle_frames > 0
     with pytest.raises(ValueError, match="unknown effect"):
         get_effect_policy("unregistered")
+
+
+def test_site_home_uses_spring_card_pop() -> None:
+    config_path = Path(__file__).resolve().parents[1] / "config" / "scene_effects.json"
+    scene_effects = load_json(config_path)
+
+    assert scene_effects["scenes"]["site_home"]["motion"] == "spring_card_pop"
+    policy = get_effect_policy("spring_card_pop")
+    assert policy.minimum_scene_frames == 12
+    assert policy.requires_readable_hold is True
 
 
 def test_gallery_effects_require_multiple_source_assets() -> None:

@@ -155,6 +155,9 @@ const MotionImage: React.FC<{ shot: RenderShot; props: TimelineProps }> = ({ sho
   if (shot.motion === "paper_curl_flip") {
     return <PaperCurlFlip assetId={selected.assetId} shot={shot} props={props} />;
   }
+  if (shot.motion === "spring_card_pop") {
+    return <SpringCardPop assetId={selected.assetId} shot={shot} props={props} />;
+  }
   if (shot.motion === "slide_gallery") {
     return <SlideGallery shot={shot} props={props} />;
   }
@@ -393,6 +396,49 @@ const PaperCurlFlip: React.FC<{ assetId: string; shot: RenderShot; props: Timeli
         return <div key={index} style={{position: "absolute", left: index * stage.width / columns, top: 0, width, height: stage.height, transformOrigin: "left center", transform: `translateX(${-curl * 74}px) rotateY(${angle}deg)`, backgroundImage: `url(${source})`, backgroundSize: `${stage.width}px ${stage.height}px`, backgroundPosition: `${-index * stage.width / columns}px 0`, boxShadow: curl > .01 ? "7px 0 14px rgba(0,0,0,.26)" : "none"}} />;
       })}
       <div style={{position: "absolute", inset: 0, background: "linear-gradient(110deg, rgba(0,0,0,.46), transparent 40%)", opacity: (1 - progress) * .8, pointerEvents: "none"}} />
+    </div>
+  </AbsoluteFill>;
+};
+
+const SpringCardPop: React.FC<{ assetId: string; shot: RenderShot; props: TimelineProps }> = ({ assetId, shot, props }) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const local = Math.max(0, frame - shot.start_frame);
+  const reveal = spring({
+    frame: local,
+    fps,
+    config: {damping: 14, stiffness: 120, mass: 0.75},
+  });
+  const stage = horizontalStage(props);
+  return <AbsoluteFill>
+    <div style={{
+      position: "absolute",
+      left: stage.left + stage.width * 0.12,
+      top: stage.top + stage.height * 0.34,
+      width: stage.width * 0.76,
+      height: stage.height * 0.72,
+      borderRadius: 70,
+      background: "rgba(41,119,255,0.36)",
+      filter: "blur(56px)",
+      transform: `translateY(${stage.height * 0.18}px) scaleX(${0.7 + reveal * 0.3})`,
+      opacity: 0.3 + reveal * 0.7,
+    }} />
+    <div style={{
+      position: "absolute",
+      left: stage.left,
+      top: stage.top,
+      width: stage.width,
+      height: stage.height,
+      borderRadius: 22,
+      overflow: "hidden",
+      padding: 10,
+      boxSizing: "border-box",
+      background: "white",
+      opacity: reveal,
+      transform: `translateY(${(1 - reveal) * 45}px) scale(${0.78 + reveal * 0.22}) rotate(${(1 - reveal) * -3}deg)`,
+      boxShadow: "0 28px 70px rgba(0,0,0,0.35)",
+    }}>
+      <Media assetId={assetId} assets={props.assets} style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: 14}} />
     </div>
   </AbsoluteFill>;
 };

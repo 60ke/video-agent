@@ -239,7 +239,7 @@ python -m video_agent catalog --assets assets --json
 
 | 场景 | 典型素材 | 默认动效 |
 |---|---|---|
-| `site_home` | 网站主页 | `paper_curl_flip` |
+| `site_home` | 网站主页 | `spring_card_pop`（单图弹性弹出） |
 | `feature_entry` | 功能入口派生图 | `detail_push_in` |
 | `parameter_input` | 参数页花字序列 | `scale_in` |
 | `result_detail` | 单结果图 | 素材方向自适应展示 |

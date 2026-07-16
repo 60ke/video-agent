@@ -114,6 +114,7 @@ class ShotPlan(Contract):
         "page_turn_3d",
         "card_flip_3d",
         "paper_curl_flip",
+        "spring_card_pop",
         "brand_breath",
         "film_strip",
         "grid_reveal",

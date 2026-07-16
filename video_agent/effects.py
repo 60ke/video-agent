@@ -24,6 +24,7 @@ EFFECTS: dict[str, EffectPolicy] = {
     "full_bleed_to_safe_card": EffectPolicy(minimum_scene_frames=18, readable_settle_frames=12, requires_readable_hold=True),
     "card_flip_3d": EffectPolicy(minimum_scene_frames=24, readable_settle_frames=12, requires_readable_hold=True),
     "paper_curl_flip": EffectPolicy(minimum_scene_frames=30, readable_settle_frames=12, requires_readable_hold=True),
+    "spring_card_pop": EffectPolicy(minimum_scene_frames=12, readable_settle_frames=10, requires_readable_hold=True),
     "page_turn_3d": EffectPolicy(minimum_scene_frames=24, readable_settle_frames=12, requires_readable_hold=True),
     "brand_breath": EffectPolicy(minimum_scene_frames=18),
     "film_strip": EffectPolicy(minimum_scene_frames=18),

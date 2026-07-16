@@ -3,7 +3,7 @@
   "scenes": {
     "site_home": {
       "template": "ui_feature_entry",
-      "motion": "paper_curl_flip",
+      "motion": "spring_card_pop",
       "transition": {"kind": "crossfade", "duration_frames": 6},
       "sfx": null
     },

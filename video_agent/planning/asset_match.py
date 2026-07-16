@@ -120,7 +120,7 @@ def feature_scope(text: str, slots: list[str], roles: dict[str, list[Asset]]) ->
 def motion_for(asset: Asset, template: str) -> str:
     preferred = asset.metadata.get("preferred_effect")
     if isinstance(preferred, str) and preferred in {
-        "card_flip_3d", "paper_curl_flip", "grid_reveal", "vertical_scroll",
+        "card_flip_3d", "paper_curl_flip", "spring_card_pop", "grid_reveal", "vertical_scroll",
         "full_bleed_to_safe_card", "image_pan_scan", "detail_push_in",
     }:
         return preferred
