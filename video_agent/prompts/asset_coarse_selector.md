@@ -7,13 +7,13 @@ JSON 输出必须保持精简，样例如下：
 ```json
 {
   "beat_candidates": {
-    "beat_001": ["asset_site_home_xxx"],
-    "beat_002": ["asset_result_a", "asset_result_b", "asset_result_c"]
+    "beat_001": ["A0001"],
+    "beat_002": ["A0017", "A0029", "A0042"]
   },
   "phrase_candidates": {
     "beat_002": {
-      "文化墙": ["asset_result_a"],
-      "门头招牌": ["asset_result_b"],
+      "文化墙": ["A0017"],
+      "门头招牌": ["A0029"],
       "主题公园": []
     }
   },
@@ -43,6 +43,6 @@ JSON 输出必须保持精简，样例如下：
 6. 编辑操作召回同功能编辑工作区素材。只有文案明确描述片尾时才选择片尾；普通品牌总结使用网站主页、品牌 Logo 或相关结果图，不能把固定片尾当正文画面。
 7. 参考图到结果图、结果图到平面图、编辑前后等因果语义，应召回所有可能参与严格关系的素材，并在 `relationship_needs` 写出关系类型。
 8. 不设候选数量上限。纳入所有与文案确实相关、可帮助 Pro 模型做正确选择的素材；排除明显无关功能素材和无关 IP 图。
-9. `required_asset_ids` 必须至少出现在一个 beat 的候选数组中。输出中的每一个 asset_id 都必须从输入 `assets.rows` 的 asset_id 列逐字复制；不得凭记忆改写旧 ID、缩写 ID 或编造素材 ID。
+9. `required_asset_refs` 必须至少出现在一个 beat 的候选数组中。模型只能输出输入 `assets.rows` 第一列的 `asset_ref`（例如 `A0017`），必须逐字复制，禁止输出或猜测程序内部哈希 ID。中文文件名、`semantic_path`、`role` 和 `path` 用于判断语义，`asset_ref` 只用于准确引用对应行。
 10. `phrase_candidate_modes` 必须覆盖 `phrase_candidates` 的每一个 beat 和每一个短语，值只能是 `result_item` 或 `supporting`。
 11. 除 `beat_candidates`、`phrase_candidates`、`phrase_candidate_modes` 和 `relationship_needs` 外不要输出解释性字段，以免 JSON 过长或截断。

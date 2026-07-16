@@ -17,7 +17,7 @@
       "start_phrase": null,
       "feature_path": ["网站", "主页"],
       "asset_terms": ["AI设计网站"],
-      "asset_bindings": {"primary": "asset_site_xxx"},
+      "asset_bindings": {"primary": "A0001"},
       "gallery_items": [],
       "derivation_request_ids": [],
       "relationship_group_id": null,
@@ -41,10 +41,10 @@
 规划规则：
 
 1. 文案语义、场景分类和素材选择全部由你完成。`asset_slots`、`hit_phrases`、标点和文件名只能作为信息，不能代替语义判断。
-2. 必须使用输入 Catalog 中真实存在的 `asset_id`。结合 `semantic_path`、`role`、`filename`、`claims`、`tags`、来源和关系选择素材，不得跨功能乱配。
+2. 必须使用输入 `assets.rows` 中真实存在的 `asset_ref`。素材表第一列是运行内稳定引用（例如 `A0017`），其后提供中文文件名、`semantic_path`、`role`、`path`、claims、tags 和来源。所有素材字段虽然沿用 `asset_id`、`source_asset_id` 等 JSON 键，其值都必须逐字复制 `asset_ref`，禁止输出或猜测程序内部哈希 ID。程序会在合同编译前还原引用。不得跨功能乱配。
 3. 网站总览用 `site_home`；具体功能入口用 `feature_entry`；参数填写用 `parameter_input`；单张结果细节用 `result_detail`。
    文案从“如何操作”转入“生成效果、结果变化、方案展示”时必须在精确原文起点拆成新 Scene。`parameter_input` 只能覆盖填写、选择、上传、点击等操作语义，绝不能跨越并吞掉“出效果图”“换行业/主题/风格”“生成方案”等结果语义。结果语义必须由 `result_detail`、`result_gallery` 或 `result_gallery_summary` 承担，并绑定同功能结果素材。
-4. 口播逐项列举多个功能时使用 `result_gallery`，每个口播项绑定一张同语义结果图。`gallery_items` 格式为 `{"asset_id":"asset_x","phrase":"文化墙"}`，其中 phrase 必须逐字出现在对应 beat 原文中，并使用能够唯一定位该项的最短业务名称，不要把“从、到、以及”等连接词放进 phrase。程序会让画面和整条黄色字幕在该词开始发音时同时切入，不能等上一个词说完才切。
+4. 口播逐项列举多个功能时使用 `result_gallery`，每个口播项绑定一张同语义结果图。`gallery_items` 格式为 `{"asset_id":"A0017","phrase":"文化墙"}`，其中 `asset_id` 的值是素材表中的 `asset_ref`；phrase 必须逐字出现在对应 beat 原文中，并使用能够唯一定位该项的最短业务名称，不要把“从、到、以及”等连接词放进 phrase。程序会让画面和整条黄色字幕在该词开始发音时同时切入，不能等上一个词说完才切。
    `result_gallery` 至少包含两个不同原文短语、两个不同发音锚点和两个不同素材。单个词只有一张图时使用 `result_detail`；单个总结短语希望同时展示多图时使用 `result_gallery_summary`，不得复制同一素材或同一 phrase 凑数量。
 5. 概括“等各类设计”“都能生成”等总结语义可独立使用 `result_gallery_summary`，绑定更多相关结果图。没有图片数量上限；只受当前动效是否能清晰展示约束。
    当一段文案先说简单操作、随后连续描述多种结果变化时，至少拆成“操作 Scene + 多结果 Scene”。例如“简单填写就能出效果图；换行业、换主题、换风格；一句话生成美陈方案”必须让后两段使用多张同功能美陈结果图，不能继续停留在参数页。
@@ -54,8 +54,8 @@
    Scene 必须严格按口播短语先后排列。一个 gallery 只能包含从本 Scene 的 `start_phrase` 起、到下一 Scene 的 `start_phrase` 之前出现的词；遇到中间素材缺口时，前一个 gallery 在缺口前结束，缺口使用独立 `result_detail` 派生 Scene 或 `light_sweep_fallback` Scene，后续精确素材再建立新的 gallery/detail Scene。
 7. “二十多项图片编辑小工具”“修图改图”等功能总览必须优先匹配 `semantic_path` 含 `AI工具`、`role=feature_list`、文件名含 `功能列表截图` 的素材，而不是普通文生图入口或结果图。
 8. `reference_to_result`、`result_to_flat_plan`、`editor_before_after` 必须分别绑定 `input` 和 `output`。优先使用 relationships 中已经注册的严格关系，绝不能从无关素材猜测因果关系。
-9. 因果素材缺失且可从已有结果图合理派生时，生成 `derivation_requests`。请求必须写清上下文相关的 `instruction`，准确设置 `derive_kind`、`source_asset_id`、`related_asset_ids`、`scene_id`、`semantic_phrase`、`target_orientation` 和需要保留的内容。场景通过 `derivation_request_ids` 引用请求。
-   可用 derive_kind 只有：`crop_and_reframe`、`result_detail_crop`、`result_vertical_layout`、`result_collection`、`canvas_extend`、`site_home_keyframe`、`site_feature_entry_keyframe`、`logo_isolate_semantic`、`brand_ip_subtitle_break`、`identity_to_system_transition`、`text_visual_break`、`parameter_callout_sequence`、`video_safe_relayout`、`result_to_reference_mock`、`logo_to_reference_board`、`result_to_application`、`result_to_flat_plan`、`result_to_edit_state`、`result_to_variation`、`contextual_result_fill`、`gallery_preview`、`result_to_editor_composite`。所有派生都必须有 Catalog 中真实存在的 source_asset_id；不支持无来源的 text-to-image。
+9. 因果素材缺失且可从已有结果图合理派生时，生成 `derivation_requests`。请求必须写清上下文相关的 `instruction`，准确设置 `derive_kind`、`source_asset_id`、`related_asset_ids`、`scene_id`、`semantic_phrase`、`target_orientation` 和需要保留的内容。`source_asset_id` 与 `related_asset_ids` 的值同样必须使用素材表 `asset_ref`。场景通过 `derivation_request_ids` 引用请求。
+   可用 derive_kind 只有：`crop_and_reframe`、`result_detail_crop`、`result_vertical_layout`、`result_collection`、`canvas_extend`、`site_home_keyframe`、`site_feature_entry_keyframe`、`logo_isolate_semantic`、`brand_ip_subtitle_break`、`identity_to_system_transition`、`text_visual_break`、`parameter_callout_sequence`、`video_safe_relayout`、`result_to_reference_mock`、`logo_to_reference_board`、`result_to_application`、`result_to_flat_plan`、`result_to_edit_state`、`result_to_variation`、`contextual_result_fill`、`gallery_preview`、`result_to_editor_composite`。所有派生都必须有素材表中真实存在的 source `asset_ref`；不支持无来源的 text-to-image。
 10. 无法准确匹配、也不适合派生时使用 `light_sweep_fallback`，绑定最近的相关非品牌画面并设置 `fallback_policy=light_sweep`，不得拿无关 IP 或结果图冒充功能证据。
     LightSweep 只承担抽象承接、情绪口号或没有事实画面要求的品牌收束，不能因为镜头时间短、动效最低帧数不足或结果素材数量不足而替换 `result_gallery`、`result_detail` 等既定场景语义。
 11. 所有场景按输出顺序组成连续 base 时间轴。第一幕 `start_phrase` 必须为 null；之后每幕的 `start_phrase` 必须是它开始时口播中逐字存在的最短原文短语。程序会以该短语的首个词级 token 作为新画面起点，并自动让上一幕在同一帧结束。最后一幕自动延续到 `timeline_end`。
@@ -80,7 +80,7 @@
 ```json
 {
   "request_id": "derive_scene_006_reference",
-  "source_asset_id": "asset_result_xxx",
+  "source_asset_id": "A0017",
   "related_asset_ids": [],
   "derive_kind": "result_to_reference_mock",
   "instruction": "根据本场景文案，为该结果图反推同一空间、同一视角、未安装设计前的真实场景参考图，保持建筑结构和相机视角一致",

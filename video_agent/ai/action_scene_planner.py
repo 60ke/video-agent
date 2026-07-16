@@ -4,15 +4,20 @@ import json
 from pathlib import Path
 from typing import Any
 
+from video_agent.ai.asset_index import (
+    AIAssetIndex,
+    resolve_ai_asset_refs,
+    translate_relationships_for_ai,
+)
+from video_agent.ai.asset_selector import compact_asset_table, select_asset_candidates
 from video_agent.ai.prompt_loader import load_prompt
 from video_agent.ai.text_client import OpenAICompatibleTextClient
-from video_agent.ai.asset_selector import compact_asset_table, select_asset_candidates
 from video_agent.contracts import ActionScene, ActionScenePlan, AssetCatalog, CaseConfig, Narration, TimeRef, TimingLock
 from video_agent.io import load_json, sha256_json, write_json_atomic
 
 
-def _asset_payload(catalog: AssetCatalog) -> dict[str, Any]:
-    return compact_asset_table(catalog.assets)
+def _asset_payload(catalog: AssetCatalog, asset_index: AIAssetIndex) -> dict[str, Any]:
+    return compact_asset_table(catalog.assets, asset_index)
 
 
 def _timing_payload(timing: TimingLock) -> dict[str, Any]:
@@ -430,7 +435,7 @@ def plan_action_scenes(
     prompt = load_prompt(repo_root / "video_agent" / "prompts" / "action_scene_planner.md")
     relationships_path = repo_root / "assets" / "relationships.json"
     relationships = load_json(relationships_path) if relationships_path.is_file() else {"relationships": []}
-    candidates, selection_report, traces = select_asset_candidates(
+    candidates, selection_report, traces, asset_index = select_asset_candidates(
         repo_root, case, narration, catalog, relationships, selection_cache_path
     )
     payload = {
@@ -441,11 +446,19 @@ def plan_action_scenes(
         },
         "narration": narration.model_dump(mode="json"),
         "timing": _timing_payload(timing),
-        "assets": _asset_payload(candidates),
+        "assets": _asset_payload(candidates, asset_index),
         "asset_selection_mode": selection_report.get("mode"),
-        "asset_selection_fallback": selection_report.get("flash_failure"),
+        "asset_selection_fallback": (
+            {"reason": "flash_contract_failed", "fallback": "full_catalog_to_pro"}
+            if selection_report.get("flash_failure")
+            else None
+        ),
         "candidate_groups": selection_report.get("flash_result"),
-        "relationships": {"relationships": selection_report["relationships"]},
+        "relationships": {
+            "relationships": translate_relationships_for_ai(
+                selection_report["relationships"], asset_index
+            )
+        },
     }
     user_json = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
     semantic_cache_path = selection_cache_path.parent / "scene_semantic_response.json" if selection_cache_path else None
@@ -477,7 +490,8 @@ def plan_action_scenes(
             _validate_semantic_order(result, narration)
             _validate_gallery_recall(result, selection_report)
             _validate_asset_gap_decisions(result, selection_report)
-            plan = _compile_semantic_result(result, case.case_id, narration, timing)
+            resolved_result = resolve_ai_asset_refs(result, asset_index)
+            plan = _compile_semantic_result(resolved_result, case.case_id, narration, timing)
             _validate_plan(plan, candidates, timing, narration)
             break
         except (ValueError, TypeError) as exc:
@@ -489,8 +503,9 @@ def plan_action_scenes(
                 "previous_invalid_json": result,
                 "validation_error": str(exc),
                 "correction_instruction": (
-                    "根据 validation_error 修正上一版，重新输出完整非空 JSON。不得编造素材 ID、"
-                    "派生类型或空 source_asset_id；具体可视化功能缺素材时优先使用 contextual_result_fill，"
+                    "根据 validation_error 修正上一版，重新输出完整非空 JSON。不得编造 asset_ref、"
+                    "派生类型或空 source_asset_id；所有素材引用必须逐字复制 assets.rows 的 asset_ref；"
+                    "具体可视化功能缺素材时优先使用 contextual_result_fill，"
                     "只有抽象或不可可靠派生的语义才使用 light_sweep_fallback。"
                 ),
             }

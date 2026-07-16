@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from video_agent.ai.asset_index import AIAssetIndex
 from video_agent.ai.prompt_loader import load_prompt
 from video_agent.ai.text_client import OpenAICompatibleTextClient
 from video_agent.contracts import Asset, AssetCatalog, CaseConfig, Narration
@@ -14,46 +15,8 @@ from video_agent.progress import get_logger
 logger = get_logger()
 
 
-def compact_asset_table(assets: list[Asset]) -> dict[str, Any]:
-    fields = [
-        "asset_id",
-        "role",
-        "semantic_path",
-        "filename",
-        "orientation",
-        "evidence_class",
-        "claims",
-        "tags",
-        "origin",
-        "parent_asset_ids",
-    ]
-    rows = []
-    for asset in assets:
-        if not asset.production_eligible or asset.quality.status == "rejected":
-            continue
-        if not asset.width or not asset.height:
-            orientation = "unknown"
-        elif asset.width / asset.height >= 1.2:
-            orientation = "landscape"
-        elif asset.width / asset.height <= 0.82:
-            orientation = "portrait"
-        else:
-            orientation = "square"
-        rows.append(
-            [
-                asset.asset_id,
-                asset.role,
-                asset.semantic_path,
-                asset.filename,
-                orientation,
-                asset.evidence_class.value,
-                asset.claims,
-                asset.tags,
-                asset.provenance.origin,
-                asset.provenance.parent_asset_ids,
-            ]
-        )
-    return {"fields": fields, "rows": rows}
+def compact_asset_table(assets: list[Asset], asset_index: AIAssetIndex) -> dict[str, Any]:
+    return asset_index.compact_table(assets)
 
 
 def _relationship_asset_ids(relationship: dict[str, Any]) -> set[str]:
@@ -84,8 +47,10 @@ def _relationship_closure(
     return expanded, included
 
 
-def _validate_flash_result(result: dict[str, Any], narration: Narration, by_id: dict[str, Asset]) -> set[str]:
-    valid_ids = set(by_id)
+def _validate_flash_result(
+    result: dict[str, Any], narration: Narration, asset_index: AIAssetIndex
+) -> set[str]:
+    valid_refs = asset_index.refs
     beat_candidates = result.get("beat_candidates")
     if not isinstance(beat_candidates, dict) or not beat_candidates:
         raise ValueError("Flash asset selector must return a non-empty beat_candidates object")
@@ -123,12 +88,12 @@ def _validate_flash_result(result: dict[str, Any], narration: Narration, by_id: 
                 str(asset_id)
                 for asset_id in candidates
                 if mode == "result_item"
-                and str(asset_id) in by_id
+                and str(asset_id) in valid_refs
                 and (
-                    by_id[str(asset_id)].role != "result_image"
+                    asset_index.asset(str(asset_id)).role != "result_image"
                     or not any(
                         semantic_part in phrase or phrase in semantic_part
-                        for semantic_part in by_id[str(asset_id)].semantic_path
+                        for semantic_part in asset_index.asset(str(asset_id)).semantic_path
                     )
                 )
             ]
@@ -138,9 +103,9 @@ def _validate_flash_result(result: dict[str, Any], narration: Narration, by_id: 
                     f"the exact phrase: beat={beat_id}, phrase={phrase}, invalid={invalid_results}. "
                     "Return exact result images or an empty array."
                 )
-    unknown = selected - valid_ids
+    unknown = selected - valid_refs
     if unknown:
-        raise ValueError(f"Flash asset selector returned unknown asset IDs: {sorted(unknown)}")
+        raise ValueError(f"Flash asset selector returned unknown asset_ref values: {sorted(unknown)}")
     return selected
 
 
@@ -151,7 +116,7 @@ def select_asset_candidates(
     catalog: AssetCatalog,
     relationships_payload: dict[str, Any],
     cache_path: Path | None = None,
-) -> tuple[AssetCatalog, dict[str, Any], list[dict[str, str]]]:
+) -> tuple[AssetCatalog, dict[str, Any], list[dict[str, str]], AIAssetIndex]:
     eligible = [
         asset
         for asset in catalog.assets
@@ -160,6 +125,9 @@ def select_asset_candidates(
         and asset.role != "outro"
         and asset.media_type != "audio"
     ]
+    asset_index = AIAssetIndex.build(eligible)
+    if cache_path:
+        write_json_atomic(cache_path.parent / "ai_asset_index.json", asset_index.manifest())
     by_id = {asset.asset_id: asset for asset in eligible}
     valid_ids = set(by_id)
     required_ids = {asset_id for asset_id in case.selected_asset_ids if asset_id in valid_ids}
@@ -177,7 +145,8 @@ def select_asset_candidates(
             "catalog": catalog.source_catalog_sha256,
             "prompt": prompt.sha256,
             "model": client.coarse_model,
-            "selector_contract_version": 4,
+            "asset_index": asset_index.manifest()["index_sha256"],
+            "selector_contract_version": 5,
         }
     )
     cached = load_json(cache_path) if cache_path and cache_path.is_file() else None
@@ -199,20 +168,23 @@ def select_asset_candidates(
                 warnings=list(catalog.warnings),
             )
             logger.warning("[素材粗筛] 复用 Flash 失败记录，直接将全量素材交给高级模型")
-            return filtered, cached, [{"path": prompt.path.as_posix(), "sha256": prompt.sha256}]
+            return filtered, cached, [{"path": prompt.path.as_posix(), "sha256": prompt.sha256}], asset_index
         try:
-            cached_selected = (
-                _validate_flash_result(cached_result, narration, by_id)
+            cached_selected_refs = (
+                _validate_flash_result(cached_result, narration, asset_index)
                 if isinstance(cached_result, dict)
                 else set()
             )
         except (ValueError, TypeError):
-            cached_selected = set()
+            cached_selected_refs = set()
+        cached_selected_ids = {
+            asset_index.asset(asset_ref).asset_id for asset_ref in cached_selected_refs
+        }
         if (
             isinstance(cached_ids, list)
             and set(cached_ids) <= valid_ids
-            and cached_selected
-            and cached_selected <= set(cached_ids)
+            and cached_selected_ids
+            and cached_selected_ids <= set(cached_ids)
         ):
             filtered = AssetCatalog(
                 catalog_id=f"candidates_{catalog.catalog_id}",
@@ -222,7 +194,7 @@ def select_asset_candidates(
                 source_catalog_sha256=catalog.source_catalog_sha256,
                 warnings=list(catalog.warnings),
             )
-            return filtered, cached, [{"path": prompt.path.as_posix(), "sha256": prompt.sha256}]
+            return filtered, cached, [{"path": prompt.path.as_posix(), "sha256": prompt.sha256}], asset_index
     user = json.dumps(
         {
             "case": {
@@ -231,8 +203,14 @@ def select_asset_candidates(
                 "feature_path": case.feature_path,
             },
             "narration": narration.model_dump(mode="json"),
-            "assets": compact_asset_table(eligible),
-            "required_asset_ids": sorted(required_ids),
+            "assets": compact_asset_table(eligible, asset_index),
+            "required_asset_refs": sorted(
+                {
+                    ref
+                    for asset_id in required_ids
+                    for ref in asset_index.refs_for_asset_id(asset_id)
+                }
+            ),
         },
         ensure_ascii=False,
         separators=(",", ":"),
@@ -279,7 +257,8 @@ def select_asset_candidates(
     flash_failed = False
     for contract_attempt in range(3):
         try:
-            selected = _validate_flash_result(raw_result, narration, by_id)
+            selected_refs = _validate_flash_result(raw_result, narration, asset_index)
+            selected = {asset_index.asset(asset_ref).asset_id for asset_ref in selected_refs}
             break
         except (ValueError, TypeError) as exc:
             last_error = exc
@@ -298,8 +277,8 @@ def select_asset_candidates(
                     "validation_error": str(exc),
                     "correction_instruction": (
                         "根据 validation_error 修正上一版并返回完整 JSON。phrase_candidates 在没有精确素材时"
-                        "必须返回空数组，不得用近义素材填充。所有 asset_id 必须逐字复制自 "
-                        "original_input.assets.rows 的 asset_id 列；不得凭记忆改写、缩写或编造 ID。"
+                        "必须返回空数组，不得用近义素材填充。所有 asset_ref 必须逐字复制自 "
+                        "original_input.assets.rows 的 asset_ref 列；不得凭记忆改写、缩写或编造引用。"
                     ),
                 },
                 ensure_ascii=False,
@@ -349,10 +328,12 @@ def select_asset_candidates(
         "mode": mode,
         "feature_path": case.feature_path,
         "candidate_asset_ids": [asset.asset_id for asset in filtered.assets],
+        "candidate_asset_refs": [asset_index.ref_for_asset(asset) for asset in filtered.assets],
         "candidate_count": len(filtered.assets),
         "required_asset_ids": sorted(required_ids),
         "relationships": included_relationships,
         "flash_result": None if flash_failed else raw_result,
+        "ai_asset_index_sha256": asset_index.manifest()["index_sha256"],
     }
     if flash_failed:
         report["flash_failure"] = {
@@ -362,4 +343,4 @@ def select_asset_candidates(
         }
     if cache_path:
         write_json_atomic(cache_path, report)
-    return filtered, report, traces
+    return filtered, report, traces, asset_index
