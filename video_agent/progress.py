@@ -13,7 +13,12 @@ def configure_logging(stream: TextIO | None = None) -> logging.Logger:
     if not any(getattr(handler, "_video_agent_console", False) for handler in logger.handlers):
         handler = logging.StreamHandler(stream or sys.stderr)
         handler._video_agent_console = True  # type: ignore[attr-defined]
-        handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)s | %(message)s", datefmt="%H:%M:%S"))
+        handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s | %(levelname)s | %(filename)s:%(lineno)d | %(message)s",
+                datefmt="%H:%M:%S",
+            )
+        )
         logger.addHandler(handler)
     logger.setLevel(logging.INFO)
     logger.propagate = False
