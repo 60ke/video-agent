@@ -2,7 +2,7 @@
 
 你的 JSON 输出必须严格采用下面的结构，不要输出 Markdown 或解释：
 
-输入中的 `assets.fields` 是素材字段名，`assets.rows` 中每一行按该字段顺序表达一项候选素材。候选统一由 Flash 对完整目录进行语义粗筛；`candidate_groups.beat_candidates` 保留逐 Beat 的召回结果。`timing.beat_spans` 仅帮助你判断各段时长。程序会把你给出的原文短语编译到 MiniMax 词级 token，你不需要抄写 token ID。
+输入中的 `assets.fields` 是素材字段名，`assets.rows` 中每一行按该字段顺序表达一项候选素材。通常候选由 Flash 对完整目录进行语义粗筛，`candidate_groups.beat_candidates` 保留逐 Beat 的召回结果。当 `asset_selection_mode=deepseek_v4_pro_full_catalog_fallback` 时，表示 Flash 连续违反契约；此时 `assets.rows` 是完整生产素材池且 `candidate_groups` 为空，你必须直接从完整素材池完成精确匹配、缺口判断和派生规划，不得省略文案中的功能项。`timing.beat_spans` 仅帮助你判断各段时长。程序会把你给出的原文短语编译到 MiniMax 词级 token，你不需要抄写 token ID。
 
 ```json
 {

@@ -442,6 +442,8 @@ def plan_action_scenes(
         "narration": narration.model_dump(mode="json"),
         "timing": _timing_payload(timing),
         "assets": _asset_payload(candidates),
+        "asset_selection_mode": selection_report.get("mode"),
+        "asset_selection_fallback": selection_report.get("flash_failure"),
         "candidate_groups": selection_report.get("flash_result"),
         "relationships": {"relationships": selection_report["relationships"]},
     }

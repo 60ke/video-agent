@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -8,6 +9,9 @@ from video_agent.ai.prompt_loader import load_prompt
 from video_agent.ai.text_client import OpenAICompatibleTextClient
 from video_agent.contracts import Asset, AssetCatalog, CaseConfig, Narration
 from video_agent.io import load_json, sha256_json, write_json_atomic
+
+
+logger = logging.getLogger("video_agent")
 
 
 def compact_asset_table(assets: list[Asset]) -> dict[str, Any]:
@@ -180,6 +184,22 @@ def select_asset_candidates(
     if isinstance(cached, dict) and cached.get("input_sha256") == input_sha256:
         cached_ids = cached.get("candidate_asset_ids")
         cached_result = cached.get("flash_result")
+        cached_mode = cached.get("mode")
+        if (
+            cached_mode == "deepseek_v4_pro_full_catalog_fallback"
+            and isinstance(cached_ids, list)
+            and set(cached_ids) == valid_ids
+        ):
+            filtered = AssetCatalog(
+                catalog_id=f"candidates_{catalog.catalog_id}",
+                generated_at=catalog.generated_at,
+                source_root=catalog.source_root,
+                assets=eligible,
+                source_catalog_sha256=catalog.source_catalog_sha256,
+                warnings=list(catalog.warnings),
+            )
+            logger.warning("[素材粗筛] 复用 Flash 失败记录，直接将全量素材交给高级模型")
+            return filtered, cached, [{"path": prompt.path.as_posix(), "sha256": prompt.sha256}]
         try:
             cached_selected = (
                 _validate_flash_result(cached_result, narration, by_id)
@@ -255,6 +275,7 @@ def select_asset_candidates(
             thinking=False,
         )
     last_error: Exception | None = None
+    flash_failed = False
     for contract_attempt in range(3):
         try:
             selected = _validate_flash_result(raw_result, narration, by_id)
@@ -262,14 +283,16 @@ def select_asset_candidates(
         except (ValueError, TypeError) as exc:
             last_error = exc
             if contract_attempt == 2:
-                raise ValueError(f"Flash asset selection failed contract correction: {exc}") from exc
+                flash_failed = True
+                break
             correction_user = json.dumps(
                 {
                     "original_input": json.loads(user),
                     "previous_invalid_json": raw_result,
                     "validation_error": str(exc),
                     "correction_instruction": (
-                        "根据 validation_error 修正上一版并返回完整非空 JSON。所有 asset_id 必须逐字复制自 "
+                        "根据 validation_error 修正上一版并返回完整 JSON。phrase_candidates 在没有精确素材时"
+                        "必须返回空数组，不得用近义素材填充。所有 asset_id 必须逐字复制自 "
                         "original_input.assets.rows 的 asset_id 列；不得凭记忆改写、缩写或编造 ID。"
                     ),
                 },
@@ -286,11 +309,24 @@ def select_asset_candidates(
             )
     else:  # pragma: no cover - the loop either succeeds or raises
         raise ValueError(f"Flash asset selection correction failed: {last_error}")
-    selected.update(required_ids)
-    mode = "deepseek_v4_flash"
     traces.append({"path": prompt.path.as_posix(), "sha256": prompt.sha256})
-
-    selected, included_relationships = _relationship_closure(selected, relationships, valid_ids)
+    if flash_failed:
+        selected = set(valid_ids)
+        included_relationships = [
+            relationship
+            for relationship in relationships
+            if _relationship_asset_ids(relationship) <= valid_ids
+        ]
+        mode = "deepseek_v4_pro_full_catalog_fallback"
+        logger.warning(
+            "[素材粗筛] Flash 连续纠错失败，跳过粗筛并将 %d 个素材交给高级模型: %s",
+            len(selected),
+            last_error,
+        )
+    else:
+        selected.update(required_ids)
+        mode = "deepseek_v4_flash"
+        selected, included_relationships = _relationship_closure(selected, relationships, valid_ids)
     if not selected:
         raise ValueError("asset candidate selection produced an empty pool")
     filtered = AssetCatalog(
@@ -310,8 +346,14 @@ def select_asset_candidates(
         "candidate_count": len(filtered.assets),
         "required_asset_ids": sorted(required_ids),
         "relationships": included_relationships,
-        "flash_result": raw_result,
+        "flash_result": None if flash_failed else raw_result,
     }
+    if flash_failed:
+        report["flash_failure"] = {
+            "error": str(last_error),
+            "last_invalid_result": raw_result,
+            "fallback": "full_catalog_to_pro",
+        }
     if cache_path:
         write_json_atomic(cache_path, report)
     return filtered, report, traces
