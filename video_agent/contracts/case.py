@@ -29,7 +29,7 @@ class VoiceConfig(Contract):
     provider: Literal["minimax"] = "minimax"
     model: str = "speech-2.8-hd"
     voice_id: str = "male-qn-qingse"
-    speed: float = Field(default=1.5, ge=0.5, le=2.0)
+    speed: float = Field(default=1.2, ge=0.5, le=2.0)
     emotion: str | None = None
     subtitle_type: Literal["word"] = "word"
     pause_profile: str = "disabled"

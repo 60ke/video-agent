@@ -72,6 +72,7 @@ def test_generate_video_creates_a_new_locked_case(tmp_path: Path, monkeypatch) -
     assert config.mode == "script_locked"
     assert config.ai_enabled is False
     assert config.goal == "柯幻熊猫文生图功能种草"
+    assert config.voice.speed == 1.2
     assert narration.beats[0].spoken_text == "文化墙、门店招牌都能一键生成。"
 
 
