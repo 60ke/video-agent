@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import io
+import logging
 
 from video_agent.contracts import CaseConfig
 from video_agent.io import write_json_atomic
@@ -46,8 +48,29 @@ def test_resume_fingerprint_tracks_locked_source_prompt_model_and_code(tmp_path:
     first = runner._stage_input_fingerprint("narration")
     assert first["prompt_sha256"]
     assert first["code_sha256"]
-    assert set(first["provider"]) == {"provider", "base_url", "model"}
+    assert set(first["provider"]) == {"provider", "base_url", "model", "coarse_model", "max_tokens"}
     assert "api_key" not in first["provider"]
     source.write_text('{"version": 2}', encoding="utf-8")
     second = runner._stage_input_fingerprint("narration")
     assert first["inputs"]["source"] != second["inputs"]["source"]
+
+
+def test_orchestrator_logs_stage_start_and_completion(tmp_path: Path) -> None:
+    _case(tmp_path, "日志测试")
+    context = RunContext.create(tmp_path, run_id="logging")
+    stream = io.StringIO()
+    logger = logging.getLogger("video_agent")
+    handler = logging.StreamHandler(stream)
+    logger.addHandler(handler)
+    previous_level = logger.level
+    logger.setLevel(logging.INFO)
+    try:
+        Orchestrator(context).run(until_stage="catalog")
+    finally:
+        logger.removeHandler(handler)
+        logger.setLevel(previous_level)
+
+    output = stream.getvalue()
+    assert "[流水线][1/1][catalog] 开始" in output
+    assert "[流水线][1/1][catalog] 完成" in output
+    assert "case=resume_demo" in output

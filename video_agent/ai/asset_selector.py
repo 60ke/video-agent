@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import logging
 from pathlib import Path
 from typing import Any
 
@@ -9,9 +8,10 @@ from video_agent.ai.prompt_loader import load_prompt
 from video_agent.ai.text_client import OpenAICompatibleTextClient
 from video_agent.contracts import Asset, AssetCatalog, CaseConfig, Narration
 from video_agent.io import load_json, sha256_json, write_json_atomic
+from video_agent.progress import get_logger
 
 
-logger = logging.getLogger("video_agent")
+logger = get_logger()
 
 
 def compact_asset_table(assets: list[Asset]) -> dict[str, Any]:
@@ -253,6 +253,7 @@ def select_asset_candidates(
         for candidates in phrase_map.values()
     )
     if has_empty_candidates:
+        logger.info("[素材粗筛] 检测到空短语候选，开始 Flash 全量目录自审")
         audit_user = json.dumps(
             {
                 "original_input": json.loads(user),
@@ -285,6 +286,11 @@ def select_asset_candidates(
             if contract_attempt == 2:
                 flash_failed = True
                 break
+            logger.warning(
+                "[素材粗筛] Flash 契约校验失败，开始第 %d 次纠错: %s",
+                contract_attempt + 1,
+                exc,
+            )
             correction_user = json.dumps(
                 {
                     "original_input": json.loads(user),

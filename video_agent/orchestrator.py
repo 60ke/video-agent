@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 from typing import Any
 
@@ -20,10 +21,25 @@ from video_agent.cover import postprocess_cover
 from video_agent.outro import postprocess_outro
 from video_agent.io import load_json, load_model, sha256_file, sha256_json, utc_now, write_json_atomic
 from video_agent.planning import build_scene_visual_plan
+from video_agent.progress import get_logger
 from video_agent.qa import validate_render_plan, validate_timing_lock
 from video_agent.render import render_video
 from video_agent.runtime import RunContext, STAGES
 from video_agent.speech import MinimaxClient, build_timing_lock
+
+
+logger = get_logger()
+
+STAGE_LABELS = {
+    "catalog": "素材目录",
+    "narration": "文案",
+    "speech": "语音与词级时间",
+    "scene": "场景与选材",
+    "prepare_assets": "派生素材准备",
+    "visual": "视觉编排",
+    "compile": "时间线编译",
+    "render": "视频渲染",
+}
 
 
 class Orchestrator:
@@ -186,11 +202,34 @@ class Orchestrator:
         stage = "unknown"
         input_sha256: str | None = None
         input_fingerprint: dict[str, Any] | None = None
+        selected_stages = STAGES[start : end + 1]
+        pipeline_started = time.perf_counter()
+        logger.info(
+            "[流水线] 开始 case=%s run=%s stages=%s",
+            self.context.case.case_id,
+            self.context.run_id,
+            ",".join(selected_stages),
+        )
         try:
-            for stage in STAGES[start : end + 1]:
+            for position, stage in enumerate(selected_stages, start=1):
+                stage_started = time.perf_counter()
+                logger.info(
+                    "[流水线][%d/%d][%s] 开始 %s",
+                    position,
+                    len(selected_stages),
+                    stage,
+                    STAGE_LABELS.get(stage, stage),
+                )
                 input_fingerprint = self._stage_input_fingerprint(stage)
                 input_sha256 = sha256_json(input_fingerprint)
                 if from_stage is None and self._can_resume_stage(stage, input_sha256):
+                    logger.info(
+                        "[流水线][%d/%d][%s] 复用缓存 elapsed=%.2fs",
+                        position,
+                        len(selected_stages),
+                        stage,
+                        time.perf_counter() - stage_started,
+                    )
                     continue
                 output = getattr(self, f"stage_{stage}")()
                 self._record(
@@ -202,9 +241,24 @@ class Orchestrator:
                 )
                 if stage == "render" and isinstance(output, Path):
                     final_video = output
+                logger.info(
+                    "[流水线][%d/%d][%s] 完成 elapsed=%.2fs output=%s",
+                    position,
+                    len(selected_stages),
+                    stage,
+                    time.perf_counter() - stage_started,
+                    output.as_posix() if isinstance(output, Path) else "-",
+                )
             self.manifest["status"] = "completed"
             write_json_atomic(self.context.artifact("run_manifest.json"), self.manifest)
             self.context.mark_latest("completed", final_video.as_posix() if final_video else None)
+            logger.info(
+                "[流水线] 完成 case=%s run=%s elapsed=%.2fs final=%s",
+                self.context.case.case_id,
+                self.context.run_id,
+                time.perf_counter() - pipeline_started,
+                final_video.as_posix() if final_video else "-",
+            )
             return final_video
         except Exception as exc:
             self.manifest["status"] = "failed"
@@ -217,6 +271,13 @@ class Orchestrator:
                 input_fingerprint=input_fingerprint,
             )
             self.context.mark_latest("failed")
+            logger.error(
+                "[流水线][%s] 失败 elapsed=%.2fs error=%s: %s",
+                stage,
+                time.perf_counter() - pipeline_started,
+                exc.__class__.__name__,
+                exc,
+            )
             raise
 
     def stage_catalog(self) -> Path:

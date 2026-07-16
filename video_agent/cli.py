@@ -17,9 +17,13 @@ from video_agent.contracts import CaseConfig, VoiceConfig
 from video_agent.cover import postprocess_cover
 from video_agent.io import load_json, write_json_atomic
 from video_agent.orchestrator import Orchestrator
+from video_agent.progress import configure_logging, get_logger
 from video_agent.runtime import RunContext, STAGES
 from video_agent.script_lock import locked_narration_from_text
 from video_agent.speech.minimax import local_minimax_voice_id
+
+
+logger = get_logger()
 
 
 def _print(value: Any, as_json: bool) -> None:
@@ -77,6 +81,7 @@ def command_generate_video(args: argparse.Namespace) -> dict[str, Any]:
         write_json_atomic(input_dir / "narration.json", locked_narration_from_text(case_id, script_text))
 
     context = RunContext.create(case_dir)
+    logger.info("[任务] 已创建 case=%s run=%s source=%s", case_id, context.run_id, "script" if script_text else "goal")
     final_video = Orchestrator(context).run()
     return {
         "ok": True,
@@ -366,6 +371,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    configure_logging()
     parser = build_parser()
     args = parser.parse_args(argv)
     args.json = args.json or getattr(args, "sub_json", False)
