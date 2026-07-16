@@ -295,7 +295,10 @@ def build_scene_visual_plan(
         if editor_flow_sequence:
             cues.append(CueBinding(action="editor.focus", anchor_id=editor_flow_sequence.focus_anchor_id))
             cues.append(CueBinding(action="editor.modal", anchor_id=editor_flow_sequence.modal_anchor_id, sfx="mouse_click"))
-        gallery_items = [GalleryItem(asset_id=item.asset_id, anchor_id=item.anchor_id) for item in scene.gallery_items]
+        gallery_items = [
+            GalleryItem(asset_id=item.asset_id, phrase=item.phrase, anchor_id=item.anchor_id)
+            for item in scene.gallery_items
+        ]
         if gallery_items:
             cues.extend(CueBinding(action="visual.hit", anchor_id=item.anchor_id, sfx="swish") for item in gallery_items)
         shots.append(

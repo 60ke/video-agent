@@ -44,7 +44,7 @@
 2. 必须使用输入 Catalog 中真实存在的 `asset_id`。结合 `semantic_path`、`role`、`filename`、`claims`、`tags`、来源和关系选择素材，不得跨功能乱配。
 3. 网站总览用 `site_home`；具体功能入口用 `feature_entry`；参数填写用 `parameter_input`；单张结果细节用 `result_detail`。
    文案从“如何操作”转入“生成效果、结果变化、方案展示”时必须在精确原文起点拆成新 Scene。`parameter_input` 只能覆盖填写、选择、上传、点击等操作语义，绝不能跨越并吞掉“出效果图”“换行业/主题/风格”“生成方案”等结果语义。结果语义必须由 `result_detail`、`result_gallery` 或 `result_gallery_summary` 承担，并绑定同功能结果素材。
-4. 口播逐项列举多个功能时使用 `result_gallery`，每个口播项绑定一张同语义结果图。`gallery_items` 格式为 `{"asset_id":"asset_x","phrase":"文化墙"}`，其中 phrase 必须逐字出现在对应 beat 原文中。程序会让画面在该词开始发音时切入，不能等上一个词说完才切。
+4. 口播逐项列举多个功能时使用 `result_gallery`，每个口播项绑定一张同语义结果图。`gallery_items` 格式为 `{"asset_id":"asset_x","phrase":"文化墙"}`，其中 phrase 必须逐字出现在对应 beat 原文中，并使用能够唯一定位该项的最短业务名称，不要把“从、到、以及”等连接词放进 phrase。程序会让画面和整条黄色字幕在该词开始发音时同时切入，不能等上一个词说完才切。
    `result_gallery` 至少包含两个不同原文短语、两个不同发音锚点和两个不同素材。单个词只有一张图时使用 `result_detail`；单个总结短语希望同时展示多图时使用 `result_gallery_summary`，不得复制同一素材或同一 phrase 凑数量。
 5. 概括“等各类设计”“都能生成”等总结语义可独立使用 `result_gallery_summary`，绑定更多相关结果图。没有图片数量上限；只受当前动效是否能清晰展示约束。
    当一段文案先说简单操作、随后连续描述多种结果变化时，至少拆成“操作 Scene + 多结果 Scene”。例如“简单填写就能出效果图；换行业、换主题、换风格；一句话生成美陈方案”必须让后两段使用多张同功能美陈结果图，不能继续停留在参数页。

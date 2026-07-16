@@ -335,6 +335,7 @@ def compile_render_plan(
             compiled_gallery_items.append(
                 CompiledGalleryItem(
                     asset_id=item.asset_id,
+                    phrase=item.phrase,
                     anchor_id=item.anchor_id,
                     hit_frame=hit_frame,
                     onset_frame=hit_frame,
@@ -424,7 +425,7 @@ def compile_render_plan(
         shots=sorted(render_shots, key=lambda item: (item.track != "base", item.start_frame, item.shot_id)),
         subtitles=compile_subtitles(
             timing,
-            gallery_anchor_ids={item.anchor_id for shot in visual.shots for item in shot.gallery_items},
+            gallery_items=[item for shot in visual.shots for item in shot.gallery_items],
         ),
         audio_tracks=audio_tracks,
         style={

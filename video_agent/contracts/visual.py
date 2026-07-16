@@ -84,6 +84,7 @@ class GalleryItem(Contract):
     """One visual item whose appearance is locked to a spoken phrase."""
 
     asset_id: str = Field(min_length=1)
+    phrase: str = Field(min_length=1)
     anchor_id: str = Field(min_length=1)
 
 

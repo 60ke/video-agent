@@ -9,6 +9,7 @@ from video_agent.contracts import (
     BeatSpan,
     CompiledParameterFrameSequence,
     CueBinding,
+    GalleryItem,
     RenderAsset,
     RenderPlan,
     RenderShot,
@@ -65,6 +66,43 @@ def test_subtitle_compiler_never_crosses_beat_boundary() -> None:
     cues = compile_subtitles(timing)
     assert all(cue.beat_id in {"beat_001", "beat_002"} for cue in cues)
     assert all(not ({token.beat_id for token in timing.tokens if token.start_frame >= cue.start_frame and token.end_frame <= cue.end_frame} - {cue.beat_id}) for cue in cues)
+
+
+def test_gallery_items_become_word_anchored_yellow_subtitles() -> None:
+    text = "从文化墙、门头招牌、LOGO等设计。"
+    tokens = [
+        TokenTiming(
+            token_id=f"tok_{index:04d}", text=char,
+            start_ms=(index - 1) * 100, end_ms=index * 100,
+            start_frame=(index - 1) * 3, end_frame=index * 3,
+            beat_id="beat_001",
+        )
+        for index, char in enumerate(text, 1)
+    ]
+    timing = TimingLock(
+        case_id="gallery", audio_path="voice.mp3", audio_sha256="a" * 64,
+        fps=30, duration_ms=len(tokens) * 100, duration_frames=len(tokens) * 3,
+        tokens=tokens,
+        beat_spans=[
+            BeatSpan(
+                beat_id="beat_001", token_ids=[token.token_id for token in tokens],
+                start_frame=0, end_frame=len(tokens) * 3,
+            )
+        ],
+    )
+    items = [
+        GalleryItem(asset_id="culture", phrase="文化墙", anchor_id="tok_0002"),
+        GalleryItem(asset_id="sign", phrase="门头招牌", anchor_id="tok_0006"),
+        GalleryItem(asset_id="logo", phrase="LOGO", anchor_id="tok_0011"),
+    ]
+
+    cues = compile_subtitles(timing, gallery_items=items)
+    gallery_cues = [cue for cue in cues if cue.style == "gallery_yellow"]
+
+    assert [cue.text for cue in gallery_cues] == ["文化墙", "门头招牌", "LOGO"]
+    assert [cue.start_frame for cue in gallery_cues] == [3, 15, 30]
+    assert all(cue.emphasize == cue.text for cue in gallery_cues)
+    assert all("从" not in cue.text for cue in gallery_cues)
 
 
 def test_qa_rejects_forbidden_motion_and_long_subtitle() -> None:

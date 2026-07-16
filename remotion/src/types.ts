@@ -44,7 +44,7 @@ export type RenderShot = {
     lens_zoom: number;
     reveal_frames: number;
   } | null;
-  gallery_items?: { asset_id: string; anchor_id: string; hit_frame: number; onset_frame?: number | null }[];
+  gallery_items?: { asset_id: string; phrase: string; anchor_id: string; hit_frame: number; onset_frame?: number | null }[];
 };
 
 export type SubtitleCue = {

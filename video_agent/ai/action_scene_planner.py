@@ -168,6 +168,7 @@ def _compile_semantic_result(
             compiled_gallery.append(
                 {
                     "asset_id": item.get("asset_id"),
+                    "phrase": item["phrase"].strip(),
                     "anchor_id": _token_anchor_for_phrase(timing, raw["beat_ids"], item["phrase"]),
                 }
             )

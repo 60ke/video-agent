@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import re
 import unicodedata
 
 from video_agent.contracts import (
@@ -204,7 +203,6 @@ def build_action_scene_plan(
     catalog: AssetCatalog,
 ) -> ActionScenePlan:
     roles = _role_assets(catalog)
-    spans = {span.beat_id: span for span in timing.beat_spans}
     anchors_by_beat: dict[str, list[object]] = {}
     for anchor in timing.phrase_anchors:
         anchors_by_beat.setdefault(anchor.beat_id, []).append(anchor)
@@ -287,7 +285,6 @@ def build_action_scene_plan(
     active_feature: str | None = None
     for beat_index, beat in enumerate(narration.beats):
         beat_id = beat.beat_id
-        span = spans[beat_id]
         is_first = beat_index == 0
         is_last = beat_index == len(narration.beats) - 1
         beat_start = TimeRef(anchor_id=TIMELINE_START if is_first else f"{BEAT_START}{beat_id}")
@@ -310,7 +307,10 @@ def build_action_scene_plan(
             if len(explicit) < 2:
                 raise ValueError(f"spoken result gallery has too few matching materials: {beat_id}")
             bindings = {f"item_{index + 1:03d}": asset.asset_id for index, (asset, _) in enumerate(explicit)}
-            gallery = [SceneGalleryItem(asset_id=asset.asset_id, anchor_id=anchor.anchor_id) for asset, anchor in explicit]
+            gallery = [
+                SceneGalleryItem(asset_id=asset.asset_id, phrase=anchor.text, anchor_id=anchor.anchor_id)
+                for asset, anchor in explicit
+            ]
             used_results.update(asset.asset_id for asset, _ in explicit)
             last_result = explicit[-1][0]
             summary_anchor = _phrase_anchor(timing, beat_id, ("等各类设计", "各类设计", "它都能一键生成", "一键生成"))
@@ -434,7 +434,6 @@ def build_action_scene_plan(
 
         if any(word in intent for word in ("实景功能", "场景照片", "参考图", "现场照片", "平面图")):
             upload_anchor = _phrase_anchor(timing, beat_id, ("上传你的场景照片参考图", "上传", "场景照片参考图"))
-            reference_anchor = _phrase_anchor(timing, beat_id, ("参考图", "场景照片参考图", "场景照片"))
             generate_anchor = _phrase_anchor(timing, beat_id, ("系统就能", "原有场景基础上生成", "基础上生成"))
             flat_anchor = _phrase_anchor(timing, beat_id, ("同时还能一键导出平面图", "同时还能", "导出平面图", "平面图"))
             reference = _first_matching(roles.get("reference_image", []), feature, filename_terms=("实景", "现场", "参考图"))

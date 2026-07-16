@@ -75,6 +75,7 @@ class CompiledEditorFlowSequence(Contract):
 
 class CompiledGalleryItem(Contract):
     asset_id: str = Field(min_length=1)
+    phrase: str = Field(min_length=1)
     anchor_id: str = Field(min_length=1)
     hit_frame: int = Field(ge=0)
     onset_frame: int | None = Field(default=None, ge=0)

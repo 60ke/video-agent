@@ -41,6 +41,7 @@ VisualPurpose = Literal[
 
 class SceneGalleryItem(Contract):
     asset_id: str = Field(min_length=1)
+    phrase: str = Field(min_length=1)
     anchor_id: str = Field(min_length=1)
 
 
