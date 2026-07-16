@@ -1,6 +1,7 @@
 import React from "react";
 import {
   AbsoluteFill,
+  AnimatedImage,
   Img,
   interpolate,
   spring,
@@ -52,6 +53,13 @@ const Media: React.FC<{
 }> = ({assetId, assets, style}) => {
   const asset = assetFor(assetId, assets);
   const src = assetUrl(assetId, assets);
+  const isAnimatedImage = /\.gif(?:$|[?#])/i.test(asset.path);
+  if (isAnimatedImage) {
+    const fit = style.objectFit === "cover" || style.objectFit === "fill"
+      ? style.objectFit
+      : "contain";
+    return <AnimatedImage src={src} style={style} fit={fit} loopBehavior="loop" />;
+  }
   return asset.media_type === "video"
     ? <Video src={src} style={style} muted loop />
     : <Img src={src} style={style} />;
