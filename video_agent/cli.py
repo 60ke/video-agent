@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import secrets
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +42,50 @@ def command_run(args: argparse.Namespace) -> dict[str, Any]:
     context = RunContext.open(case_dir, args.resume) if args.resume else RunContext.create(case_dir)
     final_video = Orchestrator(context).run(from_stage=args.from_stage, until_stage=args.until_stage)
     return {"ok": True, "run_id": context.run_id, "run_dir": context.run_dir.as_posix(), "final_video": final_video.as_posix() if final_video else None}
+
+
+def command_generate_video(args: argparse.Namespace) -> dict[str, Any]:
+    repo_root = Path(__file__).resolve().parents[1]
+    cases_root = Path(args.cases).resolve()
+    cases_root.mkdir(parents=True, exist_ok=True)
+    case_id = args.case_id or f"video_{datetime.now():%Y%m%d_%H%M%S}_{secrets.token_hex(2)}"
+    case_dir = cases_root / case_id
+    if case_dir.exists():
+        raise FileExistsError(f"case already exists: {case_dir}")
+
+    script_path = Path(args.script).resolve() if args.script else None
+    script_text = script_path.read_text(encoding="utf-8-sig").strip() if script_path else None
+    if script_path and not script_text:
+        raise ValueError(f"script file must not be empty: {script_path}")
+
+    voice_id = local_minimax_voice_id(repo_root)
+    voice = VoiceConfig(voice_id=voice_id) if voice_id else VoiceConfig()
+    config = CaseConfig(
+        case_id=case_id,
+        goal=args.goal or f"根据固定文案《{script_path.stem}》生成文生图功能视频",
+        feature_path=["文生图"],
+        voice=voice,
+        mode="script_locked" if script_text else "material_first",
+        narration_source="input/narration.json" if script_text else None,
+        ai_enabled=not bool(script_text),
+    )
+    case_dir.mkdir()
+    input_dir = case_dir / "input"
+    input_dir.mkdir()
+    write_json_atomic(case_dir / "case.json", config)
+    if script_text:
+        write_json_atomic(input_dir / "narration.json", locked_narration_from_text(case_id, script_text))
+
+    context = RunContext.create(case_dir)
+    final_video = Orchestrator(context).run()
+    return {
+        "ok": True,
+        "case_id": case_id,
+        "case": case_dir.as_posix(),
+        "run_id": context.run_id,
+        "run_dir": context.run_dir.as_posix(),
+        "final_video": final_video.as_posix() if final_video else None,
+    }
 
 
 def command_inspect(args: argparse.Namespace) -> dict[str, Any]:
@@ -202,6 +248,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="video-agent", description="Video Agent V3 material-first video compiler")
     parser.add_argument("--json", action="store_true")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    generate = sub.add_parser(
+        "generate_video",
+        aliases=["generate-video"],
+        help="Create a new 文生图 case and run the complete production pipeline",
+    )
+    generate.add_argument("--json", dest="sub_json", action="store_true")
+    source = generate.add_mutually_exclusive_group(required=True)
+    source.add_argument("--script", help="UTF-8 fixed narration text file")
+    source.add_argument("--goal", help="Goal used by AI to generate the narration")
+    generate.add_argument("--cases", default="cases", help="Parent directory for automatically created cases")
+    generate.add_argument("--case-id", help="Optional explicit case ID; defaults to a unique timestamp ID")
+    generate.set_defaults(handler=command_generate_video)
 
     catalog = sub.add_parser("catalog", help="Build the global V3 asset catalog")
     catalog.add_argument("--json", dest="sub_json", action="store_true")

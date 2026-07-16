@@ -3,7 +3,7 @@ from __future__ import annotations
 from argparse import Namespace
 from pathlib import Path
 
-from video_agent.cli import command_init, command_script_lock
+from video_agent.cli import command_generate_video, command_init, command_script_lock
 from video_agent.io import load_json, load_model
 from video_agent.contracts import CaseConfig, Narration
 from video_agent.script_lock import locked_narration_from_text
@@ -54,3 +54,37 @@ def test_script_lock_updates_existing_case(tmp_path: Path) -> None:
     assert result["beats"] == 1
     assert config.mode == "script_locked"
     assert config.narration_source == "input/narration.json"
+
+
+def test_generate_video_creates_a_new_locked_case(tmp_path: Path, monkeypatch) -> None:
+    script = tmp_path / "文案.txt"
+    script.write_text("文化墙、门店招牌都能一键生成。", encoding="utf-8")
+    monkeypatch.setattr("video_agent.cli.Orchestrator.run", lambda self: self.context.run_dir / "final" / "video.mp4")
+
+    result = command_generate_video(
+        Namespace(script=str(script), goal=None, cases=str(tmp_path / "cases"), case_id="fixed_cli_demo")
+    )
+
+    case_dir = Path(result["case"])
+    config = load_model(case_dir / "case.json", CaseConfig)
+    narration = load_model(case_dir / "input" / "narration.json", Narration)
+    assert config.feature_path == ["文生图"]
+    assert config.mode == "script_locked"
+    assert config.ai_enabled is False
+    assert narration.beats[0].spoken_text == "文化墙、门店招牌都能一键生成。"
+
+
+def test_generate_video_goal_mode_enables_ai_narration(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("video_agent.cli.Orchestrator.run", lambda self: self.context.run_dir / "final" / "video.mp4")
+
+    result = command_generate_video(
+        Namespace(script=None, goal="柯幻熊猫文生图功能种草", cases=str(tmp_path / "cases"), case_id="goal_cli_demo")
+    )
+
+    case_dir = Path(result["case"])
+    config = load_model(case_dir / "case.json", CaseConfig)
+    assert config.feature_path == ["文生图"]
+    assert config.mode == "material_first"
+    assert config.ai_enabled is True
+    assert config.narration_source is None
+    assert not (case_dir / "input" / "narration.json").exists()
