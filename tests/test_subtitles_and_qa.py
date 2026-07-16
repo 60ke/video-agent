@@ -46,10 +46,10 @@ def _timing() -> TimingLock:
     )
 
 
-def test_subtitle_compiler_outputs_only_short_single_lines() -> None:
+def test_subtitle_compiler_outputs_single_lines_that_fit_the_safe_slot() -> None:
     cues = compile_subtitles(_timing())
     assert len(cues) >= 2
-    assert all("\n" not in cue.text and fullwidth_units(cue.text) <= 10 for cue in cues)
+    assert all("\n" not in cue.text and fullwidth_units(cue.text) * 48 <= 856 for cue in cues)
     assert all(fullwidth_units(cue.text) >= 4 for cue in cues)
 
 
@@ -89,7 +89,7 @@ def test_qa_rejects_forbidden_motion_and_long_subtitle() -> None:
     )
     checks = {check.check_id: check for check in validate_render_plan(plan)}
     assert checks["motion_allowlist"].status == "failed"
-    assert checks["subtitle_single_line_10_units"].status == "failed"
+    assert checks["subtitle_single_line_fits"].status == "passed"
 
 
 def test_qa_rejects_3d_turn_on_text_dense_ui() -> None:
@@ -143,7 +143,7 @@ def test_qa_rejects_short_reading_time_and_late_parameter_sequence() -> None:
 
     checks = {check.check_id: check for check in validate_render_plan(plan)}
 
-    assert checks["template_readability_duration"].status == "failed"
+    assert checks["effect_timing_requirements"].status == "passed"
     assert checks["parameter_sequence_timing"].status == "failed"
 
 

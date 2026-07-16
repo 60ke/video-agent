@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "relationships": [
+    {
+      "relationship_id": "rel_8b1fc97e8abb",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "result_asset_id": "asset_result_8752a5f9188d",
+      "editor_composite_asset_id": "asset_derived_86ada9b68a27",
+      "edited_result_asset_id": "asset_derived_33f397ae3988",
+      "reference_asset_id": "asset_derived_d1982f7aacae",
+      "flat_plan_asset_id": "asset_derived_bec541999e8e"
+    },
+    {
+      "relationship_id": "rel_d36f2da9661d",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "result_asset_id": "asset_workflow_scene_a81af7c714a4",
+      "editor_composite_asset_id": "asset_workflow_scene_a81af7c714a4"
+    },
+    {
+      "relationship_id": "rel_272d62a4cbf3",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "result_asset_id": "asset_result_87e354216ebb",
+      "reference_asset_id": "asset_derived_46408851b80d",
+      "flat_plan_asset_id": "asset_derived_bdd3c654ba9e"
+    },
+    {
+      "relationship_id": "rel_813ce5db3193",
+      "feature_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "result_asset_id": "asset_workflow_scene_d9e3bb57462b",
+      "editor_composite_asset_id": "asset_workflow_scene_d9e3bb57462b",
+      "editor_modal_asset_id": "asset_workflow_scene_ea0ba761f909"
+    }
+  ]
+}

@@ -87,13 +87,13 @@ def _decode(response: httpx.Response) -> tuple[bytes, str | None]:
     raise RuntimeError("GPT Image response has neither b64_json nor url")
 
 
-def edit_image(repo_root: Path, source: Path, prompt: str) -> ImageEditResult:
+def edit_image(repo_root: Path, source: Path, prompt: str, *, size: str | None = None) -> ImageEditResult:
     errors: list[str] = []
     providers = sorted(_providers(repo_root), key=lambda provider: provider.weight, reverse=True)
     for provider in providers:
         url = urljoin(provider.base_url.rstrip("/") + "/", provider.edit_path.lstrip("/"))
         headers = {"Authorization": f"Bearer {provider.api_key}"}
-        data = {"model": provider.model, "prompt": prompt, "size": provider.size, "quality": provider.quality}
+        data = {"model": provider.model, "prompt": prompt, "size": size or provider.size, "quality": provider.quality}
         try:
             with source.open("rb") as handle, httpx.Client(timeout=provider.timeout_seconds, trust_env=False) as client:
                 response = client.post(

@@ -1,0 +1,56 @@
+from __future__ import annotations
+
+import pytest
+from pydantic import ValidationError
+
+from video_agent.contracts import NarrationBeat, PauseIntent, ShotPlan, TimeRef
+from video_agent.effects import get_effect_policy
+from video_agent.speech.pause_compiler import compile_beat_markup
+
+
+def test_pause_intent_compiles_to_provider_markup_without_editorial_cap() -> None:
+    beat = NarrationBeat(
+        beat_id="beat_001",
+        spoken_text="先打开首页，然后进入文生图。",
+        pause_intents=[PauseIntent(after_phrase="首页，", kind="section", requested_ms=1000)],
+    )
+
+    assert compile_beat_markup(beat) == "先打开首页，<#1.00#>然后进入文生图。"
+
+
+def test_pause_after_final_phrase_is_not_emitted_as_invalid_markup() -> None:
+    beat = NarrationBeat(
+        beat_id="beat_001",
+        spoken_text="完成生成。",
+        pause_intents=[PauseIntent(after_phrase="完成生成。", kind="beat", requested_ms=800)],
+    )
+
+    assert compile_beat_markup(beat) == "完成生成。"
+
+
+def test_effect_policy_distinguishes_feedback_from_reading_hold() -> None:
+    assert get_effect_policy("fade_in").requires_readable_hold is False
+    assert get_effect_policy("before_after").minimum_scene_frames == 18
+    assert get_effect_policy("grid_reveal").readable_settle_frames > 0
+    with pytest.raises(ValueError, match="unknown effect"):
+        get_effect_policy("unregistered")
+
+
+def test_gallery_effects_require_multiple_source_assets() -> None:
+    base = dict(
+        shot_id="shot_001",
+        beat_ids=["beat_001"],
+        start=TimeRef(anchor_id="timeline_start"),
+        end=TimeRef(anchor_id="timeline_end"),
+        template="result_showcase",
+        asset_bindings={"primary": "result_001"},
+    )
+    with pytest.raises(ValidationError, match="slide_gallery requires at least two"):
+        ShotPlan(**base, motion="slide_gallery")
+    with pytest.raises(ValidationError, match="card_stack requires at least two"):
+        ShotPlan(**base, motion="card_stack")
+    plan = ShotPlan(
+        **(base | {"asset_bindings": {"result_001": "result_001", "result_002": "result_002"}}),
+        motion="slide_gallery",
+    )
+    assert plan.motion == "slide_gallery"

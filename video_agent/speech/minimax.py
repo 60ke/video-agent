@@ -14,6 +14,35 @@ from video_agent.speech.pause_compiler import compile_narration_markup
 
 
 DEFAULT_ENDPOINT = "https://api.minimaxi.com/v1/t2a_v2"
+LOCAL_CONFIG_NAME = "minimax.local.json"
+
+
+def load_minimax_local_config(repo_root: Path) -> dict[str, Any]:
+    config_path = repo_root / "config" / LOCAL_CONFIG_NAME
+    return load_json(config_path) if config_path.is_file() else {}
+
+
+def local_minimax_voice_id(repo_root: Path) -> str | None:
+    voice_id = str(load_minimax_local_config(repo_root).get("voice_id") or "").strip()
+    return voice_id or None
+
+
+def apply_minimax_local_voice_defaults(case_data: dict[str, Any], repo_root: Path) -> dict[str, Any]:
+    """Apply the machine-local MiniMax voice settings as runtime authority."""
+    local = load_minimax_local_config(repo_root)
+    configured = {
+        key: local[key]
+        for key in ("model", "voice_id", "speed", "emotion", "subtitle_type")
+        if key in local and local[key] not in (None, "")
+    }
+    if not configured:
+        return case_data
+    patched = dict(case_data)
+    voice = case_data.get("voice")
+    patched_voice = dict(voice) if isinstance(voice, dict) else {}
+    patched_voice.update(configured)
+    patched["voice"] = patched_voice
+    return patched
 
 
 @dataclass(frozen=True)
@@ -104,8 +133,7 @@ def normalize_tokens(raw: Any) -> list[dict[str, Any]]:
 
 class MinimaxClient:
     def __init__(self, repo_root: Path) -> None:
-        config_path = repo_root / "config" / "minimax.local.json"
-        config = load_json(config_path) if config_path.is_file() else {}
+        config = load_minimax_local_config(repo_root)
         self.api_key = str(os.getenv("MINIMAX_API_KEY") or config.get("api_key") or "").strip()
         self.endpoint = str(config.get("endpoint") or DEFAULT_ENDPOINT)
         self.defaults = config
@@ -114,12 +142,14 @@ class MinimaxClient:
 
     def synthesize(self, case: CaseConfig, narration: Narration, work_dir: Path) -> MinimaxResult:
         markup_text = compile_narration_markup(narration)
+        voice_id = str(self.defaults.get("voice_id") or "").strip() or case.voice.voice_id
+        model = str(self.defaults.get("model") or "").strip() or case.voice.model
         payload: dict[str, Any] = {
-            "model": case.voice.model,
+            "model": model,
             "text": markup_text,
             "stream": False,
             "voice_setting": {
-                "voice_id": case.voice.voice_id,
+                "voice_id": voice_id,
                 "speed": case.voice.speed,
                 "vol": float(self.defaults.get("vol", 1.0)),
                 "pitch": int(self.defaults.get("pitch", 0)),

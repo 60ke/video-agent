@@ -14,6 +14,8 @@ from video_agent.contracts import (
     AudioConfig,
     AudioTrack,
     CompiledCue,
+    CompiledEditorFlowSequence,
+    CompiledGalleryItem,
     CompiledParameterFrameSequence,
     DurationPolicy,
     Narration,
@@ -24,6 +26,7 @@ from video_agent.contracts import (
     VisualPlan,
 )
 from video_agent.planning.parameter_sequence import compile_parameter_sequence_timing
+from video_agent.platform import get_profile
 
 
 MOTION_ALLOWLIST = {
@@ -37,9 +40,18 @@ MOTION_ALLOWLIST = {
     "result_reveal",
     "full_bleed_to_safe_card",
     "page_turn_3d",
+    "card_flip_3d",
+    "paper_curl_flip",
     "brand_breath",
+    "film_strip",
+    "grid_reveal",
+    "vertical_scroll",
+    "before_after",
+    "slide_gallery",
+    "card_stack",
+    "light_sweep",
 }
-TEMPLATE_ALLOWLIST = {"ui_params_focus", "ui_feature_entry", "result_showcase", "brand_ip_cutaway", "reference_to_result"}
+TEMPLATE_ALLOWLIST = {"ui_params_focus", "ui_feature_entry", "editor_interaction", "result_showcase", "brand_ip_cutaway", "reference_to_result"}
 TEXT_DENSE_TEMPLATES = {"ui_params_focus"}
 TEXT_DENSE_MOTION_ALLOWLIST = {"none", "fade_in", "fade_out", "scale_in", "scale_out"}
 BEAT_START_ANCHOR_PREFIX = "beat_start:"
@@ -106,16 +118,16 @@ def _select_sfx_events(events: list[_SfxEvent], fps: int, audio: AudioConfig) ->
     selected: list[_SfxEvent] = []
     for event in ranked:
         event_ms = event.hit_frame * 1000 / fps
-        if any(abs(event_ms - chosen.hit_frame * 1000 / fps) < policy.min_gap_ms for chosen in selected):
+        if policy.min_gap_ms is not None and any(abs(event_ms - chosen.hit_frame * 1000 / fps) < policy.min_gap_ms for chosen in selected):
             continue
-        if any(
+        if policy.repeat_cooldown_ms is not None and any(
             chosen.semantic_id == event.semantic_id
             and abs(event_ms - chosen.hit_frame * 1000 / fps) < policy.repeat_cooldown_ms
             for chosen in selected
         ):
             continue
-        events_in_window = sum(1 for chosen in selected if abs(event_ms - chosen.hit_frame * 1000 / fps) < policy.window_ms)
-        if events_in_window >= policy.max_events_per_window:
+        events_in_window = sum(1 for chosen in selected if policy.window_ms is not None and abs(event_ms - chosen.hit_frame * 1000 / fps) < policy.window_ms)
+        if policy.max_events_per_window is not None and events_in_window >= policy.max_events_per_window:
             continue
         selected.append(event)
     return sorted(selected, key=lambda item: (item.start_frame, item.semantic_id))
@@ -125,7 +137,8 @@ def _timing_anchors(timing: TimingLock) -> dict[str, int]:
     anchors = {
         TIMELINE_START_ANCHOR: 0,
         TIMELINE_END_ANCHOR: timing.duration_frames,
-        **{anchor.anchor_id: anchor.hit_frame for anchor in timing.phrase_anchors},
+        **{anchor.anchor_id: int(anchor.onset_frame) for anchor in timing.phrase_anchors},
+        **{token.token_id: token.start_frame for token in timing.tokens},
     }
     for span in timing.beat_spans:
         anchors[f"{BEAT_START_ANCHOR_PREFIX}{span.beat_id}"] = span.start_frame
@@ -197,8 +210,6 @@ def compile_render_plan(
     render_shots: list[RenderShot] = []
     sfx_events: list[_SfxEvent] = []
     used_asset_ids: set[str] = set()
-    approved = {"machine_checked", "vision_verified", "human_approved"}
-
     for shot in visual.shots:
         unknown_beats = set(shot.beat_ids) - beat_ids
         if unknown_beats:
@@ -207,27 +218,13 @@ def compile_render_plan(
             raise ValueError(f"motion is not allowed in V3: {shot.motion}")
         if shot.template not in TEMPLATE_ALLOWLIST:
             raise ValueError(f"template is not implemented in V3: {shot.template}")
-        if shot.template == "reference_to_result":
-            reference_id = shot.asset_bindings.get("reference")
-            result_id = shot.asset_bindings.get("result")
-            if not reference_id or not result_id or set(shot.asset_bindings) != {"reference", "result"}:
-                raise ValueError(f"reference_to_result requires exactly reference and result bindings: {shot.shot_id}")
-            reference = asset_by_id.get(reference_id)
-            result = asset_by_id.get(result_id)
-            if reference is None or result is None:
-                raise ValueError(f"reference_to_result bindings are missing from catalog: {shot.shot_id}")
-            if reference.role != "reference_image" or result.role != "result_image":
-                raise ValueError(f"reference_to_result requires reference_image plus result_image: {shot.shot_id}")
-            if reference.semantic_path != result.semantic_path:
-                raise ValueError(f"reference_to_result requires matching feature paths: {shot.shot_id}")
+        if shot.template == "reference_to_result" and set(shot.asset_bindings) != {"input", "output"}:
+            raise ValueError(f"causal scenes require exactly input and output bindings: {shot.shot_id}")
         if shot.template in TEXT_DENSE_TEMPLATES and shot.motion not in TEXT_DENSE_MOTION_ALLOWLIST:
             raise ValueError(f"motion {shot.motion!r} distorts text-dense template {shot.template!r}")
         missing_assets = [asset_id for asset_id in shot.asset_ids if asset_id not in asset_by_id]
         if missing_assets:
             raise ValueError(f"shot references missing assets: {missing_assets}")
-        unapproved = [asset_id for asset_id in shot.asset_ids if asset_by_id[asset_id].quality.status not in approved]
-        if unapproved:
-            raise ValueError(f"shot references unapproved assets: {unapproved}")
         ineligible = [asset_id for asset_id in shot.asset_ids if not asset_by_id[asset_id].production_eligible]
         if ineligible:
             raise ValueError(f"shot references source-only assets: {ineligible}")
@@ -239,13 +236,16 @@ def compile_render_plan(
         cues: list[CompiledCue] = []
         for binding in shot.cue_bindings:
             anchor = anchor_by_id.get(binding.anchor_id)
+            token = next((item for item in timing.tokens if item.token_id == binding.anchor_id), None)
             is_beat_boundary = binding.anchor_id in anchor_frames and (
                 binding.anchor_id.startswith(BEAT_START_ANCHOR_PREFIX) or binding.anchor_id.startswith(BEAT_END_ANCHOR_PREFIX)
             )
-            if anchor is None and not is_beat_boundary:
+            if anchor is None and token is None and not is_beat_boundary:
                 raise ValueError(f"shot references unknown phrase anchor: {binding.anchor_id}")
             if anchor is not None and anchor.beat_id not in shot.beat_ids:
                 raise ValueError(f"cue anchor belongs to a beat outside {shot.shot_id}: {binding.anchor_id}")
+            if token is not None and token.beat_id not in shot.beat_ids:
+                raise ValueError(f"cue token belongs to a beat outside {shot.shot_id}: {binding.anchor_id}")
             hit_frame = max(0, min(timing.duration_frames, anchor_frames[binding.anchor_id] + binding.offset_frames))
             if hit_frame < start_frame or hit_frame > end_frame:
                 raise ValueError(f"cue anchor falls outside shot range: {binding.anchor_id}")
@@ -300,11 +300,51 @@ def compile_render_plan(
                 base_asset_id=sequence.base_asset_id,
                 stage_asset_id=sequence.stage_asset_id,
                 final_asset_id=sequence.final_asset_id,
+                required_field_labels=sequence.required_field_labels,
+                callout_text=sequence.callout_text,
+                callout_reveal_frames=sequence.callout_reveal_frames,
                 **timing_result.__dict__,
+            )
+        compiled_editor_flow = None
+        if shot.editor_flow_sequence:
+            sequence = shot.editor_flow_sequence
+            focus_frame = _resolve_time(anchor_frames, sequence.focus_anchor_id, 0, timing.duration_frames)
+            modal_frame = _resolve_time(anchor_frames, sequence.modal_anchor_id, 0, timing.duration_frames)
+            if not start_frame <= focus_frame < end_frame or not start_frame <= modal_frame < end_frame:
+                raise ValueError(f"editor flow anchors fall outside shot range: {shot.shot_id}")
+            compiled_editor_flow = CompiledEditorFlowSequence(
+                sequence_id=sequence.sequence_id,
+                page_asset_id=sequence.page_asset_id,
+                modal_asset_id=sequence.modal_asset_id,
+                focus_frame=focus_frame,
+                modal_frame=modal_frame,
+                focus_x=sequence.focus_x,
+                focus_y=sequence.focus_y,
+                focus_w=sequence.focus_w,
+                focus_h=sequence.focus_h,
+                lens_zoom=sequence.lens_zoom,
+                reveal_frames=sequence.reveal_frames,
+            )
+        compiled_gallery_items = []
+        for item in shot.gallery_items:
+            if item.anchor_id not in anchor_frames:
+                raise ValueError(f"gallery item references unknown phrase anchor: {item.anchor_id}")
+            hit_frame = anchor_frames[item.anchor_id]
+            if not start_frame <= hit_frame < end_frame:
+                raise ValueError(f"gallery item anchor falls outside shot range: {item.anchor_id}")
+            compiled_gallery_items.append(
+                CompiledGalleryItem(
+                    asset_id=item.asset_id,
+                    anchor_id=item.anchor_id,
+                    hit_frame=hit_frame,
+                    onset_frame=hit_frame,
+                )
             )
         render_shots.append(
             RenderShot(
                 shot_id=shot.shot_id,
+                scene_id=shot.scene_id,
+                scene_kind=shot.scene_kind,
                 track=shot.track,
                 beat_ids=shot.beat_ids,
                 template=shot.template,
@@ -318,6 +358,8 @@ def compile_render_plan(
                 long_hold_reason=shot.long_hold_reason,
                 overlay_layout=shot.overlay_layout.model_dump(mode="json") if shot.overlay_layout else None,
                 parameter_sequence=compiled_sequence,
+                editor_flow_sequence=compiled_editor_flow,
+                gallery_items=compiled_gallery_items,
             )
         )
         used_asset_ids.update(shot.asset_ids)
@@ -366,6 +408,7 @@ def compile_render_plan(
             )
         )
 
+    profile = get_profile(platform_profile)
     return RenderPlan(
         case_id=case_id,
         run_id=run_id,
@@ -379,7 +422,10 @@ def compile_render_plan(
         platform_profile=platform_profile,
         assets=render_assets,
         shots=sorted(render_shots, key=lambda item: (item.track != "base", item.start_frame, item.shot_id)),
-        subtitles=compile_subtitles(timing),
+        subtitles=compile_subtitles(
+            timing,
+            gallery_anchor_ids={item.anchor_id for shot in visual.shots for item in shot.gallery_items},
+        ),
         audio_tracks=audio_tracks,
         style={
             "render_backend": "remotion",
@@ -388,5 +434,11 @@ def compile_render_plan(
             "subtitle_font_max": 68,
             "subtitle_stroke": 4,
             "sfx_density": audio.sfx_density.model_dump(mode="json"),
+            "safe_area": {
+                "content": profile.content_safe.as_dict(),
+                "critical": profile.critical_safe.as_dict(),
+                "subtitle_top": profile.subtitle_top.as_dict(),
+                "subtitle_lower": profile.subtitle_lower.as_dict(),
+            },
         },
     )

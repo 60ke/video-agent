@@ -27,6 +27,17 @@ class DeriveKind(str, Enum):
     BRAND_IP_SUBTITLE_BREAK = "brand_ip_subtitle_break"
     IDENTITY_TO_SYSTEM_TRANSITION = "identity_to_system_transition"
     TEXT_VISUAL_BREAK = "text_visual_break"
+    PARAMETER_CALLOUT_SEQUENCE = "parameter_callout_sequence"
+    VIDEO_SAFE_RELAYOUT = "video_safe_relayout"
+    RESULT_TO_REFERENCE_MOCK = "result_to_reference_mock"
+    LOGO_TO_REFERENCE_BOARD = "logo_to_reference_board"
+    RESULT_TO_APPLICATION = "result_to_application"
+    RESULT_TO_FLAT_PLAN = "result_to_flat_plan"
+    RESULT_TO_EDIT_STATE = "result_to_edit_state"
+    RESULT_TO_VARIATION = "result_to_variation"
+    CONTEXTUAL_RESULT_FILL = "contextual_result_fill"
+    GALLERY_PREVIEW = "gallery_preview"
+    RESULT_TO_EDITOR_COMPOSITE = "result_to_editor_composite"
 
 
 class NormalizedRect(Contract):
@@ -54,7 +65,7 @@ class VisualAnchor(Contract):
 
 
 class AssetQuality(Contract):
-    status: Literal["unreviewed", "machine_checked", "vision_verified", "human_approved", "rejected"] = "unreviewed"
+    status: Literal["unreviewed", "machine_checked", "human_approved", "rejected"] = "unreviewed"
     readable: bool | None = None
     checks: list[str] = Field(default_factory=list)
     rejection_reason: str | None = None
@@ -118,6 +129,11 @@ class DerivedAssetRequest(Contract):
     beat_id: str | None = None
     preferred_start_frame: int | None = Field(default=None, ge=0)
     preferred_end_frame: int | None = Field(default=None, gt=0)
+    scene_id: str | None = None
+    semantic_phrase: str | None = None
+    target_orientation: Literal["landscape", "portrait", "square"] | None = None
+    preserve: list[str] = Field(default_factory=list)
+    relationship_id: str | None = None
 
     @model_validator(mode="after")
     def validate_preferred_window(self) -> "DerivedAssetRequest":
@@ -135,44 +151,3 @@ class DerivedAssetRequest(Contract):
 class MaterializationPlan(VersionedContract):
     case_id: str
     requests: list[DerivedAssetRequest] = Field(default_factory=list)
-
-
-class VisualClaimAnchor(Contract):
-    claim_id: str
-    hit_frame: int = Field(ge=0)
-
-
-class BeatVisualDemand(Contract):
-    beat_id: str
-    start_frame: int = Field(ge=0)
-    end_frame: int = Field(gt=0)
-    required_visual_states: int = Field(ge=1, le=8)
-    existing_asset_ids: list[str] = Field(default_factory=list)
-    claim_anchors: list[VisualClaimAnchor] = Field(default_factory=list)
-    request_ids: list[str] = Field(default_factory=list)
-    reason: str = ""
-
-    @model_validator(mode="after")
-    def validate_span(self) -> "BeatVisualDemand":
-        if self.end_frame <= self.start_frame:
-            raise ValueError("visual demand beat span must have positive duration")
-        return self
-
-
-class VisualDemandPlan(VersionedContract):
-    case_id: str
-    timing_lock_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
-    catalog_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
-    demands: list[BeatVisualDemand] = Field(default_factory=list)
-    requests: list[DerivedAssetRequest] = Field(default_factory=list)
-    warnings: list[str] = Field(default_factory=list)
-
-    @model_validator(mode="after")
-    def request_references_exist(self) -> "VisualDemandPlan":
-        request_ids = {request.request_id for request in self.requests}
-        if len(request_ids) != len(self.requests):
-            raise ValueError("visual demand request_id values must be unique")
-        unknown = sorted({request_id for demand in self.demands for request_id in demand.request_ids} - request_ids)
-        if unknown:
-            raise ValueError(f"visual demands reference unknown requests: {unknown}")
-        return self

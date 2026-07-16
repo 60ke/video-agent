@@ -5,24 +5,22 @@ from pathlib import Path
 from typing import Any
 
 from video_agent.ai.story_planner import plan_narration
-from video_agent.ai.visual_critic import review_contact_sheet
-from video_agent.ai.visual_planner import plan_visual
-from video_agent.assets import build_catalog, catalog_snapshot, materialize_assets, review_materialized_assets
+from video_agent.ai.action_scene_planner import plan_action_scenes
+from video_agent.assets import build_catalog, catalog_snapshot, prepare_scene_assets
 from video_agent.compiler import compile_render_plan
 from video_agent.contracts import (
     AssetCatalog,
-    MaterializationPlan,
+    ActionScenePlan,
     Narration,
-    QaReport,
     RenderPlan,
     TimingLock,
-    VisualDemandPlan,
     VisualPlan,
 )
 from video_agent.cover import postprocess_cover
+from video_agent.outro import postprocess_outro
 from video_agent.io import load_json, load_model, sha256_file, sha256_json, utc_now, write_json_atomic
-from video_agent.planning import build_auto_visual_plan, build_visual_demand_plan
-from video_agent.qa import run_final_qa, validate_render_plan, validate_timing_lock
+from video_agent.planning import build_scene_visual_plan
+from video_agent.qa import validate_render_plan, validate_timing_lock
 from video_agent.render import render_video
 from video_agent.runtime import RunContext, STAGES
 from video_agent.speech import MinimaxClient, build_timing_lock
@@ -90,6 +88,13 @@ class Orchestrator:
             [{"path": path.relative_to(self.context.repo_root).as_posix(), "sha256": sha256_file(path)} for path in paths]
         )
 
+    def _assets_fingerprint(self) -> str:
+        root = self.context.repo_root / "assets"
+        paths = sorted(path for path in root.rglob("*") if path.is_file() and path.name != "catalog.json")
+        return sha256_json(
+            [{"path": path.relative_to(root).as_posix(), "sha256": sha256_file(path)} for path in paths]
+        )
+
     def _provider_fingerprint(self) -> dict[str, str]:
         config_path = self.context.repo_root / "config" / "ai.local.json"
         config = load_json(config_path) if config_path.is_file() else {}
@@ -97,15 +102,16 @@ class Orchestrator:
             "provider": "openai_compatible",
             "base_url": str(os.getenv("VIDEO_AGENT_AI_BASE_URL") or config.get("base_url") or "").rstrip("/"),
             "model": str(config.get("model") or "gpt-5"),
+            "coarse_model": str(config.get("coarse_model") or "deepseek-v4-flash"),
+            "max_tokens": str(config.get("max_tokens") or 8192),
         }
 
     def _stage_input_fingerprint(self, stage: str) -> dict[str, Any]:
         case = self.context.case.model_dump(mode="json")
         prompt_map = {
-            "materialize": "materialization/controlled_derivative.md",
+            "prepare_assets": "materialization/controlled_derivative.md",
             "narration": "story_and_shot_proposal.md",
-            "visual": "visual_story_planner.md",
-            "qa": "visual_critic.md",
+            "scene": "action_scene_planner.md",
         }
         prompt_name = prompt_map.get(stage)
         prompt_sha = self._content_sha256(self.context.repo_root / "video_agent" / "prompts" / prompt_name) if prompt_name else None
@@ -113,15 +119,12 @@ class Orchestrator:
             "code_sha256": self._code_fingerprint(),
             "prompt_sha256": prompt_sha,
             "provider": self._provider_fingerprint(),
-            "vision_review_enabled": self.context.case.vision_review_enabled,
             "quality": self.context.case.quality,
         }
         source_map: dict[str, Any] = {
             "catalog": {
                 "case": case,
-                "global_catalog": sha256_file(self.context.repo_root / "assets" / "catalog.json")
-                if (self.context.repo_root / "assets" / "catalog.json").is_file()
-                else None,
+                "assets": self._assets_fingerprint() if stage == "catalog" else None,
             },
             "narration": {
                 "case": case,
@@ -129,24 +132,21 @@ class Orchestrator:
                 "source": self._source_sha256(self.context.case.narration_source),
             },
             "speech": {"voice": case["voice"], "narration": self._artifact_sha256("narration.json")},
-            "visual_demand": {
+            "scene": {
                 "case": case,
                 "narration": self._artifact_sha256("narration.json"),
                 "timing": self._artifact_sha256("timing_lock.json"),
                 "catalog": self._artifact_sha256("asset_catalog.source.json"),
-                "manual_materialization": self._source_sha256(self.context.case.materialization_source),
             },
-            "materialize": {
+            "prepare_assets": {
                 "catalog": self._artifact_sha256("asset_catalog.source.json"),
-                "visual_demand": self._artifact_sha256("visual_demand.json"),
+                "scene": self._artifact_sha256("scene_plan.json"),
             },
-            "asset_review": {"catalog": self._artifact_sha256("asset_catalog.pending.json")},
             "visual": {
-                "mode": case["visual_planner_mode"],
                 "narration": self._artifact_sha256("narration.json"),
                 "timing": self._artifact_sha256("timing_lock.json"),
                 "catalog": self._artifact_sha256("asset_catalog.json"),
-                "source": self._source_sha256(self.context.case.visual_plan_source),
+                "scene": self._artifact_sha256("resolved_scene_plan.json"),
             },
             "compile": {
                 "narration": self._artifact_sha256("narration.json"),
@@ -161,11 +161,8 @@ class Orchestrator:
                 "quality": case["quality"],
                 "cover_enabled": case["cover_enabled"],
                 "cover_source": self._source_sha256(case["cover_source"]) if case["cover_enabled"] else None,
-            },
-            "qa": {
-                "plan": self._artifact_sha256("render_plan.json"),
-                "video": self._artifact_sha256("final/video.mp4"),
-                "vision_review_enabled": case["vision_review_enabled"],
+                "outro_enabled": case["outro_enabled"],
+                "outro_source": self._content_sha256(self.context.repo_root / case["outro_source"]) if case["outro_enabled"] else None,
             },
         }
         return {**common, "stage": stage, "inputs": source_map[stage]}
@@ -224,10 +221,9 @@ class Orchestrator:
 
     def stage_catalog(self) -> Path:
         global_path = self.context.repo_root / "assets" / "catalog.json"
-        if global_path.is_file():
-            catalog = load_model(global_path, AssetCatalog)
-        else:
-            catalog = build_catalog(self.context.repo_root / "assets", global_path)
+        # Assets are curated outside the pipeline. Rebuild the lightweight
+        # index so newly added files are immediately available to every run.
+        catalog = build_catalog(self.context.repo_root / "assets", global_path)
         snapshot = catalog_snapshot(catalog, self.context.case.feature_path, self.context.case.selected_asset_ids)
         output = self.context.artifact("asset_catalog.source.json")
         write_json_atomic(output, snapshot)
@@ -275,63 +271,47 @@ class Orchestrator:
         write_json_atomic(output, timing)
         return output
 
-    def stage_visual_demand(self) -> Path:
+    def stage_scene(self) -> Path:
         narration = load_model(self.context.artifact("narration.json"), Narration)
         timing = load_model(self.context.artifact("timing_lock.json"), TimingLock)
         catalog = load_model(self.context.artifact("asset_catalog.source.json"), AssetCatalog)
-        plan = build_visual_demand_plan(self.context.case.case_id, narration, timing, catalog)
+        plan, prompts, selection = plan_action_scenes(
+            self.context.repo_root,
+            self.context.case,
+            narration,
+            timing,
+            catalog,
+            self.context.artifact("asset_selection.json"),
+        )
+        self.manifest["prompts"].extend(prompts)
+        write_json_atomic(self.context.artifact("asset_selection.json"), selection)
 
-        if self.context.case.materialization_source:
-            manual = load_model(self.context.case_dir / self.context.case.materialization_source, MaterializationPlan)
-            if manual.case_id != self.context.case.case_id:
-                raise ValueError("materialization plan case_id differs from case.json")
-            by_id = {request.request_id: request for request in plan.requests}
-            for request in manual.requests:
-                existing = by_id.get(request.request_id)
-                if existing and existing.model_dump(mode="json") != request.model_dump(mode="json"):
-                    raise ValueError(f"manual materialization request conflicts with automatic request: {request.request_id}")
-                if not existing:
-                    plan.requests.append(request)
-                    by_id[request.request_id] = request
-            plan.warnings.append(f"merged {len(manual.requests)} manual materialization requests")
-
-        output = self.context.artifact("visual_demand.json")
+        output = self.context.artifact("scene_plan.json")
         write_json_atomic(output, plan)
         return output
 
-    def stage_materialize(self) -> Path:
+    def stage_prepare_assets(self) -> Path:
         source = load_model(self.context.artifact("asset_catalog.source.json"), AssetCatalog)
-        demand = load_model(self.context.artifact("visual_demand.json"), VisualDemandPlan)
-        if demand.case_id != self.context.case.case_id:
-            raise ValueError("visual demand case_id differs from case.json")
-        if demand.requests:
-            plan = MaterializationPlan(case_id=demand.case_id, requests=demand.requests)
-            catalog = materialize_assets(self.context.repo_root, source, plan, self.context.run_dir / "work" / "derived_assets")
-        else:
-            catalog = source
-        output = self.context.artifact("asset_catalog.pending.json")
-        write_json_atomic(output, catalog)
-        return output
-
-    def stage_asset_review(self) -> Path:
-        pending = load_model(self.context.artifact("asset_catalog.pending.json"), AssetCatalog)
-        catalog, report = review_materialized_assets(self.context.repo_root, pending)
-        write_json_atomic(self.context.artifact("asset_review_report.json"), report)
-        output = self.context.artifact("asset_catalog.json")
-        write_json_atomic(output, catalog)
+        scenes = load_model(self.context.artifact("scene_plan.json"), ActionScenePlan)
+        if scenes.case_id != self.context.case.case_id:
+            raise ValueError("action scene plan case_id differs from case.json")
+        catalog, resolved, report = prepare_scene_assets(self.context.repo_root, source, scenes)
+        write_json_atomic(self.context.artifact("asset_catalog.json"), catalog)
+        write_json_atomic(
+            self.context.artifact("asset_preparation_plan.json"),
+            {"schema_version": 1, "case_id": self.context.case.case_id, "requests": report.get("requests", [])},
+        )
+        write_json_atomic(self.context.artifact("asset_preparation_report.json"), report)
+        output = self.context.artifact("resolved_scene_plan.json")
+        write_json_atomic(output, resolved)
         return output
 
     def stage_visual(self) -> Path:
         narration = load_model(self.context.artifact("narration.json"), Narration)
         timing = load_model(self.context.artifact("timing_lock.json"), TimingLock)
         catalog = load_model(self.context.artifact("asset_catalog.json"), AssetCatalog)
-        if self.context.case.visual_plan_source:
-            visual = load_model(self.context.case_dir / self.context.case.visual_plan_source, VisualPlan)
-        elif self.context.case.visual_planner_mode == "multimodal":
-            visual, prompt = plan_visual(self.context.repo_root, self.context.case, narration, timing, catalog)
-            self.manifest["prompts"].append(prompt)
-        else:
-            visual = build_auto_visual_plan(self.context.case.case_id, narration, timing, catalog)
+        scenes = load_model(self.context.artifact("resolved_scene_plan.json"), ActionScenePlan)
+        visual = build_scene_visual_plan(self.context.case.case_id, narration, timing, scenes, catalog, self.context.repo_root)
         visual.timing_lock_sha256 = sha256_json(timing)
         output = self.context.artifact("visual_plan.json")
         write_json_atomic(output, visual)
@@ -376,28 +356,9 @@ class Orchestrator:
         )
         if self.context.case.cover_enabled:
             spec = self.context.case_dir / self.context.case.cover_source
-            postprocess_cover(self.context.repo_root, self.context.case_dir, self.context.run_dir, spec)
-        return output
-
-    def stage_qa(self) -> Path:
-        plan = load_model(self.context.artifact("render_plan.json"), RenderPlan)
-        video = self.context.run_dir / "final" / "video.mp4"
-        report: QaReport = run_final_qa(plan, video, self.context.run_dir)
-        if self.context.case.vision_review_enabled:
-            review, trace = review_contact_sheet(
-                self.context.repo_root,
-                plan,
-                self.context.run_dir / "final" / "contact_sheet.jpg",
-                sorted((self.context.run_dir / "final").glob("cue_contact_sheet_*.jpg")),
-            )
-            report.checks.append(review)
-            self.manifest["prompts"].append({"path": trace["path"], "sha256": trace["sha256"]})
-            write_json_atomic(self.context.artifact("vision_review.json"), trace["result"])
-            if review.status == "failed":
-                report.status = "failed"
-        output = self.context.artifact("qa_report.json")
-        write_json_atomic(output, report)
-        if report.status != "passed":
-            failures = [item.check_id for item in report.checks if item.status == "failed"]
-            raise ValueError(f"final video QA failed: {', '.join(failures)}")
+            cover_report = postprocess_cover(self.context.repo_root, self.context.case_dir, self.context.run_dir, spec)
+            self.manifest["cover"] = cover_report
+        if self.context.case.outro_enabled:
+            outro_report = postprocess_outro(self.context.repo_root, self.context.run_dir, self.context.case.outro_source)
+            self.manifest["outro"] = outro_report
         return output

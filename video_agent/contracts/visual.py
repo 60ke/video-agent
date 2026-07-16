@@ -23,7 +23,7 @@ class TimeRef(Contract):
 
 class TransitionIn(Contract):
     kind: Literal["cut", "crossfade", "slide_left", "slide_right"] = "cut"
-    duration_frames: int = Field(default=0, ge=0, le=30)
+    duration_frames: int = Field(default=0, ge=0)
 
     @model_validator(mode="after")
     def cut_has_no_duration(self) -> "TransitionIn":
@@ -61,10 +61,36 @@ class ParameterFrameSequence(Contract):
     final_asset_id: str = Field(min_length=1)
     required_field_labels: list[str] = Field(min_length=1)
     callout_text: str = Field(min_length=1)
+    callout_reveal_frames: int = Field(default=10, ge=1, le=90)
+
+
+class EditorFlowSequence(Contract):
+    """A fixed editor page and modal, activated by word-level anchors."""
+
+    sequence_id: str = Field(min_length=1)
+    page_asset_id: str = Field(min_length=1)
+    modal_asset_id: str = Field(min_length=1)
+    focus_anchor_id: str = Field(min_length=1)
+    modal_anchor_id: str = Field(min_length=1)
+    focus_x: float = Field(ge=0.0, le=1.0)
+    focus_y: float = Field(ge=0.0, le=1.0)
+    focus_w: float = Field(gt=0.0, le=1.0)
+    focus_h: float = Field(gt=0.0, le=1.0)
+    lens_zoom: float = Field(default=2.15, ge=1.2, le=4.0)
+    reveal_frames: int = Field(default=10, ge=4, le=45)
+
+
+class GalleryItem(Contract):
+    """One visual item whose appearance is locked to a spoken phrase."""
+
+    asset_id: str = Field(min_length=1)
+    anchor_id: str = Field(min_length=1)
 
 
 class ShotPlan(Contract):
     shot_id: str
+    scene_id: str | None = None
+    scene_kind: str | None = None
     track: Literal["base", "overlay"] = "base"
     beat_ids: list[str] = Field(min_length=1)
     start: TimeRef
@@ -85,13 +111,24 @@ class ShotPlan(Contract):
         "result_reveal",
         "full_bleed_to_safe_card",
         "page_turn_3d",
+        "card_flip_3d",
+        "paper_curl_flip",
         "brand_breath",
+        "film_strip",
+        "grid_reveal",
+        "vertical_scroll",
+        "before_after",
+        "slide_gallery",
+        "card_stack",
+        "light_sweep",
     ] = "none"
     transition_in: TransitionIn = Field(default_factory=TransitionIn)
     evidence_policy: str = "source_pixels_visible"
     long_hold_reason: Literal["reading", "appreciation", "pause"] | None = None
     overlay_layout: OverlayLayout | None = None
     parameter_sequence: ParameterFrameSequence | None = None
+    editor_flow_sequence: EditorFlowSequence | None = None
+    gallery_items: list[GalleryItem] = Field(default_factory=list)
 
     @property
     def asset_ids(self) -> list[str]:
@@ -107,12 +144,20 @@ class ShotPlan(Contract):
             raise ValueError("base shots cannot define overlay_layout")
         if self.parameter_sequence is not None and self.template != "ui_params_focus":
             raise ValueError("parameter frame sequences require ui_params_focus")
-        if self.template == "ui_params_focus" and self.parameter_sequence is None:
-            raise ValueError("ui_params_focus requires a parameter frame sequence")
+        if self.editor_flow_sequence is not None and self.template != "editor_interaction":
+            raise ValueError("editor flow sequences require editor_interaction")
+        if self.motion in {"slide_gallery", "card_stack"} and len(self.asset_bindings) < 2:
+            raise ValueError(f"{self.motion} requires at least two asset bindings")
+        if self.gallery_items:
+            binding_ids = set(self.asset_bindings.values())
+            missing = [item.asset_id for item in self.gallery_items if item.asset_id not in binding_ids]
+            if missing:
+                raise ValueError(f"gallery items must reference bound assets: {missing}")
         return self
 
 
 class VisualPlan(VersionedContract):
     case_id: str
     timing_lock_sha256: str | None = None
+    action_scene_plan_sha256: str | None = None
     shots: list[ShotPlan] = Field(min_length=1)

@@ -1,0 +1,1031 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "asset_id": "asset_derived_8de565cf9f68",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_editor_composite_96f5ce0bbfb8.png",
+      "sha256": "becc2e1a696a9607bb8d535b86716b7b4ede4911380077a7deec5b09c8c07a32",
+      "media_type": "image",
+      "filename": "文化墙_result_to_editor_composite_96f5ce0bbfb8.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "editor_workspace",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_editor_composite",
+        "scene_007"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d",
+          "asset_workflow_scene_a81af7c714a4"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "e2279b9acc675787f9de9c66f3539f5b14ba5f9702e21a86f0e7958494a73218"
+      },
+      "metadata": {
+        "derive_kind": "result_to_editor_composite",
+        "request_id": "derive_e03a161d8080",
+        "scene_id": "scene_007",
+        "semantic_phrase": "把上一张结果图完整载入真实编辑页面，保持编辑器 UI 和结果图内容不变",
+        "target_orientation": "portrait",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+        "purpose": "action_scene",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "96f5ce0bbfb802e1ddfd977f3035dd06f64dc121060d2f55762457fe25dc5a1d"
+      }
+    },
+    {
+      "asset_id": "asset_derived_ec091dbfc947",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_edit_state_59e6b2ce550b.png",
+      "sha256": "3db21fef5b0a18a8b6a6b5bac4f0a06cc1a0846491a3c20653fa73f6d85ea063",
+      "media_type": "image",
+      "filename": "文化墙_result_to_edit_state_59e6b2ce550b.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_edit_state",
+        "scene_008"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "175d685bfa0226d05b3ba358c6e4027c168d9ba0f965610cf077859dc96a2413"
+      },
+      "metadata": {
+        "derive_kind": "result_to_edit_state",
+        "request_id": "derive_5e2d2c37e24d",
+        "scene_id": "scene_008",
+        "semantic_phrase": "画面细节不满意可直接进入编辑页面随心调整修改。",
+        "target_orientation": "portrait",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+        "purpose": "action_scene",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "59e6b2ce550b9fc7023178b42a0a65adbe7bdb5727c3f067528492c1ec59c6eb"
+      }
+    },
+    {
+      "asset_id": "asset_derived_fc9269f28a8e",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/电商_gallery_preview_2d8eb40c4f5b.png",
+      "sha256": "44451c469c2c4db60e5dcbc9a92637edf179d054a6481602076a742b9208564f",
+      "media_type": "image",
+      "filename": "电商_gallery_preview_2d8eb40c4f5b.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "电商",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_1743c9fe5d9e"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "f690fd0fddc439f90071c39ee23fe5aa98f9a2936a8e722b809a76c4aef8e21b"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_e364fb2e6b6e8cf7",
+        "scene_id": "scene_002",
+        "semantic_phrase": "文化墙、门店招牌、景观小品、商业美陈、品牌 logo、电商视觉、活动物料",
+        "target_orientation": "landscape",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "2d8eb40c4f5bcf435e0920d9405ecef77c80b9771675be989e933f1623e1fa94"
+      }
+    },
+    {
+      "asset_id": "asset_derived_9ff1c369cd3b",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_gallery_preview_5b2cfe673fb4.png",
+      "sha256": "a9467a59d0d50349e9b558d344ac2266d53320d33f56f4b959fb1c6b1c78add0",
+      "media_type": "image",
+      "filename": "文化墙_gallery_preview_5b2cfe673fb4.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "活动物料",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "活动物料",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_83edbd4346c9"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "f690fd0fddc439f90071c39ee23fe5aa98f9a2936a8e722b809a76c4aef8e21b"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_5d98be03ab6b268f",
+        "scene_id": "scene_002",
+        "semantic_phrase": "文化墙、门店招牌、景观小品、商业美陈、品牌 logo、电商视觉、活动物料",
+        "target_orientation": "landscape",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "5b2cfe673fb4e8ff871b1872a58a053eed9601f4e7746892074b14f9a0baaa08"
+      }
+    },
+    {
+      "asset_id": "asset_derived_0df82e0dc4c3",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_reference_mock_a1b62059a200.png",
+      "sha256": "5646ea5f196f50991fcec64a53e446fcece6aa48cee6d458cf4869d694083df7",
+      "media_type": "image",
+      "filename": "文化墙_result_to_reference_mock_a1b62059a200.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_reference_mock",
+        "scene_011"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "eb05fd2b98087fd117a7c13330b4faf39d0c565e0440ae0371a0dba53bb8c962"
+      },
+      "metadata": {
+        "derive_kind": "result_to_reference_mock",
+        "request_id": "prepare_4fba701910644190",
+        "scene_id": "scene_011",
+        "semantic_phrase": "系统就能在原有场景基础上生成",
+        "target_orientation": "portrait",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+        "purpose": "asset_preflight",
+        "relationship_id": "flow_44774cb95e",
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "a1b62059a20063194b0274ea988d3b88eab68bd10ea46b445b98a2814107b514"
+      }
+    },
+    {
+      "asset_id": "asset_derived_a5824805eb54",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_flat_plan_211fef200bec.png",
+      "sha256": "7b91f12fea1c17863ce770f9d157eea9c8d66c9589457900013e21a5fc21fe06",
+      "media_type": "image",
+      "filename": "文化墙_result_to_flat_plan_211fef200bec.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "plane_result",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_flat_plan",
+        "scene_012"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "877d430504435fe5ca318f5b098a8b2ade0a12ed095a830fea6e6bb977d88389"
+      },
+      "metadata": {
+        "derive_kind": "result_to_flat_plan",
+        "request_id": "prepare_505e2e81d1b01330",
+        "scene_id": "scene_012",
+        "semantic_phrase": "导出平面图",
+        "target_orientation": "portrait",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+        "purpose": "asset_preflight",
+        "relationship_id": "flow_44774cb95e",
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "211fef200bec0a26a6ffa0bea8f52a28cc1c68650ef8091acc6cff179e1c04a7"
+      }
+    },
+    {
+      "asset_id": "asset_derived_86ada9b68a27",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_editor_composite_251d01daba29.png",
+      "sha256": "7277173722cacef2e7f09ad4ed9f353f606576b5cf21496203cd1382ff832558",
+      "media_type": "image",
+      "filename": "文化墙_result_to_editor_composite_251d01daba29.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "editor_workspace",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_editor_composite",
+        "scene_007"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d",
+          "asset_workflow_scene_a81af7c714a4"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "48ce0111078314bb01638b01a04717b552ce196ace1616a898b54f6710618faf"
+      },
+      "metadata": {
+        "derive_kind": "result_to_editor_composite",
+        "request_id": "derive_e03a161d8080",
+        "scene_id": "scene_007",
+        "semantic_phrase": "把上一张结果图完整载入真实编辑页面，保持编辑器 UI 和结果图内容不变",
+        "target_orientation": "portrait",
+        "target_size": "1024x1792",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "action_scene",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "251d01daba295738a30d3a00091f76d407d696234ac6de01d97403dd92da7b6e"
+      }
+    },
+    {
+      "asset_id": "asset_derived_33f397ae3988",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_edit_state_87b8829815d3.png",
+      "sha256": "2911961dce2206dcff712efec6a477aad6a115c180819763778e8a91ba0eab11",
+      "media_type": "image",
+      "filename": "文化墙_result_to_edit_state_87b8829815d3.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_edit_state",
+        "scene_008"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "91c115f76185df51b41bc9f20145ab5784198f051494374a6a7ea781652ca3cc"
+      },
+      "metadata": {
+        "derive_kind": "result_to_edit_state",
+        "request_id": "derive_5e2d2c37e24d",
+        "scene_id": "scene_008",
+        "semantic_phrase": "画面细节不满意可直接进入编辑页面随心调整修改。",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "action_scene",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "87b8829815d30f9a0550a783a670e8c01f7ed82f5f3ca250fa6e2b595e4245d8"
+      }
+    },
+    {
+      "asset_id": "asset_derived_fd21c098a086",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/电商_gallery_preview_a204105a5b64.png",
+      "sha256": "39d2714392dfd55a065262d38212b34c191e8f5cefa5def016284a0ed504031a",
+      "media_type": "image",
+      "filename": "电商_gallery_preview_a204105a5b64.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "电商",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_1743c9fe5d9e"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "91ed154c95d7b376a5c91dcebcadcd32fa82b6d4953b73a43d4ea376c99815ba"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_e364fb2e6b6e8cf7",
+        "scene_id": "scene_002",
+        "semantic_phrase": "文化墙、门店招牌、景观小品、商业美陈、品牌 logo、电商视觉、活动物料",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "a204105a5b64b9a8ffe7e723ae0f024f4b7b907382f658c110e744f181f8d2eb"
+      }
+    },
+    {
+      "asset_id": "asset_derived_973bec654ad9",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_gallery_preview_09646f5af3ab.png",
+      "sha256": "66cd1eb200884c9db682be8182029932e7033d4238b9e75b023dda6a2d22c694",
+      "media_type": "image",
+      "filename": "文化墙_gallery_preview_09646f5af3ab.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "活动物料",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "活动物料",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_83edbd4346c9"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "91ed154c95d7b376a5c91dcebcadcd32fa82b6d4953b73a43d4ea376c99815ba"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_5d98be03ab6b268f",
+        "scene_id": "scene_002",
+        "semantic_phrase": "文化墙、门店招牌、景观小品、商业美陈、品牌 logo、电商视觉、活动物料",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "09646f5af3ab323769f4835c2abe0382860af347013996b7ab74a76e51c80316"
+      }
+    },
+    {
+      "asset_id": "asset_derived_d1982f7aacae",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_reference_mock_fb5668a082ef.png",
+      "sha256": "fd257b5e046f227ac928460ae9a9ac4a58a9a7d490de96ac7bc521b95472369e",
+      "media_type": "image",
+      "filename": "文化墙_result_to_reference_mock_fb5668a082ef.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_reference_mock",
+        "scene_011"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "2f056b762168c229f5fd9fe275ff6db1ac03e3a66c5c2e11bff6935d9bcba0b1"
+      },
+      "metadata": {
+        "derive_kind": "result_to_reference_mock",
+        "request_id": "prepare_4fba701910644190",
+        "scene_id": "scene_011",
+        "semantic_phrase": "系统就能在原有场景基础上生成",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": "flow_44774cb95e",
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "fb5668a082efe74853091228aee5c5cb1fbbd84811a2d132dcd637ca93b358bb"
+      }
+    },
+    {
+      "asset_id": "asset_derived_bec541999e8e",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_flat_plan_bc794b5eef89.png",
+      "sha256": "73e111faf54c97fb788291a63e1519358b46d16606db818d20c68eab69ef1371",
+      "media_type": "image",
+      "filename": "文化墙_result_to_flat_plan_bc794b5eef89.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "plane_result",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_flat_plan",
+        "scene_012"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "6c655e3fb7fd15a025c73f985d87befdebcec4be4d098146555d33dfd3e3889b"
+      },
+      "metadata": {
+        "derive_kind": "result_to_flat_plan",
+        "request_id": "prepare_505e2e81d1b01330",
+        "scene_id": "scene_012",
+        "semantic_phrase": "导出平面图",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": "flow_44774cb95e",
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "bc794b5eef892c1d55da36d648ed2a06ad82f5452acd898b8ea2077af3499455"
+      }
+    },
+    {
+      "asset_id": "asset_derived_46408851b80d",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_reference_mock_f3a73c7f39d4.png",
+      "sha256": "e371963dd8e3535a248ab0ce0bf7b59df3ca0086d0ee488c72416fdb818f2c4b",
+      "media_type": "image",
+      "filename": "文化墙_result_to_reference_mock_f3a73c7f39d4.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "职工之家",
+        "文生图",
+        "文化墙",
+        "result_to_reference_mock",
+        "scene_010"
+      ],
+      "identity_group": "职工之家",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_87e354216ebb"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "2f056b762168c229f5fd9fe275ff6db1ac03e3a66c5c2e11bff6935d9bcba0b1"
+      },
+      "metadata": {
+        "derive_kind": "result_to_reference_mock",
+        "request_id": "prepare_403e6e9cd958a48d",
+        "scene_id": "scene_010",
+        "semantic_phrase": "系统就能在原有场景基础上生成",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": "flow_44774cb95e",
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "f3a73c7f39d441582cf34a5b3b11fb0274e1a6cbe5cbf2c15af020aba4ee9e1a"
+      }
+    },
+    {
+      "asset_id": "asset_derived_bdd3c654ba9e",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_flat_plan_4776ab83b7af.png",
+      "sha256": "bdc8a0c64914b0de6711009c8a1a79c6e8ee50ccc84ccd50b6257a2fbf6611d5",
+      "media_type": "image",
+      "filename": "文化墙_result_to_flat_plan_4776ab83b7af.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "plane_result",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "职工之家",
+        "文生图",
+        "文化墙",
+        "result_to_flat_plan",
+        "scene_011"
+      ],
+      "identity_group": "职工之家",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_87e354216ebb"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "6c655e3fb7fd15a025c73f985d87befdebcec4be4d098146555d33dfd3e3889b"
+      },
+      "metadata": {
+        "derive_kind": "result_to_flat_plan",
+        "request_id": "prepare_a5ce2a1aa4ac0e7d",
+        "scene_id": "scene_011",
+        "semantic_phrase": "导出平面图",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": "flow_44774cb95e",
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "4776ab83b7af7a869a5237626a561de51cd01e5493547df20d5809b4c13bceba"
+      }
+    },
+    {
+      "asset_id": "asset_derived_ac2c808917ba",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/雕塑小品_contextual_result_fill_8032808ae466.png",
+      "sha256": "b12215a76aa06b6aa725d3f76a8ff22935ded3a25cf096a7b322ac2ed8b64bfa",
+      "media_type": "image",
+      "filename": "雕塑小品_contextual_result_fill_8032808ae466.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "雕塑小品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "美陈",
+        "雕塑小品",
+        "contextual_result_fill"
+      ],
+      "identity_group": "美陈",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_d17cdb7a61e6"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "fc0739a62f36354e46d2d8083627d8ef36525dc2b8f934a92bdc0fc1eaa73ad2"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "derive_sculpture_result",
+        "scene_id": "scene_003",
+        "semantic_phrase": "雕塑小品",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "result_display",
+        "relationship_id": null,
+        "beat_id": "beat_002",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "8032808ae4662f68b2f125658c7c1eace150ad2a27d0b8180d2910378f1afb48"
+      }
+    },
+    {
+      "asset_id": "asset_derived_8e27361374c1",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/主题公园_contextual_result_fill_294dc4f1a919.png",
+      "sha256": "603fff1c8b9e38c398fb919b7d4625888e461a64b049bc0655dccd19f2e0c460",
+      "media_type": "image",
+      "filename": "主题公园_contextual_result_fill_294dc4f1a919.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "主题公园"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "美陈",
+        "主题公园",
+        "contextual_result_fill"
+      ],
+      "identity_group": "美陈",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_c1d93d40e3b5"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "d00ce35b3c297ac3505759c6079779c367378d41ee09e75b03c858ede5765f82"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "derive_theme_park_result",
+        "scene_id": "scene_004",
+        "semantic_phrase": "主题公园",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "result_display",
+        "relationship_id": null,
+        "beat_id": "beat_002",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "294dc4f1a919714df9044d371795e075578c244329431d918b97a53e3392a50c"
+      }
+    },
+    {
+      "asset_id": "asset_derived_e7f6020d05b5",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_71a84bd08d49.png",
+      "sha256": "32b4f6cdbbf5aaae262fd12f4c9dc7a697258fdc14febf382e119789420e642e",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_71a84bd08d49.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "文生图",
+        "gallery_preview",
+        "scene_005"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_e4b3286c7596"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "edede55452b6837f27cfa49c47fde7a600ae28d9e22788c02f06fe64176d0b6b"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_05fe21ff513c40bf",
+        "scene_id": "scene_005",
+        "semantic_phrase": "IP形象、电商、到海报",
+        "target_orientation": "portrait",
+        "target_size": "1024x1792",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "71a84bd08d492f035bba35a31f7928b0a264f8dfe0d95bde3af32b1e882061dc"
+      }
+    }
+  ]
+}

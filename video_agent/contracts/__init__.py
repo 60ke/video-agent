@@ -2,7 +2,6 @@ from .assets import (
     Asset,
     AssetCatalog,
     AssetQuality,
-    BeatVisualDemand,
     DeriveKind,
     DerivedAssetRequest,
     EvidenceClass,
@@ -10,31 +9,42 @@ from .assets import (
     NormalizedRect,
     Provenance,
     VisualAnchor,
-    VisualClaimAnchor,
-    VisualDemandPlan,
+)
+from .action_scene import (
+    ActionScene,
+    ActionScenePlan,
+    NarrativeRole,
+    SceneGalleryItem,
+    SceneKind,
+    VisualPurpose,
 )
 from .case import AudioConfig, CaseConfig, DurationPolicy, SemanticSfx, SfxDensityPolicy, VideoFormat, VoiceConfig
 from .narration import Claim, ClaimCue, Narration, NarrationBeat, PauseIntent
 from .qa import CheckResult, QaReport
-from .render import AudioTrack, CompiledCue, CompiledParameterFrameSequence, RenderAsset, RenderPlan, RenderShot, SubtitleCue
+from .render import AudioTrack, CompiledCue, CompiledEditorFlowSequence, CompiledGalleryItem, CompiledParameterFrameSequence, RenderAsset, RenderPlan, RenderShot, SubtitleCue
 from .timing import BeatSpan, PauseEvent, PhraseAnchor, TimingLock, TokenTiming
-from .visual import CueBinding, OverlayLayout, ParameterFrameSequence, ShotPlan, TimeRef, TransitionIn, VisualPlan
+from .visual import CueBinding, EditorFlowSequence, GalleryItem, OverlayLayout, ParameterFrameSequence, ShotPlan, TimeRef, TransitionIn, VisualPlan
 
 __all__ = [
     "Asset",
+    "ActionScene",
+    "ActionScenePlan",
     "AssetCatalog",
     "AssetQuality",
     "AudioConfig",
     "AudioTrack",
     "BeatSpan",
-    "BeatVisualDemand",
     "CaseConfig",
     "CheckResult",
     "Claim",
     "ClaimCue",
     "CompiledCue",
+    "CompiledEditorFlowSequence",
+    "CompiledGalleryItem",
     "CompiledParameterFrameSequence",
     "CueBinding",
+    "EditorFlowSequence",
+    "GalleryItem",
     "DurationPolicy",
     "DeriveKind",
     "DerivedAssetRequest",
@@ -54,6 +64,10 @@ __all__ = [
     "RenderPlan",
     "RenderShot",
     "SemanticSfx",
+    "SceneGalleryItem",
+    "SceneKind",
+    "NarrativeRole",
+    "VisualPurpose",
     "ShotPlan",
     "SfxDensityPolicy",
     "SubtitleCue",
@@ -62,8 +76,6 @@ __all__ = [
     "TokenTiming",
     "TransitionIn",
     "VideoFormat",
-    "VisualClaimAnchor",
-    "VisualDemandPlan",
     "VisualPlan",
     "VisualAnchor",
     "VoiceConfig",

@@ -26,8 +26,20 @@ class PhraseAnchor(Contract):
     text: str
     token_ids: list[str] = Field(min_length=1)
     hit_frame: int = Field(ge=0)
+    onset_frame: int | None = Field(default=None, ge=0)
+    end_frame: int | None = Field(default=None, gt=0)
     beat_id: str
     claim_ids: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def resolve_phrase_span(self) -> "PhraseAnchor":
+        if self.onset_frame is None:
+            object.__setattr__(self, "onset_frame", self.hit_frame)
+        if self.end_frame is None:
+            object.__setattr__(self, "end_frame", self.hit_frame + 1)
+        if self.end_frame <= self.onset_frame:
+            raise ValueError("phrase anchor must have a positive frame span")
+        return self
 
 
 class PauseEvent(Contract):

@@ -1,6 +1,7 @@
 {
   "endpoint": "https://api.minimaxi.com/v1/t2a_v2",
   "api_key": "replace-locally",
+  "voice_id": "male-qn-qingse",
   "sample_rate": 32000,
   "bitrate": 128000,
   "vol": 1.0,

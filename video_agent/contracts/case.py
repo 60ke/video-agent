@@ -29,7 +29,7 @@ class VoiceConfig(Contract):
     provider: Literal["minimax"] = "minimax"
     model: str = "speech-2.8-hd"
     voice_id: str = "male-qn-qingse"
-    speed: float = Field(default=1.3, ge=0.5, le=2.0)
+    speed: float = Field(default=1.5, ge=0.5, le=2.0)
     emotion: str | None = None
     subtitle_type: Literal["word"] = "word"
     pause_profile: str = "disabled"
@@ -54,10 +54,28 @@ class SemanticSfx(Contract):
 
 
 class SfxDensityPolicy(Contract):
-    min_gap_ms: int = Field(default=280, ge=0, le=3000)
-    window_ms: int = Field(default=3000, ge=500, le=10000)
-    max_events_per_window: int = Field(default=3, ge=1, le=12)
-    repeat_cooldown_ms: int = Field(default=900, ge=0, le=10000)
+    profile: Literal["clean", "normal", "energetic", "custom"] = "normal"
+    min_gap_ms: int | None = Field(default=None, ge=0, le=3000)
+    window_ms: int | None = Field(default=None, ge=500, le=10000)
+    max_events_per_window: int | None = Field(default=None, ge=1, le=12)
+    repeat_cooldown_ms: int | None = Field(default=None, ge=0, le=10000)
+
+    @model_validator(mode="after")
+    def resolve_profile(self) -> "SfxDensityPolicy":
+        profiles = {
+            "clean": (420, 3500, 2, 1100),
+            "normal": (280, 3000, 3, 900),
+            "energetic": (140, 2200, 5, 500),
+        }
+        if self.profile != "custom":
+            gap, window, maximum, repeat = profiles[self.profile]
+            # Assignment validation is enabled by Contract, so use the model's
+            # raw setter inside this post-validation normalization step.
+            object.__setattr__(self, "min_gap_ms", gap)
+            object.__setattr__(self, "window_ms", window)
+            object.__setattr__(self, "max_events_per_window", maximum)
+            object.__setattr__(self, "repeat_cooldown_ms", repeat)
+        return self
 
 
 class AudioConfig(Contract):
@@ -81,11 +99,9 @@ class CaseConfig(VersionedContract):
     audio: AudioConfig = Field(default_factory=AudioConfig)
     platform_profile: Literal["douyin_portrait_v1"] = "douyin_portrait_v1"
     narration_source: str | None = None
-    materialization_source: str | None = None
-    visual_plan_source: str | None = None
-    visual_planner_mode: Literal["auto", "multimodal"] = "auto"
     selected_asset_ids: list[str] = Field(default_factory=list)
-    cover_enabled: bool = False
+    cover_enabled: bool = True
     cover_source: str = "input/cover.json"
+    outro_enabled: bool = True
+    outro_source: str = "assets/outro/default_panda_outro.mp4"
     ai_enabled: bool = False
-    vision_review_enabled: bool = False

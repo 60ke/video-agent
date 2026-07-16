@@ -1,0 +1,124 @@
+{
+  "schema_version": 2,
+  "workflow": "fixed_editor_flow_materials",
+  "generated_at": "2026-07-15T12:35:34.071463+00:00",
+  "assets": [
+    {
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/workflow_scenes/文生图/文化墙/柯幻熊猫_文生图_文化墙_编辑页面关键帧.png",
+      "sha256": "a81af7c714a427997acf5f1cba6e3ef6a365e783dd841b3eb74361938610bb07",
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "editor_workspace",
+      "workflow_step": "local_editing",
+      "quality_status": "human_approved",
+      "claims": [
+        "image_editing_available"
+      ],
+      "tags": [
+        "编辑页面",
+        "局部编辑",
+        "调整修改"
+      ],
+      "source": "user_provided_editor_screenshot"
+    },
+    {
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_文化墙_参数面板关键帧.png",
+      "sha256": "86c5a0dcd53140ef722bd07c2b583c5dc27235d983f30058e195b524a9413bb5",
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "feature_form_params",
+      "workflow_step": "parameter_input",
+      "quality_status": "human_approved",
+      "claims": [
+        "culture_wall_parameter_input"
+      ],
+      "tags": [
+        "参数面板",
+        "行业",
+        "主题",
+        "场景"
+      ],
+      "source": "approved_prepared_parameter_keyframe"
+    },
+    {
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "editor_flow_sequence_id": "editor_flow_55a639a45cc372",
+      "source_artwork_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_社区服务_结果图_01.png",
+      "source_artwork_sha256": "8752a5f9188d3c4eedd7669bc4b0859ce620245c8c28af9bacc9f89e679a2d96",
+      "editor_template_sha256": "1984d7bda43bfd853d175441236af75c50becb826d2112e6f5b0f98b59e67a67",
+      "modal_template_sha256": "c4a8e3ebcf7ecdec4840a1af887ec2fc1551d78cb2e89c2026f83737f432c913",
+      "prompt_sha256": "a201ab572a5476289523bd18d15913a93c8cbfbf0ec1c474628adcba8e80969c",
+      "focus_target": "局部编辑",
+      "focus_rect": {
+        "x": 0.8,
+        "y": 0.7,
+        "w": 0.13,
+        "h": 0.17
+      },
+      "claims": [
+        "image_editing_available",
+        "local_editing_available"
+      ],
+      "tags": [
+        "编辑页面",
+        "局部编辑",
+        "放大镜聚焦",
+        "文化墙"
+      ],
+      "quality_status": "machine_checked",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/workflow_scenes/文生图/文化墙/editor_flow_55a639a45cc372/柯幻熊猫_文生图_文化墙_完整编辑页.png",
+      "sha256": "d9e3bb57462bae255b2ecf158ac0d2a557b9c0bb17a2f584ea61a1678db87aed",
+      "role": "editor_workspace",
+      "workflow_step": "editor_page",
+      "editor_flow_role": "page",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null
+    },
+    {
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "editor_flow_sequence_id": "editor_flow_55a639a45cc372",
+      "source_artwork_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_社区服务_结果图_01.png",
+      "source_artwork_sha256": "8752a5f9188d3c4eedd7669bc4b0859ce620245c8c28af9bacc9f89e679a2d96",
+      "editor_template_sha256": "1984d7bda43bfd853d175441236af75c50becb826d2112e6f5b0f98b59e67a67",
+      "modal_template_sha256": "c4a8e3ebcf7ecdec4840a1af887ec2fc1551d78cb2e89c2026f83737f432c913",
+      "prompt_sha256": "a201ab572a5476289523bd18d15913a93c8cbfbf0ec1c474628adcba8e80969c",
+      "focus_target": "局部编辑",
+      "focus_rect": {
+        "x": 0.8,
+        "y": 0.7,
+        "w": 0.13,
+        "h": 0.17
+      },
+      "claims": [
+        "image_editing_available",
+        "local_editing_available"
+      ],
+      "tags": [
+        "编辑页面",
+        "局部编辑",
+        "放大镜聚焦",
+        "文化墙"
+      ],
+      "quality_status": "machine_checked",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/workflow_scenes/文生图/文化墙/editor_flow_55a639a45cc372/柯幻熊猫_文生图_文化墙_局部编辑弹窗.png",
+      "sha256": "ea0ba761f909b0b874b096b9ef04f16df0f3ad5884a6a4ee93a55192bb46dae3",
+      "role": "editor_local_modal",
+      "workflow_step": "local_edit_modal",
+      "editor_flow_role": "modal",
+      "provider": "apiyi",
+      "model": "gpt-image-2",
+      "response_id": null
+    }
+  ]
+}

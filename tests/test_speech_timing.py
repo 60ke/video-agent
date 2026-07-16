@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from video_agent.contracts import Narration, NarrationBeat, PauseIntent
-from video_agent.speech.pause_compiler import compile_narration_markup
+from video_agent.speech.pause_compiler import compile_narration_markup, strip_tts_markup
 from video_agent.speech.minimax import normalize_tokens
 from video_agent.speech.timing_lock import build_timing_lock, ms_to_frame
 
@@ -17,7 +17,7 @@ def _tokens(text: str, step_ms: int = 120) -> list[dict[str, int | str]]:
     ]
 
 
-def test_explicit_pause_markup_is_disabled() -> None:
+def test_explicit_pause_markup_is_compiled_for_minimax() -> None:
     narration = Narration(
         case_id="pause_case",
         beats=[
@@ -32,9 +32,8 @@ def test_explicit_pause_markup_is_disabled() -> None:
 
     markup = compile_narration_markup(narration)
 
-    assert markup == "上传LOGO，再填写品牌名称。\n一键生成。"
-    assert markup.replace("\n", "") == narration.spoken_text
-    assert "<#" not in markup
+    assert markup == "上传LOGO<#0.18#>，再填写品牌名称。\n一键生成。"
+    assert strip_tts_markup(markup).replace("\n", "") == narration.spoken_text
 
 
 def test_narration_beat_supports_enumerated_visual_strategy() -> None:

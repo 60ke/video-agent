@@ -11,7 +11,9 @@ from .base import Contract, VersionedContract
 class PauseIntent(Contract):
     after_phrase: str
     kind: Literal["micro", "short", "beat", "section"]
-    requested_ms: int = Field(ge=10, le=450)
+    # MiniMax permits <#0.01#> through <#99.99#>; provider formatting happens
+    # in the speech compiler rather than imposing an editorial ceiling here.
+    requested_ms: int = Field(ge=10, le=99_990)
 
 
 class Claim(Contract):

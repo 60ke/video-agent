@@ -187,6 +187,8 @@ def build_timing_lock(
                     text=phrase,
                     token_ids=[token.token_id for token in matched],
                     hit_frame=matched[0].start_frame,
+                    onset_frame=matched[0].start_frame,
+                    end_frame=matched[-1].end_frame,
                     beat_id=beat.beat_id,
                     claim_ids=claim_ids,
                 )

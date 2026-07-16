@@ -1,33 +1,32 @@
 ---
 name: video-agent-v3
-description: Build material-first 9:16 product demo videos with Minimax word timing, deterministic visual cues, platform-safe subtitles, controlled motion, and final MP4 QA.
+description: Build material-first 9:16 product demo videos with MiniMax word timing, ActionScene planning, cached GPT Image derivatives, Remotion motion, and FFmpeg audio mixing.
 ---
 
 # Video Agent V3
 
-Use this repository when the user asks for a vertical feature-seeding, product-demo, or website-material video based on real screenshots and result images.
+Use this repository for vertical feature-seeding, product-demo, and website-material videos based on curated screenshots, references, result images, and workflow templates.
 
 ## Production Rules
 
-1. Read `docs/video_agent_v3_final_design.md` and the case's `case.json`.
-2. Capture website materials with `cdp-capture`; refuse generation actions when the required logged-in state is unavailable.
-3. Build `assets/catalog.json` with `python -m video_agent catalog --assets assets --json`.
-4. Write narration only from approved same-feature materials. Do not infer industries, fields, or product results that are not visible.
+1. Read `AGENTS.md`, `docs/architecture.md`, and the Case `case.json`.
+2. Treat files already placed in `assets/` as externally curated inputs; machine checks do not perform visual approval.
+3. Build the global catalog with `python -m video_agent catalog --assets assets --json`.
+4. Use `script-lock` for approved copy or `ai_enabled=true` for API-generated Narration. Both paths must converge before speech synthesis.
 5. Run the single DAG with `python -m video_agent run --case cases/<case> --json`.
-6. Inspect `qa_report.json`, `final/contact_sheet.jpg`, semantic hit frames, and the final MP4 before presenting it.
+6. Use `inspect` and the final MP4 to diagnose a run. Fix reusable planning, compile, or Remotion behavior instead of patching rendered frames.
 
 ## Non-Negotiable
 
-- Minimax uses speed `1.2` and `subtitle_type=word` unless the user changes the case.
-- Word alignment must match lexical text exactly; punctuation omission is recoverable, text substitution is not.
-- One-line subtitles only, at most 10 fullwidth units.
-- UI fields are focused only when the spoken phrase matches a real CDP anchor. No unrelated fallback anchor.
-- Website screenshots are never redrawn by GPT Image.
-- GPT Image derivatives remain unreviewed until explicitly approved.
-- E2/E3 assets cannot support factual claims.
-- Render from one `render_plan.json`; do not recreate V2 project/effect/keyframe derivatives.
-- Do not reintroduce `tile_drop`, `radial_unfurl`, or ordinary `drop_bounce`.
-- Final delivery requires passed MP4 duration, dimensions, audio, loudness, subtitle, timeline, density, effect, and platform checks.
+- Spoken phrase, subtitle, visual hit, and assigned SFX share one word-level timing anchor.
+- MiniMax must request `subtitle_type=word`; local configuration is the authority for model and voice.
+- The canvas is 1080x1920 at 30 fps and uses the Douyin safe-area profile.
+- Classify ActionScene before selecting material or motion.
+- Strict causal scenes use registered relationships or contextual GPT Image derivation; never guess relationships from unrelated files.
+- Missing visuals use `light_sweep_fallback`, not an unrelated brand image.
+- Website emphasis comes from cached derivatives or effect metadata, never raw CDP-coordinate drawing at render time.
+- Render from one `render_plan.json` through Remotion and FFmpeg.
+- Do not reintroduce automatic Vision Critic, V2 compatibility, or global image-count limits.
 
 ## Local Secrets
 

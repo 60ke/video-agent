@@ -9,6 +9,8 @@ export type RenderAsset = {
 
 export type RenderShot = {
   shot_id: string;
+  scene_id?: string | null;
+  scene_kind?: string | null;
   track: "base" | "overlay";
   template: string;
   asset_bindings: Record<string, string>;
@@ -25,7 +27,24 @@ export type RenderShot = {
     stage_frame: number;
     hit_frame: number;
     crossfade_frames: number;
+    callout_reveal_frames?: number;
+    required_field_labels?: string[];
+    callout_text?: string;
   } | null;
+  editor_flow_sequence?: {
+    sequence_id: string;
+    page_asset_id: string;
+    modal_asset_id: string;
+    focus_frame: number;
+    modal_frame: number;
+    focus_x: number;
+    focus_y: number;
+    focus_w: number;
+    focus_h: number;
+    lens_zoom: number;
+    reveal_frames: number;
+  } | null;
+  gallery_items?: { asset_id: string; anchor_id: string; hit_frame: number; onset_frame?: number | null }[];
 };
 
 export type SubtitleCue = {
@@ -34,6 +53,7 @@ export type SubtitleCue = {
   end_frame: number;
   slot: string;
   emphasize?: string | null;
+  style?: "default" | "gallery_yellow";
 };
 
 export type TimelineProps = {
@@ -44,5 +64,13 @@ export type TimelineProps = {
   assets: RenderAsset[];
   shots: RenderShot[];
   subtitles: SubtitleCue[];
-  style?: Record<string, unknown>;
+  style?: {
+    safe_area?: {
+      content?: {x: number; y: number; w: number; h: number};
+      critical?: {x: number; y: number; w: number; h: number};
+      subtitle_top?: {x: number; y: number; w: number; h: number};
+      subtitle_lower?: {x: number; y: number; w: number; h: number};
+    };
+    [key: string]: unknown;
+  };
 };

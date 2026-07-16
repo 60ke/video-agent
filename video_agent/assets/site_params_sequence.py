@@ -253,27 +253,3 @@ def generate_parameter_frame_sequences(
         "cached": sum(item.get("status") == "cached" for item in results),
         "manifest": manifest_path.as_posix(),
     }
-
-
-def approve_parameter_frame_sequences(manifest_path: Path) -> dict[str, int]:
-    manifest = load_json(manifest_path)
-    sequences = manifest.get("sequences") if isinstance(manifest, dict) else None
-    if not isinstance(sequences, list) or manifest.get("errors"):
-        raise ValueError(f"invalid or incomplete parameter sequence manifest: {manifest_path}")
-    approved = 0
-    for sequence in sequences:
-        if not isinstance(sequence, dict):
-            continue
-        for state in ("base", "stage", "final"):
-            frame = sequence.get("frames", {}).get(state, {})
-            path = Path(str(frame.get("path") or ""))
-            if not path.is_file() or sha256_file(path) != frame.get("sha256"):
-                raise ValueError(f"parameter sequence frame hash mismatch: {sequence.get('sequence_id')}/{state}")
-            frame["quality_status"] = "human_approved"
-            frame["quality_checks"] = ["human_reviewed"]
-        sequence["quality_status"] = "human_approved"
-        sequence["quality_checks"] = ["human_reviewed", "sequence_complete"]
-        approved += 1
-    manifest["reviewed_at"] = utc_now()
-    write_json_atomic(manifest_path, manifest)
-    return {"approved": approved}

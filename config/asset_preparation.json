@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "gallery": {
+    "maximum_ratio_factor": 1.8,
+    "derive_kind": "gallery_preview",
+    "preserve_source": true
+  },
+  "relationships": {
+    "registry": "assets/relationships.json",
+    "strict": true,
+    "allow_filename_guessing": false
+  },
+  "derivatives": {
+    "root": "assets/derived/generated",
+    "registry": "assets/derived/generated/registry.json",
+    "reuse_by_content_hash": true
+  },
+  "replacement": {
+    "enabled": true,
+    "atomic": true,
+    "preserve_asset_identity": true,
+    "requests": []
+  }
+}

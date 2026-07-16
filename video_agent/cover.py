@@ -15,7 +15,7 @@ from pydantic import Field
 from video_agent.ai.gpt_image import edit_image
 from video_agent.contracts.base import Contract
 from video_agent.io import load_json, load_model, sha256_file, utc_now, write_json_atomic
-from video_agent.contracts import AssetCatalog, RenderPlan, VisualPlan
+from video_agent.contracts import AssetCatalog, CaseConfig, Narration, RenderPlan, VisualPlan
 
 
 class CoverSpec(Contract):
@@ -25,6 +25,25 @@ class CoverSpec(Contract):
     style_hint: str = "short_video_feature_seed"
     reference_asset_ids: list[str] = Field(default_factory=list, max_length=3)
     max_references: int = Field(default=3, ge=1, le=3)
+
+
+def default_cover_spec(case: CaseConfig, narration: Narration) -> CoverSpec:
+    """Build the default cover brief without inventing additional copy."""
+
+    title = case.goal.strip(" ，。！？；：,.!?:;")
+    for prefix in ("制作一个", "制作一版", "制作", "生成一个", "生成一版", "生成", "做一个", "创建一个"):
+        if title.startswith(prefix):
+            title = title[len(prefix) :].strip()
+            break
+    if title.endswith("视频") and len(title) > 2:
+        title = title[:-2].rstrip()
+    if not title and narration.beats:
+        title = narration.beats[0].spoken_text.strip(" ，。！？；：,.!?:;")
+    title = title[:28].rstrip(" ，。！？；：,.!?:;") or "功能介绍"
+    return CoverSpec(
+        title=title,
+        narration_text=" ".join(beat.spoken_text for beat in narration.beats),
+    )
 
 
 def _font(size: int) -> ImageFont.FreeTypeFont:
@@ -58,18 +77,42 @@ def _frame_count(path: Path) -> int:
 def _select_references(repo_root: Path, spec: CoverSpec, catalog: AssetCatalog, visual: VisualPlan) -> list[Path]:
     assets = {asset.asset_id: asset for asset in catalog.assets}
     usage = Counter(asset_id for shot in visual.shots for asset_id in shot.asset_ids)
-    selected: list[str] = []
-    for asset_id in spec.reference_asset_ids:
-        asset = assets.get(asset_id)
-        if not asset or asset.media_type != "image" or not asset.production_eligible:
-            raise ValueError(f"cover reference is not an eligible image: {asset_id}")
-        selected.append(asset_id)
-    candidates = [
+    eligible = [
         asset
         for asset in assets.values()
         if asset.media_type == "image"
         and asset.production_eligible
-        and asset.quality.status in {"machine_checked", "vision_verified", "human_approved"}
+        and asset.quality.status != "rejected"
+    ]
+    brand_candidates = [
+        asset
+        for asset in eligible
+        if asset.role in {"brand_logo", "brand_ip_static"}
+        and Path(asset.path).as_posix().lower().startswith("assets/brand/kehuanxiongmao/")
+    ]
+    brand_candidates.sort(
+        key=lambda asset: (
+            asset.role != "brand_logo",
+            Path(asset.path).suffix.lower() != ".png",
+            asset.filename,
+        )
+    )
+    if not brand_candidates:
+        raise ValueError("cover requires an official kehuanxiongmao brand logo or IP image")
+
+    # Reference A is always the platform brand. Explicit references and video
+    # results are sample content only and can never replace brand identity.
+    selected: list[str] = [brand_candidates[0].asset_id]
+    for asset_id in spec.reference_asset_ids:
+        asset = assets.get(asset_id)
+        if not asset or asset.media_type != "image" or not asset.production_eligible:
+            raise ValueError(f"cover reference is not an eligible image: {asset_id}")
+        if asset_id not in selected:
+            selected.append(asset_id)
+    candidates = [
+        asset
+        for asset in eligible
+        if asset.role not in {"brand_logo", "brand_ip_static", "brand_ip_animation", "brand_ip_video"}
         and asset.asset_id in usage
         and asset.asset_id not in selected
     ]
@@ -82,8 +125,6 @@ def _select_references(repo_root: Path, spec: CoverSpec, catalog: AssetCatalog, 
         )
     )
     selected.extend(asset.asset_id for asset in candidates[: max(0, spec.max_references - len(selected))])
-    if not selected:
-        raise ValueError("cover requires at least one eligible image used by the video")
     return [(repo_root / assets[asset_id].path).resolve() for asset_id in selected[: spec.max_references]]
 
 
@@ -125,10 +166,10 @@ CENTRAL 3:4 SAFE ZONE:
 Put the title, subtitle, main result subject, logo, and every important element inside x=0..1080, y=240..1680. Keep the most critical content inside x=100..860, y=240..1500 so Douyin controls and metadata cannot cover it. Outside the central safe zone use only background extension and restrained decoration.
 
 REFERENCES:
-The reference sheet contains {reference_count} approved images labelled A, B, C. Prefer a result image as the hero. Website UI may only be a small supporting element. Preserve the referenced design, product, brand, and result content; do not invent unrelated UI, brands, products, people, or generated results.
+The reference sheet contains {reference_count} approved images labelled A, B, C. Reference A is the ONLY official platform brand identity and belongs to 柯幻熊猫. References B and C, when present, are sample content only. Prefer a sample result image as the hero while keeping reference A as a small, clear brand badge. Website UI may only be a small supporting element. Preserve the referenced design and result content; do not invent unrelated UI, brands, products, people, or generated results.
 
 BRAND LOGO:
-If any reference image is a brand logo (identified by its square aspect ratio and clean logomark), reproduce it pixel-faithfully in the cover. Do not redraw, restyle, recolor, simplify, or invent a different logo. Place the brand logo as a small badge in a corner or near the title, never as the main hero. The official brand logo in the references is the ONLY logo allowed on the cover.
+Reproduce the 柯幻熊猫 identity from reference A pixel-faithfully. Do not redraw, restyle, recolor, simplify, replace, or invent a different logo. Place it as a small badge in a corner or near the title, never as the main hero. Any logos, trademarks, company names, or readable brands inside references B and C belong to sample customer work: keep them inside the sample image if unavoidable, but never extract, enlarge, repeat, or present them as the cover brand. Reference A is the ONLY logo allowed outside sample-image pixels.
 
 DESIGN:
 Mobile-feed readability, high contrast, strong hierarchy, lively but clean short-video feature-seeding composition. Style hint: {spec.style_hint}. Do not add extra marketing copy, watermarks, fake interface text, or decorative paragraphs.
@@ -181,8 +222,16 @@ def _image_mae(left: Path, right: Path) -> float:
     return float(np.abs(a - b).mean())
 
 
-def postprocess_cover(repo_root: Path, case_dir: Path, run_dir: Path, spec_path: Path) -> dict[str, Any]:
-    spec = load_model(spec_path, CoverSpec)
+def postprocess_cover(repo_root: Path, case_dir: Path, run_dir: Path, spec_path: Path | None = None) -> dict[str, Any]:
+    if spec_path and spec_path.is_file():
+        spec = load_model(spec_path, CoverSpec)
+        spec_origin = spec_path.as_posix()
+    else:
+        case = load_model(case_dir / "case.json", CaseConfig)
+        narration = load_model(run_dir / "narration.json", Narration)
+        spec = default_cover_spec(case, narration)
+        spec_origin = "generated_from_case_and_narration"
+        write_json_atomic(run_dir / "work" / "cover" / "default_cover_spec.json", spec)
     video = run_dir / "final" / "video.mp4"
     if not video.is_file():
         raise FileNotFoundError(f"rendered video is missing: {video}")
@@ -240,6 +289,7 @@ def postprocess_cover(repo_root: Path, case_dir: Path, run_dir: Path, spec_path:
         "generated_at": utc_now(),
         "title": spec.title,
         "subtitle": spec.subtitle_hint,
+        "spec_origin": spec_origin,
         "cover": cover.as_posix(),
         "crop_preview": preview.as_posix(),
         "reference_sheet": sheet.as_posix(),

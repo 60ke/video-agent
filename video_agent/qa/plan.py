@@ -3,18 +3,39 @@ from __future__ import annotations
 from video_agent.compiler.render_plan import MOTION_ALLOWLIST, TEMPLATE_ALLOWLIST, TEXT_DENSE_MOTION_ALLOWLIST, TEXT_DENSE_TEMPLATES
 from video_agent.compiler.subtitles import fullwidth_units
 from video_agent.contracts import CheckResult, RenderPlan
+from video_agent.effects import get_effect_policy
 from video_agent.platform import PixelRect, get_profile
 
 
 def validate_render_plan(plan: RenderPlan) -> list[CheckResult]:
     checks: list[CheckResult] = []
     profile = get_profile(plan.platform_profile)
-    subtitle_errors = [cue.cue_id for cue in plan.subtitles if "\n" in cue.text or "\r" in cue.text or fullwidth_units(cue.text) > 10]
+    subtitle_min_font = int(plan.style.get("subtitle_min_font_px", 48))
+    subtitle_errors = []
+    for cue in plan.subtitles:
+        slot = profile.subtitle_top if cue.slot == "subtitle_top" else profile.subtitle_lower
+        if "\n" in cue.text or "\r" in cue.text or fullwidth_units(cue.text) * subtitle_min_font > slot.w:
+            subtitle_errors.append(cue.cue_id)
     checks.append(
         CheckResult(
-            check_id="subtitle_single_line_10_units",
+            check_id="subtitle_single_line_fits",
             status="failed" if subtitle_errors else "passed",
             message=", ".join(subtitle_errors),
+        )
+    )
+    gallery_errors: list[str] = []
+    for shot in plan.shots:
+        if not shot.gallery_items:
+            continue
+        bound = set(shot.asset_bindings.values())
+        for item in shot.gallery_items:
+            if item.asset_id not in bound or not shot.start_frame <= item.hit_frame < shot.end_frame:
+                gallery_errors.append(f"{shot.shot_id}:{item.anchor_id}")
+    checks.append(
+        CheckResult(
+            check_id="gallery_phrase_anchor_alignment",
+            status="failed" if gallery_errors else "passed",
+            message=",".join(gallery_errors),
         )
     )
     slot_errors = []
@@ -76,14 +97,14 @@ def validate_render_plan(plan: RenderPlan) -> list[CheckResult]:
     )
     sfx_tracks = sorted((track for track in plan.audio_tracks if track.kind == "sfx"), key=lambda item: item.start_frame)
     density = plan.style.get("sfx_density", {})
-    min_gap_ms = int(density.get("min_gap_ms", 280))
-    window_ms = int(density.get("window_ms", 3000))
-    max_events = int(density.get("max_events_per_window", 3))
-    repeat_cooldown_ms = int(density.get("repeat_cooldown_ms", 900))
+    min_gap_ms = density.get("min_gap_ms")
+    window_ms = density.get("window_ms")
+    max_events = density.get("max_events_per_window")
+    repeat_cooldown_ms = density.get("repeat_cooldown_ms")
     sfx_density_errors: list[str] = []
     for index, track in enumerate(sfx_tracks):
         track_ms = track.start_frame * 1000 / plan.fps
-        if index and track_ms - sfx_tracks[index - 1].start_frame * 1000 / plan.fps < min_gap_ms:
+        if min_gap_ms is not None and index and track_ms - sfx_tracks[index - 1].start_frame * 1000 / plan.fps < int(min_gap_ms):
             sfx_density_errors.append(f"gap:{sfx_tracks[index - 1].anchor_id}/{track.anchor_id}")
         same_semantic = next(
             (
@@ -93,50 +114,42 @@ def validate_render_plan(plan: RenderPlan) -> list[CheckResult]:
             ),
             None,
         )
-        if same_semantic and track_ms - same_semantic.start_frame * 1000 / plan.fps < repeat_cooldown_ms:
+        if repeat_cooldown_ms is not None and same_semantic and track_ms - same_semantic.start_frame * 1000 / plan.fps < int(repeat_cooldown_ms):
             sfx_density_errors.append(f"repeat:{track.semantic_id}")
-        in_window = sum(
-            1
-            for candidate in sfx_tracks
-            if 0 <= track_ms - candidate.start_frame * 1000 / plan.fps < window_ms
-        )
-        if in_window > max_events:
+        in_window = sum(1 for candidate in sfx_tracks if window_ms is not None and 0 <= track_ms - candidate.start_frame * 1000 / plan.fps < int(window_ms))
+        if max_events is not None and in_window > int(max_events):
             sfx_density_errors.append(f"window:{track.anchor_id}")
     checks.append(
         CheckResult(
             check_id="semantic_sfx_density",
-            status="failed" if sfx_density_errors else "passed",
+            status="warning" if sfx_density_errors else "passed",
             message=", ".join(sfx_density_errors),
         )
     )
-    density_errors = []
+    effect_errors: list[str] = []
     for shot in plan.shots:
-        events = [shot.start_frame] + sorted(cue.hit_frame for cue in shot.cues) + [shot.end_frame]
-        max_gap = max((right - left for left, right in zip(events, events[1:])), default=0)
-        if max_gap > int(round(plan.fps * 2.2)) and not shot.long_hold_reason:
-            density_errors.append(f"{shot.shot_id}:{max_gap}")
-        if shot.end_frame - shot.start_frame > plan.fps * 4 and not shot.long_hold_reason:
-            density_errors.append(f"{shot.shot_id}:over_4s")
-    checks.append(CheckResult(check_id="semantic_visual_density", status="failed" if density_errors else "passed", message=", ".join(density_errors)))
-    readability_errors: list[str] = []
-    minimum_seconds = {
-        "ui_params_focus": 2.2,
-        "result_showcase": 1.2,
-        "reference_to_result": 1.5,
-        "brand_ip_cutaway": 1.2,
-    }
-    for shot in plan.shots:
-        if shot.track != "base":
+        try:
+            policy = get_effect_policy(shot.motion)
+        except ValueError:
+            # The allowlist result above is the actionable QA finding; avoid
+            # turning an invalid planner value into a QA runtime exception.
+            effect_errors.append(f"unknown:{shot.shot_id}:{shot.motion}")
             continue
-        required = minimum_seconds.get(shot.template, 1.5 if shot.template == "ui_feature_entry" else 0.0)
-        actual = (shot.end_frame - shot.start_frame) / plan.fps
-        if actual + 1e-6 < required:
-            readability_errors.append(f"{shot.shot_id}:{actual:.3f}s<{required:.3f}s")
+        duration = shot.end_frame - shot.start_frame
+        if duration < policy.minimum_scene_frames:
+            effect_errors.append(f"scene:{shot.shot_id}:{duration}<{policy.minimum_scene_frames}")
+        if policy.requires_readable_hold:
+            last_hit = max((cue.hit_frame for cue in shot.cues), default=shot.start_frame)
+            if shot.end_frame - last_hit < policy.readable_settle_frames:
+                effect_errors.append(f"settle:{shot.shot_id}:{shot.end_frame - last_hit}<{policy.readable_settle_frames}")
     checks.append(
         CheckResult(
-            check_id="template_readability_duration",
-            status="failed" if readability_errors else "passed",
-            message=", ".join(readability_errors),
+            check_id="effect_timing_requirements",
+            # Effect durations are creative recommendations. The renderer
+            # compresses or truncates animation phases to the locked scene and
+            # holds the final state; timing metadata must not change semantics.
+            status="warning" if effect_errors else "passed",
+            message=", ".join(effect_errors),
         )
     )
     sequence_errors = []

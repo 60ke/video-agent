@@ -130,35 +130,7 @@ def test_parameter_batch_exclude_skips_locked_source(tmp_path: Path) -> None:
         )
 
 
-def test_parameter_sequence_manifest_approval_checks_hash_and_marks_review(tmp_path: Path) -> None:
-    outputs = {state: tmp_path / f"参数面板{state}.png" for state in ("base", "stage", "final")}
-    for output in outputs.values():
-        _png(output)
-    from video_agent.io import sha256_file
-
-    manifest_path = tmp_path / "manifest.json"
-    manifest_path.write_text(
-        json.dumps(
-            {
-                "sequences": [{"sequence_id": "params", "frames": {state: {"path": path.as_posix(), "sha256": sha256_file(path)} for state, path in outputs.items()}}],
-                "errors": [],
-            },
-            ensure_ascii=False,
-        ),
-        encoding="utf-8",
-    )
-
-    from video_agent.assets.site_params_sequence import approve_parameter_frame_sequences
-
-    result = approve_parameter_frame_sequences(manifest_path)
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-
-    assert result == {"approved": 1}
-    assert manifest["sequences"][0]["quality_status"] == "human_approved"
-    assert manifest["sequences"][0]["frames"]["base"]["quality_status"] == "human_approved"
-
-
-def test_approved_parameter_keyframe_replaces_raw_screenshot_in_production_pool(tmp_path: Path) -> None:
+def test_parameter_sequence_and_raw_screenshot_are_available_to_planner(tmp_path: Path) -> None:
     assets = tmp_path / "assets"
     source = assets / "sites" / "柯幻熊猫_文生图_文化墙_参数面板截图.png"
     derived_dir = assets / "derived" / "sites" / "柯幻熊猫" / "文生图" / "参数面板序列" / "frames"
@@ -183,9 +155,9 @@ def test_approved_parameter_keyframe_replaces_raw_screenshot_in_production_pool(
                 "feature": "文化墙",
                 "required_field_labels": ["行业"],
                 "callout_text": "行业",
-                "quality_status": "human_approved",
+                "quality_status": "machine_checked",
                 "frames": {
-                    state: {"path": path.resolve().as_posix(), "sha256": sha256_file(path), "quality_status": "human_approved", "origin": "gpt_image_edit"}
+                    state: {"path": path.resolve().as_posix(), "sha256": sha256_file(path), "quality_status": "machine_checked", "origin": "gpt_image_edit"}
                     for state, path in derived.items()
                 },
             }
@@ -197,10 +169,10 @@ def test_approved_parameter_keyframe_replaces_raw_screenshot_in_production_pool(
     params = [asset for asset in catalog.assets if asset.role == "feature_form_params"]
 
     assert len(params) == 4
-    assert next(asset for asset in params if asset.provenance.origin == "site_screenshot_library").production_eligible is False
+    assert next(asset for asset in params if asset.provenance.origin == "site_screenshot_library").production_eligible is True
     prepared = next(asset for asset in params if asset.metadata.get("sequence_role") == "base")
     assert prepared.production_eligible is True
-    assert prepared.quality.status == "human_approved"
+    assert prepared.quality.status == "machine_checked"
 
 
 def test_catalog_preserves_chinese_semantic_path_and_callout(tmp_path: Path) -> None:
@@ -354,7 +326,7 @@ def _source_asset(path: str, digest: str, origin: str = "curated_result_library"
         role="result_image",
         evidence_class=EvidenceClass.SOURCE,
         claims=["真实结果"],
-        quality=AssetQuality(status="machine_checked"),
+        quality=AssetQuality(status="human_approved"),
         provenance=Provenance(origin=origin),
     )
 

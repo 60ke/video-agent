@@ -1,7 +1,7 @@
 {
   "schema_version": 3,
   "catalog_id": "catalog_video_agent_assets_v3",
-  "generated_at": "2026-07-14T08:53:01.677381+00:00",
+  "generated_at": "2026-07-16T03:41:13.957976+00:00",
   "source_root": "assets",
   "assets": [
     {
@@ -83,7 +83,7 @@
         "IP形象"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -156,7 +156,7 @@
         "IP形象"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -223,7 +223,7 @@
         "LOGO"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -296,7 +296,7 @@
         "LOGO"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -377,7 +377,7 @@
         "VI"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -450,7 +450,7 @@
         "VI"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -517,7 +517,7 @@
         "会议美陈"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -590,7 +590,7 @@
         "会议美陈"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -671,7 +671,7 @@
         "包装"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -744,7 +744,7 @@
         "包装"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -826,7 +826,7 @@
         "banner"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -900,7 +900,7 @@
         "banner"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -967,7 +967,7 @@
         "图文广告"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -1041,7 +1041,7 @@
         "单页"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -1115,7 +1115,7 @@
         "单页"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -1211,7 +1211,7 @@
         "台历"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -1285,7 +1285,7 @@
         "台历"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -1381,7 +1381,7 @@
         "名片"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -1455,7 +1455,7 @@
         "名片"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -1551,7 +1551,7 @@
         "展板"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -1625,7 +1625,7 @@
         "展板"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -1707,7 +1707,7 @@
         "易拉宝/展架"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -1781,7 +1781,7 @@
         "易拉宝/展架"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -1891,7 +1891,7 @@
         "朋友圈海报"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -1965,7 +1965,7 @@
         "朋友圈海报"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -2033,7 +2033,7 @@
         "灯箱"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -2107,7 +2107,7 @@
         "灯箱"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -2189,7 +2189,7 @@
         "电梯广告"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -2263,7 +2263,7 @@
         "电梯广告"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -2331,7 +2331,7 @@
         "直播背景"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -2405,7 +2405,7 @@
         "直播背景"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -2487,7 +2487,7 @@
         "胸卡&工牌"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -2561,7 +2561,7 @@
         "胸卡&工牌"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -2657,7 +2657,7 @@
         "菜单"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -2731,7 +2731,7 @@
         "菜单"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -2855,7 +2855,7 @@
         "贴纸"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -2929,7 +2929,7 @@
         "贴纸"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -3011,7 +3011,7 @@
         "车贴"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -3085,7 +3085,7 @@
         "车贴"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -3181,7 +3181,7 @@
         "高炮"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -3255,7 +3255,7 @@
         "高炮"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -3350,7 +3350,7 @@
         "婚礼美陈"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -3423,7 +3423,7 @@
         "婚礼美陈"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -3518,7 +3518,7 @@
         "展台"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -3591,7 +3591,7 @@
         "展台"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -3686,7 +3686,7 @@
         "文化墙"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -3759,7 +3759,7 @@
         "文化墙"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -3854,7 +3854,7 @@
         "旅游海报"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -3927,7 +3927,7 @@
         "旅游海报"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -4036,7 +4036,7 @@
         "景观小品"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -4109,7 +4109,7 @@
         "景观小品"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -4190,7 +4190,7 @@
         "标识标牌"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -4263,7 +4263,7 @@
         "标识标牌"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -4344,7 +4344,7 @@
         "活动物料"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -4417,7 +4417,7 @@
         "活动物料"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -4526,7 +4526,7 @@
         "活动美陈"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -4599,7 +4599,7 @@
         "活动美陈"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -4722,7 +4722,7 @@
         "海报"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -4795,7 +4795,7 @@
         "海报"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -4862,7 +4862,7 @@
         "电商"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -4935,7 +4935,7 @@
         "电商"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -5030,7 +5030,7 @@
         "美陈"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -5103,7 +5103,7 @@
         "美陈"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -5184,7 +5184,7 @@
         "门头招牌"
       ],
       "role": "feature_entry",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -5257,7 +5257,7 @@
         "门头招牌"
       ],
       "role": "feature_form_params",
-      "production_eligible": false,
+      "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
         "real_website_screenshot",
@@ -5444,7 +5444,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -5492,7 +5492,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -5540,7 +5540,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -5588,7 +5588,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -5636,7 +5636,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -5685,7 +5685,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -5733,7 +5733,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -5782,7 +5782,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -5831,7 +5831,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -5880,7 +5880,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -5929,7 +5929,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -5979,7 +5979,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6028,7 +6028,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6077,7 +6077,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6126,7 +6126,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6175,7 +6175,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6224,7 +6224,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6273,7 +6273,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6322,7 +6322,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6371,7 +6371,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6420,7 +6420,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6468,7 +6468,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6516,7 +6516,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6564,7 +6564,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6612,7 +6612,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6660,7 +6660,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6708,7 +6708,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6756,7 +6756,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6804,7 +6804,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6852,7 +6852,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6900,7 +6900,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6948,7 +6948,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -6996,7 +6996,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7045,7 +7045,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7121,7 +7121,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7197,7 +7197,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7273,7 +7273,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7350,7 +7350,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7427,7 +7427,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7504,7 +7504,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7580,7 +7580,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7656,7 +7656,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7732,7 +7732,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7809,7 +7809,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7886,7 +7886,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -7963,7 +7963,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8040,7 +8040,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8117,7 +8117,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8195,7 +8195,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8272,7 +8272,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8349,7 +8349,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8426,7 +8426,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8505,7 +8505,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8584,7 +8584,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8663,7 +8663,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8742,7 +8742,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8821,7 +8821,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8900,7 +8900,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -8979,7 +8979,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -9058,7 +9058,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -9137,7 +9137,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -9215,7 +9215,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -9293,7 +9293,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -9372,7 +9372,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -9453,7 +9453,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -9534,7 +9534,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -9614,7 +9614,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -9691,7 +9691,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -9768,7 +9768,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -9845,7 +9845,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -9923,7 +9923,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -10001,7 +10001,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -10079,7 +10079,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -10156,7 +10156,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -10233,7 +10233,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -10310,7 +10310,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -10388,7 +10388,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -10466,7 +10466,7 @@
       ],
       "visual_anchors": [],
       "quality": {
-        "status": "human_approved",
+        "status": "machine_checked",
         "readable": true,
         "checks": [
           "image_decode_ok",
@@ -10515,6 +10515,221 @@
           "ecc_score": 0.7080023323695955,
           "changed_ratio": 0.2355251736111111,
           "status": "passed"
+        }
+      }
+    },
+    {
+      "asset_id": "asset_workflow_scene_a81af7c714a4",
+      "path": "assets/derived/workflow_scenes/文生图/文化墙/柯幻熊猫_文生图_文化墙_编辑页面关键帧.png",
+      "sha256": "a81af7c714a427997acf5f1cba6e3ef6a365e783dd841b3eb74361938610bb07",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_编辑页面关键帧.png",
+      "width": 1916,
+      "height": 905,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "editor_workspace",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "image_editing_available"
+      ],
+      "tags": [
+        "编辑页面",
+        "局部编辑",
+        "调整修改"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_workflow_scene",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "workflow_step": "local_editing",
+        "source": "user_provided_editor_screenshot",
+        "editor_flow_sequence_id": null,
+        "editor_flow_role": null,
+        "editor_flow_asset_ids": {},
+        "source_artwork_path": null,
+        "source_artwork_sha256": null,
+        "focus_target": null,
+        "focus_rect": null
+      }
+    },
+    {
+      "asset_id": "asset_workflow_scene_86c5a0dcd531",
+      "path": "assets/derived/sites/柯幻熊猫/文生图/参数面板/柯幻熊猫_文生图_文化墙_参数面板关键帧.png",
+      "sha256": "86c5a0dcd53140ef722bd07c2b583c5dc27235d983f30058e195b524a9413bb5",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_参数面板关键帧.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "feature_form_params",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "culture_wall_parameter_input"
+      ],
+      "tags": [
+        "参数面板",
+        "行业",
+        "主题",
+        "场景"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "curated_workflow_scene",
+        "parent_asset_ids": []
+      },
+      "metadata": {
+        "workflow_step": "parameter_input",
+        "source": "approved_prepared_parameter_keyframe",
+        "editor_flow_sequence_id": null,
+        "editor_flow_role": null,
+        "editor_flow_asset_ids": {},
+        "source_artwork_path": null,
+        "source_artwork_sha256": null,
+        "focus_target": null,
+        "focus_rect": null
+      }
+    },
+    {
+      "asset_id": "asset_workflow_scene_d9e3bb57462b",
+      "path": "assets/derived/workflow_scenes/文生图/文化墙/editor_flow_55a639a45cc372/柯幻熊猫_文生图_文化墙_完整编辑页.png",
+      "sha256": "d9e3bb57462bae255b2ecf158ac0d2a557b9c0bb17a2f584ea61a1678db87aed",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_完整编辑页.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "editor_workspace",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "image_editing_available",
+        "local_editing_available"
+      ],
+      "tags": [
+        "编辑页面",
+        "局部编辑",
+        "放大镜聚焦",
+        "文化墙"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_editor_flow",
+        "parent_asset_ids": [],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "a201ab572a5476289523bd18d15913a93c8cbfbf0ec1c474628adcba8e80969c"
+      },
+      "metadata": {
+        "workflow_step": "editor_page",
+        "source": null,
+        "editor_flow_sequence_id": "editor_flow_55a639a45cc372",
+        "editor_flow_role": "page",
+        "editor_flow_asset_ids": {
+          "page": "asset_workflow_scene_d9e3bb57462b",
+          "modal": "asset_workflow_scene_ea0ba761f909"
+        },
+        "source_artwork_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_社区服务_结果图_01.png",
+        "source_artwork_sha256": "8752a5f9188d3c4eedd7669bc4b0859ce620245c8c28af9bacc9f89e679a2d96",
+        "focus_target": "局部编辑",
+        "focus_rect": {
+          "x": 0.8,
+          "y": 0.7,
+          "w": 0.13,
+          "h": 0.17
+        }
+      }
+    },
+    {
+      "asset_id": "asset_workflow_scene_ea0ba761f909",
+      "path": "assets/derived/workflow_scenes/文生图/文化墙/editor_flow_55a639a45cc372/柯幻熊猫_文生图_文化墙_局部编辑弹窗.png",
+      "sha256": "ea0ba761f909b0b874b096b9ef04f16df0f3ad5884a6a4ee93a55192bb46dae3",
+      "media_type": "image",
+      "filename": "柯幻熊猫_文生图_文化墙_局部编辑弹窗.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "editor_local_modal",
+      "production_eligible": true,
+      "evidence_class": "E0_source_evidence",
+      "claims": [
+        "image_editing_available",
+        "local_editing_available"
+      ],
+      "tags": [
+        "编辑页面",
+        "局部编辑",
+        "放大镜聚焦",
+        "文化墙"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "readable": true,
+        "checks": [
+          "image_decode_ok"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_editor_flow",
+        "parent_asset_ids": [],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "a201ab572a5476289523bd18d15913a93c8cbfbf0ec1c474628adcba8e80969c"
+      },
+      "metadata": {
+        "workflow_step": "local_edit_modal",
+        "source": null,
+        "editor_flow_sequence_id": "editor_flow_55a639a45cc372",
+        "editor_flow_role": "modal",
+        "editor_flow_asset_ids": {
+          "page": "asset_workflow_scene_d9e3bb57462b",
+          "modal": "asset_workflow_scene_ea0ba761f909"
+        },
+        "source_artwork_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_社区服务_结果图_01.png",
+        "source_artwork_sha256": "8752a5f9188d3c4eedd7669bc4b0859ce620245c8c28af9bacc9f89e679a2d96",
+        "focus_target": "局部编辑",
+        "focus_rect": {
+          "x": 0.8,
+          "y": 0.7,
+          "w": 0.13,
+          "h": 0.17
         }
       }
     },
@@ -16437,10 +16652,864 @@
         "duration_ms": null,
         "mime_type": "image/png"
       }
+    },
+    {
+      "asset_id": "asset_derived_8de565cf9f68",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_editor_composite_96f5ce0bbfb8.png",
+      "sha256": "becc2e1a696a9607bb8d535b86716b7b4ede4911380077a7deec5b09c8c07a32",
+      "media_type": "image",
+      "filename": "文化墙_result_to_editor_composite_96f5ce0bbfb8.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "editor_workspace",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_editor_composite",
+        "scene_007"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d",
+          "asset_workflow_scene_a81af7c714a4"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "e2279b9acc675787f9de9c66f3539f5b14ba5f9702e21a86f0e7958494a73218"
+      },
+      "metadata": {
+        "derive_kind": "result_to_editor_composite",
+        "request_id": "derive_e03a161d8080",
+        "scene_id": "scene_007",
+        "semantic_phrase": "把上一张结果图完整载入真实编辑页面，保持编辑器 UI 和结果图内容不变",
+        "target_orientation": "portrait",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+        "purpose": "action_scene",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "96f5ce0bbfb802e1ddfd977f3035dd06f64dc121060d2f55762457fe25dc5a1d"
+      }
+    },
+    {
+      "asset_id": "asset_derived_ec091dbfc947",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_edit_state_59e6b2ce550b.png",
+      "sha256": "3db21fef5b0a18a8b6a6b5bac4f0a06cc1a0846491a3c20653fa73f6d85ea063",
+      "media_type": "image",
+      "filename": "文化墙_result_to_edit_state_59e6b2ce550b.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_edit_state",
+        "scene_008"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "175d685bfa0226d05b3ba358c6e4027c168d9ba0f965610cf077859dc96a2413"
+      },
+      "metadata": {
+        "derive_kind": "result_to_edit_state",
+        "request_id": "derive_5e2d2c37e24d",
+        "scene_id": "scene_008",
+        "semantic_phrase": "画面细节不满意可直接进入编辑页面随心调整修改。",
+        "target_orientation": "portrait",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+        "purpose": "action_scene",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "59e6b2ce550b9fc7023178b42a0a65adbe7bdb5727c3f067528492c1ec59c6eb"
+      }
+    },
+    {
+      "asset_id": "asset_derived_fc9269f28a8e",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/电商_gallery_preview_2d8eb40c4f5b.png",
+      "sha256": "44451c469c2c4db60e5dcbc9a92637edf179d054a6481602076a742b9208564f",
+      "media_type": "image",
+      "filename": "电商_gallery_preview_2d8eb40c4f5b.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "电商",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_1743c9fe5d9e"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "f690fd0fddc439f90071c39ee23fe5aa98f9a2936a8e722b809a76c4aef8e21b"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_e364fb2e6b6e8cf7",
+        "scene_id": "scene_002",
+        "semantic_phrase": "文化墙、门店招牌、景观小品、商业美陈、品牌 logo、电商视觉、活动物料",
+        "target_orientation": "landscape",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "2d8eb40c4f5bcf435e0920d9405ecef77c80b9771675be989e933f1623e1fa94"
+      }
+    },
+    {
+      "asset_id": "asset_derived_9ff1c369cd3b",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_gallery_preview_5b2cfe673fb4.png",
+      "sha256": "a9467a59d0d50349e9b558d344ac2266d53320d33f56f4b959fb1c6b1c78add0",
+      "media_type": "image",
+      "filename": "文化墙_gallery_preview_5b2cfe673fb4.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "活动物料",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "活动物料",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_83edbd4346c9"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "f690fd0fddc439f90071c39ee23fe5aa98f9a2936a8e722b809a76c4aef8e21b"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_5d98be03ab6b268f",
+        "scene_id": "scene_002",
+        "semantic_phrase": "文化墙、门店招牌、景观小品、商业美陈、品牌 logo、电商视觉、活动物料",
+        "target_orientation": "landscape",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "5b2cfe673fb4e8ff871b1872a58a053eed9601f4e7746892074b14f9a0baaa08"
+      }
+    },
+    {
+      "asset_id": "asset_derived_0df82e0dc4c3",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_reference_mock_a1b62059a200.png",
+      "sha256": "5646ea5f196f50991fcec64a53e446fcece6aa48cee6d458cf4869d694083df7",
+      "media_type": "image",
+      "filename": "文化墙_result_to_reference_mock_a1b62059a200.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_reference_mock",
+        "scene_011"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "eb05fd2b98087fd117a7c13330b4faf39d0c565e0440ae0371a0dba53bb8c962"
+      },
+      "metadata": {
+        "derive_kind": "result_to_reference_mock",
+        "request_id": "prepare_4fba701910644190",
+        "scene_id": "scene_011",
+        "semantic_phrase": "系统就能在原有场景基础上生成",
+        "target_orientation": "portrait",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+        "purpose": "asset_preflight",
+        "relationship_id": "flow_44774cb95e",
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "a1b62059a20063194b0274ea988d3b88eab68bd10ea46b445b98a2814107b514"
+      }
+    },
+    {
+      "asset_id": "asset_derived_a5824805eb54",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_flat_plan_211fef200bec.png",
+      "sha256": "7b91f12fea1c17863ce770f9d157eea9c8d66c9589457900013e21a5fc21fe06",
+      "media_type": "image",
+      "filename": "文化墙_result_to_flat_plan_211fef200bec.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "plane_result",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_flat_plan",
+        "scene_012"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "877d430504435fe5ca318f5b098a8b2ade0a12ed095a830fea6e6bb977d88389"
+      },
+      "metadata": {
+        "derive_kind": "result_to_flat_plan",
+        "request_id": "prepare_505e2e81d1b01330",
+        "scene_id": "scene_012",
+        "semantic_phrase": "导出平面图",
+        "target_orientation": "portrait",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "fc3367229f956b87dcde98b6d3dbe3ab94ef09db60f07cbbb04ee5c2bf1b2a46",
+        "purpose": "asset_preflight",
+        "relationship_id": "flow_44774cb95e",
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "211fef200bec0a26a6ffa0bea8f52a28cc1c68650ef8091acc6cff179e1c04a7"
+      }
+    },
+    {
+      "asset_id": "asset_derived_86ada9b68a27",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_editor_composite_251d01daba29.png",
+      "sha256": "7277173722cacef2e7f09ad4ed9f353f606576b5cf21496203cd1382ff832558",
+      "media_type": "image",
+      "filename": "文化墙_result_to_editor_composite_251d01daba29.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "editor_workspace",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_editor_composite",
+        "scene_007"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d",
+          "asset_workflow_scene_a81af7c714a4"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "48ce0111078314bb01638b01a04717b552ce196ace1616a898b54f6710618faf"
+      },
+      "metadata": {
+        "derive_kind": "result_to_editor_composite",
+        "request_id": "derive_e03a161d8080",
+        "scene_id": "scene_007",
+        "semantic_phrase": "把上一张结果图完整载入真实编辑页面，保持编辑器 UI 和结果图内容不变",
+        "target_orientation": "portrait",
+        "target_size": "1024x1792",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "action_scene",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "251d01daba295738a30d3a00091f76d407d696234ac6de01d97403dd92da7b6e"
+      }
+    },
+    {
+      "asset_id": "asset_derived_33f397ae3988",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_edit_state_87b8829815d3.png",
+      "sha256": "2911961dce2206dcff712efec6a477aad6a115c180819763778e8a91ba0eab11",
+      "media_type": "image",
+      "filename": "文化墙_result_to_edit_state_87b8829815d3.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_edit_state",
+        "scene_008"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "91c115f76185df51b41bc9f20145ab5784198f051494374a6a7ea781652ca3cc"
+      },
+      "metadata": {
+        "derive_kind": "result_to_edit_state",
+        "request_id": "derive_5e2d2c37e24d",
+        "scene_id": "scene_008",
+        "semantic_phrase": "画面细节不满意可直接进入编辑页面随心调整修改。",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "action_scene",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "87b8829815d30f9a0550a783a670e8c01f7ed82f5f3ca250fa6e2b595e4245d8"
+      }
+    },
+    {
+      "asset_id": "asset_derived_fd21c098a086",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/电商_gallery_preview_a204105a5b64.png",
+      "sha256": "39d2714392dfd55a065262d38212b34c191e8f5cefa5def016284a0ed504031a",
+      "media_type": "image",
+      "filename": "电商_gallery_preview_a204105a5b64.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "电商",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_1743c9fe5d9e"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "91ed154c95d7b376a5c91dcebcadcd32fa82b6d4953b73a43d4ea376c99815ba"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_e364fb2e6b6e8cf7",
+        "scene_id": "scene_002",
+        "semantic_phrase": "文化墙、门店招牌、景观小品、商业美陈、品牌 logo、电商视觉、活动物料",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "a204105a5b64b9a8ffe7e723ae0f024f4b7b907382f658c110e744f181f8d2eb"
+      }
+    },
+    {
+      "asset_id": "asset_derived_973bec654ad9",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_gallery_preview_09646f5af3ab.png",
+      "sha256": "66cd1eb200884c9db682be8182029932e7033d4238b9e75b023dda6a2d22c694",
+      "media_type": "image",
+      "filename": "文化墙_gallery_preview_09646f5af3ab.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "活动物料",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "活动物料",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_83edbd4346c9"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "91ed154c95d7b376a5c91dcebcadcd32fa82b6d4953b73a43d4ea376c99815ba"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_5d98be03ab6b268f",
+        "scene_id": "scene_002",
+        "semantic_phrase": "文化墙、门店招牌、景观小品、商业美陈、品牌 logo、电商视觉、活动物料",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "09646f5af3ab323769f4835c2abe0382860af347013996b7ab74a76e51c80316"
+      }
+    },
+    {
+      "asset_id": "asset_derived_d1982f7aacae",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_reference_mock_fb5668a082ef.png",
+      "sha256": "fd257b5e046f227ac928460ae9a9ac4a58a9a7d490de96ac7bc521b95472369e",
+      "media_type": "image",
+      "filename": "文化墙_result_to_reference_mock_fb5668a082ef.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_reference_mock",
+        "scene_011"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "2f056b762168c229f5fd9fe275ff6db1ac03e3a66c5c2e11bff6935d9bcba0b1"
+      },
+      "metadata": {
+        "derive_kind": "result_to_reference_mock",
+        "request_id": "prepare_4fba701910644190",
+        "scene_id": "scene_011",
+        "semantic_phrase": "系统就能在原有场景基础上生成",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": "flow_44774cb95e",
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "fb5668a082efe74853091228aee5c5cb1fbbd84811a2d132dcd637ca93b358bb"
+      }
+    },
+    {
+      "asset_id": "asset_derived_bec541999e8e",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_flat_plan_bc794b5eef89.png",
+      "sha256": "73e111faf54c97fb788291a63e1519358b46d16606db818d20c68eab69ef1371",
+      "media_type": "image",
+      "filename": "文化墙_result_to_flat_plan_bc794b5eef89.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "plane_result",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "社区服务",
+        "文生图",
+        "文化墙",
+        "result_to_flat_plan",
+        "scene_012"
+      ],
+      "identity_group": "社区服务",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_8752a5f9188d"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "6c655e3fb7fd15a025c73f985d87befdebcec4be4d098146555d33dfd3e3889b"
+      },
+      "metadata": {
+        "derive_kind": "result_to_flat_plan",
+        "request_id": "prepare_505e2e81d1b01330",
+        "scene_id": "scene_012",
+        "semantic_phrase": "导出平面图",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": "flow_44774cb95e",
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "bc794b5eef892c1d55da36d648ed2a06ad82f5452acd898b8ea2077af3499455"
+      }
+    },
+    {
+      "asset_id": "asset_derived_46408851b80d",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_reference_mock_f3a73c7f39d4.png",
+      "sha256": "e371963dd8e3535a248ab0ce0bf7b59df3ca0086d0ee488c72416fdb818f2c4b",
+      "media_type": "image",
+      "filename": "文化墙_result_to_reference_mock_f3a73c7f39d4.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "职工之家",
+        "文生图",
+        "文化墙",
+        "result_to_reference_mock",
+        "scene_010"
+      ],
+      "identity_group": "职工之家",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_87e354216ebb"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "2f056b762168c229f5fd9fe275ff6db1ac03e3a66c5c2e11bff6935d9bcba0b1"
+      },
+      "metadata": {
+        "derive_kind": "result_to_reference_mock",
+        "request_id": "prepare_403e6e9cd958a48d",
+        "scene_id": "scene_010",
+        "semantic_phrase": "系统就能在原有场景基础上生成",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": "flow_44774cb95e",
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "f3a73c7f39d441582cf34a5b3b11fb0274e1a6cbe5cbf2c15af020aba4ee9e1a"
+      }
+    },
+    {
+      "asset_id": "asset_derived_bdd3c654ba9e",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文化墙_result_to_flat_plan_4776ab83b7af.png",
+      "sha256": "bdc8a0c64914b0de6711009c8a1a79c6e8ee50ccc84ccd50b6257a2fbf6611d5",
+      "media_type": "image",
+      "filename": "文化墙_result_to_flat_plan_4776ab83b7af.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "role": "plane_result",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "职工之家",
+        "文生图",
+        "文化墙",
+        "result_to_flat_plan",
+        "scene_011"
+      ],
+      "identity_group": "职工之家",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_87e354216ebb"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "6c655e3fb7fd15a025c73f985d87befdebcec4be4d098146555d33dfd3e3889b"
+      },
+      "metadata": {
+        "derive_kind": "result_to_flat_plan",
+        "request_id": "prepare_a5ce2a1aa4ac0e7d",
+        "scene_id": "scene_011",
+        "semantic_phrase": "导出平面图",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": "flow_44774cb95e",
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "4776ab83b7af7a869a5237626a561de51cd01e5493547df20d5809b4c13bceba"
+      }
     }
   ],
-  "source_catalog_sha256": "00ecf0e7f5b398380c979ebd4da5dde989af68d58eb289f58cadf3720676c4f7",
-  "warnings": [
-    "unrecognized site filename: 柯幻熊猫_AI工具_功能列表截图.png"
-  ]
+  "source_catalog_sha256": "f678f35a13c55901c2da6485263050d3f8fb657bab41bfa20b348123161f9706",
+  "warnings": []
 }

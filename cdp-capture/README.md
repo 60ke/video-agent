@@ -56,7 +56,7 @@ The output filenames follow the site material naming policy, for example:
 - For 文生图 modules, use `references/site_profiles/kehuanxiongmao_text_to_image_modules.json` as the source of truth for route, label, and page title.
 - For `图文广告`, include the extra child layer in the filename path: `柯幻熊猫_文生图_图文广告_<子功能>_<截图类型>.png`.
 - Parameter screenshots may fall back to the full page if a precise panel crop is unstable. GPT Image performs the final 9:16 reframing and integrated visual marker after the required fields are validated.
-- CDP boxes are guidance, not renderer instructions. Pillow/OpenCV must not recreate the deprecated coordinate-driven red-circle or transparent-layer route.
+- CDP boxes are guidance for capture and fixed derivative tooling, not renderer instructions. The Remotion runtime must not recreate the deprecated coordinate-driven red-circle or transparent-layer route.
 
 ## Result Authenticity
 

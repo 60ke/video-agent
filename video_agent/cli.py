@@ -5,16 +5,19 @@ import json
 from pathlib import Path
 from typing import Any
 
-from video_agent.assets import build_catalog
-from video_agent.assets.site_entry_batch import approve_site_entry_manifest, generate_site_entry_keyframes
-from video_agent.assets.site_params_sequence import approve_parameter_frame_sequences, generate_parameter_frame_sequences
+from video_agent.assets import build_catalog, generate_editor_flow_assets
+from video_agent.assets.site_entry_batch import generate_site_entry_keyframes
+from video_agent.assets.site_params_sequence import generate_parameter_frame_sequences
 from video_agent.assets.video_material_import import import_video_material_images
 from video_agent.audio.register import register_sfx_library
-from video_agent.contracts import AssetCatalog, CaseConfig
+from video_agent.case_admin import clean_cases, export_case_videos
+from video_agent.contracts import CaseConfig, VoiceConfig
 from video_agent.cover import postprocess_cover
-from video_agent.io import load_json, load_model, write_json_atomic
+from video_agent.io import load_json, write_json_atomic
 from video_agent.orchestrator import Orchestrator
 from video_agent.runtime import RunContext, STAGES
+from video_agent.script_lock import locked_narration_from_text
+from video_agent.speech.minimax import local_minimax_voice_id
 
 
 def _print(value: Any, as_json: bool) -> None:
@@ -54,32 +57,65 @@ def command_inspect(args: argparse.Namespace) -> dict[str, Any]:
 def command_init(args: argparse.Namespace) -> dict[str, Any]:
     case_dir = Path(args.case).resolve()
     case_dir.mkdir(parents=True, exist_ok=False)
-    config = CaseConfig(case_id=args.case_id, goal=args.goal, feature_path=args.feature_path or [])
+    repo_root = Path(__file__).resolve().parents[1]
+    voice_id = local_minimax_voice_id(repo_root)
+    voice = VoiceConfig(voice_id=voice_id) if voice_id else VoiceConfig()
+    script_text = _script_text(args)
+    config = CaseConfig(
+        case_id=args.case_id,
+        goal=args.goal,
+        feature_path=args.feature_path or [],
+        voice=voice,
+        mode="script_locked" if script_text else "material_first",
+        narration_source="input/narration.json" if script_text else None,
+        ai_enabled=False,
+    )
     write_json_atomic(case_dir / "case.json", config)
     (case_dir / "input").mkdir()
-    return {"ok": True, "case": case_dir.as_posix(), "case_json": (case_dir / "case.json").as_posix()}
+    result = {"ok": True, "case": case_dir.as_posix(), "case_json": (case_dir / "case.json").as_posix()}
+    if script_text:
+        narration_path = case_dir / "input" / "narration.json"
+        narration = locked_narration_from_text(config.case_id, script_text)
+        write_json_atomic(narration_path, narration)
+        result.update({"narration": narration_path.as_posix(), "beats": len(narration.beats), "locked": True})
+    return result
 
 
-def command_asset_review(args: argparse.Namespace) -> dict[str, Any]:
+def _script_text(args: argparse.Namespace) -> str | None:
+    direct = getattr(args, "script_text", None)
+    source = getattr(args, "script_file", None)
+    if direct is not None:
+        value = str(direct).strip()
+        if not value:
+            raise ValueError("--script-text must not be empty")
+        return value
+    if source is not None:
+        return Path(source).read_text(encoding="utf-8-sig").strip()
+    return None
+
+
+def command_script_lock(args: argparse.Namespace) -> dict[str, Any]:
     case_dir = Path(args.case).resolve()
-    run_id = args.run or load_json(case_dir / "latest_run.json")["run_id"]
-    catalog_path = case_dir / "runs" / run_id / "asset_catalog.json"
-    catalog = load_model(catalog_path, AssetCatalog)
-    asset = next((item for item in catalog.assets if item.asset_id == args.asset_id), None)
-    if asset is None:
-        raise ValueError(f"asset not found in run catalog: {args.asset_id}")
-    if args.reject:
-        if not args.reason:
-            raise ValueError("--reason is required when rejecting an asset")
-        asset.quality.status = "rejected"
-        asset.quality.rejection_reason = args.reason
-    else:
-        asset.quality.status = "human_approved"
-        asset.quality.rejection_reason = None
-        if "human_reviewed" not in asset.quality.checks:
-            asset.quality.checks.append("human_reviewed")
-    write_json_atomic(catalog_path, catalog)
-    return {"ok": True, "run_id": run_id, "asset_id": asset.asset_id, "status": asset.quality.status}
+    config_path = case_dir / "case.json"
+    if not config_path.is_file():
+        raise FileNotFoundError(f"case.json not found: {config_path}")
+    text = _script_text(args)
+    if text is None:
+        raise ValueError("provide --script-text or --script-file")
+    config = CaseConfig.model_validate(load_json(config_path)).model_copy(
+        update={"mode": "script_locked", "narration_source": "input/narration.json", "ai_enabled": False}
+    )
+    narration = locked_narration_from_text(config.case_id, text)
+    narration_path = case_dir / "input" / "narration.json"
+    write_json_atomic(narration_path, narration)
+    write_json_atomic(config_path, config)
+    return {
+        "ok": True,
+        "case": case_dir.as_posix(),
+        "narration": narration_path.as_posix(),
+        "beats": len(narration.beats),
+        "locked": True,
+    }
 
 
 def command_sfx_register(args: argparse.Namespace) -> dict[str, Any]:
@@ -100,11 +136,6 @@ def command_site_entry_batch(args: argparse.Namespace) -> dict[str, Any]:
     return {"ok": True, **result}
 
 
-def command_site_entry_approve(args: argparse.Namespace) -> dict[str, Any]:
-    result = approve_site_entry_manifest(Path(args.manifest).resolve())
-    return {"ok": True, **result, "manifest": Path(args.manifest).resolve().as_posix()}
-
-
 def command_site_params_sequence(args: argparse.Namespace) -> dict[str, Any]:
     result = generate_parameter_frame_sequences(
         Path(__file__).resolve().parents[1],
@@ -118,10 +149,22 @@ def command_site_params_sequence(args: argparse.Namespace) -> dict[str, Any]:
     return {"ok": True, **result}
 
 
-def command_site_params_sequence_approve(args: argparse.Namespace) -> dict[str, Any]:
-    manifest = Path(args.manifest).resolve()
-    result = approve_parameter_frame_sequences(manifest)
-    return {"ok": True, **result, "manifest": manifest.as_posix()}
+def command_editor_flow(args: argparse.Namespace) -> dict[str, Any]:
+    repo_root = Path(__file__).resolve().parents[1]
+    focus_rect = {"x": args.focus_x, "y": args.focus_y, "w": args.focus_w, "h": args.focus_h}
+    result = generate_editor_flow_assets(
+        repo_root,
+        Path(args.artwork).resolve(),
+        Path(args.editor_template).resolve(),
+        Path(args.modal_template).resolve(),
+        Path(args.output).resolve(),
+        semantic_path=args.semantic_path,
+        focus_rect=focus_rect,
+        force=args.force,
+    )
+    catalog_path = repo_root / "assets" / "catalog.json"
+    catalog = build_catalog(repo_root / "assets", catalog_path)
+    return {"ok": True, **result, "catalog": catalog_path.as_posix(), "catalog_assets": len(catalog.assets)}
 
 
 def command_import_video_materials(args: argparse.Namespace) -> dict[str, Any]:
@@ -145,6 +188,16 @@ def command_cover_postprocess(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def command_cases_export(args: argparse.Namespace) -> dict[str, Any]:
+    return {"ok": True, **export_case_videos(Path(args.cases), Path(args.destination))}
+
+
+def command_cases_clean(args: argparse.Namespace) -> dict[str, Any]:
+    cases = Path(args.cases).resolve()
+    manifest = Path(args.export_manifest).resolve() if args.export_manifest else None
+    return {"ok": True, **clean_cases(cases, require_export_manifest=manifest)}
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="video-agent", description="Video Agent V3 material-first video compiler")
     parser.add_argument("--json", action="store_true")
@@ -162,7 +215,18 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--case-id", required=True)
     init.add_argument("--goal", required=True)
     init.add_argument("--feature-path", action="append")
+    init_script = init.add_mutually_exclusive_group()
+    init_script.add_argument("--script-text", help="Lock this exact text as the narration")
+    init_script.add_argument("--script-file", help="UTF-8 text file to lock as the narration")
     init.set_defaults(handler=command_init)
+
+    script_lock = sub.add_parser("script-lock", help="Turn exact text into locked narration for an existing case")
+    script_lock.add_argument("--json", dest="sub_json", action="store_true")
+    script_lock.add_argument("--case", required=True)
+    script_source = script_lock.add_mutually_exclusive_group(required=True)
+    script_source.add_argument("--script-text", help="Exact narration text")
+    script_source.add_argument("--script-file", help="UTF-8 text file containing exact narration")
+    script_lock.set_defaults(handler=command_script_lock)
 
     run = sub.add_parser("run", help="Run the single V3 production DAG")
     run.add_argument("--json", dest="sub_json", action="store_true")
@@ -178,17 +242,6 @@ def build_parser() -> argparse.ArgumentParser:
     inspect.add_argument("--run")
     inspect.set_defaults(handler=command_inspect)
 
-    review = sub.add_parser("asset-review", help="Approve or reject a derived asset in one run")
-    review.add_argument("--json", dest="sub_json", action="store_true")
-    review.add_argument("--case", required=True)
-    review.add_argument("--run")
-    review.add_argument("--asset-id", required=True)
-    decision = review.add_mutually_exclusive_group(required=True)
-    decision.add_argument("--approve", action="store_true")
-    decision.add_argument("--reject", action="store_true")
-    review.add_argument("--reason")
-    review.set_defaults(handler=command_asset_review)
-
     sfx = sub.add_parser("sfx-register", help="Register the canonical Douyin SFX library")
     sfx.add_argument("--json", dest="sub_json", action="store_true")
     sfx.add_argument("--source-dir", required=True)
@@ -203,11 +256,6 @@ def build_parser() -> argparse.ArgumentParser:
     site_entries.add_argument("--force", action="store_true")
     site_entries.set_defaults(handler=command_site_entry_batch)
 
-    approve_entries = sub.add_parser("site-entry-approve", help="Mark every generated site-entry keyframe in a manifest as human approved")
-    approve_entries.add_argument("--json", dest="sub_json", action="store_true")
-    approve_entries.add_argument("--manifest", default="assets/derived/sites/柯幻熊猫/文生图/功能入口/manifest.json")
-    approve_entries.set_defaults(handler=command_site_entry_approve)
-
     site_params = sub.add_parser("site-params-sequence", help="Generate complete base, stage, and final parameter-page flower-text frames")
     site_params.add_argument("--json", dest="sub_json", action="store_true")
     site_params.add_argument("--source", default="assets/sites")
@@ -218,10 +266,19 @@ def build_parser() -> argparse.ArgumentParser:
     site_params.add_argument("--force", action="store_true")
     site_params.set_defaults(handler=command_site_params_sequence)
 
-    approve_params = sub.add_parser("site-params-sequence-approve", help="Mark every generated parameter frame sequence as human approved")
-    approve_params.add_argument("--json", dest="sub_json", action="store_true")
-    approve_params.add_argument("--manifest", default="assets/derived/sites/柯幻熊猫/文生图/参数面板序列/manifest.json")
-    approve_params.set_defaults(handler=command_site_params_sequence_approve)
+    editor_flow = sub.add_parser("editor-flow", help="Generate and register a fixed local-edit interaction sequence")
+    editor_flow.add_argument("--json", dest="sub_json", action="store_true")
+    editor_flow.add_argument("--artwork", required=True, help="Result/reference artwork loaded into both editor states")
+    editor_flow.add_argument("--editor-template", required=True)
+    editor_flow.add_argument("--modal-template", required=True)
+    editor_flow.add_argument("--semantic-path", action="append", required=True)
+    editor_flow.add_argument("--output", default="assets/derived/workflow_scenes")
+    editor_flow.add_argument("--focus-x", type=float, default=0.80)
+    editor_flow.add_argument("--focus-y", type=float, default=0.70)
+    editor_flow.add_argument("--focus-w", type=float, default=0.13)
+    editor_flow.add_argument("--focus-h", type=float, default=0.17)
+    editor_flow.add_argument("--force", action="store_true")
+    editor_flow.set_defaults(handler=command_editor_flow)
 
     import_materials = sub.add_parser("import-video-materials", help="Import and register curated external image materials")
     import_materials.add_argument("--json", dest="sub_json", action="store_true")
@@ -234,6 +291,18 @@ def build_parser() -> argparse.ArgumentParser:
     cover.add_argument("--run")
     cover.add_argument("--spec", help="Defaults to <case>/input/cover.json")
     cover.set_defaults(handler=command_cover_postprocess)
+
+    cases_export = sub.add_parser("cases-export", help="Copy every final case video into one destination folder")
+    cases_export.add_argument("--json", dest="sub_json", action="store_true")
+    cases_export.add_argument("--cases", default="cases")
+    cases_export.add_argument("--destination", required=True)
+    cases_export.set_defaults(handler=command_cases_export)
+
+    cases_clean = sub.add_parser("cases-clean", help="Remove every direct child case directory after export")
+    cases_clean.add_argument("--json", dest="sub_json", action="store_true")
+    cases_clean.add_argument("--cases", default="cases")
+    cases_clean.add_argument("--export-manifest", help="Require the export manifest before deleting cases")
+    cases_clean.set_defaults(handler=command_cases_clean)
     return parser
 
 

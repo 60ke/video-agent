@@ -1,4 +1,7 @@
-from .auto_visual import build_auto_visual_plan
-from .visual_demand import build_visual_demand_plan, desired_visual_states
+from .action_scene import build_action_scene_plan
+from .scene_visual import build_scene_visual_plan
 
-__all__ = ["build_auto_visual_plan", "build_visual_demand_plan", "desired_visual_states"]
+__all__ = [
+    "build_action_scene_plan",
+    "build_scene_visual_plan",
+]

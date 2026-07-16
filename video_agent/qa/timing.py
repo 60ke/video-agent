@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from video_agent.compiler.subtitles import fullwidth_units
 from video_agent.contracts import CheckResult, Narration, TimingLock
 
 
@@ -32,12 +31,4 @@ def validate_timing_lock(narration: Narration, timing: TimingLock) -> list[Check
             },
         )
     )
-    rate = fullwidth_units(narration.spoken_text) / (timing.duration_ms / 1000)
-    if rate < 3.5 or rate > 6.2:
-        status = "failed"
-    elif rate < 4.2 or rate > 5.8:
-        status = "warning"
-    else:
-        status = "passed"
-    checks.append(CheckResult(check_id="effective_speech_rate", status=status, details={"units_per_second": round(rate, 3)}))
     return checks

@@ -19,7 +19,8 @@ from video_agent.contracts import (
     TimeRef,
     VisualPlan,
 )
-from video_agent.cover import CoverSpec, _prompt, postprocess_cover
+from video_agent.cover import CoverSpec, _prompt, default_cover_spec, postprocess_cover
+from video_agent.contracts import CaseConfig, Narration, NarrationBeat
 from video_agent.io import sha256_file, write_json_atomic
 
 
@@ -54,6 +55,17 @@ def test_cover_prompt_keeps_v2_title_and_safe_zone_constraints() -> None:
 def test_cover_prompt_without_subtitle_forbids_subtitle_text() -> None:
     prompt = _prompt(CoverSpec(title="VI设计 一句话生成"), 1, "不需要提示词，只需要简单输入你的品牌名称")
     assert "If the optional subtitle is empty, render no subtitle." in prompt
+
+
+def test_default_cover_spec_uses_case_goal_and_full_narration() -> None:
+    case = CaseConfig(case_id="demo", goal="制作一个文化墙功能介绍视频")
+    narration = Narration(
+        case_id="demo",
+        beats=[NarrationBeat(beat_id="beat_001", spoken_text="上传参考图，就能生成文化墙效果。")],
+    )
+    spec = default_cover_spec(case, narration)
+    assert spec.title == "文化墙功能介绍"
+    assert spec.narration_text == "上传参考图，就能生成文化墙效果。"
 
 
 def test_cover_postprocess_adds_exactly_one_frame_without_accumulating(tmp_path: Path, monkeypatch) -> None:

@@ -201,34 +201,3 @@ def generate_site_entry_keyframes(
         "recovered": sum(item.get("status") == "recovered" for item in results),
         "manifest": manifest_path.as_posix(),
     }
-
-
-def approve_site_entry_manifest(manifest_path: Path) -> dict[str, int]:
-    manifest = load_json(manifest_path)
-    assets = manifest.get("assets") if isinstance(manifest, dict) else None
-    if not isinstance(assets, list):
-        raise ValueError(f"invalid site-entry manifest: {manifest_path}")
-    if manifest.get("errors"):
-        raise ValueError(f"site-entry manifest still contains generation errors: {manifest_path}")
-
-    approved = 0
-    for asset in assets:
-        if not isinstance(asset, dict):
-            continue
-        output = Path(str(asset.get("output_path") or ""))
-        if not output.is_file():
-            raise FileNotFoundError(f"approved feature-entry output is missing: {output}")
-        expected_sha256 = str(asset.get("output_sha256") or "")
-        if not expected_sha256 or sha256_file(output) != expected_sha256:
-            raise ValueError(f"feature-entry output hash mismatch: {output}")
-        asset["quality_status"] = "human_approved"
-        checks = asset.setdefault("quality_checks", [])
-        for check in ("human_reviewed", "feature_marker_reviewed"):
-            if check not in checks:
-                checks.append(check)
-        approved += 1
-
-    manifest["reviewed_at"] = utc_now()
-    manifest["review_status"] = "human_approved"
-    write_json_atomic(manifest_path, manifest)
-    return {"approved": approved}
