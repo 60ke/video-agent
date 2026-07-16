@@ -62,11 +62,7 @@ def command_generate_video(args: argparse.Namespace) -> dict[str, Any]:
     if script_path and not script_text:
         raise ValueError(f"script file must not be empty: {script_path}")
     script_narration = locked_narration_from_text(case_id, script_text) if script_text else None
-    default_goal = (
-        script_narration.beats[0].spoken_text.strip()
-        if script_narration and script_narration.beats
-        else "柯幻熊猫文生图功能种草"
-    )
+    default_goal = "柯幻熊猫文生图功能种草"
 
     voice_id = local_minimax_voice_id(repo_root)
     voice = VoiceConfig(voice_id=voice_id) if voice_id else VoiceConfig()

@@ -14,9 +14,14 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 from pydantic import Field
 
 from video_agent.ai.gpt_image import edit_image
+from video_agent.ai.cover_title import plan_cover_title
 from video_agent.contracts.base import Contract
 from video_agent.io import load_json, load_model, sha256_file, utc_now, write_json_atomic
 from video_agent.contracts import AssetCatalog, CaseConfig, Narration, RenderPlan, VisualPlan
+from video_agent.progress import get_logger
+
+
+logger = get_logger()
 
 
 class CoverSpec(Contract):
@@ -233,8 +238,21 @@ def postprocess_cover(repo_root: Path, case_dir: Path, run_dir: Path, spec_path:
         case = load_model(case_dir / "case.json", CaseConfig)
         narration = load_model(run_dir / "narration.json", Narration)
         spec = default_cover_spec(case, narration)
-        spec_origin = "generated_from_case_and_narration"
+        spec_origin = "full_narration_fallback"
+        title_plan_meta: dict[str, str] | None = None
+        try:
+            title_plan, title_plan_meta = plan_cover_title(repo_root, case, narration)
+            spec = spec.model_copy(update={"title": title_plan.title})
+            spec_origin = "ai_planned_from_full_narration"
+            logger.info("[封面] 已根据完整文案生成标题：%s", spec.title)
+        except (OSError, ValueError) as exc:
+            logger.warning("[封面] 完整文案标题规划失败，使用确定性兜底：%s", exc)
         write_json_atomic(run_dir / "work" / "cover" / "default_cover_spec.json", spec)
+        if title_plan_meta:
+            write_json_atomic(
+                run_dir / "work" / "cover" / "cover_title_plan.json",
+                {"title": spec.title, **title_plan_meta},
+            )
     video = run_dir / "final" / "video.mp4"
     if not video.is_file():
         raise FileNotFoundError(f"rendered video is missing: {video}")
