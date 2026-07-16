@@ -62,7 +62,7 @@ Set-Location ..
 使用固定文案：
 
 ```powershell
-python main.py generate_video --script C:\copy\文案.txt
+python main.py --script C:\copy\文案.txt
 ```
 
 只提供目标，由 AI 生成文案：
@@ -86,10 +86,10 @@ final_video: .../cases/video_20260716_120000_ab12/runs/<run_id>/final/video.mp4
 
 ```powershell
 # 指定 Case 父目录
-python main.py generate_video --script C:\copy\文案.txt --cases D:\video_cases
+python main.py --script C:\copy\文案.txt --cases D:\video_cases
 
 # 显式指定 Case ID；省略时自动生成唯一 ID
-python main.py generate_video --script C:\copy\文案.txt --case-id ad_demo_v1
+python main.py --script C:\copy\文案.txt --case-id ad_demo_v1
 
 # 输出 JSON
 python main.py --goal "柯幻熊猫文生图功能种草" --json
