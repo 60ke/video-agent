@@ -55,38 +55,105 @@ Set-Location ..
 
 示例配置位于同目录的 `*.example.json`。运行时配置优先于契约默认值；不要在文档或代码中复制本地音色 ID 和 API Key。
 
-## 快速开始
+## 命令行生成视频
 
-### 使用既有文案
+### 1. 准备本地配置
+
+复制示例文件并填写本机密钥。三个 `*.local.json` 均已被 Git 忽略：
+
+```powershell
+Copy-Item config\ai.example.json config\ai.local.json
+Copy-Item config\minimax.example.json config\minimax.local.json
+Copy-Item config\gpt_image.example.json config\gpt_image.local.json
+```
+
+- `ai.local.json`：固定文案和 AI 文案模式都需要。Flash 模型负责素材粗筛，Pro 模型负责 ActionScene 场景分类、素材绑定和派生决策。
+- `minimax.local.json`：必需。负责整段口播和 word 级时间戳；本地 `voice_id`、`speed` 等配置会覆盖 Case 默认值。
+- `gpt_image.local.json`：仅当场景需要补充因果素材、统一轮播比例或生成编辑状态等派生图时调用。已有缓存会直接复用。
+
+Remotion 依赖也必须已安装：
+
+```powershell
+Set-Location remotion
+npm install
+Set-Location ..
+```
+
+### 2. 根据固定文案生成
+
+推荐把文案保存为 UTF-8 文本文件，避免 PowerShell 对长中文和换行的转义问题。例如：
+
+```powershell
+@'
+广告人必须收藏的全能网站！
+文化墙、门店招牌、景观小品、商业美陈、品牌 LOGO、活动物料等各类设计，它都能一键生成。
+拿文化墙设计举例，选定所属行业、主题还有场景，即刻出高级质感效果图。
+'@ | Set-Content -Encoding utf8 C:\copy\ad_script.txt
+```
+
+在仓库根目录初始化一个全新的 Case。`--case-id` 只能使用英文、数字、下划线或连字符，且 `--case` 指向的目录不能已经存在：
 
 ```powershell
 python -m video_agent init `
-  --case cases\demo `
-  --case-id demo `
-  --goal "文化墙功能介绍" `
+  --case cases\ad_demo_20260716 `
+  --case-id ad_demo_20260716 `
+  --goal "柯幻熊猫文生图功能种草" `
   --feature-path 文生图 `
-  --feature-path 文化墙 `
-  --script-file C:\copy\script.txt `
+  --script-file C:\copy\ad_script.txt `
   --json
-
-python -m video_agent run --case cases\demo --json
-python -m video_agent inspect --case cases\demo --json
 ```
 
-也可以给已有 Case 更新锁定文案：
+执行完整生产链路：
+
+```powershell
+python -m video_agent run --case cases\ad_demo_20260716 --json
+```
+
+成功后命令会返回 `run_id`、`run_dir` 和 `final_video`。默认成片位于：
+
+```text
+cases/ad_demo_20260716/runs/<run_id>/final/video.mp4
+```
+
+查看最新运行的阶段记录和 QA 信息：
+
+```powershell
+python -m video_agent inspect --case cases\ad_demo_20260716 --json
+```
+
+固定文案模式只锁定口播原文。系统会确定性生成初始 `Narration`，MiniMax 提供词级时钟，AI 仍会结合完整素材目录完成场景分类、素材粗筛、精确卡点、素材派生决策和动效选择，但不会改写传入文案。
+
+### 3. 更新已有 Case 的固定文案
 
 ```powershell
 python -m video_agent script-lock `
-  --case cases\demo `
+  --case cases\ad_demo_20260716 `
+  --script-file C:\copy\ad_script_v2.txt `
+  --json
+
+python -m video_agent run --case cases\ad_demo_20260716 --json
+```
+
+每次不带 `--resume` 执行 `run` 都会创建新的 Run，不会覆盖历史成片。
+
+### 4. 直接传入短文案
+
+短文案也可以使用 `--script-text`：
+
+```powershell
+python -m video_agent init `
+  --case cases\culture_wall_demo `
+  --case-id culture_wall_demo `
+  --goal "文化墙功能介绍" `
+  --feature-path 文生图 `
+  --feature-path 文化墙 `
   --script-text "文化墙、门店招牌、景观小品都能一键生成。" `
   --json
 ```
 
-锁定文案会确定性拆分 Beat，并为中文枚举项创建词级视觉命中短语。生成的 `input/narration.json` 可以继续补充 `asset_slots`、`hit_phrases` 和场景提示，但口播原文不会被 AI 改写。
+### 5. 让 AI 生成文案
 
-### AI 生成文案
-
-将 `case.json` 的 `ai_enabled` 设为 `true` 且不指定 `narration_source`。Story Planner 使用 `config/ai.local.json` 中的 OpenAI-compatible 文本接口生成结构化 `Narration`；从 `speech` 阶段开始，两种文案入口共用完全相同的生产链路。
+初始化不带 `--script-file` 或 `--script-text` 的 Case，然后把 `case.json` 的 `ai_enabled` 设为 `true`。Story Planner 会使用 `config/ai.local.json` 生成结构化 `Narration`。从 MiniMax 语音阶段开始，它与固定文案模式共用同一条 ActionScene、素材准备、视觉编排、编译和渲染链路。
 
 ## Case 与运行产物
 
