@@ -262,12 +262,8 @@ def postprocess_cover(repo_root: Path, case_dir: Path, run_dir: Path, spec_path:
     work = run_dir / "work" / "cover"
     final = run_dir / "final"
     report_path = run_dir / "cover_report.json"
-    previous = load_json(report_path) if report_path.is_file() else {}
     body = work / "video_without_cover.mp4"
-    current_sha = sha256_file(video)
-    if previous.get("output_video_sha256") == current_sha and body.is_file():
-        pass
-    else:
+    if not body.is_file():
         work.mkdir(parents=True, exist_ok=True)
         shutil.copy2(video, body)
 

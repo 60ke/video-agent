@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from video_agent.ai.prompt_loader import load_prompt
 from video_agent.ai.text_client import OpenAICompatibleTextClient
@@ -13,6 +14,12 @@ from video_agent.contracts.base import Contract
 
 class CoverTitlePlan(Contract):
     title: str = Field(min_length=4, max_length=24)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def normalize_title(cls, value: object) -> str:
+        title = re.sub(r"[，。！？；：,.!?:;、‘’“”《》]+", " ", str(value))
+        return " ".join(title.split()).strip()
 
 
 def plan_cover_title(

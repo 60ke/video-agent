@@ -14,7 +14,7 @@ def test_cover_title_planner_receives_full_narration(tmp_path: Path, monkeypatch
 
     def complete_json(_self, system: str, user: str, schema_name: str, **_kwargs):
         captured.update(system=system, user=user, schema_name=schema_name)
-        return {"title": "广告人的AI设计神器"}
+        return {"title": "广告人的AI设计神器，一键出图"}
 
     monkeypatch.setattr("video_agent.ai.cover_title.OpenAICompatibleTextClient.__init__", lambda self, _root: None)
     monkeypatch.setattr("video_agent.ai.cover_title.OpenAICompatibleTextClient.complete_json", complete_json)
@@ -32,7 +32,7 @@ def test_cover_title_planner_receives_full_narration(tmp_path: Path, monkeypatch
         narration,
     )
 
-    assert plan.title == "广告人的AI设计神器"
+    assert plan.title == "广告人的AI设计神器 一键出图"
     assert "第一句只是开场。" in captured["user"]
     assert "后面介绍完整的设计和改图能力。" in captured["user"]
     assert captured["schema_name"] == "cover_title"

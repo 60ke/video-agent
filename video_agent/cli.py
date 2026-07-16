@@ -15,7 +15,8 @@ from video_agent.audio.register import register_sfx_library
 from video_agent.case_admin import clean_cases, export_case_videos
 from video_agent.contracts import CaseConfig, VoiceConfig
 from video_agent.cover import postprocess_cover
-from video_agent.io import load_json, write_json_atomic
+from video_agent.outro import postprocess_outro
+from video_agent.io import load_json, load_model, write_json_atomic
 from video_agent.orchestrator import Orchestrator
 from video_agent.progress import configure_logging, get_logger
 from video_agent.runtime import RunContext, STAGES
@@ -231,6 +232,9 @@ def command_cover_postprocess(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = case_dir / "runs" / run_id
     spec = Path(args.spec).resolve() if args.spec else case_dir / "input" / "cover.json"
     report = postprocess_cover(Path(__file__).resolve().parents[1], case_dir, run_dir, spec)
+    case = load_model(case_dir / "case.json", CaseConfig)
+    if case.outro_enabled:
+        postprocess_outro(Path(__file__).resolve().parents[1], run_dir, case.outro_source)
     return {
         "ok": True,
         "run_id": run_id,

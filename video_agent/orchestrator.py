@@ -409,6 +409,11 @@ class Orchestrator:
     def stage_render(self) -> Path:
         plan = load_model(self.context.artifact("render_plan.json"), RenderPlan)
         output = self.context.run_dir / "final" / "video.mp4"
+        for cached_body in (
+            self.context.run_dir / "work" / "cover" / "video_without_cover.mp4",
+            self.context.run_dir / "work" / "outro" / "video_without_outro.mp4",
+        ):
+            cached_body.unlink(missing_ok=True)
         render_video(
             plan,
             output,
