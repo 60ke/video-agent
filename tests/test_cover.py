@@ -68,15 +68,31 @@ def test_default_cover_spec_uses_case_goal_and_full_narration() -> None:
     assert spec.narration_text == "上传参考图，就能生成文化墙效果。"
 
 
+def test_default_cover_spec_rejects_internal_script_filename_goal() -> None:
+    case = CaseConfig(case_id="demo", goal="根据固定文案《test》生成文生图功能视频")
+    narration = Narration(
+        case_id="demo",
+        beats=[NarrationBeat(beat_id="beat_001", spoken_text="专为广告人量身定制的 AI 设计网站来了！")],
+    )
+
+    spec = default_cover_spec(case, narration)
+
+    assert spec.title == "专为广告人量身定制的 AI 设计网站来了"
+    assert "test" not in spec.title
+
+
 def test_cover_postprocess_adds_exactly_one_frame_without_accumulating(tmp_path: Path, monkeypatch) -> None:
     repo = tmp_path
     case = repo / "cases" / "demo"
     run = case / "runs" / "run_1"
     (repo / "assets" / "results").mkdir(parents=True)
+    (repo / "assets" / "brand" / "kehuanxiongmao").mkdir(parents=True)
     (case / "input").mkdir(parents=True)
     (run / "final").mkdir(parents=True)
     result_path = repo / "assets" / "results" / "result.png"
     result_path.write_bytes(_png_bytes((230, 80, 60)))
+    brand_path = repo / "assets" / "brand" / "kehuanxiongmao" / "logo.png"
+    brand_path.write_bytes(_png_bytes((20, 120, 220)))
     _body_video(run / "final" / "video.mp4")
 
     asset = Asset(
@@ -92,7 +108,20 @@ def test_cover_postprocess_adds_exactly_one_frame_without_accumulating(tmp_path:
         quality=AssetQuality(status="human_approved"),
         provenance=Provenance(origin="curated_result_library"),
     )
-    write_json_atomic(run / "asset_catalog.json", AssetCatalog(catalog_id="demo", generated_at="now", source_root="assets", assets=[asset]))
+    brand = Asset(
+        asset_id="asset_brand",
+        path="assets/brand/kehuanxiongmao/logo.png",
+        sha256=sha256_file(brand_path),
+        filename=brand_path.name,
+        width=1024,
+        height=1792,
+        semantic_path=["柯幻熊猫", "品牌"],
+        role="brand_logo",
+        evidence_class=EvidenceClass.SOURCE,
+        quality=AssetQuality(status="human_approved"),
+        provenance=Provenance(origin="curated_brand_library"),
+    )
+    write_json_atomic(run / "asset_catalog.json", AssetCatalog(catalog_id="demo", generated_at="now", source_root="assets", assets=[brand, asset]))
     visual = VisualPlan(
         case_id="demo",
         shots=[

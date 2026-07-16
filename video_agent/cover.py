@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 from collections import Counter
@@ -31,6 +32,8 @@ def default_cover_spec(case: CaseConfig, narration: Narration) -> CoverSpec:
     """Build the default cover brief without inventing additional copy."""
 
     title = case.goal.strip(" ，。！？；：,.!?:;")
+    if re.fullmatch(r"根据固定文案《[^》]+》生成.*", title):
+        title = ""
     for prefix in ("制作一个", "制作一版", "制作", "生成一个", "生成一版", "生成", "做一个", "创建一个"):
         if title.startswith(prefix):
             title = title[len(prefix) :].strip()

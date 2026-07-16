@@ -61,12 +61,18 @@ def command_generate_video(args: argparse.Namespace) -> dict[str, Any]:
     script_text = script_path.read_text(encoding="utf-8-sig").strip() if script_path else None
     if script_path and not script_text:
         raise ValueError(f"script file must not be empty: {script_path}")
+    script_narration = locked_narration_from_text(case_id, script_text) if script_text else None
+    default_goal = (
+        script_narration.beats[0].spoken_text.strip()
+        if script_narration and script_narration.beats
+        else "柯幻熊猫文生图功能种草"
+    )
 
     voice_id = local_minimax_voice_id(repo_root)
     voice = VoiceConfig(voice_id=voice_id) if voice_id else VoiceConfig()
     config = CaseConfig(
         case_id=case_id,
-        goal=args.goal or f"根据固定文案《{script_path.stem}》生成文生图功能视频",
+        goal=args.goal or default_goal,
         feature_path=["文生图"],
         voice=voice,
         mode="script_locked" if script_text else "material_first",
@@ -77,8 +83,8 @@ def command_generate_video(args: argparse.Namespace) -> dict[str, Any]:
     input_dir = case_dir / "input"
     input_dir.mkdir()
     write_json_atomic(case_dir / "case.json", config)
-    if script_text:
-        write_json_atomic(input_dir / "narration.json", locked_narration_from_text(case_id, script_text))
+    if script_narration:
+        write_json_atomic(input_dir / "narration.json", script_narration)
 
     context = RunContext.create(case_dir)
     logger.info("[任务] 已创建 case=%s run=%s source=%s", case_id, context.run_id, "script" if script_text else "goal")
