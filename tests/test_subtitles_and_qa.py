@@ -105,6 +105,51 @@ def test_gallery_items_become_word_anchored_yellow_subtitles() -> None:
     assert all("从" not in cue.text for cue in gallery_cues)
 
 
+def test_gallery_phrase_accepts_punctuation_attached_to_final_token() -> None:
+    token_texts = ["从", "文", "化", "墙、", "门", "头", "招", "牌。"]
+    tokens = [
+        TokenTiming(
+            token_id=f"tok_{index:04d}",
+            text=text,
+            start_ms=(index - 1) * 100,
+            end_ms=index * 100,
+            start_frame=(index - 1) * 3,
+            end_frame=index * 3,
+            beat_id="beat_001",
+        )
+        for index, text in enumerate(token_texts, 1)
+    ]
+    timing = TimingLock(
+        case_id="gallery_punctuation",
+        audio_path="voice.mp3",
+        audio_sha256="a" * 64,
+        fps=30,
+        duration_ms=len(tokens) * 100,
+        duration_frames=len(tokens) * 3,
+        tokens=tokens,
+        beat_spans=[
+            BeatSpan(
+                beat_id="beat_001",
+                token_ids=[token.token_id for token in tokens],
+                start_frame=0,
+                end_frame=len(tokens) * 3,
+            )
+        ],
+    )
+
+    cues = compile_subtitles(
+        timing,
+        gallery_items=[
+            GalleryItem(asset_id="culture", phrase="文化墙", anchor_id="tok_0002"),
+            GalleryItem(asset_id="sign", phrase="门头招牌", anchor_id="tok_0005"),
+        ],
+    )
+    gallery_cues = [cue for cue in cues if cue.style == "gallery_yellow"]
+
+    assert [cue.text for cue in gallery_cues] == ["文化墙", "门头招牌"]
+    assert gallery_cues[0].end_frame == tokens[3].end_frame
+
+
 def test_qa_rejects_forbidden_motion_and_long_subtitle() -> None:
     plan = RenderPlan(
         case_id="demo",

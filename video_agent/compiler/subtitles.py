@@ -6,6 +6,7 @@ from video_agent.contracts import GalleryItem, PhraseAnchor, SubtitleCue, Timing
 
 
 BREAK_PUNCTUATION = set("，。！？；：")
+GALLERY_BOUNDARY_PUNCTUATION = "，、。！？；："
 ORPHAN_CONNECTORS = {"从", "到", "和", "及", "与", "以及"}
 
 
@@ -30,11 +31,13 @@ def _compact(text: str) -> str:
 
 
 def _gallery_tokens(tokens: list[TokenTiming], start_index: int, phrase: str) -> tuple[list[TokenTiming], int]:
-    expected = _compact(phrase)
+    expected = _compact(phrase).strip(GALLERY_BOUNDARY_PUNCTUATION)
     collected: list[TokenTiming] = []
     for index in range(start_index, len(tokens)):
         collected.append(tokens[index])
-        actual = _compact("".join(token.text for token in collected))
+        actual = _compact("".join(token.text for token in collected)).strip(
+            GALLERY_BOUNDARY_PUNCTUATION
+        )
         if actual == expected:
             return collected, index + 1
         if not expected.startswith(actual):
