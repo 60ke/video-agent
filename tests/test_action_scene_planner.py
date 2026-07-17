@@ -5,6 +5,8 @@ from video_agent.ai.action_scene_planner import (
     _normalize_gallery_boundaries,
     _validate_asset_gap_decisions,
 )
+import pytest
+
 from video_agent.contracts import Narration, NarrationBeat
 
 
@@ -74,7 +76,7 @@ def test_gallery_items_are_split_at_intervening_scene_boundaries() -> None:
     assert [item["phrase"] for item in split["gallery_items"]] == ["IP形象", "电商", "海报"]
 
 
-def test_concrete_scene_resolves_stale_empty_candidate_decision() -> None:
+def test_direct_asset_cannot_resolve_an_empty_result_candidate() -> None:
     result = {
         "scenes": [
             {
@@ -103,7 +105,8 @@ def test_concrete_scene_resolves_stale_empty_candidate_decision() -> None:
         }
     }
 
-    _validate_asset_gap_decisions(result, selection_report)
+    with pytest.raises(ValueError, match="requires a matching fallback scene"):
+        _validate_asset_gap_decisions(result, selection_report)
 
 
 def test_empty_exact_candidates_are_removed_from_gallery() -> None:

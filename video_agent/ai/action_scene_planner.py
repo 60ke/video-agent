@@ -629,9 +629,11 @@ def _validate_asset_gap_decisions(result: dict[str, Any], selection_report: dict
         if isinstance(phrase_modes.get(beat_id, {}), dict)
         and phrase_modes[beat_id].get(phrase) == "result_item"
     }
-    resolved_existing = {
+    resolved_supporting = {
         (beat_id, phrase)
         for beat_id, phrase in all_empty
+        if isinstance(phrase_modes.get(beat_id, {}), dict)
+        and phrase_modes[beat_id].get(phrase) == "supporting"
         if any(
             isinstance(scene, dict)
             and scene.get("scene_kind") != "light_sweep_fallback"
@@ -648,7 +650,6 @@ def _validate_asset_gap_decisions(result: dict[str, Any], selection_report: dict
             for scene in result.get("scenes", [])
         )
     }
-    required_missing -= resolved_existing
     decisions = result.get("asset_gap_decisions", [])
     if not isinstance(decisions, list):
         raise ValueError("asset_gap_decisions must be an array")
@@ -657,7 +658,7 @@ def _validate_asset_gap_decisions(result: dict[str, Any], selection_report: dict
         if not isinstance(decision, dict):
             raise ValueError("asset_gap_decisions entries must be JSON objects")
         key = (str(decision.get("beat_id", "")), str(decision.get("phrase", "")))
-        if key not in all_empty or key in resolved_existing:
+        if key not in all_empty or key in resolved_supporting:
             logger.info(
                 "[场景编排] 忽略已解决或非缺口决策 beat=%s phrase=%s",
                 key[0],
