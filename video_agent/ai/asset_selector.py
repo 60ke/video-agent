@@ -120,7 +120,55 @@ def _repair_exact_phrase_candidates(
     beat_candidates = repaired.get("beat_candidates")
     if not isinstance(phrase_candidates, dict) or not isinstance(phrase_modes, dict):
         return repaired
-    known_beats = {beat.beat_id for beat in narration.beats}
+    beat_text = {beat.beat_id: "".join(beat.spoken_text.split()) for beat in narration.beats}
+
+    # The model may return a valid verbatim phrase under the wrong beat. Beat
+    # ownership is deterministic, so repair it before any candidate checks.
+    for source_beat_id, phrase_map in list(phrase_candidates.items()):
+        if not isinstance(phrase_map, dict):
+            continue
+        source_modes = phrase_modes.get(source_beat_id)
+        if not isinstance(source_modes, dict):
+            continue
+        for phrase, candidates in list(phrase_map.items()):
+            if not isinstance(phrase, str):
+                continue
+            compact_phrase = "".join(phrase.split())
+            matching_beats = [
+                beat_id for beat_id, spoken_text in beat_text.items() if compact_phrase and compact_phrase in spoken_text
+            ]
+            if source_beat_id in matching_beats or len(matching_beats) != 1:
+                continue
+            target_beat_id = matching_beats[0]
+            target_phrases = phrase_candidates.setdefault(target_beat_id, {})
+            target_modes = phrase_modes.setdefault(target_beat_id, {})
+            if not isinstance(target_phrases, dict) or not isinstance(target_modes, dict):
+                continue
+            existing = target_phrases.get(phrase, [])
+            merged = list(
+                dict.fromkeys(
+                    [
+                        *(existing if isinstance(existing, list) else []),
+                        *(candidates if isinstance(candidates, list) else []),
+                    ]
+                )
+            )
+            target_phrases[phrase] = merged
+            target_modes[phrase] = source_modes.get(phrase)
+            del phrase_map[phrase]
+            source_modes.pop(phrase, None)
+            if isinstance(beat_candidates, dict) and isinstance(beat_candidates.get(target_beat_id), list):
+                beat_candidates[target_beat_id] = list(
+                    dict.fromkeys([*beat_candidates[target_beat_id], *merged])
+                )
+            logger.info(
+                "[素材粗筛] 程序修正短语所属 beat phrase=%s from=%s to=%s",
+                phrase,
+                source_beat_id,
+                target_beat_id,
+            )
+
+    known_beats = set(beat_text)
     for beat_id, phrase_map in phrase_candidates.items():
         if beat_id not in known_beats or not isinstance(phrase_map, dict):
             continue
@@ -199,7 +247,7 @@ def select_asset_candidates(
             "prompt": prompt.sha256,
             "model": client.coarse_model,
             "asset_index": asset_index.manifest()["index_sha256"],
-            "selector_contract_version": 5,
+            "selector_contract_version": 6,
         }
     )
     cached = load_json(cache_path) if cache_path and cache_path.is_file() else None

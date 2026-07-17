@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from video_agent.ai.action_scene_planner import (
+    _normalize_empty_result_gallery_items,
     _normalize_gallery_boundaries,
     _validate_asset_gap_decisions,
 )
@@ -103,3 +104,41 @@ def test_concrete_scene_resolves_stale_empty_candidate_decision() -> None:
     }
 
     _validate_asset_gap_decisions(result, selection_report)
+
+
+def test_empty_exact_candidates_are_removed_from_gallery() -> None:
+    result = {
+        "scenes": [
+            {
+                "scene_id": "scene_001",
+                "scene_kind": "result_gallery",
+                "visual_purpose": "multi_result_evidence",
+                "beat_ids": ["beat_001"],
+                "start_phrase": "餐饮美食",
+                "semantic_phrase": "餐饮美食、品牌LOGO",
+                "asset_bindings": {"item_001": "A0001", "item_002": "A0002"},
+                "gallery_items": [
+                    {"asset_id": "A0001", "phrase": "餐饮美食"},
+                    {"asset_id": "A0002", "phrase": "品牌LOGO"},
+                ],
+            }
+        ]
+    }
+    selection_report = {
+        "flash_result": {
+            "phrase_candidates": {
+                "beat_001": {"餐饮美食": [], "品牌LOGO": ["A0002"]},
+            },
+            "phrase_candidate_modes": {
+                "beat_001": {"餐饮美食": "result_item", "品牌LOGO": "result_item"},
+            },
+        }
+    }
+
+    normalized = _normalize_empty_result_gallery_items(result, selection_report)
+
+    scene = normalized["scenes"][0]
+    assert scene["scene_kind"] == "result_detail"
+    assert scene["start_phrase"] == "品牌LOGO"
+    assert scene["asset_bindings"] == {"primary": "A0002"}
+    assert scene["gallery_items"] == []

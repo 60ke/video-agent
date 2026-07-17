@@ -178,3 +178,34 @@ def test_exact_phrase_candidates_are_repaired_from_catalog_evidence() -> None:
     expected = index.ref_for_asset(sculpture)
     assert repaired["phrase_candidates"]["beat_001"]["雕塑小品"] == [expected]
     assert expected in repaired["beat_candidates"]["beat_001"]
+
+
+def test_phrase_candidates_are_moved_to_the_verbatim_beat() -> None:
+    office = _asset("asset_result_office", "企业办公和真实场景融合")
+    index = AIAssetIndex.build([office])
+    result = {
+        "beat_candidates": {"beat_001": [], "beat_002": []},
+        "phrase_candidates": {
+            "beat_001": {},
+            "beat_002": {"企业办公和真实场景融合": []},
+        },
+        "phrase_candidate_modes": {
+            "beat_001": {},
+            "beat_002": {"企业办公和真实场景融合": "result_item"},
+        },
+    }
+    narration = Narration(
+        case_id="repair_beat",
+        beats=[
+            NarrationBeat(beat_id="beat_001", spoken_text="还是我们企业办公和真实场景融合。"),
+            NarrationBeat(beat_id="beat_002", spoken_text="都不在话下。"),
+        ],
+    )
+
+    repaired = _repair_exact_phrase_candidates(result, narration, index)
+
+    expected = index.ref_for_asset(office)
+    assert repaired["phrase_candidates"]["beat_002"] == {}
+    assert repaired["phrase_candidate_modes"]["beat_002"] == {}
+    assert repaired["phrase_candidates"]["beat_001"]["企业办公和真实场景融合"] == [expected]
+    assert repaired["phrase_candidate_modes"]["beat_001"]["企业办公和真实场景融合"] == "result_item"

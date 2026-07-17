@@ -469,6 +469,85 @@ def _validate_gallery_recall(result: dict[str, Any], selection_report: dict[str,
                 )
 
 
+def _normalize_empty_result_gallery_items(
+    result: dict[str, Any], selection_report: dict[str, Any]
+) -> dict[str, Any]:
+    """Remove result-gallery guesses for phrases with no exact candidates.
+
+    The model still decides derive versus light_sweep through
+    asset_gap_decisions. It may not bypass that decision by placing a nearby
+    or unrelated asset directly into the gallery.
+    """
+
+    flash_result = selection_report.get("flash_result")
+    phrase_candidates = flash_result.get("phrase_candidates", {}) if isinstance(flash_result, dict) else {}
+    phrase_modes = flash_result.get("phrase_candidate_modes", {}) if isinstance(flash_result, dict) else {}
+    empty_result_items = {
+        (str(beat_id), str(phrase))
+        for beat_id, phrase_map in phrase_candidates.items()
+        if isinstance(phrase_map, dict)
+        for phrase, candidates in phrase_map.items()
+        if isinstance(candidates, list)
+        and not candidates
+        and isinstance(phrase_modes.get(beat_id, {}), dict)
+        and phrase_modes[beat_id].get(phrase) == "result_item"
+    }
+    if not empty_result_items:
+        return result
+
+    normalized = json.loads(json.dumps(result, ensure_ascii=False))
+    scenes = normalized.get("scenes")
+    if not isinstance(scenes, list):
+        return normalized
+    retained_scenes: list[dict[str, Any]] = []
+    for scene in scenes:
+        if not isinstance(scene, dict) or scene.get("scene_kind") not in {
+            "result_gallery",
+            "result_gallery_summary",
+        }:
+            retained_scenes.append(scene)
+            continue
+        beat_ids = [str(value) for value in scene.get("beat_ids", [])]
+        items = [item for item in scene.get("gallery_items", []) if isinstance(item, dict)]
+        removed = [
+            item
+            for item in items
+            if any((beat_id, str(item.get("phrase", ""))) in empty_result_items for beat_id in beat_ids)
+        ]
+        if not removed:
+            retained_scenes.append(scene)
+            continue
+        remaining = [item for item in items if item not in removed]
+        logger.info(
+            "[场景编排] 移除空候选轮播项 scene=%s phrases=%s",
+            scene.get("scene_id"),
+            ",".join(str(item.get("phrase", "")) for item in removed),
+        )
+        if not remaining:
+            continue
+        remaining_asset_ids = {str(item.get("asset_id")) for item in remaining}
+        scene["asset_bindings"] = {
+            str(key): value
+            for key, value in scene.get("asset_bindings", {}).items()
+            if str(value) in remaining_asset_ids
+        }
+        if len(remaining) == 1:
+            item = remaining[0]
+            scene["scene_kind"] = "result_detail"
+            scene["visual_purpose"] = "single_result_evidence"
+            scene["semantic_phrase"] = str(item.get("phrase", ""))
+            scene["start_phrase"] = str(item.get("phrase", ""))
+            scene["asset_bindings"] = {"primary": item.get("asset_id")}
+            scene["gallery_items"] = []
+        else:
+            scene["gallery_items"] = remaining
+            if scene.get("start_phrase") in {item.get("phrase") for item in removed}:
+                scene["start_phrase"] = str(remaining[0].get("phrase", ""))
+        retained_scenes.append(scene)
+    normalized["scenes"] = retained_scenes
+    return normalized
+
+
 def _validate_asset_gap_decisions(result: dict[str, Any], selection_report: dict[str, Any]) -> None:
     flash_result = selection_report.get("flash_result")
     phrase_candidates = flash_result.get("phrase_candidates", {}) if isinstance(flash_result, dict) else {}
@@ -638,6 +717,7 @@ def plan_action_scenes(
     last_error: Exception | None = None
     for contract_attempt in range(3):
         try:
+            result = _normalize_empty_result_gallery_items(result, selection_report)
             result = _normalize_gallery_boundaries(result, narration)
             _validate_semantic_order(result, narration)
             _validate_gallery_recall(result, selection_report)
