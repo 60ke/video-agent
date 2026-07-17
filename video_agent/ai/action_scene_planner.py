@@ -497,6 +497,8 @@ def _validate_gallery_recall(result: dict[str, Any], selection_report: dict[str,
     for scene in result.get("scenes", []):
         if not isinstance(scene, dict):
             continue
+        if scene.get("scene_kind") == "result_gallery_summary":
+            continue
         beat_ids = scene.get("beat_ids", [])
         for item in scene.get("gallery_items", []):
             if not isinstance(item, dict):
@@ -560,10 +562,7 @@ def _normalize_empty_result_gallery_items(
     }
     retained_scenes: list[dict[str, Any]] = []
     for scene in scenes:
-        if not isinstance(scene, dict) or scene.get("scene_kind") not in {
-            "result_gallery",
-            "result_gallery_summary",
-        }:
+        if not isinstance(scene, dict) or scene.get("scene_kind") != "result_gallery":
             retained_scenes.append(scene)
             continue
         beat_ids = [str(value) for value in scene.get("beat_ids", [])]
@@ -683,6 +682,48 @@ def _normalize_invalid_asset_gap_decisions(
     decisions = [decision for decision in normalized.get("asset_gap_decisions", []) if isinstance(decision, dict)]
     beat_text = {beat.beat_id: beat.spoken_text for beat in narration.beats}
 
+    resolved_summary_keys = {
+        (str(beat_id), phrase)
+        for scene in scenes
+        if scene.get("scene_kind") == "result_gallery_summary"
+        and bool(scene.get("gallery_items") or scene.get("asset_bindings"))
+        for beat_id in scene.get("beat_ids", [])
+        for phrase in {
+            str(scene.get("start_phrase") or ""),
+            str(scene.get("semantic_phrase") or ""),
+            *{
+                str(item.get("phrase") or "")
+                for item in scene.get("gallery_items", [])
+                if isinstance(item, dict)
+            },
+        }
+        if phrase
+    }
+    removed_request_ids = {
+        str(request.get("request_id"))
+        for request in requests
+        if (str(request.get("beat_id", "")), str(request.get("semantic_phrase", "")))
+        in resolved_summary_keys
+    }
+    if removed_request_ids:
+        requests = [
+            request
+            for request in requests
+            if str(request.get("request_id")) not in removed_request_ids
+        ]
+        for scene in scenes:
+            scene["derivation_request_ids"] = [
+                request_id
+                for request_id in scene.get("derivation_request_ids", [])
+                if str(request_id) not in removed_request_ids
+            ]
+    decisions = [
+        decision
+        for decision in decisions
+        if (str(decision.get("beat_id", "")), str(decision.get("phrase", "")))
+        not in resolved_summary_keys
+    ]
+
     def matching_scene(beat_id: str, phrase: str) -> dict[str, Any] | None:
         for scene in scenes:
             if beat_id not in scene.get("beat_ids", []):
@@ -718,6 +759,7 @@ def _normalize_invalid_asset_gap_decisions(
             key = (str(beat_id), str(phrase))
             if (
                 key in decided_keys
+                or key in resolved_summary_keys
                 or mode_map.get(phrase) != "result_item"
                 or not isinstance(candidates, list)
                 or candidates
@@ -1037,12 +1079,30 @@ def _validate_asset_gap_decisions(result: dict[str, Any], selection_report: dict
         if isinstance(candidates, list)
         and not candidates
     }
+    resolved_summaries = {
+        (str(beat_id), phrase)
+        for scene in result.get("scenes", [])
+        if isinstance(scene, dict)
+        and scene.get("scene_kind") == "result_gallery_summary"
+        and bool(scene.get("gallery_items") or scene.get("asset_bindings"))
+        for beat_id in scene.get("beat_ids", [])
+        for phrase in {
+            str(scene.get("start_phrase") or ""),
+            str(scene.get("semantic_phrase") or ""),
+            *{
+                str(item.get("phrase") or "")
+                for item in scene.get("gallery_items", [])
+                if isinstance(item, dict)
+            },
+        }
+        if phrase
+    }
     required_missing = {
         (beat_id, phrase)
         for beat_id, phrase in all_empty
         if isinstance(phrase_modes.get(beat_id, {}), dict)
         and phrase_modes[beat_id].get(phrase) == "result_item"
-    }
+    } - resolved_summaries
     resolved_supporting = {
         (beat_id, phrase)
         for beat_id, phrase in all_empty

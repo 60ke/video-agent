@@ -119,6 +119,39 @@ def test_summary_gallery_uses_spoken_summary_instead_of_asset_labels() -> None:
     ]
 
 
+def test_summary_gallery_satisfies_empty_summary_without_derivation() -> None:
+    result = {
+        "scenes": [
+            {
+                "scene_id": "scene_summary",
+                "scene_kind": "result_gallery_summary",
+                "beat_ids": ["beat_001"],
+                "start_phrase": "常见主题都可生成",
+                "semantic_phrase": "常见主题都可生成",
+                "asset_bindings": {"item_001": "A0001", "item_002": "A0002"},
+                "gallery_items": [
+                    {"asset_id": "A0001", "phrase": "常见主题都可生成"},
+                    {"asset_id": "A0002", "phrase": "常见主题都可生成"},
+                ],
+            }
+        ],
+        "derivation_requests": [],
+        "asset_gap_decisions": [],
+    }
+    selection_report = {
+        "flash_result": {
+            "beat_candidates": {"beat_001": ["A0001", "A0002"]},
+            "phrase_candidates": {"beat_001": {"常见主题都可生成": []}},
+            "phrase_candidate_modes": {"beat_001": {"常见主题都可生成": "result_item"}},
+        }
+    }
+
+    normalized = _normalize_empty_result_gallery_items(result, selection_report)
+    _validate_asset_gap_decisions(normalized, selection_report)
+
+    assert normalized["scenes"][0]["gallery_items"] == result["scenes"][0]["gallery_items"]
+
+
 def test_direct_asset_cannot_resolve_an_empty_result_candidate() -> None:
     result = {
         "scenes": [
