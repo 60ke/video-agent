@@ -917,8 +917,8 @@ SceneSemanticPlan
 
 阶段 0 确认后，正式设计按以下顺序展开：
 
-1. VideoScope、SceneSemanticPlan、字段纠错 Contract；
-2. Scope 与 Scene Semantics Prompt 模板和请求导出规范；
+1. VideoScope、SceneSemanticPlan、字段纠错 Contract；已进入 `video_agent_v4_stage1_semantic_contract_and_ai_runtime_design_20260717.md`；
+2. Scope 与 Scene Semantics Prompt 模板和请求导出规范；已进入同一 Stage 1 正式设计；
 3. Capability Registry 与素材领域 Contract；
 4. Repository、SQLite、ObjectStore 和迁移命令；
 5. 素材选择、关系展开、GPT Image 派生和持久化；
