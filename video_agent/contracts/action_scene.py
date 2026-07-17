@@ -105,7 +105,11 @@ class ActionScene(Contract):
             raise ValueError("brand_closing must be a closing scene")
         if self.visual_purpose == "brand_close" and self.narrative_role != "closing":
             raise ValueError("brand_close visual purpose must be a closing scene")
-        if not self.asset_bindings and not self.derivation_request_ids:
+        if (
+            self.scene_kind != "light_sweep_fallback"
+            and not self.asset_bindings
+            and not self.derivation_request_ids
+        ):
             raise ValueError("action scene requires assets or a derivation request")
         return self
 

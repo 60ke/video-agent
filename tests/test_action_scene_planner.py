@@ -3,11 +3,21 @@ from __future__ import annotations
 from video_agent.ai.action_scene_planner import (
     _normalize_empty_result_gallery_items,
     _normalize_gallery_boundaries,
+    _normalize_invalid_asset_gap_decisions,
     _validate_asset_gap_decisions,
 )
 import pytest
 
-from video_agent.contracts import Narration, NarrationBeat
+from video_agent.ai.asset_index import AIAssetIndex
+from video_agent.contracts import (
+    ActionScene,
+    Asset,
+    EvidenceClass,
+    Narration,
+    NarrationBeat,
+    Provenance,
+    TimeRef,
+)
 
 
 def test_gallery_items_are_split_at_intervening_scene_boundaries() -> None:
@@ -192,3 +202,99 @@ def test_derived_empty_gallery_items_become_individual_scenes() -> None:
     assert normalized["scenes"][1]["derivation_request_ids"] == ["derive_spec"]
     assert normalized["derivation_requests"][0]["scene_id"] == normalized["scenes"][0]["scene_id"]
     assert normalized["derivation_requests"][1]["scene_id"] == normalized["scenes"][1]["scene_id"]
+
+
+def test_invalid_exact_gap_is_derived_from_same_beat_result() -> None:
+    source = Asset(
+        asset_id="asset_result",
+        path="assets/results/ecommerce.png",
+        filename="ecommerce.png",
+        sha256="a" * 64,
+        role="result_image",
+        semantic_path=["文生图", "电商"],
+        width=1600,
+        height=900,
+        evidence_class=EvidenceClass.SOURCE,
+        provenance=Provenance(origin="test"),
+    )
+    reference = Asset(
+        asset_id="asset_reference",
+        path="assets/references/spec.png",
+        filename="spec.png",
+        sha256="b" * 64,
+        role="reference_image",
+        semantic_path=["文生图", "电商"],
+        width=900,
+        height=1600,
+        evidence_class=EvidenceClass.SOURCE,
+        provenance=Provenance(origin="test"),
+    )
+    index = AIAssetIndex.build([source, reference])
+    source_ref = index.ref_for_asset(source)
+    reference_ref = index.ref_for_asset(reference)
+    result = {
+        "scenes": [
+            {
+                "scene_id": "scene_001",
+                "scene_kind": "result_detail",
+                "visual_purpose": "single_result_evidence",
+                "beat_ids": ["beat_001"],
+                "semantic_phrase": "规格信息",
+                "start_phrase": "规格信息",
+                "feature_path": ["文生图", "电商"],
+                "asset_bindings": {"primary": reference_ref},
+                "gallery_items": [],
+                "derivation_request_ids": [],
+            }
+        ],
+        "derivation_requests": [],
+        "asset_gap_decisions": [
+            {
+                "beat_id": "beat_001",
+                "phrase": "规格信息",
+                "decision": "exact",
+                "reason": "nearby reference",
+            }
+        ],
+    }
+    selection_report = {
+        "flash_result": {
+            "beat_candidates": {"beat_001": [source_ref, reference_ref]},
+            "phrase_candidates": {"beat_001": {"规格信息": []}},
+            "phrase_candidate_modes": {"beat_001": {"规格信息": "result_item"}},
+        }
+    }
+    narration = Narration(
+        case_id="gap_repair",
+        beats=[NarrationBeat(beat_id="beat_001", spoken_text="包含规格信息")],
+    )
+
+    normalized = _normalize_invalid_asset_gap_decisions(
+        result, selection_report, narration, index
+    )
+
+    decision = normalized["asset_gap_decisions"][0]
+    request = normalized["derivation_requests"][0]
+    scene = normalized["scenes"][0]
+    assert decision["decision"] == "derive"
+    assert request["source_asset_id"] == source_ref
+    assert request["semantic_phrase"] == "规格信息"
+    assert request["target_orientation"] == "landscape"
+    assert scene["asset_bindings"] == {}
+    assert scene["derivation_request_ids"] == [request["request_id"]]
+
+
+def test_light_sweep_scene_does_not_require_an_image_asset() -> None:
+    scene = ActionScene(
+        scene_id="scene_fallback",
+        scene_kind="light_sweep_fallback",
+        narrative_role="body",
+        visual_purpose="abstract_bridge",
+        beat_ids=["beat_001"],
+        semantic_phrase="无素材过渡",
+        start=TimeRef(anchor_id="timeline_start"),
+        end=TimeRef(anchor_id="timeline_end"),
+        fallback_policy="light_sweep",
+    )
+
+    assert scene.asset_bindings == {}

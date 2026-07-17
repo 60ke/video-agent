@@ -611,6 +611,146 @@ def _normalize_empty_result_gallery_items(
     return normalized
 
 
+def _normalize_invalid_asset_gap_decisions(
+    result: dict[str, Any],
+    selection_report: dict[str, Any],
+    narration: Narration,
+    asset_index: AIAssetIndex,
+) -> dict[str, Any]:
+    """Resolve invalid gap actions without another model correction round."""
+
+    flash_result = selection_report.get("flash_result")
+    if not isinstance(flash_result, dict):
+        return result
+    phrase_candidates = flash_result.get("phrase_candidates", {})
+    phrase_modes = flash_result.get("phrase_candidate_modes", {})
+    beat_candidates = flash_result.get("beat_candidates", {})
+    if not all(isinstance(value, dict) for value in (phrase_candidates, phrase_modes, beat_candidates)):
+        return result
+
+    normalized = json.loads(json.dumps(result, ensure_ascii=False))
+    scenes = [scene for scene in normalized.get("scenes", []) if isinstance(scene, dict)]
+    requests = [request for request in normalized.get("derivation_requests", []) if isinstance(request, dict)]
+    decisions = [decision for decision in normalized.get("asset_gap_decisions", []) if isinstance(decision, dict)]
+    beat_text = {beat.beat_id: beat.spoken_text for beat in narration.beats}
+
+    def matching_scene(beat_id: str, phrase: str) -> dict[str, Any] | None:
+        for scene in scenes:
+            if beat_id not in scene.get("beat_ids", []):
+                continue
+            if scene.get("start_phrase") == phrase or phrase in str(scene.get("semantic_phrase", "")):
+                return scene
+        return None
+
+    def best_result_source(beat_id: str, scene: dict[str, Any]) -> str | None:
+        feature_parts = {str(value) for value in scene.get("feature_path", []) if value}
+        ranked: list[tuple[int, int, str]] = []
+        for order, asset_ref in enumerate(beat_candidates.get(beat_id, [])):
+            if not isinstance(asset_ref, str) or asset_ref not in asset_index.refs:
+                continue
+            asset = asset_index.asset(asset_ref)
+            if asset.role != "result_image":
+                continue
+            overlap = len(feature_parts & {str(value) for value in asset.semantic_path})
+            ranked.append((-overlap, order, asset_ref))
+        return min(ranked)[2] if ranked else None
+
+    for decision in decisions:
+        beat_id = str(decision.get("beat_id", ""))
+        phrase = str(decision.get("phrase", ""))
+        candidates = phrase_candidates.get(beat_id, {}).get(phrase)
+        mode = phrase_modes.get(beat_id, {}).get(phrase)
+        if mode != "result_item" or not isinstance(candidates, list) or candidates:
+            continue
+        scene = matching_scene(beat_id, phrase)
+        if scene is None or decision.get("decision") == "derive":
+            continue
+        source_ref = None if decision.get("decision") == "light_sweep" else best_result_source(beat_id, scene)
+        if source_ref is None:
+            decision.update(
+                {
+                    "decision": "light_sweep",
+                    "reason": "程序修正：缺少精确结果图且没有可用结果母图。",
+                }
+            )
+            decision.pop("request_id", None)
+            scene.update(
+                {
+                    "scene_kind": "light_sweep_fallback",
+                    "visual_purpose": "abstract_bridge",
+                    "asset_bindings": {},
+                    "gallery_items": [],
+                    "derivation_request_ids": [],
+                    "fallback_policy": "light_sweep",
+                }
+            )
+            continue
+
+        source = asset_index.asset(source_ref)
+        request_id = f"gap_{sha256_json([beat_id, phrase, source_ref])[:12]}"
+        scene_id = str(scene.get("scene_id"))
+        target_orientation = (
+            "landscape"
+            if source.width and source.height and source.width / source.height >= 1.2
+            else "portrait"
+            if source.width and source.height and source.width / source.height <= 0.82
+            else "square"
+        )
+        request = {
+            "request_id": request_id,
+            "source_asset_id": source_ref,
+            "related_asset_ids": [],
+            "derive_kind": "contextual_result_fill",
+            "instruction": (
+                f"基于输入结果图的设计品质与视觉语言，生成可直接用于短视频展示的{phrase}结果图。"
+                f"口播上下文：{beat_text.get(beat_id, '')}。必须清晰体现{phrase}，保持同一功能与行业语境，"
+                "不要复制无关文字，不要添加视频字幕、边框或水印。"
+            ),
+            "output_role": "result_image",
+            "semantic_path": [*scene.get("feature_path", []), phrase],
+            "tags": ["contextual_result_fill", phrase],
+            "purpose": "missing_result_evidence",
+            "beat_id": beat_id,
+            "scene_id": scene_id,
+            "semantic_phrase": phrase,
+            "target_orientation": target_orientation,
+            "preserve": ["设计品质", "主体信息完整性"],
+        }
+        requests = [item for item in requests if item.get("request_id") != request_id]
+        requests.append(request)
+        decision.update(
+            {
+                "decision": "derive",
+                "request_id": request_id,
+                "reason": "程序修正：精确结果缺失，使用同 beat 的真实结果图作为派生母图。",
+            }
+        )
+        scene.update(
+            {
+                "scene_kind": "result_detail",
+                "visual_purpose": "single_result_evidence",
+                "semantic_phrase": phrase,
+                "start_phrase": phrase,
+                "asset_terms": [phrase],
+                "asset_bindings": {},
+                "gallery_items": [],
+                "derivation_request_ids": [request_id],
+                "fallback_policy": "derive_or_fallback",
+            }
+        )
+        logger.info(
+            "[场景编排] 程序修正缺口决策 beat=%s phrase=%s action=derive source=%s",
+            beat_id,
+            phrase,
+            source_ref,
+        )
+
+    normalized["scenes"] = scenes
+    normalized["derivation_requests"] = requests
+    normalized["asset_gap_decisions"] = decisions
+    return normalized
+
+
 def _validate_asset_gap_decisions(result: dict[str, Any], selection_report: dict[str, Any]) -> None:
     flash_result = selection_report.get("flash_result")
     phrase_candidates = flash_result.get("phrase_candidates", {}) if isinstance(flash_result, dict) else {}
@@ -781,6 +921,9 @@ def plan_action_scenes(
     last_error: Exception | None = None
     for contract_attempt in range(3):
         try:
+            result = _normalize_invalid_asset_gap_decisions(
+                result, selection_report, narration, asset_index
+            )
             result = _normalize_empty_result_gallery_items(result, selection_report)
             result = _normalize_gallery_boundaries(result, narration)
             _validate_semantic_order(result, narration)
