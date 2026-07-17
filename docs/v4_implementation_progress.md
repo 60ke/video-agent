@@ -15,7 +15,7 @@ When examples drift from the Stage 1 design, the Stage 1 strict Contract is auth
 | Stage | Status | Notes |
 |---|---|---|
 | Baseline audit | complete | Current executable pipeline is V3. Stage 1 had design documents only. |
-| Stage 1: semantic Contract and AI runtime | in progress | Strict V4 contracts, frozen registry snapshot, domain validation and Stage 0 golden fixtures are implemented. Prompt/runtime/traces/resume/orchestration remain. |
+| Stage 1: semantic Contract and AI runtime | in progress | Strict contracts, registry snapshot, validators, Stage 0 fixtures and structured dynamic prompts are implemented. Async runtime/traces/resume/orchestration remain. |
 | Stage 2: capability and asset domain | pending | Formal design document required before implementation. |
 | Stage 3: asset resolution and derivation | pending | Formal design document required before implementation. |
 | Stage 4: motion, SFX and voice assignment | pending | Formal design document required before implementation. |
@@ -33,5 +33,6 @@ When examples drift from the Stage 1 design, the Stage 1 strict Contract is auth
 ## Verification Ledger
 
 - `python -m pytest tests/test_v4_semantic_contracts.py -q`: PASS (7 tests).
+- `python -m pytest tests/test_v4_prompts.py tests/test_v4_semantic_contracts.py -q`: PASS (10 tests).
 - `python -m ruff check video_agent/contracts/v4 video_agent/registries video_agent/semantic tests/test_v4_semantic_contracts.py`: PASS.
 - Full legacy suite currently has three unrelated baseline failures in `tests/test_assets.py`; they assert removed review metadata and the deleted brand-IP directory scan. These are tracked for the Stage 2 cutover rather than weakening the new Contract.

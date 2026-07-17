@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "field_path", "invalid_value", "validation_code", "allowed_values", "local_context", "original_text"],
+  "properties": {
+    "contract": {"type": "string"},
+    "field_path": {"type": "string"},
+    "invalid_value": {},
+    "validation_code": {"type": "string"},
+    "allowed_values": {"type": "array"},
+    "local_context": {"type": "object"},
+    "original_text": {"type": "string"}
+  }
+}

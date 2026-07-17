@@ -1,0 +1,23 @@
+{
+  "positive": [
+    {
+      "rule": "枚举对象逐个建槽",
+      "scene": {
+        "scene_id": "s001",
+        "order": 1,
+        "text": "文化墙、门头招牌都能生成。",
+        "visual_structure": "gallery",
+        "slots": [
+          {"slot_id": "g1", "anchor_phrase": "文化墙", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "category/wall", "asset_role": "result_image", "source": {"kind": "asset_query"}, "subtitle_emphasis": "keyword"},
+          {"slot_id": "g2", "anchor_phrase": "门头招牌", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "category/sign", "asset_role": "result_image", "source": {"kind": "asset_query"}, "subtitle_emphasis": "keyword"}
+        ],
+        "events": [], "inputs": [], "outputs": [], "claims": [], "no_asset": false
+      }
+    }
+  ],
+  "negative": [
+    {"rule": "不得用一个槽覆盖多个逐字出现的 Gallery 对象。"},
+    {"rule": "编辑页不得随机 asset_query，必须引用上游结果并通过关系来源解析。"},
+    {"rule": "素材缺失属于下游 Resolver，不得提前改成 no_asset。"}
+  ]
+}
