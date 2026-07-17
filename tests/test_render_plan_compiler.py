@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from video_agent.compiler.render_plan import compile_render_plan
+from video_agent.compiler.render_plan import _beat_ids_for_range, compile_render_plan
 from video_agent.contracts import (
     Asset,
     AssetCatalog,
@@ -103,3 +103,42 @@ def test_timeline_start_is_a_valid_visual_enter_cue(tmp_path: Path) -> None:
 
     assert plan.shots[0].cues[0].anchor_id == "timeline_start"
     assert plan.shots[0].cues[0].hit_frame == 0
+
+
+def test_resolved_shot_beats_follow_the_actual_frame_range() -> None:
+    tokens = [
+        TokenTiming(
+            token_id="tok_0001",
+            text="一",
+            start_ms=0,
+            end_ms=400,
+            start_frame=0,
+            end_frame=12,
+            beat_id="beat_001",
+        ),
+        TokenTiming(
+            token_id="tok_0002",
+            text="二",
+            start_ms=500,
+            end_ms=900,
+            start_frame=15,
+            end_frame=27,
+            beat_id="beat_002",
+        ),
+    ]
+    timing = TimingLock(
+        case_id="beat_overlap",
+        audio_path="voice.mp3",
+        audio_sha256="c" * 64,
+        fps=30,
+        duration_ms=1000,
+        duration_frames=30,
+        tokens=tokens,
+        beat_spans=[
+            BeatSpan(beat_id="beat_001", token_ids=["tok_0001"], start_frame=0, end_frame=12),
+            BeatSpan(beat_id="beat_002", token_ids=["tok_0002"], start_frame=15, end_frame=27),
+        ],
+    )
+
+    assert _beat_ids_for_range(timing, 0, 18) == ["beat_001", "beat_002"]
+    assert _beat_ids_for_range(timing, 12, 15) == []

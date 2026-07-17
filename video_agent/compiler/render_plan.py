@@ -113,6 +113,14 @@ def _resolve_sfx_path(path: str, case_dir: Path, repo_root: Path) -> Path:
     return next((candidate.resolve() for candidate in candidates if candidate.is_file()), candidates[0].resolve())
 
 
+def _beat_ids_for_range(timing: TimingLock, start_frame: int, end_frame: int) -> list[str]:
+    return [
+        span.beat_id
+        for span in timing.beat_spans
+        if span.start_frame < end_frame and span.end_frame > start_frame
+    ]
+
+
 def _select_sfx_events(events: list[_SfxEvent], fps: int, audio: AudioConfig) -> list[_SfxEvent]:
     policy = audio.sfx_density
     ranked = sorted(events, key=lambda item: (item.hit_frame, -item.priority, item.semantic_id))
@@ -234,6 +242,7 @@ def compile_render_plan(
         end_frame = _resolve_time(anchor_frames, shot.end.anchor_id, shot.end.offset_frames, timing.duration_frames)
         if end_frame <= start_frame:
             raise ValueError(f"shot has non-positive resolved duration: {shot.shot_id}")
+        resolved_beat_ids = _beat_ids_for_range(timing, start_frame, end_frame) or shot.beat_ids
         cues: list[CompiledCue] = []
         for binding in shot.cue_bindings:
             anchor = anchor_by_id.get(binding.anchor_id)
@@ -247,9 +256,9 @@ def compile_render_plan(
             }
             if anchor is None and token is None and not is_beat_boundary and not is_timeline_boundary:
                 raise ValueError(f"shot references unknown phrase anchor: {binding.anchor_id}")
-            if anchor is not None and anchor.beat_id not in shot.beat_ids:
+            if anchor is not None and anchor.beat_id not in resolved_beat_ids:
                 raise ValueError(f"cue anchor belongs to a beat outside {shot.shot_id}: {binding.anchor_id}")
-            if token is not None and token.beat_id not in shot.beat_ids:
+            if token is not None and token.beat_id not in resolved_beat_ids:
                 raise ValueError(f"cue token belongs to a beat outside {shot.shot_id}: {binding.anchor_id}")
             hit_frame = max(0, min(timing.duration_frames, anchor_frames[binding.anchor_id] + binding.offset_frames))
             if hit_frame < start_frame or hit_frame > end_frame:
@@ -352,7 +361,7 @@ def compile_render_plan(
                 scene_id=shot.scene_id,
                 scene_kind=shot.scene_kind,
                 track=shot.track,
-                beat_ids=shot.beat_ids,
+                beat_ids=resolved_beat_ids,
                 template=shot.template,
                 asset_bindings=shot.asset_bindings,
                 claim_ids=shot.claim_ids,
