@@ -1,0 +1,8 @@
+{
+  "scope_mode": "multi_category",
+  "categories": [
+    {"category_id": "文生图/文化墙", "mention_phrases": ["文化墙"], "is_primary": true},
+    {"category_id": "文生图/门头招牌", "mention_phrases": ["门头招牌"], "is_primary": false},
+    {"category_id": "文生图/美陈", "mention_phrases": ["美陈"], "is_primary": false}
+  ]
+}
