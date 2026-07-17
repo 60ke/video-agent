@@ -835,6 +835,43 @@ def _normalize_multi_gap_derivation_scenes(
     return normalized
 
 
+def _normalize_scene_visual_purposes(result: dict[str, Any]) -> dict[str, Any]:
+    """Repair the purpose enum when scene_kind already determines it."""
+
+    normalized = json.loads(json.dumps(result, ensure_ascii=False))
+    fixed = {
+        "site_home": "product_overview",
+        "feature_entry": "feature_navigation",
+        "parameter_input": "parameter_operation",
+        "result_detail": "single_result_evidence",
+        "result_gallery": "multi_result_evidence",
+        "result_gallery_summary": "multi_result_evidence",
+        "reference_input": "causal_evidence",
+        "reference_to_result": "causal_evidence",
+        "result_to_flat_plan": "causal_evidence",
+        "editor_workspace": "editor_operation",
+        "editor_before_after": "editor_operation",
+        "brand_closing": "brand_close",
+    }
+    for scene in normalized.get("scenes", []):
+        if not isinstance(scene, dict):
+            continue
+        kind = scene.get("scene_kind")
+        expected = fixed.get(str(kind))
+        if kind == "light_sweep_fallback":
+            expected = "brand_close" if scene.get("narrative_role") == "closing" else "abstract_bridge"
+        if expected and scene.get("visual_purpose") != expected:
+            logger.info(
+                "[场景编排] 程序修正视觉目的 scene=%s kind=%s from=%s to=%s",
+                scene.get("scene_id"),
+                kind,
+                scene.get("visual_purpose"),
+                expected,
+            )
+            scene["visual_purpose"] = expected
+    return normalized
+
+
 def _validate_asset_gap_decisions(result: dict[str, Any], selection_report: dict[str, Any]) -> None:
     flash_result = selection_report.get("flash_result")
     phrase_candidates = flash_result.get("phrase_candidates", {}) if isinstance(flash_result, dict) else {}
@@ -1011,6 +1048,7 @@ def plan_action_scenes(
             result = _normalize_multi_gap_derivation_scenes(result, narration)
             result = _normalize_empty_result_gallery_items(result, selection_report)
             result = _normalize_gallery_boundaries(result, narration)
+            result = _normalize_scene_visual_purposes(result)
             _validate_semantic_order(result, narration)
             _validate_gallery_recall(result, selection_report)
             _validate_asset_gap_decisions(result, selection_report)

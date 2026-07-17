@@ -5,6 +5,7 @@ from video_agent.ai.action_scene_planner import (
     _normalize_gallery_boundaries,
     _normalize_invalid_asset_gap_decisions,
     _normalize_multi_gap_derivation_scenes,
+    _normalize_scene_visual_purposes,
     _validate_asset_gap_decisions,
 )
 import pytest
@@ -356,3 +357,27 @@ def test_shared_result_derivations_are_split_at_their_spoken_phrases() -> None:
     requests = {request["request_id"]: request for request in normalized["derivation_requests"]}
     assert requests["derive_spec"]["scene_id"] == "scene_001_derive_02"
     assert requests["derive_spec"]["semantic_path"][-1] == "规格信息"
+
+
+def test_scene_kind_repairs_deterministic_visual_purpose() -> None:
+    normalized = _normalize_scene_visual_purposes(
+        {
+            "scenes": [
+                {
+                    "scene_id": "scene_reference",
+                    "scene_kind": "reference_input",
+                    "narrative_role": "body",
+                    "visual_purpose": "parameter_operation",
+                },
+                {
+                    "scene_id": "scene_close",
+                    "scene_kind": "light_sweep_fallback",
+                    "narrative_role": "closing",
+                    "visual_purpose": "abstract_bridge",
+                },
+            ]
+        }
+    )
+
+    assert normalized["scenes"][0]["visual_purpose"] == "causal_evidence"
+    assert normalized["scenes"][1]["visual_purpose"] == "brand_close"
