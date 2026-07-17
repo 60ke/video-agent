@@ -16,7 +16,7 @@ When examples drift from the Stage 1 design, the Stage 1 strict Contract is auth
 |---|---|---|
 | Baseline audit | complete | Current executable pipeline is V3. Stage 1 had design documents only. |
 | Stage 1: semantic Contract and AI runtime | complete | Strict contracts, structured prompts, exact runtime schema injection, trace/replay, field repair, quality rebuild, routing and `V4Orchestrator` are implemented. Stage 0 real-provider execution produced validated Scope and Scene artifacts. |
-| Stage 2: capability and asset domain | pending | Formal design document required before implementation. |
+| Stage 2: capability and asset domain | in progress | Formal design completed in `video_agent_v4_stage2_capability_and_asset_contracts_20260717.md`; implementation is next. |
 | Stage 3: asset resolution and derivation | pending | Formal design document required before implementation. |
 | Stage 4: motion, SFX and voice assignment | pending | Formal design document required before implementation. |
 | Stage 5: semantic timing and compilation | pending | Formal design document required before implementation. |
@@ -31,6 +31,8 @@ When examples drift from the Stage 1 design, the Stage 1 strict Contract is auth
 4. Required root validation scripts (`test.txt` through `test4.txt`) remain local validation inputs and are not committed.
 5. Structured semantic models default to `thinking=false`: these nodes transform a frozen contract and must spend their token budget on the JSON object. Model settings remain overrideable in `config/ai_runtime.v4.json`.
 6. The Gateway appends the exact Pydantic-generated JSON Schema to every structured request. The effective prompt is fingerprinted and exported, so a stale shallow prompt cannot pass replay boundaries.
+7. Stage 2 treats `active` repository assets as externally approved and removes review/approval state from the V4 domain. Legacy review fields remain migration input only.
+8. Stage 2 keeps role/category IDs dynamic while preserving closed structural protocol values (`source_kind`, lifecycle, orientation and E0-E3 evidence IDs).
 
 ## Verification Ledger
 
