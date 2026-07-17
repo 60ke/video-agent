@@ -74,3 +74,16 @@ def load_scene_prompt(repo_root: Path, registry_payload: dict[str, Any]) -> Prom
             "registry": sha256_json(registry_payload),
         },
     )
+
+
+def load_field_repair_prompt(repo_root: Path) -> PromptBundle:
+    root = _prompt_root(repo_root, "field_repair")
+    system = load_prompt(root / "system.v1.md")
+    return PromptBundle(
+        capability="field_repair",
+        version="field_repair.v1",
+        system_prompt=system.text,
+        input_schema=load_json(root / "input.schema.json"),
+        output_schema=load_json(root / "output.schema.json"),
+        component_fingerprints={"system": system.sha256},
+    )

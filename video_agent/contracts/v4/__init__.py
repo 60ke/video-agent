@@ -15,6 +15,7 @@ from .scene import (
     SemanticScene,
     SlotSource,
 )
+from .repair import FieldRepairPatch
 from .scope import ScopeCategory, VideoScope
 
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     "AssetQuerySource",
     "ConfiguredAssetSource",
     "DomainValidationError",
+    "FieldRepairPatch",
     "GroupMemberSource",
     "MaterialSlot",
     "OperationEvent",
