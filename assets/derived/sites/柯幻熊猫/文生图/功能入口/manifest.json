@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-13T03:27:43.239740+00:00",
+  "generated_at": "2026-07-13T11:27:43.23974+08:00",
   "workflow": "site_feature_entry_gpt_image_batch",
   "annotation_style": "red_hand_drawn_double_stroke_circle_or_ellipse",
   "source_dir": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites",
@@ -27,18 +27,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_IP形象_功能入口无圈底图.png",
-      "callout_base_sha256": "54d3aacdc4ceab376f9a4096238a529f725f6d6aeaaecc10802fcddb0c713bc5",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_IP形象_功能入口圈选层.png",
-      "callout_layer_sha256": "18e9f5dc42510b3362bbf8b0c24ef66045f045797fb6eb56f296c995d72e9a97",
-      "callout_component_area": 5061,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_LOGO_功能入口截图.png",
@@ -61,18 +50,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_LOGO_功能入口无圈底图.png",
-      "callout_base_sha256": "74578f951b4e7b1430400f920d8821a23e71d7353370ca1b90a9bfcbbf1feaf9",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_LOGO_功能入口圈选层.png",
-      "callout_layer_sha256": "1302d39d6ca520da025d7e555941cf063e5f5c11dfbf8e88f8c654c82dbca541",
-      "callout_component_area": 11258,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_VI_功能入口截图.png",
@@ -95,18 +73,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_VI_功能入口无圈底图.png",
-      "callout_base_sha256": "a31b0f770121ce2941969775f46db2da6fc7612aef322883324fb9f18babdb0f",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_VI_功能入口圈选层.png",
-      "callout_layer_sha256": "6d4bf3bf410fbc9ecdf2c1d3f21527fe60012d4b661482aa35dd618839b235d2",
-      "callout_component_area": 8878,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_会议美陈_功能入口截图.png",
@@ -129,18 +96,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_会议美陈_功能入口无圈底图.png",
-      "callout_base_sha256": "66002da43cbb22b35e223de714cf785b78e3174ab7d7f114e66059604cf8835f",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_会议美陈_功能入口圈选层.png",
-      "callout_layer_sha256": "d1d8e5acd78443b022f20457571b88815851a5b0e17afcf4024ea725297ad839",
-      "callout_component_area": 10856,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_包装_功能入口截图.png",
@@ -163,18 +119,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "generated",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_包装_功能入口无圈底图.png",
-      "callout_base_sha256": "0036e664493641d6f10777de6be887ac5b86fce4d130108be6f95bbc65fe0d9b",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_包装_功能入口圈选层.png",
-      "callout_layer_sha256": "71af8d8173bcd4694a8b81958ff3f5eb639bc713d9821a5c29fe1b3039e630ed",
-      "callout_component_area": 7539,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "generated"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_banner_功能入口截图.png",
@@ -198,18 +143,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_banner_功能入口无圈底图.png",
-      "callout_base_sha256": "7374a545e305007f40f35660e8eb3ab10bbd42b3ccaf694a73e6fc1b95bdb05f",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_banner_功能入口圈选层.png",
-      "callout_layer_sha256": "4344c1ef1ad7f208802914b7cc8da34a24542f7158c731f6314f03472c39f10b",
-      "callout_component_area": 3344,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_功能入口截图.png",
@@ -232,18 +166,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_功能入口无圈底图.png",
-      "callout_base_sha256": "92c1bf84adefb92b5af5366a26149b9365e3d80ad495a3d18161510e6290383e",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_功能入口圈选层.png",
-      "callout_layer_sha256": "195e3889c9b005d5c96b00c4165f7a2b27c061b888cbc98aaa87cadac642a9d0",
-      "callout_component_area": 11017,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_单页_功能入口截图.png",
@@ -267,18 +190,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_单页_功能入口无圈底图.png",
-      "callout_base_sha256": "4f9d1ce2d9896d5ff06e1e5decd2d8eabadda64117c0b8165d6ce6722df7ef1a",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_单页_功能入口圈选层.png",
-      "callout_layer_sha256": "34f4e2c8e1dc6e5d628bb7662c503d2b2d98a54c54094c53f72b68f34eb15dd3",
-      "callout_component_area": 5840,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_台历_功能入口截图.png",
@@ -302,18 +214,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_台历_功能入口无圈底图.png",
-      "callout_base_sha256": "45011310cb27d90dfb618792780c87af43b58da8088191292e497cf60d1cca71",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_台历_功能入口圈选层.png",
-      "callout_layer_sha256": "284f319acf1ae48524b531b1e0918bec1fbc4e18243905b5a072b8003741ee10",
-      "callout_component_area": 3840,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_名片_功能入口截图.png",
@@ -337,18 +238,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_名片_功能入口无圈底图.png",
-      "callout_base_sha256": "9fa3d25ed0f6b7500ea42cf4ec5e704bb7d6c826b7b44e70a68568e1ab5911c4",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_名片_功能入口圈选层.png",
-      "callout_layer_sha256": "c8842ef598bc61c0bc85764d94484d2eb53f5d71cbe7af5f3bb7455a02ed4f29",
-      "callout_component_area": 4680,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_展板_功能入口截图.png",
@@ -372,18 +262,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "generated",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_展板_功能入口无圈底图.png",
-      "callout_base_sha256": "0c3bf168ad1eb25cc36c012a65a3eae9c51f66364e8f66fac640ef590aa16f63",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_展板_功能入口圈选层.png",
-      "callout_layer_sha256": "b1dc634920c74dc9633a3badd11c36c162bd766fcbeb66866b3394652cef4eac",
-      "callout_component_area": 3226,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "generated"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_易拉宝_展架_功能入口截图.png",
@@ -408,18 +287,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_易拉宝_展架_功能入口无圈底图.png",
-      "callout_base_sha256": "f558ab34651ffdf810f0630eed8d8ecb60ea59b8e60ef97a3efd70576feb1308",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_易拉宝_展架_功能入口圈选层.png",
-      "callout_layer_sha256": "4e779af6c33cdcc7e0b8742efde38a8d73560f20a9bc8876ca0b61201836e755",
-      "callout_component_area": 4518,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_朋友圈海报_功能入口截图.png",
@@ -443,18 +311,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "generated",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_朋友圈海报_功能入口无圈底图.png",
-      "callout_base_sha256": "33b285bb088b3796f9a98ceb5b75ebea3b197ef05367572406e189912ddeac99",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_朋友圈海报_功能入口圈选层.png",
-      "callout_layer_sha256": "fcbbb7826ba9d626584de740ca1fef0cb9476e1949eb257ceb82dfcceeef3479",
-      "callout_component_area": 3716,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "generated"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_灯箱_功能入口截图.png",
@@ -478,18 +335,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_灯箱_功能入口无圈底图.png",
-      "callout_base_sha256": "b722798d1fd365c4b6551949e7524e34de9832ccffb72bae73015f9bdd27aaa3",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_灯箱_功能入口圈选层.png",
-      "callout_layer_sha256": "0e9b4c5c3d07fc6f682e4678ceee810e158cdee152d60660266e89a495a5f159",
-      "callout_component_area": 4022,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_电梯广告_功能入口截图.png",
@@ -513,18 +359,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_电梯广告_功能入口无圈底图.png",
-      "callout_base_sha256": "db9c65733e77be9f0cc860f4d067d7996767d94d1ba1178b55e35463727d90a1",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_电梯广告_功能入口圈选层.png",
-      "callout_layer_sha256": "5a9e8d3e351df5dc7e50657043a8ac187eaf5698ad5407089c2758063310639f",
-      "callout_component_area": 1856,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_直播背景_功能入口截图.png",
@@ -548,18 +383,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_直播背景_功能入口无圈底图.png",
-      "callout_base_sha256": "fc6d90ef1ecaf9be80f84dedf8c9aba3f2f563adf4b69205a3e0e157e6cadff1",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_直播背景_功能入口圈选层.png",
-      "callout_layer_sha256": "6be9d01e1ee1f49ec7a568fd1672162435fced8785b4ebee30d1bd3606453a54",
-      "callout_component_area": 4208,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_胸卡&工牌_功能入口截图.png",
@@ -583,18 +407,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_胸卡&工牌_功能入口无圈底图.png",
-      "callout_base_sha256": "b386735abb4cd84fe186112435931f6dddbe936bf0b9fccff38848d42f834375",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_胸卡&工牌_功能入口圈选层.png",
-      "callout_layer_sha256": "4f608bd81ac8083a8975675d20c42e6fb3474805718564fff9d665e6da894523",
-      "callout_component_area": 2951,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_菜单_功能入口截图.png",
@@ -618,18 +431,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_菜单_功能入口无圈底图.png",
-      "callout_base_sha256": "5ddbafcb07ea0fd6fbc710099f13e328c90beb48d95442c13156e00499755675",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_菜单_功能入口圈选层.png",
-      "callout_layer_sha256": "9ad02c535645c83e406544a7dda845ac84a320e4d3da806d4d3469db6327915a",
-      "callout_component_area": 3615,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_贴纸_功能入口截图.png",
@@ -653,18 +455,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_贴纸_功能入口无圈底图.png",
-      "callout_base_sha256": "8f7eb820b668e15ac97e2a3d49ef3e7f2d03b0c7e167261106f8739d044a04be",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_贴纸_功能入口圈选层.png",
-      "callout_layer_sha256": "d3cfb26dfee5e08faa1d18e4b3183834bbd99915917674c6d0da70445c9ebba6",
-      "callout_component_area": 4015,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_车贴_功能入口截图.png",
@@ -688,18 +479,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_车贴_功能入口无圈底图.png",
-      "callout_base_sha256": "a220b7dec9955e3e996f55837264f5f719d303de9837e95454bae678763b4c88",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_车贴_功能入口圈选层.png",
-      "callout_layer_sha256": "46d5a8b868db909dbb8f18eb656c922183c1797ac304fe83c15998f02ed18557",
-      "callout_component_area": 3029,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_图文广告_高炮_功能入口截图.png",
@@ -723,18 +503,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_高炮_功能入口无圈底图.png",
-      "callout_base_sha256": "d28cfd60aa89c4c67ef58c539a30c05b0c70ab57405c3495946b46b2b8d445a7",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_图文广告_高炮_功能入口圈选层.png",
-      "callout_layer_sha256": "ae2e55a7bc1f64806c672c7871c52b68d4a10b103689d5d889e1caf3c459d0ce",
-      "callout_component_area": 3352,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_婚礼美陈_功能入口截图.png",
@@ -757,18 +526,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_婚礼美陈_功能入口无圈底图.png",
-      "callout_base_sha256": "2eeeeb17160253ffdb5821e497884daafc235131979070230dbf69ca1d073322",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_婚礼美陈_功能入口圈选层.png",
-      "callout_layer_sha256": "108cd2681c9bfd9778ecc9b7f0dd15bfb8cab652f55ec45a55302c99ddea60a0",
-      "callout_component_area": 7082,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_展台_功能入口截图.png",
@@ -791,18 +549,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_展台_功能入口无圈底图.png",
-      "callout_base_sha256": "26140dac4d262c99eef357d988f9703778acce22c7d6dfa8d704b7fbe74c7b58",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_展台_功能入口圈选层.png",
-      "callout_layer_sha256": "e805b73e7af4dc962e8654741d737ae13cfe2878b204a0b9493c5a70b1aa10bd",
-      "callout_component_area": 10012,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_文化墙_功能入口截图.png",
@@ -825,18 +572,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_文化墙_功能入口无圈底图.png",
-      "callout_base_sha256": "9ca1eaf5a68a4d3776f0686d959835652d3acf204c14bbcac0bfb8e1767b31b6",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_文化墙_功能入口圈选层.png",
-      "callout_layer_sha256": "e3979dbce9f3a7a091c44aaa23944f000287728da30763b8119c9b32114cff97",
-      "callout_component_area": 3183,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_旅游海报_功能入口截图.png",
@@ -859,18 +595,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_旅游海报_功能入口无圈底图.png",
-      "callout_base_sha256": "7b87c18a01d46d98cded783fa161f9f39b8424d432a41ff349681fb2f3c7c1a9",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_旅游海报_功能入口圈选层.png",
-      "callout_layer_sha256": "8e26a0a63521e68abbdaa10684d6025208fc49fd712d5e86361151af58dbd0d9",
-      "callout_component_area": 5200,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_景观小品_功能入口截图.png",
@@ -893,18 +618,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_景观小品_功能入口无圈底图.png",
-      "callout_base_sha256": "1a32d2ce389fea7d1960a4152fe72bf90cfcba4078b974a6122927b8a3740e68",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_景观小品_功能入口圈选层.png",
-      "callout_layer_sha256": "d02b9e24745014473884bd7fd897b77303f3c2295d390d5737cfbd02280f8bfa",
-      "callout_component_area": 3725,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_标识标牌_功能入口截图.png",
@@ -927,18 +641,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_标识标牌_功能入口无圈底图.png",
-      "callout_base_sha256": "49f06bb90453c6a349c9faaa58c1b399b13539e94dda9dcd3c91ae2051cf45d8",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_标识标牌_功能入口圈选层.png",
-      "callout_layer_sha256": "047dac51e62c26738421d6b88f5aa67e7ab0e6179afd70038a6eb92c998eec71",
-      "callout_component_area": 7096,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_活动物料_功能入口截图.png",
@@ -961,18 +664,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_活动物料_功能入口无圈底图.png",
-      "callout_base_sha256": "2d6f295fd517ceb5de8c393d7cd61cf61c6d42bb19896e5f1b8e70f762651a4e",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_活动物料_功能入口圈选层.png",
-      "callout_layer_sha256": "b36dfd6da653dfe271234ac0ca35e512b77bfb8636fd8b24ef256f5e42f5456f",
-      "callout_component_area": 8751,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_活动美陈_功能入口截图.png",
@@ -995,18 +687,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_活动美陈_功能入口无圈底图.png",
-      "callout_base_sha256": "e9c00c7420774d2bceca9c4bcd47eee97d615bd2dc2a4532d779e02e4640fc6a",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_活动美陈_功能入口圈选层.png",
-      "callout_layer_sha256": "9f6aeded17a98c04cdb863aff97285f2ff93512e8c986165176cba4b38e050c8",
-      "callout_component_area": 3590,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_海报_功能入口截图.png",
@@ -1029,18 +710,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_海报_功能入口无圈底图.png",
-      "callout_base_sha256": "dfff821ef496a0560f8682c4a721046c571d0df6ba557aa4613d54ad4ea10db6",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_海报_功能入口圈选层.png",
-      "callout_layer_sha256": "e631d21f322ef64c501ed082247732d9b07082d69dcc18c066e6c5ac4475f925",
-      "callout_component_area": 8704,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_电商_功能入口截图.png",
@@ -1063,18 +733,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_电商_功能入口无圈底图.png",
-      "callout_base_sha256": "c5a4681b3b23619ab6a5fd374df0429586a0ea4114af5c32e0c6a4b46b0e25f8",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_电商_功能入口圈选层.png",
-      "callout_layer_sha256": "afb5f404ea85a0d62c922c2c5b0b8167643cf62462c5116321163943cd90ca1f",
-      "callout_component_area": 6047,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_美陈_功能入口截图.png",
@@ -1097,18 +756,7 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_美陈_功能入口无圈底图.png",
-      "callout_base_sha256": "9ff23231eba2c04e0bfa2046113498cedc8849268e1a69b3e9797b3221028e69",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_美陈_功能入口圈选层.png",
-      "callout_layer_sha256": "381422f31cc89b4073cd83adc8eba1c64883328bb9824f1b316b6849b987bcf6",
-      "callout_component_area": 6108,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     },
     {
       "source_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/sites/柯幻熊猫_文生图_门头招牌_功能入口截图.png",
@@ -1131,21 +779,9 @@
       "provider": "apiyi",
       "model": "gpt-image-2",
       "response_id": null,
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "callout_layers_generated"
-      ],
-      "callout_base_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_门头招牌_功能入口无圈底图.png",
-      "callout_base_sha256": "9ab9edf12361ec195d1e52a5af996ed4866d24692b39867bb84c5449dcbccccc",
-      "callout_layer_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/功能入口/layers/柯幻熊猫_文生图_门头招牌_功能入口圈选层.png",
-      "callout_layer_sha256": "c9b4979edb0020e550f1f8bbacf98c98cfef83a60381bd4a7365d9fe62f4760c",
-      "callout_component_area": 6764,
-      "callout_layer_method": "red_stroke_components_below_brand_header_v2"
+      "status": "cached"
     }
   ],
   "errors": [],
-  "reviewed_at": "2026-07-13T04:18:34.096978+00:00",
   "review_status": "human_approved"
 }

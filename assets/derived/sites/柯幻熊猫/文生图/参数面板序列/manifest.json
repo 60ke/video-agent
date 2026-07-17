@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "workflow": "site_params_flower_text_frame_sequence",
-  "generated_at": "2026-07-14T04:01:20.536484+00:00",
+  "generated_at": "2026-07-14T12:01:20.536484+08:00",
   "sequences": [
     {
       "sequence_id": "params_IP形象",
@@ -31,11 +31,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_IP形象_参数面板花字阶段图.png",
@@ -43,11 +39,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_IP形象_参数面板花字完成图.png",
@@ -55,11 +47,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -80,13 +68,7 @@
         "changed_ratio": 0.21687451774691358,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_IP形象_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_LOGO",
@@ -118,11 +100,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_LOGO_参数面板花字阶段图.png",
@@ -130,11 +108,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_LOGO_参数面板花字完成图.png",
@@ -142,11 +116,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -167,13 +137,7 @@
         "changed_ratio": 0.22230372299382717,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_LOGO_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_VI",
@@ -203,11 +167,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_VI_参数面板花字阶段图.png",
@@ -215,11 +175,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_VI_参数面板花字完成图.png",
@@ -227,11 +183,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -243,7 +195,7 @@
             -5.381326675415039
           ],
           [
-            3.075780114158988e-05,
+            3.075780114158988E-05,
             1.0104418992996216,
             0.9694664478302002
           ]
@@ -252,13 +204,7 @@
         "changed_ratio": 0.21935378086419752,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_VI_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_会议美陈",
@@ -290,11 +236,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_会议美陈_参数面板花字阶段图.png",
@@ -302,11 +244,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_会议美陈_参数面板花字完成图.png",
@@ -314,11 +252,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -339,13 +273,7 @@
         "changed_ratio": 0.20865306712962964,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_会议美陈_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_包装",
@@ -377,11 +305,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_包装_参数面板花字阶段图.png",
@@ -389,11 +313,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_包装_参数面板花字完成图.png",
@@ -401,11 +321,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -426,13 +342,7 @@
         "changed_ratio": 0.3511492091049383,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_包装_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_图文广告_banner",
@@ -463,11 +373,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_banner_参数面板花字阶段图.png",
@@ -475,11 +381,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_banner_参数面板花字完成图.png",
@@ -487,11 +389,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -512,13 +410,7 @@
         "changed_ratio": 0.2034596836419753,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_图文广告_banner_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_图文广告_单页",
@@ -553,11 +445,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_单页_参数面板花字阶段图.png",
@@ -565,11 +453,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_单页_参数面板花字完成图.png",
@@ -577,11 +461,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -602,13 +482,7 @@
         "changed_ratio": 0.3188112461419753,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_图文广告_单页_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_图文广告_台历",
@@ -643,11 +517,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_台历_参数面板花字阶段图.png",
@@ -655,11 +525,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_台历_参数面板花字完成图.png",
@@ -667,11 +533,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -692,13 +554,7 @@
         "changed_ratio": 0.2620722415123457,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_图文广告_台历_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_图文广告_名片",
@@ -733,11 +589,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_名片_参数面板花字阶段图.png",
@@ -745,11 +597,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_名片_参数面板花字完成图.png",
@@ -757,11 +605,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -782,13 +626,7 @@
         "changed_ratio": 0.24634452160493828,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_图文广告_名片_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_图文广告_展板",
@@ -821,11 +659,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_展板_参数面板花字阶段图.png",
@@ -833,11 +667,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_展板_参数面板花字完成图.png",
@@ -845,11 +675,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -870,13 +696,7 @@
         "changed_ratio": 0.2527030285493827,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_图文广告_展板_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_图文广告_易拉宝_展架",
@@ -914,11 +734,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_易拉宝_展架_参数面板花字阶段图.png",
@@ -926,11 +742,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_易拉宝_展架_参数面板花字完成图.png",
@@ -938,11 +750,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -963,13 +771,7 @@
         "changed_ratio": 0.23030140817901235,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_图文广告_易拉宝_展架_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_图文广告_朋友圈海报",
@@ -1000,11 +802,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_朋友圈海报_参数面板花字阶段图.png",
@@ -1012,11 +810,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_朋友圈海报_参数面板花字完成图.png",
@@ -1024,11 +818,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -1036,7 +826,7 @@
         "matrix": [
           [
             1.009213924407959,
-            -4.9328769819112495e-05,
+            -4.9328769819112495E-05,
             -5.383017063140869
           ],
           [
@@ -1049,13 +839,7 @@
         "changed_ratio": 0.2075221836419753,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_图文广告_朋友圈海报_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_图文广告_灯箱",
@@ -1088,11 +872,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_灯箱_参数面板花字阶段图.png",
@@ -1100,11 +880,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_灯箱_参数面板花字完成图.png",
@@ -1112,11 +888,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -1137,13 +909,7 @@
         "changed_ratio": 0.2715813078703704,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_图文广告_灯箱_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_图文广告_电梯广告",
@@ -1174,11 +940,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_电梯广告_参数面板花字阶段图.png",
@@ -1186,11 +948,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_电梯广告_参数面板花字完成图.png",
@@ -1198,11 +956,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -1223,13 +977,7 @@
         "changed_ratio": 0.28009211033950615,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_图文广告_电梯广告_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     },
     {
       "sequence_id": "params_图文广告_直播背景",
@@ -1262,11 +1010,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         },
         "stage": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_直播背景_参数面板花字阶段图.png",
@@ -1274,11 +1018,7 @@
           "origin": "deterministic_frame_blend",
           "provider": "local",
           "model": "registered_difference_blend_v1",
-          "stage_strength": 0.55,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "stage_strength": 0.55
         },
         "final": {
           "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/frames/柯幻熊猫_文生图_图文广告_直播背景_参数面板花字完成图.png",
@@ -1286,11 +1026,7 @@
           "origin": "gpt_image_edit",
           "provider": "apiyi",
           "model": "gpt-image-2",
-          "response_id": null,
-          "quality_status": "human_approved",
-          "quality_checks": [
-            "human_reviewed"
-          ]
+          "response_id": null
         }
       },
       "registration": {
@@ -1311,15 +1047,8 @@
         "changed_ratio": 0.2355251736111111,
         "status": "passed"
       },
-      "review_preview_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/sites/柯幻熊猫/文生图/参数面板序列/review/柯幻熊猫_文生图_图文广告_直播背景_参数面板序列预览.png",
-      "quality_status": "human_approved",
-      "status": "cached",
-      "quality_checks": [
-        "human_reviewed",
-        "sequence_complete"
-      ]
+      "status": "cached"
     }
   ],
-  "errors": [],
-  "reviewed_at": "2026-07-14T06:58:57.820344+00:00"
+  "errors": []
 }
