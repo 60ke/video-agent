@@ -7,6 +7,7 @@ from typing import Any
 from PIL import Image, ImageDraw
 
 from video_agent.ai.gpt_image import edit_image
+from video_agent.assets.manifest_utils import without_legacy_review_fields
 from video_agent.io import load_json, sha256_file, utc_now, write_json_atomic
 
 
@@ -56,7 +57,7 @@ def _modal_prompt() -> str:
 
 
 def _upsert_manifest(manifest_path: Path, sequence_id: str, items: list[dict[str, Any]]) -> None:
-    previous = load_json(manifest_path) if manifest_path.is_file() else {}
+    previous = without_legacy_review_fields(load_json(manifest_path)) if manifest_path.is_file() else {}
     assets = [
         item
         for item in previous.get("assets", [])
@@ -134,7 +135,6 @@ def generate_editor_flow_assets(
         "focus_rect": rect,
         "claims": ["image_editing_available", "local_editing_available"],
         "tags": ["编辑页面", "局部编辑", "放大镜聚焦", semantic_path[-1]],
-        "quality_status": "machine_checked",
     }
     items = [
         {

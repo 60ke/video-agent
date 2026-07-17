@@ -281,7 +281,7 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                 claims=["real_website_screenshot", role],
                 tags=[semantic_path[-1]] if semantic_path else [],
                 visual_anchors=anchors,
-                quality=AssetQuality(status="machine_checked" if width and height else "rejected", readable=None, checks=checks),
+                quality=AssetQuality(readable=bool(width and height), checks=checks),
                 provenance=Provenance(origin="site_screenshot_library"),
                 metadata={"capture_type": path.stem.split("_")[-1], "mime_type": mimetypes.guess_type(path.name)[0]},
             )
@@ -317,7 +317,7 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                     evidence_class=EvidenceClass.SEMANTIC,
                     claims=[],
                     tags=[str(item.get("target") or semantic_path[-1]), "9:16", "功能入口", "红色手绘圈"],
-                    quality=AssetQuality(status="machine_checked", readable=True, checks=checks + list(item.get("quality_checks", []))),
+                    quality=AssetQuality(readable=True, checks=checks + list(item.get("quality_checks", []))),
                     provenance=Provenance(
                         origin="gpt_image_site_keyframe",
                         parent_asset_ids=[_asset_id("site", str(item.get("source_sha256") or ""))],
@@ -364,7 +364,7 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                         filename=path.name, width=width, height=height, semantic_path=semantic_path, role="feature_form_params",
                         production_eligible=True, evidence_class=EvidenceClass.SEMANTIC, claims=[],
                         tags=[str(item.get("feature") or semantic_path[-1]), "9:16", "参数面板", "花字序列", state],
-                        quality=AssetQuality(status="machine_checked", readable=True, checks=checks + list(frame.get("quality_checks", []))),
+                        quality=AssetQuality(readable=True, checks=checks + list(frame.get("quality_checks", []))),
                         provenance=Provenance(
                             origin="gpt_image_site_keyframe" if frame.get("origin") == "gpt_image_edit" else "deterministic_faithful_derivative",
                             parent_asset_ids=[_asset_id("site", str(item.get("source_sha256") or ""))], provider=frame.get("provider"),
@@ -419,7 +419,7 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                     role=role, production_eligible=True, evidence_class=EvidenceClass.SOURCE,
                     claims=[str(value) for value in item.get("claims", []) if str(value)],
                     tags=[str(value) for value in item.get("tags", []) if str(value)],
-                    quality=AssetQuality(status="machine_checked", readable=True, checks=checks),
+                    quality=AssetQuality(readable=True, checks=checks),
                     provenance=Provenance(
                         origin="gpt_image_editor_flow" if item.get("editor_flow_sequence_id") else "curated_workflow_scene",
                         provider=item.get("provider"), model=item.get("model"), prompt_sha256=item.get("prompt_sha256"),
@@ -456,7 +456,7 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                 claims=claims,
                 tags=tags,
                 identity_group=variant or None,
-                quality=AssetQuality(status="machine_checked" if width and height else "rejected", readable=True if width and height else False, checks=checks),
+                quality=AssetQuality(readable=bool(width and height), checks=checks),
                 provenance=Provenance(origin="curated_result_library"),
                 metadata={
                     "variant_label": variant,
@@ -488,7 +488,7 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                 evidence_class=EvidenceClass.SOURCE,
                 claims=["curated_reference_image", f"{' -> '.join(semantic_path)}参考素材"],
                 tags=[label, "参考图"],
-                quality=AssetQuality(status="machine_checked" if width and height else "rejected", readable=True if width and height else False, checks=checks),
+                quality=AssetQuality(readable=bool(width and height), checks=checks),
                 provenance=Provenance(origin="external_reference_library"),
                 metadata={
                     "reference_label": label,
@@ -520,7 +520,7 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                 evidence_class=EvidenceClass.DECORATIVE,
                 claims=[],
                 tags=["柯幻熊猫", "片尾"],
-                quality=AssetQuality(status="machine_checked", checks=checks),
+                quality=AssetQuality(checks=checks),
                 provenance=Provenance(origin="shared_outro_library"),
             )
         )
@@ -560,11 +560,7 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                 claims=["official_brand_identity"] if canonical else [],
                 tags=tags,
                 identity_group="柯幻熊猫",
-                quality=AssetQuality(
-                    status="machine_checked" if width and height else "rejected",
-                    readable=True if width and height else False,
-                    checks=checks,
-                ),
+                quality=AssetQuality(readable=bool(width and height), checks=checks),
                 provenance=Provenance(origin="brand_ip_library"),
                 metadata={
                     "fps": fps,

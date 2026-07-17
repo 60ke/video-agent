@@ -404,7 +404,6 @@ def materialize_assets(
                 tags=list(dict.fromkeys(parent.tags + request.tags + [request.derive_kind.value])),
                 identity_group=parent.identity_group,
                 quality=AssetQuality(
-                    status="machine_checked",
                     readable=None,
                     checks=["image_decode_ok"] + (["prompt_provenance_recorded"] if evidence == EvidenceClass.SEMANTIC else ["faithful_recipe_checked"]),
                 ),
