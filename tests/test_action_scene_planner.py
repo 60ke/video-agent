@@ -142,3 +142,50 @@ def test_empty_exact_candidates_are_removed_from_gallery() -> None:
     assert scene["start_phrase"] == "品牌LOGO"
     assert scene["asset_bindings"] == {"primary": "A0002"}
     assert scene["gallery_items"] == []
+
+
+def test_derived_empty_gallery_items_become_individual_scenes() -> None:
+    result = {
+        "scenes": [
+            {
+                "scene_id": "scene_001",
+                "scene_kind": "result_gallery",
+                "narrative_role": "body",
+                "visual_purpose": "multi_result_evidence",
+                "beat_ids": ["beat_001"],
+                "start_phrase": "产品主KV",
+                "semantic_phrase": "产品主KV、规格信息",
+                "asset_bindings": {},
+                "gallery_items": [
+                    {"asset_id": "placeholder_1", "phrase": "产品主KV"},
+                    {"asset_id": "placeholder_2", "phrase": "规格信息"},
+                ],
+                "derivation_request_ids": ["derive_kv", "derive_spec"],
+            }
+        ],
+        "derivation_requests": [
+            {"request_id": "derive_kv", "scene_id": "scene_001", "beat_id": "beat_001"},
+            {"request_id": "derive_spec", "scene_id": "scene_001", "beat_id": "beat_001"},
+        ],
+        "asset_gap_decisions": [
+            {"beat_id": "beat_001", "phrase": "产品主KV", "decision": "derive", "request_id": "derive_kv"},
+            {"beat_id": "beat_001", "phrase": "规格信息", "decision": "derive", "request_id": "derive_spec"},
+        ],
+    }
+    selection_report = {
+        "flash_result": {
+            "phrase_candidates": {"beat_001": {"产品主KV": [], "规格信息": []}},
+            "phrase_candidate_modes": {
+                "beat_001": {"产品主KV": "result_item", "规格信息": "result_item"}
+            },
+        }
+    }
+
+    normalized = _normalize_empty_result_gallery_items(result, selection_report)
+
+    assert [scene["start_phrase"] for scene in normalized["scenes"]] == ["产品主KV", "规格信息"]
+    assert all(scene["scene_kind"] == "result_detail" for scene in normalized["scenes"])
+    assert normalized["scenes"][0]["derivation_request_ids"] == ["derive_kv"]
+    assert normalized["scenes"][1]["derivation_request_ids"] == ["derive_spec"]
+    assert normalized["derivation_requests"][0]["scene_id"] == normalized["scenes"][0]["scene_id"]
+    assert normalized["derivation_requests"][1]["scene_id"] == normalized["scenes"][1]["scene_id"]

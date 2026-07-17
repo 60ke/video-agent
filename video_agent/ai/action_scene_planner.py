@@ -499,6 +499,16 @@ def _normalize_empty_result_gallery_items(
     scenes = normalized.get("scenes")
     if not isinstance(scenes, list):
         return normalized
+    decisions = {
+        (str(item.get("beat_id", "")), str(item.get("phrase", ""))): item
+        for item in normalized.get("asset_gap_decisions", [])
+        if isinstance(item, dict)
+    }
+    requests = {
+        str(item.get("request_id")): item
+        for item in normalized.get("derivation_requests", [])
+        if isinstance(item, dict) and item.get("request_id")
+    }
     retained_scenes: list[dict[str, Any]] = []
     for scene in scenes:
         if not isinstance(scene, dict) or scene.get("scene_kind") not in {
@@ -517,33 +527,86 @@ def _normalize_empty_result_gallery_items(
         if not removed:
             retained_scenes.append(scene)
             continue
-        remaining = [item for item in items if item not in removed]
         logger.info(
             "[场景编排] 移除空候选轮播项 scene=%s phrases=%s",
             scene.get("scene_id"),
             ",".join(str(item.get("phrase", "")) for item in removed),
         )
-        if not remaining:
-            continue
-        remaining_asset_ids = {str(item.get("asset_id")) for item in remaining}
-        scene["asset_bindings"] = {
-            str(key): value
-            for key, value in scene.get("asset_bindings", {}).items()
-            if str(value) in remaining_asset_ids
-        }
-        if len(remaining) == 1:
-            item = remaining[0]
-            scene["scene_kind"] = "result_detail"
-            scene["visual_purpose"] = "single_result_evidence"
-            scene["semantic_phrase"] = str(item.get("phrase", ""))
-            scene["start_phrase"] = str(item.get("phrase", ""))
-            scene["asset_bindings"] = {"primary": item.get("asset_id")}
-            scene["gallery_items"] = []
-        else:
-            scene["gallery_items"] = remaining
-            if scene.get("start_phrase") in {item.get("phrase") for item in removed}:
-                scene["start_phrase"] = str(remaining[0].get("phrase", ""))
-        retained_scenes.append(scene)
+        chunks: list[dict[str, Any]] = []
+        valid_run: list[dict[str, Any]] = []
+
+        def flush_valid_run() -> None:
+            if not valid_run:
+                return
+            chunk = json.loads(json.dumps(scene, ensure_ascii=False))
+            chunk["scene_id"] = f"{scene.get('scene_id')}_valid_{len(chunks) + 1:02d}"
+            chunk["semantic_phrase"] = "、".join(str(item.get("phrase", "")) for item in valid_run)
+            chunk["start_phrase"] = str(valid_run[0].get("phrase", ""))
+            chunk["derivation_request_ids"] = []
+            valid_asset_ids = {str(item.get("asset_id")) for item in valid_run}
+            if len(valid_run) == 1:
+                chunk["scene_kind"] = "result_detail"
+                chunk["visual_purpose"] = "single_result_evidence"
+                chunk["asset_bindings"] = {"primary": valid_run[0].get("asset_id")}
+                chunk["gallery_items"] = []
+            else:
+                chunk["scene_kind"] = "result_gallery"
+                chunk["visual_purpose"] = "multi_result_evidence"
+                chunk["asset_bindings"] = {
+                    str(key): value
+                    for key, value in scene.get("asset_bindings", {}).items()
+                    if str(value) in valid_asset_ids
+                }
+                chunk["gallery_items"] = list(valid_run)
+            chunks.append(chunk)
+            valid_run.clear()
+
+        for item in items:
+            phrase = str(item.get("phrase", ""))
+            gap_key = next(
+                ((beat_id, phrase) for beat_id in beat_ids if (beat_id, phrase) in empty_result_items),
+                None,
+            )
+            if gap_key is None:
+                valid_run.append(item)
+                continue
+            flush_valid_run()
+            decision = decisions.get(gap_key)
+            request_id = str(decision.get("request_id")) if isinstance(decision, dict) and decision.get("request_id") else ""
+            request = requests.get(request_id)
+            if not isinstance(decision, dict) or decision.get("decision") != "derive" or request is None:
+                continue
+            derived_scene = json.loads(json.dumps(scene, ensure_ascii=False))
+            derived_scene_id = f"{scene.get('scene_id')}_derive_{len(chunks) + 1:02d}"
+            derived_scene.update(
+                {
+                    "scene_id": derived_scene_id,
+                    "scene_kind": "result_detail",
+                    "visual_purpose": "single_result_evidence",
+                    "semantic_phrase": phrase,
+                    "start_phrase": phrase,
+                    "asset_terms": [phrase],
+                    "asset_bindings": {},
+                    "gallery_items": [],
+                    "derivation_request_ids": [request_id],
+                    "fallback_policy": "derive_or_fallback",
+                }
+            )
+            request["scene_id"] = derived_scene_id
+            request["beat_id"] = gap_key[0]
+            request["semantic_phrase"] = phrase
+            chunks.append(derived_scene)
+        flush_valid_run()
+
+        if chunks:
+            original_role = scene.get("narrative_role")
+            for chunk in chunks:
+                chunk["narrative_role"] = "body"
+            if original_role == "opening":
+                chunks[0]["narrative_role"] = "opening"
+            elif original_role == "closing":
+                chunks[-1]["narrative_role"] = "closing"
+            retained_scenes.extend(chunks)
     normalized["scenes"] = retained_scenes
     return normalized
 
