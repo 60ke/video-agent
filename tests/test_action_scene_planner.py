@@ -317,6 +317,68 @@ def test_invalid_exact_gap_is_derived_from_same_beat_result() -> None:
     assert scene["derivation_request_ids"] == [request["request_id"]]
 
 
+def test_missing_result_gap_decision_is_programmatically_derived() -> None:
+    source = Asset(
+        asset_id="asset_logo_result",
+        path="assets/results/logo.png",
+        filename="logo.png",
+        sha256="f" * 64,
+        role="result_image",
+        semantic_path=["文生图", "LOGO"],
+        width=1600,
+        height=900,
+        evidence_class=EvidenceClass.SOURCE,
+        provenance=Provenance(origin="test"),
+    )
+    index = AIAssetIndex.build([source])
+    source_ref = index.ref_for_asset(source)
+    result = {
+        "scenes": [
+            {
+                "scene_id": "scene_logo_gallery",
+                "scene_kind": "result_gallery",
+                "visual_purpose": "multi_result_evidence",
+                "beat_ids": ["beat_001"],
+                "semantic_phrase": "餐饮美食、交通出行",
+                "start_phrase": "餐饮美食",
+                "feature_path": ["文生图", "LOGO"],
+                "asset_bindings": {},
+                "gallery_items": [],
+                "derivation_request_ids": [],
+            }
+        ],
+        "derivation_requests": [],
+        "asset_gap_decisions": [],
+    }
+    selection_report = {
+        "flash_result": {
+            "beat_candidates": {"beat_001": [source_ref]},
+            "phrase_candidates": {"beat_001": {"餐饮美食": [], "交通出行": []}},
+            "phrase_candidate_modes": {
+                "beat_001": {"餐饮美食": "result_item", "交通出行": "result_item"}
+            },
+        }
+    }
+    narration = Narration(
+        case_id="missing_decisions",
+        beats=[NarrationBeat(beat_id="beat_001", spoken_text="餐饮美食、交通出行")],
+    )
+
+    normalized = _normalize_invalid_asset_gap_decisions(
+        result, selection_report, narration, index
+    )
+
+    assert [decision["decision"] for decision in normalized["asset_gap_decisions"]] == [
+        "derive",
+        "derive",
+    ]
+    assert {request["semantic_phrase"] for request in normalized["derivation_requests"]} == {
+        "餐饮美食",
+        "交通出行",
+    }
+    assert len(normalized["scenes"][0]["derivation_request_ids"]) == 2
+
+
 def test_missing_request_for_derive_decision_is_reconstructed() -> None:
     source = Asset(
         asset_id="asset_result",

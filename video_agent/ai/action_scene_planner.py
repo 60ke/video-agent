@@ -704,6 +704,40 @@ def _normalize_invalid_asset_gap_decisions(
             ranked.append((-overlap, order, asset_ref))
         return min(ranked)[2] if ranked else None
 
+    decided_keys = {
+        (str(decision.get("beat_id", "")), str(decision.get("phrase", "")))
+        for decision in decisions
+    }
+    for beat_id, phrase_map in phrase_candidates.items():
+        if not isinstance(phrase_map, dict):
+            continue
+        mode_map = phrase_modes.get(beat_id, {})
+        if not isinstance(mode_map, dict):
+            continue
+        for phrase, candidates in phrase_map.items():
+            key = (str(beat_id), str(phrase))
+            if (
+                key in decided_keys
+                or mode_map.get(phrase) != "result_item"
+                or not isinstance(candidates, list)
+                or candidates
+            ):
+                continue
+            decisions.append(
+                {
+                    "beat_id": key[0],
+                    "phrase": key[1],
+                    "decision": "derive",
+                    "reason": "程序补全：具体结果短语缺少精确素材，优先从同段真实结果图派生。",
+                }
+            )
+            decided_keys.add(key)
+            logger.info(
+                "[场景编排] 程序补全缺口决策 beat=%s phrase=%s",
+                key[0],
+                key[1],
+            )
+
     for decision in decisions:
         beat_id = str(decision.get("beat_id", ""))
         phrase = str(decision.get("phrase", ""))
