@@ -241,7 +241,11 @@ def compile_render_plan(
             is_beat_boundary = binding.anchor_id in anchor_frames and (
                 binding.anchor_id.startswith(BEAT_START_ANCHOR_PREFIX) or binding.anchor_id.startswith(BEAT_END_ANCHOR_PREFIX)
             )
-            if anchor is None and token is None and not is_beat_boundary:
+            is_timeline_boundary = binding.anchor_id in {
+                TIMELINE_START_ANCHOR,
+                TIMELINE_END_ANCHOR,
+            }
+            if anchor is None and token is None and not is_beat_boundary and not is_timeline_boundary:
                 raise ValueError(f"shot references unknown phrase anchor: {binding.anchor_id}")
             if anchor is not None and anchor.beat_id not in shot.beat_ids:
                 raise ValueError(f"cue anchor belongs to a beat outside {shot.shot_id}: {binding.anchor_id}")

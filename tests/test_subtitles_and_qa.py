@@ -150,6 +150,23 @@ def test_gallery_phrase_accepts_punctuation_attached_to_final_token() -> None:
     assert gallery_cues[0].end_frame == tokens[3].end_frame
 
 
+def test_gallery_summary_reuses_one_subtitle_for_same_phrase_anchor() -> None:
+    timing = _timing()
+    anchor_id = timing.tokens[2].token_id
+
+    cues = compile_subtitles(
+        timing,
+        gallery_items=[
+            GalleryItem(asset_id="result_1", phrase="LOGO", anchor_id=anchor_id),
+            GalleryItem(asset_id="result_2", phrase="LOGO", anchor_id=anchor_id),
+            GalleryItem(asset_id="result_3", phrase="LOGO", anchor_id=anchor_id),
+        ],
+    )
+
+    gallery_cues = [cue for cue in cues if cue.style == "gallery_yellow"]
+    assert [cue.text for cue in gallery_cues] == ["LOGO"]
+
+
 def test_qa_rejects_forbidden_motion_and_long_subtitle() -> None:
     plan = RenderPlan(
         case_id="demo",

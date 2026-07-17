@@ -57,6 +57,11 @@ def _gallery_starts(timing: TimingLock, gallery_items: list[GalleryItem]) -> dic
         else:
             raise ValueError(f"gallery item references unknown timing anchor: {item.anchor_id}")
         if start_token_id in starts:
+            existing = starts[start_token_id]
+            if _compact(existing.phrase).strip(GALLERY_BOUNDARY_PUNCTUATION) == _compact(
+                item.phrase
+            ).strip(GALLERY_BOUNDARY_PUNCTUATION):
+                continue
             raise ValueError(f"multiple gallery subtitles share one token anchor: {start_token_id}")
         starts[start_token_id] = item
     return starts
