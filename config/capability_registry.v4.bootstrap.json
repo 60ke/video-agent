@@ -1,0 +1,65 @@
+{
+  "categories": [
+    {"category_id": "网站/主页", "name": "网站主页", "aliases": ["首页"], "enabled": true, "scope_eligible": false},
+    {"category_id": "文生图/文化墙", "name": "文化墙", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/门头招牌", "name": "门头招牌", "aliases": ["门店招牌", "门头"], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/景观小品", "name": "景观小品", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/雕塑小品", "name": "雕塑小品", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/美陈", "name": "美陈", "aliases": ["商业美陈"], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/活动美陈", "name": "活动美陈", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/会议美陈", "name": "会议美陈", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/婚礼美陈", "name": "婚礼美陈", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/旅游海报", "name": "旅游海报", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/IP形象", "name": "IP形象", "aliases": ["IP设计"], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/LOGO", "name": "LOGO", "aliases": ["品牌LOGO", "品牌 logo", "logo"], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/电商", "name": "电商", "aliases": ["电商视觉"], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/展台", "name": "展台", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/包装", "name": "包装", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/标识标牌", "name": "标识标牌", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/VI", "name": "VI", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/海报", "name": "海报", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/活动物料", "name": "活动物料", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/图文广告", "name": "图文广告", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/主题公园", "name": "主题公园", "aliases": [], "enabled": true, "scope_eligible": true}
+  ],
+  "asset_roles": [
+    {"item_id": "site_home", "enabled": true, "requires_category": false},
+    {"item_id": "feature_entry", "enabled": true, "requires_category": true},
+    {"item_id": "feature_list", "enabled": true, "requires_category": false},
+    {"item_id": "parameter_panel", "enabled": true, "requires_category": true},
+    {"item_id": "result_image", "enabled": true, "requires_category": true},
+    {"item_id": "reference_image", "enabled": true, "requires_category": true},
+    {"item_id": "flat_plan", "enabled": true, "requires_category": true},
+    {"item_id": "editor_page", "enabled": true, "requires_category": true},
+    {"item_id": "editor_modal", "enabled": true, "requires_category": true},
+    {"item_id": "edited_result", "enabled": true, "requires_category": true},
+    {"item_id": "outro", "enabled": true, "requires_category": false}
+  ],
+  "visual_structures": [
+    {"item_id": "single", "enabled": true, "requires_category": false},
+    {"item_id": "gallery", "enabled": true, "requires_category": false},
+    {"item_id": "comparison", "enabled": true, "requires_category": false},
+    {"item_id": "sequence", "enabled": true, "requires_category": false},
+    {"item_id": "no_asset_transition", "enabled": true, "requires_category": false}
+  ],
+  "operation_intents": [
+    {"item_id": "select", "enabled": true, "requires_category": false},
+    {"item_id": "type", "enabled": true, "requires_category": false},
+    {"item_id": "click", "enabled": true, "requires_category": false},
+    {"item_id": "upload", "enabled": true, "requires_category": false},
+    {"item_id": "generate", "enabled": true, "requires_category": false},
+    {"item_id": "edit", "enabled": true, "requires_category": false},
+    {"item_id": "export", "enabled": true, "requires_category": false}
+  ],
+  "claims": [
+    {"item_id": "real_website_screenshot", "enabled": true, "requires_category": false},
+    {"item_id": "feature_can_generate_result", "enabled": true, "requires_category": false}
+  ],
+  "group_types": [
+    {"item_id": "process", "enabled": true, "requires_category": false},
+    {"item_id": "causal", "enabled": true, "requires_category": false}
+  ],
+  "configured_assets": [
+    {"item_id": "default_outro", "enabled": true, "requires_category": false}
+  ]
+}

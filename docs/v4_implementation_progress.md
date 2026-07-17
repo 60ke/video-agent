@@ -15,7 +15,7 @@ When examples drift from the Stage 1 design, the Stage 1 strict Contract is auth
 | Stage | Status | Notes |
 |---|---|---|
 | Baseline audit | complete | Current executable pipeline is V3. Stage 1 had design documents only. |
-| Stage 1: semantic Contract and AI runtime | in progress | Contracts, validators, prompts, async runtime, Scope and Scene stages, restricted field repair and quality-model rebuild are implemented. V4 orchestration and real Stage 0 execution remain. |
+| Stage 1: semantic Contract and AI runtime | in progress | Stage 1 implementation is wired through `V4Orchestrator`: fixed-voice TTS and Scope run concurrently, then validated Scene Semantics is persisted. Real Stage 0 provider execution remains. |
 | Stage 2: capability and asset domain | pending | Formal design document required before implementation. |
 | Stage 3: asset resolution and derivation | pending | Formal design document required before implementation. |
 | Stage 4: motion, SFX and voice assignment | pending | Formal design document required before implementation. |
@@ -36,5 +36,7 @@ When examples drift from the Stage 1 design, the Stage 1 strict Contract is auth
 - `python -m pytest tests/test_v4_prompts.py tests/test_v4_semantic_contracts.py -q`: PASS (10 tests).
 - `python -m pytest tests/test_v4_ai_runtime.py tests/test_v4_prompts.py tests/test_v4_semantic_contracts.py -q`: PASS (13 tests).
 - `python -m pytest tests/test_v4_semantic_stages.py tests/test_v4_semantic_contracts.py tests/test_v4_prompts.py tests/test_v4_ai_runtime.py -q`: PASS (17 tests).
+- `python -m pytest tests/test_v4_stage1_orchestrator.py tests/test_v4_semantic_stages.py tests/test_v4_semantic_contracts.py tests/test_v4_prompts.py tests/test_v4_ai_runtime.py -q`: PASS (19 tests).
+- `python main.py v4-stage1 --help`: PASS.
 - `python -m ruff check video_agent/contracts/v4 video_agent/registries video_agent/semantic tests/test_v4_semantic_contracts.py`: PASS.
 - Full legacy suite currently has three unrelated baseline failures in `tests/test_assets.py`; they assert removed review metadata and the deleted brand-IP directory scan. These are tracked for the Stage 2 cutover rather than weakening the new Contract.

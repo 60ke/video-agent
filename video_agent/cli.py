@@ -22,6 +22,7 @@ from video_agent.progress import configure_logging, get_logger
 from video_agent.runtime import RunContext, STAGES
 from video_agent.script_lock import locked_narration_from_text
 from video_agent.speech.minimax import local_minimax_voice_id
+from video_agent.v4 import V4Orchestrator
 
 
 logger = get_logger()
@@ -47,6 +48,19 @@ def command_run(args: argparse.Namespace) -> dict[str, Any]:
     context = RunContext.open(case_dir, args.resume) if args.resume else RunContext.create(case_dir)
     final_video = Orchestrator(context).run(from_stage=args.from_stage, until_stage=args.until_stage)
     return {"ok": True, "run_id": context.run_id, "run_dir": context.run_dir.as_posix(), "final_video": final_video.as_posix() if final_video else None}
+
+
+def command_v4_stage1(args: argparse.Namespace) -> dict[str, Any]:
+    case_dir = Path(args.case).resolve()
+    context = RunContext.open(case_dir, args.resume) if args.resume else RunContext.create(case_dir)
+    result = V4Orchestrator(context).run_stage1()
+    return {
+        "ok": True,
+        "run_id": context.run_id,
+        "run_dir": context.run_dir.as_posix(),
+        "video_scope": result.video_scope.as_posix(),
+        "scene_semantic_plan": result.scene_semantic_plan.as_posix(),
+    }
 
 
 def command_generate_video(args: argparse.Namespace) -> dict[str, Any]:
@@ -305,6 +319,12 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--from-stage", choices=STAGES)
     run.add_argument("--until-stage", choices=STAGES)
     run.set_defaults(handler=command_run)
+
+    v4_stage1 = sub.add_parser("v4-stage1", help="Run the V4 semantic frontend with parallel speech and scope")
+    v4_stage1.add_argument("--json", dest="sub_json", action="store_true")
+    v4_stage1.add_argument("--case", required=True)
+    v4_stage1.add_argument("--resume")
+    v4_stage1.set_defaults(handler=command_v4_stage1)
 
     inspect = sub.add_parser("inspect", help="Inspect a V3 run")
     inspect.add_argument("--json", dest="sub_json", action="store_true")

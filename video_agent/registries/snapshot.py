@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from pydantic import Field
 
 from video_agent.contracts.v4.common import V4Contract
+from video_agent.io import load_json
 
 
 class CategoryDefinition(V4Contract):
@@ -34,3 +37,10 @@ class CapabilityRegistrySnapshot(V4Contract):
     def item(self, registry_name: str, item_id: str) -> RegistryDefinition | None:
         items = getattr(self, registry_name)
         return next((item for item in items if item.item_id == item_id), None)
+
+
+def load_bootstrap_registry(repo_root: Path) -> CapabilityRegistrySnapshot:
+    path = repo_root / "config" / "capability_registry.v4.bootstrap.json"
+    if not path.is_file():
+        raise FileNotFoundError(f"V4 bootstrap registry not found: {path}")
+    return CapabilityRegistrySnapshot.model_validate(load_json(path))

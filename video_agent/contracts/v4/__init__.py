@@ -1,4 +1,4 @@
-from .common import ArtifactEnvelope, DomainValidationError, ValidationIssue, V4Contract
+from .common import ArtifactEnvelope, DomainValidationError, FrozenNarration, ValidationIssue, V4Contract
 from .scene import (
     AssetGroupQuerySource,
     AssetQuerySource,
@@ -25,6 +25,7 @@ __all__ = [
     "ConfiguredAssetSource",
     "DomainValidationError",
     "FieldRepairPatch",
+    "FrozenNarration",
     "GroupMemberSource",
     "MaterialSlot",
     "OperationEvent",

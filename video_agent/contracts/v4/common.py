@@ -20,6 +20,12 @@ class ArtifactEnvelope(V4Contract, Generic[T]):
     payload: T
 
 
+class FrozenNarration(V4Contract):
+    text: str = Field(min_length=1)
+    source: str = Field(min_length=1)
+    source_fingerprint: str = Field(min_length=1)
+
+
 class ValidationIssue(V4Contract):
     code: str
     path: str
