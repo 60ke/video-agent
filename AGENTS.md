@@ -12,11 +12,14 @@ the actual audio peak must agree within the configured tolerance.
 - Effects declare their own readable-settle and minimum-scene requirements.
   Do not introduce global scene-duration or image-count limits as a proxy for
   quality.
-- Only human-approved assets may enter a production visual plan. Machine
-  integrity checks verify files; they never approve visual quality.
+- Every file under `assets/` is already inside the project production boundary.
+  Runtime checks only verify technical integrity; there is no review-state gate
+  and no `human_approved`/`reviewed` asset workflow.
+- The official brand fallback is only `assets/brand/kehuanxiongmao/logo/柯幻熊猫_LOGO.png`.
+  Do not use a generic panda IP asset as a missing-scene fallback.
 - The Douyin canvas is 1080x1920 at 30 fps. Layout uses the platform safe-area
   profile instead of component-local pixel constants.
-- A screenshot's visual emphasis is supplied by an approved derived asset or
+- A screenshot's visual emphasis is supplied by a persisted derived asset or
   effect metadata. Do not recreate boxes or callouts from raw screenshot
   coordinates at render time.
 
