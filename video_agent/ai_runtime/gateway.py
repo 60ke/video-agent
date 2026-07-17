@@ -51,6 +51,7 @@ class AsyncModelGateway:
         domain_validator: DomainValidator[T] | None = None,
         route_kind: str = "primary",
     ) -> StructuredInvocation[T]:
+        effective_system_prompt = _append_exact_output_contract(system_prompt, output_type)
         route = self.configuration.routes[capability]
         profile_id = getattr(route, route_kind)
         if not profile_id:
@@ -59,7 +60,7 @@ class AsyncModelGateway:
         provider = self.providers[model_profile.provider_profile]
         fingerprint = _request_fingerprint(
             capability=capability,
-            system_prompt=system_prompt,
+            system_prompt=effective_system_prompt,
             input_payload=input_payload,
             output_type=output_type,
             model_profile=model_profile,
@@ -80,7 +81,7 @@ class AsyncModelGateway:
             )
 
         started = time.perf_counter()
-        trace.start(system_prompt=system_prompt, input_payload=input_payload)
+        trace.start(system_prompt=effective_system_prompt, input_payload=input_payload)
         base_manifest = {
             "capability": capability,
             "prompt_version": trace_context.prompt_version,
@@ -98,7 +99,7 @@ class AsyncModelGateway:
                 provider=provider,
                 request=ProviderRequest(
                     capability=capability,
-                    system_prompt=system_prompt,
+                    system_prompt=effective_system_prompt,
                     input_payload=input_payload,
                     model_profile=model_profile,
                 ),
@@ -200,4 +201,17 @@ def _request_fingerprint(
                 "thinking": model_profile.thinking,
             },
         }
+    )
+
+
+def _append_exact_output_contract(system_prompt: str, output_type: type[BaseModel]) -> str:
+    schema = json.dumps(output_type.model_json_schema(), ensure_ascii=False, indent=2)
+    return (
+        system_prompt.rstrip()
+        + "\n\n# Exact JSON Output Schema (Authoritative)\n"
+        + "Return exactly one JSON object that validates against the schema below. "
+        + "Do not add envelope fields, aliases, comments, Markdown fences, or properties "
+        + "that are not declared by this schema. Every required property must be present.\n\n"
+        + schema
+        + "\n"
     )

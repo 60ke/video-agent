@@ -15,7 +15,7 @@ When examples drift from the Stage 1 design, the Stage 1 strict Contract is auth
 | Stage | Status | Notes |
 |---|---|---|
 | Baseline audit | complete | Current executable pipeline is V3. Stage 1 had design documents only. |
-| Stage 1: semantic Contract and AI runtime | in progress | Stage 1 implementation is wired through `V4Orchestrator`: fixed-voice TTS and Scope run concurrently, then validated Scene Semantics is persisted. Real Stage 0 provider execution remains. |
+| Stage 1: semantic Contract and AI runtime | complete | Strict contracts, structured prompts, exact runtime schema injection, trace/replay, field repair, quality rebuild, routing and `V4Orchestrator` are implemented. Stage 0 real-provider execution produced validated Scope and Scene artifacts. |
 | Stage 2: capability and asset domain | pending | Formal design document required before implementation. |
 | Stage 3: asset resolution and derivation | pending | Formal design document required before implementation. |
 | Stage 4: motion, SFX and voice assignment | pending | Formal design document required before implementation. |
@@ -29,6 +29,8 @@ When examples drift from the Stage 1 design, the Stage 1 strict Contract is auth
 2. V4 AI nodes emit phrases copied from frozen narration. Python owns IDs outside each semantic object, registry validation, dependency validation and all timing.
 3. The Stage 0 legacy example fields (`scope`, `presentation_index`, `structure`) are migrated in fixtures to Stage 1 fields (`scope_mode`, `order`, `visual_structure`). Runtime compatibility aliases will not be added.
 4. Required root validation scripts (`test.txt` through `test4.txt`) remain local validation inputs and are not committed.
+5. Structured semantic models default to `thinking=false`: these nodes transform a frozen contract and must spend their token budget on the JSON object. Model settings remain overrideable in `config/ai_runtime.v4.json`.
+6. The Gateway appends the exact Pydantic-generated JSON Schema to every structured request. The effective prompt is fingerprinted and exported, so a stale shallow prompt cannot pass replay boundaries.
 
 ## Verification Ledger
 
@@ -37,6 +39,8 @@ When examples drift from the Stage 1 design, the Stage 1 strict Contract is auth
 - `python -m pytest tests/test_v4_ai_runtime.py tests/test_v4_prompts.py tests/test_v4_semantic_contracts.py -q`: PASS (13 tests).
 - `python -m pytest tests/test_v4_semantic_stages.py tests/test_v4_semantic_contracts.py tests/test_v4_prompts.py tests/test_v4_ai_runtime.py -q`: PASS (17 tests).
 - `python -m pytest tests/test_v4_stage1_orchestrator.py tests/test_v4_semantic_stages.py tests/test_v4_semantic_contracts.py tests/test_v4_prompts.py tests/test_v4_ai_runtime.py -q`: PASS (19 tests).
+- `python -m pytest tests/test_v4_runtime_routing.py tests/test_v4_ai_runtime.py tests/test_v4_prompts.py tests/test_v4_semantic_stages.py tests/test_v4_stage1_orchestrator.py tests/test_v4_semantic_contracts.py -q`: PASS (23 tests).
 - `python main.py v4-stage1 --help`: PASS.
+- `python main.py v4-stage1 --case cases/v4_stage0_golden_20260717 --resume 20260717_211546_a4ed36`: PASS. Validated artifacts: `video_scope.json`, `scene_semantic_plan.json`; run elapsed 13.40s after prompt/routing stabilization.
 - `python -m ruff check video_agent/contracts/v4 video_agent/registries video_agent/semantic tests/test_v4_semantic_contracts.py`: PASS.
 - Full legacy suite currently has three unrelated baseline failures in `tests/test_assets.py`; they assert removed review metadata and the deleted brand-IP directory scan. These are tracked for the Stage 2 cutover rather than weakening the new Contract.

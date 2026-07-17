@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 
 from video_agent.semantic.prompts import load_scene_prompt, load_scope_prompt
+from video_agent.semantic.registry_payload import scene_registry_payload
+from video_agent.registries import CapabilityRegistrySnapshot
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -40,9 +42,39 @@ def test_scene_prompt_injects_registry_and_decision_assets() -> None:
     assert "runtime_only_role" in prompt.system_prompt
     assert "{{" not in prompt.system_prompt
     assert json.dumps(registry, ensure_ascii=False, indent=2) in prompt.system_prompt
+    assert "`group_member` 不能作为" in prompt.system_prompt
+    assert "不确定时必须输出空数组" in prompt.system_prompt
+    assert "必须在关系边界拆成两个连续 scene" in prompt.system_prompt
+    assert "不得拿上游 `result_image` 充当 `feature_entry`" in prompt.system_prompt
 
 
 def test_prompt_fingerprint_changes_with_registry() -> None:
     first = load_scene_prompt(REPO_ROOT, {"asset_roles": [{"item_id": "a"}]})
     second = load_scene_prompt(REPO_ROOT, {"asset_roles": [{"item_id": "b"}]})
     assert first.fingerprint != second.fingerprint
+
+
+def test_scene_registry_payload_exposes_category_requirement() -> None:
+    registry = CapabilityRegistrySnapshot.model_validate(
+        {
+            "categories": [
+                {"category_id": "文生图/文化墙", "name": "文化墙"},
+            ],
+            "asset_roles": [
+                {"item_id": "result_image", "requires_category": True},
+                {"item_id": "site_home", "requires_category": False},
+            ],
+            "visual_structures": [],
+            "operation_intents": [],
+            "claims": [],
+            "group_types": [],
+            "configured_assets": [],
+        }
+    )
+
+    payload = scene_registry_payload(registry)
+
+    assert payload["asset_roles"] == [
+        {"item_id": "result_image", "requires_category": True},
+        {"item_id": "site_home", "requires_category": False},
+    ]

@@ -33,5 +33,12 @@ def scene_registry_payload(registry: CapabilityRegistrySnapshot) -> dict[str, An
     }
 
 
-def _items(items) -> list[dict[str, str]]:
-    return [{"item_id": item.item_id} for item in items if item.enabled]
+def _items(items) -> list[dict[str, str | bool]]:
+    return [
+        {
+            "item_id": item.item_id,
+            "requires_category": item.requires_category,
+        }
+        for item in items
+        if item.enabled
+    ]

@@ -39,18 +39,25 @@ def load_runtime_configuration(repo_root: Path) -> RuntimeConfiguration:
     max_tokens = int(local.get("max_tokens") or 8192)
     fast_model = str(local.get("coarse_model") or local.get("model") or "deepseek-chat")
     quality_model = str(local.get("model") or fast_model)
+    model_values = explicit.get("models", {})
+    fast_values = model_values.get("semantic_fast", {})
+    quality_values = model_values.get("semantic_quality", {})
     models = {
         "semantic_fast": ModelProfile(
             profile_id="semantic_fast",
             provider_profile=provider.profile_id,
-            model=fast_model,
-            max_tokens=max_tokens,
+            model=str(fast_values.get("model") or fast_model),
+            max_tokens=int(fast_values.get("max_tokens", max_tokens)),
+            temperature=fast_values.get("temperature"),
+            thinking=bool(fast_values.get("thinking", False)),
         ),
         "semantic_quality": ModelProfile(
             profile_id="semantic_quality",
             provider_profile=provider.profile_id,
-            model=quality_model,
-            max_tokens=max_tokens,
+            model=str(quality_values.get("model") or quality_model),
+            max_tokens=int(quality_values.get("max_tokens", max_tokens)),
+            temperature=quality_values.get("temperature"),
+            thinking=bool(quality_values.get("thinking", False)),
         ),
     }
     route_values = explicit.get("routes", {})
