@@ -10,6 +10,7 @@ from PIL import Image
 
 from video_agent.ai.gpt_image import edit_image
 from video_agent.assets.materializer import _prompt
+from video_agent.assets.manifest_utils import without_legacy_review_fields
 from video_agent.contracts import DeriveKind
 from video_agent.io import load_json, sha256_file, utc_now, write_json_atomic
 
@@ -77,7 +78,7 @@ def generate_site_entry_keyframes(
         raise FileNotFoundError(f"no feature-entry screenshots found in {source_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = output_dir / "manifest.json"
-    previous = load_json(manifest_path) if manifest_path.is_file() else {}
+    previous = without_legacy_review_fields(load_json(manifest_path)) if manifest_path.is_file() else {}
     previous_by_source = {
         item["source_path"]: item
         for item in previous.get("assets", [])

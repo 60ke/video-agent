@@ -10,6 +10,7 @@ import numpy as np
 from PIL import Image
 
 from video_agent.ai.gpt_image import edit_image
+from video_agent.assets.manifest_utils import without_legacy_review_fields
 from video_agent.assets.site_params_batch import (
     IMAGE_SUFFIXES,
     SUFFIX,
@@ -148,7 +149,7 @@ def generate_parameter_frame_sequences(
     frames_dir = output_dir / "frames"
     frames_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = output_dir / "manifest.json"
-    previous = load_json(manifest_path) if manifest_path.is_file() else {}
+    previous = without_legacy_review_fields(load_json(manifest_path)) if manifest_path.is_file() else {}
     prior_by_source = {str(item.get("source_path")): item for item in previous.get("sequences", []) if isinstance(item, dict)}
     callouts = load_json(source_dir / "_callouts.json")
 
