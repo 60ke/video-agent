@@ -286,6 +286,74 @@ def test_invalid_exact_gap_is_derived_from_same_beat_result() -> None:
     assert scene["derivation_request_ids"] == [request["request_id"]]
 
 
+def test_missing_request_for_derive_decision_is_reconstructed() -> None:
+    source = Asset(
+        asset_id="asset_result",
+        path="assets/results/logo.png",
+        filename="logo.png",
+        sha256="c" * 64,
+        role="result_image",
+        semantic_path=["文生图", "LOGO"],
+        width=1600,
+        height=900,
+        evidence_class=EvidenceClass.SOURCE,
+        provenance=Provenance(origin="test"),
+    )
+    index = AIAssetIndex.build([source])
+    source_ref = index.ref_for_asset(source)
+    result = {
+        "scenes": [
+            {
+                "scene_id": "scene_gallery",
+                "scene_kind": "result_gallery",
+                "visual_purpose": "multi_result_evidence",
+                "beat_ids": ["beat_001"],
+                "semantic_phrase": "餐饮美食、交通出行",
+                "start_phrase": "餐饮美食",
+                "feature_path": ["文生图", "LOGO"],
+                "asset_bindings": {"item": source_ref},
+                "gallery_items": [
+                    {"asset_id": source_ref, "phrase": "餐饮美食"},
+                    {"asset_id": source_ref, "phrase": "交通出行"},
+                ],
+                "derivation_request_ids": [],
+            }
+        ],
+        "derivation_requests": [],
+        "asset_gap_decisions": [
+            {
+                "beat_id": "beat_001",
+                "phrase": "交通出行",
+                "decision": "derive",
+                "request_id": "derive_traffic_result",
+                "reason": "missing request",
+            }
+        ],
+    }
+    selection_report = {
+        "flash_result": {
+            "beat_candidates": {"beat_001": [source_ref]},
+            "phrase_candidates": {"beat_001": {"交通出行": []}},
+            "phrase_candidate_modes": {"beat_001": {"交通出行": "result_item"}},
+        }
+    }
+    narration = Narration(
+        case_id="missing_request",
+        beats=[NarrationBeat(beat_id="beat_001", spoken_text="餐饮美食、交通出行")],
+    )
+
+    normalized = _normalize_invalid_asset_gap_decisions(
+        result, selection_report, narration, index
+    )
+
+    request = normalized["derivation_requests"][0]
+    scene = normalized["scenes"][0]
+    assert request["request_id"] == "derive_traffic_result"
+    assert request["source_asset_id"] == source_ref
+    assert scene["scene_kind"] == "result_gallery"
+    assert scene["derivation_request_ids"] == ["derive_traffic_result"]
+
+
 def test_light_sweep_scene_does_not_require_an_image_asset() -> None:
     scene = ActionScene(
         scene_id="scene_fallback",

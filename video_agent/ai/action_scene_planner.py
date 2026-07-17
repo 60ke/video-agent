@@ -663,9 +663,17 @@ def _normalize_invalid_asset_gap_decisions(
         if mode != "result_item" or not isinstance(candidates, list) or candidates:
             continue
         scene = matching_scene(beat_id, phrase)
-        if scene is None or decision.get("decision") == "derive":
+        if scene is None:
             continue
-        source_ref = None if decision.get("decision") == "light_sweep" else best_result_source(beat_id, scene)
+        action = decision.get("decision")
+        existing_request_id = str(decision.get("request_id") or "")
+        existing_request = next(
+            (item for item in requests if str(item.get("request_id")) == existing_request_id),
+            None,
+        )
+        if action == "derive" and isinstance(existing_request, dict):
+            continue
+        source_ref = None if action == "light_sweep" else best_result_source(beat_id, scene)
         if source_ref is None:
             decision.update(
                 {
@@ -687,7 +695,7 @@ def _normalize_invalid_asset_gap_decisions(
             continue
 
         source = asset_index.asset(source_ref)
-        request_id = f"gap_{sha256_json([beat_id, phrase, source_ref])[:12]}"
+        request_id = existing_request_id or f"gap_{sha256_json([beat_id, phrase, source_ref])[:12]}"
         scene_id = str(scene.get("scene_id"))
         target_orientation = (
             "landscape"
@@ -725,19 +733,24 @@ def _normalize_invalid_asset_gap_decisions(
                 "reason": "程序修正：精确结果缺失，使用同 beat 的真实结果图作为派生母图。",
             }
         )
-        scene.update(
-            {
-                "scene_kind": "result_detail",
-                "visual_purpose": "single_result_evidence",
-                "semantic_phrase": phrase,
-                "start_phrase": phrase,
-                "asset_terms": [phrase],
-                "asset_bindings": {},
-                "gallery_items": [],
-                "derivation_request_ids": [request_id],
-                "fallback_policy": "derive_or_fallback",
-            }
-        )
+        if scene.get("scene_kind") not in {"result_gallery", "result_gallery_summary"}:
+            scene.update(
+                {
+                    "scene_kind": "result_detail",
+                    "visual_purpose": "single_result_evidence",
+                    "semantic_phrase": phrase,
+                    "start_phrase": phrase,
+                    "asset_terms": [phrase],
+                    "asset_bindings": {},
+                    "gallery_items": [],
+                    "derivation_request_ids": [request_id],
+                    "fallback_policy": "derive_or_fallback",
+                }
+            )
+        else:
+            scene["derivation_request_ids"] = list(
+                dict.fromkeys([*scene.get("derivation_request_ids", []), request_id])
+            )
         logger.info(
             "[场景编排] 程序修正缺口决策 beat=%s phrase=%s action=derive source=%s",
             beat_id,
