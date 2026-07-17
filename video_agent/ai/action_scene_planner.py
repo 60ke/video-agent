@@ -751,6 +751,90 @@ def _normalize_invalid_asset_gap_decisions(
     return normalized
 
 
+def _normalize_multi_gap_derivation_scenes(
+    result: dict[str, Any], narration: Narration
+) -> dict[str, Any]:
+    """Split one AI scene carrying several word-anchored result derivations."""
+
+    normalized = json.loads(json.dumps(result, ensure_ascii=False))
+    scenes = normalized.get("scenes")
+    requests = normalized.get("derivation_requests")
+    if not isinstance(scenes, list) or not isinstance(requests, list):
+        return normalized
+    requests_by_id = {
+        str(request.get("request_id")): request
+        for request in requests
+        if isinstance(request, dict) and request.get("request_id")
+    }
+    expanded: list[dict[str, Any]] = []
+    for scene in scenes:
+        if not isinstance(scene, dict):
+            continue
+        request_ids = [
+            str(value)
+            for value in scene.get("derivation_request_ids", [])
+            if str(value) in requests_by_id
+            and requests_by_id[str(value)].get("derive_kind") == "contextual_result_fill"
+            and requests_by_id[str(value)].get("semantic_phrase")
+        ]
+        for request_id in request_ids:
+            request = requests_by_id[request_id]
+            phrase = str(request["semantic_phrase"])
+            semantic_path = request.get("semantic_path")
+            if not isinstance(semantic_path, list):
+                semantic_path = []
+            if not any(phrase in str(part) or str(part) in phrase for part in semantic_path):
+                request["semantic_path"] = [*semantic_path, phrase]
+        if len(request_ids) <= 1:
+            expanded.append(scene)
+            continue
+        beat_ids = [str(value) for value in scene.get("beat_ids", [])]
+        request_ids.sort(
+            key=lambda request_id: _semantic_phrase_position(
+                narration,
+                beat_ids,
+                str(requests_by_id[request_id]["semantic_phrase"]),
+            )
+        )
+        chunks: list[dict[str, Any]] = []
+        for index, request_id in enumerate(request_ids, start=1):
+            request = requests_by_id[request_id]
+            phrase = str(request["semantic_phrase"])
+            chunk = json.loads(json.dumps(scene, ensure_ascii=False))
+            chunk_id = f"{scene.get('scene_id')}_derive_{index:02d}"
+            chunk.update(
+                {
+                    "scene_id": chunk_id,
+                    "scene_kind": "result_detail",
+                    "narrative_role": "body",
+                    "visual_purpose": "single_result_evidence",
+                    "semantic_phrase": phrase,
+                    "start_phrase": phrase,
+                    "asset_terms": [phrase],
+                    "asset_bindings": {},
+                    "gallery_items": [],
+                    "derivation_request_ids": [request_id],
+                    "fallback_policy": "derive_or_fallback",
+                }
+            )
+            request["scene_id"] = chunk_id
+            chunks.append(chunk)
+        original_role = scene.get("narrative_role")
+        if original_role == "opening":
+            chunks[0]["narrative_role"] = "opening"
+        elif original_role == "closing":
+            chunks[-1]["narrative_role"] = "closing"
+        expanded.extend(chunks)
+        logger.info(
+            "[场景编排] 拆分多派生场景 scene=%s count=%d",
+            scene.get("scene_id"),
+            len(chunks),
+        )
+    normalized["scenes"] = expanded
+    normalized["derivation_requests"] = list(requests_by_id.values())
+    return normalized
+
+
 def _validate_asset_gap_decisions(result: dict[str, Any], selection_report: dict[str, Any]) -> None:
     flash_result = selection_report.get("flash_result")
     phrase_candidates = flash_result.get("phrase_candidates", {}) if isinstance(flash_result, dict) else {}
@@ -924,6 +1008,7 @@ def plan_action_scenes(
             result = _normalize_invalid_asset_gap_decisions(
                 result, selection_report, narration, asset_index
             )
+            result = _normalize_multi_gap_derivation_scenes(result, narration)
             result = _normalize_empty_result_gallery_items(result, selection_report)
             result = _normalize_gallery_boundaries(result, narration)
             _validate_semantic_order(result, narration)

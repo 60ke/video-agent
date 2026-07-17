@@ -4,6 +4,7 @@ from video_agent.ai.action_scene_planner import (
     _normalize_empty_result_gallery_items,
     _normalize_gallery_boundaries,
     _normalize_invalid_asset_gap_decisions,
+    _normalize_multi_gap_derivation_scenes,
     _validate_asset_gap_decisions,
 )
 import pytest
@@ -298,3 +299,60 @@ def test_light_sweep_scene_does_not_require_an_image_asset() -> None:
     )
 
     assert scene.asset_bindings == {}
+
+
+def test_shared_result_derivations_are_split_at_their_spoken_phrases() -> None:
+    narration = Narration(
+        case_id="split_derivations",
+        beats=[NarrationBeat(beat_id="beat_001", spoken_text="包含产品主KV、规格信息和应用场景")],
+    )
+    result = {
+        "scenes": [
+            {
+                "scene_id": "scene_001",
+                "scene_kind": "result_gallery",
+                "narrative_role": "closing",
+                "visual_purpose": "multi_result_evidence",
+                "beat_ids": ["beat_001"],
+                "semantic_phrase": "产品主KV、规格信息和应用场景",
+                "start_phrase": "产品主KV",
+                "feature_path": ["文生图", "电商"],
+                "asset_bindings": {},
+                "gallery_items": [],
+                "derivation_request_ids": ["derive_kv", "derive_spec", "derive_scene"],
+            }
+        ],
+        "derivation_requests": [
+            {
+                "request_id": "derive_scene",
+                "derive_kind": "contextual_result_fill",
+                "semantic_phrase": "应用场景",
+                "semantic_path": ["文生图", "电商"],
+            },
+            {
+                "request_id": "derive_kv",
+                "derive_kind": "contextual_result_fill",
+                "semantic_phrase": "产品主KV",
+                "semantic_path": ["文生图", "电商"],
+            },
+            {
+                "request_id": "derive_spec",
+                "derive_kind": "contextual_result_fill",
+                "semantic_phrase": "规格信息",
+                "semantic_path": ["文生图", "电商"],
+            },
+        ],
+    }
+
+    normalized = _normalize_multi_gap_derivation_scenes(result, narration)
+
+    assert [scene["start_phrase"] for scene in normalized["scenes"]] == [
+        "产品主KV",
+        "规格信息",
+        "应用场景",
+    ]
+    assert normalized["scenes"][-1]["narrative_role"] == "closing"
+    assert all(scene["scene_kind"] == "result_detail" for scene in normalized["scenes"])
+    requests = {request["request_id"]: request for request in normalized["derivation_requests"]}
+    assert requests["derive_spec"]["scene_id"] == "scene_001_derive_02"
+    assert requests["derive_spec"]["semantic_path"][-1] == "规格信息"
