@@ -7,7 +7,7 @@ from typing import Any, Collection
 
 import cv2
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 
 from video_agent.ai.gpt_image import edit_image
 from video_agent.assets.site_params_batch import (
@@ -123,25 +123,6 @@ def _frame_path(frames_dir: Path, source: SiteParamsSource, state: str) -> Path:
     return frames_dir / f"{stem}_{names[state]}.png"
 
 
-def _preview_path(review_dir: Path, source: SiteParamsSource) -> Path:
-    return review_dir / f"{source.path.stem[: -len(SUFFIX)]}_参数面板序列预览.png"
-
-
-def _preview(paths: dict[str, Path], output: Path) -> None:
-    images = [Image.open(paths[state]).convert("RGB") for state in ("base", "stage", "final")]
-    try:
-        thumb_w, thumb_h = 270, 480
-        preview = Image.new("RGB", (thumb_w * 3, thumb_h + 44), (12, 16, 22))
-        draw = ImageDraw.Draw(preview)
-        for index, (label, image) in enumerate(zip(("BASE", "STAGE", "FINAL"), images, strict=True)):
-            preview.paste(image.resize((thumb_w, thumb_h), Image.Resampling.LANCZOS), (index * thumb_w, 44))
-            draw.text((index * thumb_w + 12, 12), label, fill=(238, 244, 255))
-        preview.save(output, format="PNG")
-    finally:
-        for image in images:
-            image.close()
-
-
 def _sequence_id(source: SiteParamsSource) -> str:
     return "params_" + "_".join(source.feature_path)
 
@@ -165,9 +146,7 @@ def generate_parameter_frame_sequences(
     if not sources:
         raise FileNotFoundError("no parameter-panel screenshots match the requested selection")
     frames_dir = output_dir / "frames"
-    review_dir = output_dir / "review"
     frames_dir.mkdir(parents=True, exist_ok=True)
-    review_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = output_dir / "manifest.json"
     previous = load_json(manifest_path) if manifest_path.is_file() else {}
     prior_by_source = {str(item.get("source_path")): item for item in previous.get("sequences", []) if isinstance(item, dict)}
@@ -199,23 +178,21 @@ def generate_parameter_frame_sequences(
         final.save(paths["final"], format="PNG")
         stage = _stage_frame(base, final, mask)
         stage.save(paths["stage"], format="PNG")
-        preview_path = _preview_path(review_dir, source)
-        _preview(paths, preview_path)
         frames = {
             "base": {
                 "path": paths["base"].resolve().as_posix(), "sha256": sha256_file(paths["base"]),
                 "origin": "gpt_image_edit", "provider": base_edit.provider, "model": base_edit.model,
-                "response_id": base_edit.response_id, "quality_status": "unreviewed",
+                "response_id": base_edit.response_id,
             },
             "stage": {
                 "path": paths["stage"].resolve().as_posix(), "sha256": sha256_file(paths["stage"]),
                 "origin": "deterministic_frame_blend", "provider": "local", "model": "registered_difference_blend_v1",
-                "stage_strength": 0.55, "quality_status": "unreviewed",
+                "stage_strength": 0.55,
             },
             "final": {
                 "path": paths["final"].resolve().as_posix(), "sha256": sha256_file(paths["final"]),
                 "origin": "gpt_image_edit", "provider": final_edit.provider, "model": final_edit.model,
-                "response_id": final_edit.response_id, "quality_status": "unreviewed",
+                "response_id": final_edit.response_id,
             },
         }
         return {
@@ -226,7 +203,7 @@ def generate_parameter_frame_sequences(
             "frontend_source_path": annotation.frontend_source_path, "frontend_source_sha256": annotation.frontend_source_sha256,
             "cdp_required_field_labels": list(annotation.cdp_labels), "cdp_unmatched_field_labels": list(annotation.cdp_unmatched_labels),
             "prompt_sha256": prompt_sha256, "frames": frames, "registration": registration,
-            "review_preview_path": preview_path.resolve().as_posix(), "quality_status": "unreviewed", "status": "generated",
+            "status": "generated",
         }
 
     selected_source_paths = {source.path.resolve().as_posix() for source in sources}

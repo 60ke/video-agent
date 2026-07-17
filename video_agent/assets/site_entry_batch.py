@@ -131,7 +131,6 @@ def generate_site_entry_keyframes(
                         "provider": "recovered_interrupted_batch",
                         "model": "unknown",
                         "response_id": None,
-                        "quality_status": "unreviewed",
                         "status": "recovered",
                     }
                 )
@@ -166,7 +165,6 @@ def generate_site_entry_keyframes(
             "provider": result.provider,
             "model": result.model,
             "response_id": result.response_id,
-            "quality_status": "unreviewed",
             "status": "generated",
         }
 
