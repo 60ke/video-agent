@@ -6,7 +6,7 @@
 
 上游文档：`video_agent_v4_architecture_framework_rev3_20260717.md`
 
-本文修订 `video_agent_v4_stage0_golden_scenario_20260717.md`。旧稿保留作为审查记录，本文作为后续 Contract、Prompt 和迁移设计的唯一阶段 0 输入。
+本文是阶段 0 的唯一权威输入，取代已删除的初版黄金场景稿。后续 Contract、Prompt、素材领域和迁移设计只引用本文与上游 Rev3 架构。
 
 ## 0. 阶段 0 的目标与边界
 

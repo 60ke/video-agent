@@ -4,7 +4,13 @@
 
 状态：架构框架修订稿 Rev3
 
-本文修订并取代同日的 Rev2（`video_agent_v4_architecture_framework_rev2_20260717.md`）。同日的《Video Agent V4 多 Agent 编排设计》（8 Agent 方案）中与本文冲突的部分（视觉导演 Agent、字幕语义 Agent、音效设计 Agent、覆盖与缺口 Agent 作为独立 AI 单元）一并废止；其素材对象具名化、`asset://` 引用、Prompt 六段规范和请求导出目录约定继续有效。
+本文是 V4 架构的唯一权威框架，取代同日的首版、Rev2 和 8 Agent 编排草案。旧稿不再作为设计输入；其中仍有效的约定已经收回本文：
+
+- 模型输入中的素材必须是具名对象，不使用 `fields + rows` 位置数组；
+- 素材统一使用可迁移的 `asset://Axxxx` 引用，宿主机绝对路径不得进入模型上下文；
+- Agent Prompt 使用独立 Markdown 文件，基础结构为 `Role`、`Goal`、`Inputs`、`Allowed Decisions`、`Forbidden Decisions`、`Output Contract`，复杂决策可追加 Decision Table 和正反例；
+- 每次 AI 调用分别导出 `request.system.md`、`request.input.json`、`response.raw.json`、`response.validated.json` 和 `manifest.json`，不得把全部内容封装成一个转义字符串；
+- Manifest 记录 Prompt 版本、模型 Profile、输入指纹、耗时、校验和纠错结果，不记录 API Key。
 
 本文只定义系统分层、模块职责、主数据流和边界。具体 Prompt、数据库表、Pydantic Contract、Effect 配置和迁移步骤在框架确认后分别设计。
 
