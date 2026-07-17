@@ -394,7 +394,7 @@ def _validate_plan(plan: ActionScenePlan, catalog: AssetCatalog, timing: TimingL
     eligible_assets = {
         asset.asset_id: asset
         for asset in catalog.assets
-        if asset.production_eligible and asset.quality.status != "rejected"
+        if asset.quality.readable is not False
     }
     asset_ids = set(eligible_assets)
     beat_ids = {beat.beat_id for beat in narration.beats}
@@ -1044,8 +1044,7 @@ def _normalize_required_scene_asset_roles(
             for asset_ref in sorted(asset_index.refs)
             if (asset := asset_index.asset(asset_ref)).role == required_role
             and asset.semantic_path == feature_path
-            and asset.production_eligible
-            and asset.quality.status != "rejected"
+            and asset.quality.readable is not False
         ]
         if not candidates:
             continue

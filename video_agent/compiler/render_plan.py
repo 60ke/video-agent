@@ -234,9 +234,9 @@ def compile_render_plan(
         missing_assets = [asset_id for asset_id in shot.asset_ids if asset_id not in asset_by_id]
         if missing_assets:
             raise ValueError(f"shot references missing assets: {missing_assets}")
-        ineligible = [asset_id for asset_id in shot.asset_ids if not asset_by_id[asset_id].production_eligible]
-        if ineligible:
-            raise ValueError(f"shot references source-only assets: {ineligible}")
+        unreadable = [asset_id for asset_id in shot.asset_ids if asset_by_id[asset_id].quality.readable is False]
+        if unreadable:
+            raise ValueError(f"shot references technically unreadable assets: {unreadable}")
 
         start_frame = _resolve_time(anchor_frames, shot.start.anchor_id, shot.start.offset_frames, timing.duration_frames)
         end_frame = _resolve_time(anchor_frames, shot.end.anchor_id, shot.end.offset_frames, timing.duration_frames)

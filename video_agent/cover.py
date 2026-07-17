@@ -89,8 +89,7 @@ def _select_references(repo_root: Path, spec: CoverSpec, catalog: AssetCatalog, 
         asset
         for asset in assets.values()
         if asset.media_type == "image"
-        and asset.production_eligible
-        and asset.quality.status != "rejected"
+        and asset.quality.readable is not False
     ]
     brand_candidates = [
         asset
@@ -113,7 +112,7 @@ def _select_references(repo_root: Path, spec: CoverSpec, catalog: AssetCatalog, 
     selected: list[str] = [brand_candidates[0].asset_id]
     for asset_id in spec.reference_asset_ids:
         asset = assets.get(asset_id)
-        if not asset or asset.media_type != "image" or not asset.production_eligible:
+        if not asset or asset.media_type != "image" or asset.quality.readable is False:
             raise ValueError(f"cover reference is not an eligible image: {asset_id}")
         if asset_id not in selected:
             selected.append(asset_id)

@@ -28,7 +28,7 @@ def role_assets(catalog: AssetCatalog) -> dict[str, list[Asset]]:
     roles: dict[str, list[Asset]] = defaultdict(list)
     for asset in catalog.assets:
         usable = asset.media_type == "image" or asset.role in {"brand_ip_animation", "brand_ip_video"}
-        if not asset.production_eligible or asset.quality.status == "rejected" or not usable:
+        if asset.quality.readable is False or not usable:
             continue
         if (
             asset.provenance.origin == "gpt_image_semantic_derivative"

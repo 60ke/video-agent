@@ -16,13 +16,12 @@ def plan_narration(repo_root: Path, case: CaseConfig, catalog: AssetCatalog) -> 
             "semantic_path": asset.semantic_path,
             "role": asset.role,
             "evidence_class": asset.evidence_class.value,
-            "quality_status": asset.quality.status,
             "claims": asset.claims,
             "tags": asset.tags,
             "anchors": [anchor.label for anchor in asset.visual_anchors],
         }
         for asset in catalog.assets
-        if asset.production_eligible and asset.quality.status != "rejected"
+        if asset.quality.readable is not False
     ]
     user = json.dumps(
         {

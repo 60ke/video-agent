@@ -221,8 +221,7 @@ def select_asset_candidates(
     eligible = [
         asset
         for asset in catalog.assets
-        if asset.production_eligible
-        and asset.quality.status != "rejected"
+        if asset.quality.readable is not False
         and asset.role != "outro"
         and asset.media_type != "audio"
     ]

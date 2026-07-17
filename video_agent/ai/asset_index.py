@@ -72,7 +72,7 @@ class AIAssetIndex:
         for asset_ref, asset in self.assets_by_ref.items():
             if (asset.asset_id, asset.path, asset.filename) not in allowed:
                 continue
-            if not asset.production_eligible or asset.quality.status == "rejected":
+            if asset.quality.readable is False:
                 continue
             if not asset.width or not asset.height:
                 orientation = "unknown"
