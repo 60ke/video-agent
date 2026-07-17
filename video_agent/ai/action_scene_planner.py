@@ -73,6 +73,54 @@ def _semantic_phrase_position(narration: Narration, beat_ids: list[str], phrase:
     raise ValueError(f"AI phrase does not occur verbatim in its declared beats: {phrase}")
 
 
+def _normalize_summary_gallery_phrases(
+    result: dict[str, Any], narration: Narration
+) -> dict[str, Any]:
+    """Anchor summary-gallery assets to spoken copy, never to asset labels."""
+
+    normalized = json.loads(json.dumps(result, ensure_ascii=False))
+    scenes = normalized.get("scenes")
+    if not isinstance(scenes, list):
+        return normalized
+    for scene in scenes:
+        if not isinstance(scene, dict) or scene.get("scene_kind") != "result_gallery_summary":
+            continue
+        items = scene.get("gallery_items")
+        beat_ids = scene.get("beat_ids")
+        if not isinstance(items, list) or not items or not isinstance(beat_ids, list):
+            continue
+        anchor_phrase: str | None = None
+        for candidate in (scene.get("start_phrase"), scene.get("semantic_phrase")):
+            if not isinstance(candidate, str) or not candidate.strip():
+                continue
+            try:
+                _semantic_phrase_position(narration, beat_ids, candidate)
+            except ValueError:
+                continue
+            anchor_phrase = candidate.strip()
+            break
+        if anchor_phrase is None:
+            raise ValueError(
+                "result_gallery_summary requires a spoken start_phrase or semantic_phrase: "
+                f"{scene.get('scene_id')}"
+            )
+        changed = False
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            if item.get("phrase") != anchor_phrase:
+                item["phrase"] = anchor_phrase
+                changed = True
+        if changed:
+            logger.info(
+                "[场景编排] 汇总轮播统一口播锚点 scene=%s phrase=%s count=%d",
+                scene.get("scene_id"),
+                anchor_phrase,
+                len(items),
+            )
+    return normalized
+
+
 def _normalize_gallery_boundaries(result: dict[str, Any], narration: Narration) -> dict[str, Any]:
     """Split gallery items at existing scene boundaries using spoken-text positions."""
 
@@ -1118,6 +1166,7 @@ def plan_action_scenes(
             )
             result = _normalize_multi_gap_derivation_scenes(result, narration)
             result = _normalize_empty_result_gallery_items(result, selection_report)
+            result = _normalize_summary_gallery_phrases(result, narration)
             result = _normalize_gallery_boundaries(result, narration)
             result = _normalize_scene_visual_purposes(result)
             result = _normalize_required_scene_asset_roles(result, asset_index)

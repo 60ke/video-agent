@@ -7,6 +7,7 @@ from video_agent.ai.action_scene_planner import (
     _normalize_multi_gap_derivation_scenes,
     _normalize_scene_visual_purposes,
     _normalize_required_scene_asset_roles,
+    _normalize_summary_gallery_phrases,
     _validate_asset_gap_decisions,
 )
 import pytest
@@ -87,6 +88,35 @@ def test_gallery_items_are_split_at_intervening_scene_boundaries() -> None:
     assert split["scene_id"] == "scene_auto_split_001"
     assert split["start_phrase"] == "IP形象"
     assert [item["phrase"] for item in split["gallery_items"]] == ["IP形象", "电商", "海报"]
+
+
+def test_summary_gallery_uses_spoken_summary_instead_of_asset_labels() -> None:
+    narration = Narration(
+        case_id="summary_anchor",
+        beats=[NarrationBeat(beat_id="beat_001", spoken_text="延伸产品也可以直接搞定")],
+    )
+    result = {
+        "scenes": [
+            {
+                "scene_id": "scene_summary",
+                "scene_kind": "result_gallery_summary",
+                "beat_ids": ["beat_001"],
+                "start_phrase": "延伸产品也可以直接搞定",
+                "semantic_phrase": "延伸产品也可以直接搞定",
+                "gallery_items": [
+                    {"asset_id": "A0001", "phrase": "TATA木门"},
+                    {"asset_id": "A0002", "phrase": "半克星球"},
+                ],
+            }
+        ]
+    }
+
+    normalized = _normalize_summary_gallery_phrases(result, narration)
+
+    assert [item["phrase"] for item in normalized["scenes"][0]["gallery_items"]] == [
+        "延伸产品也可以直接搞定",
+        "延伸产品也可以直接搞定",
+    ]
 
 
 def test_direct_asset_cannot_resolve_an_empty_result_candidate() -> None:
