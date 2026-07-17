@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from video_agent.contracts import NarrationBeat, PauseIntent, ShotPlan, TimeRef
+from video_agent.contracts import NarrationBeat, PauseIntent, RenderShot, ShotPlan, TimeRef
 from video_agent.effects import get_effect_policy
 from video_agent.io import load_json
 from video_agent.speech.pause_compiler import compile_beat_markup
@@ -67,3 +67,37 @@ def test_gallery_effects_require_multiple_source_assets() -> None:
         motion="slide_gallery",
     )
     assert plan.motion == "slide_gallery"
+
+
+def test_light_sweep_fallback_is_the_only_assetless_shot() -> None:
+    shot = ShotPlan(
+        shot_id="shot_fallback",
+        scene_kind="light_sweep_fallback",
+        beat_ids=["beat_001"],
+        start=TimeRef(anchor_id="timeline_start"),
+        end=TimeRef(anchor_id="timeline_end"),
+        template="result_showcase",
+        motion="light_sweep",
+    )
+    rendered = RenderShot(
+        shot_id="shot_fallback",
+        scene_kind="light_sweep_fallback",
+        beat_ids=["beat_001"],
+        template="result_showcase",
+        start_frame=0,
+        end_frame=30,
+        motion="light_sweep",
+    )
+
+    assert shot.asset_bindings == {}
+    assert rendered.asset_bindings == {}
+    with pytest.raises(ValidationError, match="shots without assets"):
+        ShotPlan(
+            shot_id="shot_invalid",
+            scene_kind="result_detail",
+            beat_ids=["beat_001"],
+            start=TimeRef(anchor_id="timeline_start"),
+            end=TimeRef(anchor_id="timeline_end"),
+            template="result_showcase",
+            motion="light_sweep",
+        )

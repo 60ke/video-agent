@@ -138,8 +138,26 @@ const MotionImage: React.FC<{ shot: RenderShot; props: TimelineProps }> = ({ sho
   const local = Math.max(0, frame - shot.start_frame);
   const duration = Math.max(1, shot.end_frame - shot.start_frame);
   const progress = clamp(local / duration);
-  const selected = sequenceAsset(shot, frame);
   if (shot.track === "overlay") return <OverlayImage shot={shot} props={props} />;
+  if (shot.scene_kind === "light_sweep_fallback" && Object.keys(shot.asset_bindings).length === 0) {
+    const sweep = interpolate(easeInOut(progress), [0, 1], [-55, 125]);
+    const glow = 0.45 + Math.sin(progress * Math.PI) * 0.35;
+    return (
+      <AbsoluteFill
+        style={{
+          overflow: "hidden",
+          backgroundColor: "#06090d",
+          backgroundImage:
+            "linear-gradient(rgba(62,92,105,.20) 1px, transparent 1px), linear-gradient(90deg, rgba(62,92,105,.20) 1px, transparent 1px)",
+          backgroundSize: "72px 72px",
+        }}
+      >
+        <div style={{position: "absolute", inset: "18% 8%", border: "1px solid rgba(91,210,226,.20)", boxShadow: `0 0 80px rgba(37,183,213,${glow * 0.22})`}} />
+        <div style={{position: "absolute", top: "-20%", bottom: "-20%", width: "34%", left: `${sweep}%`, transform: "skewX(-18deg)", background: "linear-gradient(90deg, transparent, rgba(89,222,241,.46), rgba(255,255,255,.18), transparent)", filter: "blur(3px)", mixBlendMode: "screen"}} />
+      </AbsoluteFill>
+    );
+  }
+  const selected = sequenceAsset(shot, frame);
   if (shot.template === "editor_interaction") {
     return <EditorInteraction shot={shot} props={props} />;
   }

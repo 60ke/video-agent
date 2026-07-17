@@ -97,7 +97,7 @@ class ShotPlan(Contract):
     start: TimeRef
     end: TimeRef
     template: str
-    asset_bindings: dict[str, str] = Field(min_length=1)
+    asset_bindings: dict[str, str] = Field(default_factory=dict)
     claim_ids: list[str] = Field(default_factory=list)
     cue_bindings: list[CueBinding] = Field(default_factory=list)
     energy: Literal["low", "medium", "high"] = "medium"
@@ -150,6 +150,10 @@ class ShotPlan(Contract):
             raise ValueError("editor flow sequences require editor_interaction")
         if self.motion in {"slide_gallery", "card_stack"} and len(self.asset_bindings) < 2:
             raise ValueError(f"{self.motion} requires at least two asset bindings")
+        if not self.asset_bindings and not (
+            self.scene_kind == "light_sweep_fallback" and self.motion == "light_sweep"
+        ):
+            raise ValueError("shots without assets must be LightSweep fallback scenes")
         if self.gallery_items:
             binding_ids = set(self.asset_bindings.values())
             missing = [item.asset_id for item in self.gallery_items if item.asset_id not in binding_ids]

@@ -94,7 +94,7 @@ class RenderShot(Contract):
     track: str = "base"
     beat_ids: list[str] = Field(min_length=1)
     template: str
-    asset_bindings: dict[str, str] = Field(min_length=1)
+    asset_bindings: dict[str, str] = Field(default_factory=dict)
     claim_ids: list[str] = Field(default_factory=list)
     start_frame: int = Field(ge=0)
     end_frame: int = Field(gt=0)
@@ -115,6 +115,10 @@ class RenderShot(Contract):
     def positive_span(self) -> "RenderShot":
         if self.end_frame <= self.start_frame:
             raise ValueError("render shot must have positive duration")
+        if not self.asset_bindings and not (
+            self.scene_kind == "light_sweep_fallback" and self.motion == "light_sweep"
+        ):
+            raise ValueError("render shots without assets must be LightSweep fallback scenes")
         return self
 
 

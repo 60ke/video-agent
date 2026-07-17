@@ -127,11 +127,11 @@ def _template(kind: str, config: dict[str, Any]) -> str:
     return "result_showcase"
 
 
-def _motion(kind: str, primary: Asset, binding_count: int, config: dict[str, Any]) -> str:
+def _motion(kind: str, primary: Asset | None, binding_count: int, config: dict[str, Any]) -> str:
     configured = _rule(config, kind, "motion", None)
     if isinstance(configured, str):
         return configured
-    if isinstance(configured, dict):
+    if isinstance(configured, dict) and primary is not None:
         media_key = "animated" if primary.media_type == "video" or primary.role in {"brand_ip_animation", "brand_ip_video"} else "static"
         selected = configured.get(media_key) or configured.get("default")
         if selected:
@@ -154,6 +154,8 @@ def _motion(kind: str, primary: Asset, binding_count: int, config: dict[str, Any
         return "before_after"
     if kind == "light_sweep_fallback":
         return "light_sweep"
+    if primary is None:
+        raise ValueError(f"scene kind {kind} requires a primary asset")
     return _motion_for(primary, _template(kind, config))
 
 
@@ -266,7 +268,9 @@ def build_scene_visual_plan(
         unknown = sorted(set(bindings.values()) - set(assets))
         if unknown:
             raise ValueError(f"action scene references missing assets: {scene.scene_id}/{unknown}")
-        primary = assets[next(iter(bindings.values()))]
+        primary = assets[next(iter(bindings.values()))] if bindings else None
+        if primary is None and scene.scene_kind != "light_sweep_fallback":
+            raise ValueError(f"action scene has no visual asset: {scene.scene_id}")
         template = _template(scene.scene_kind, config)
         parameter_sequence = (
             _parameter_sequence(
@@ -274,10 +278,14 @@ def build_scene_visual_plan(
                 catalog,
                 callout_reveal_frames=int(_rule(config, "parameter_input", "callout_reveal_frames", 10)),
             )
-            if scene.scene_kind == "parameter_input"
+            if scene.scene_kind == "parameter_input" and primary is not None
             else None
         )
-        editor_flow_sequence = _editor_flow_sequence(scene, primary, timing) if scene.scene_kind == "editor_workspace" else None
+        editor_flow_sequence = (
+            _editor_flow_sequence(scene, primary, timing)
+            if scene.scene_kind == "editor_workspace" and primary is not None
+            else None
+        )
         if editor_flow_sequence:
             template = "editor_interaction"
         if parameter_sequence:
