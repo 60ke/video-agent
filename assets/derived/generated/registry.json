@@ -1026,6 +1026,911 @@
         "preferred_end_frame": null,
         "derivative_key": "71a84bd08d492f035bba35a31f7928b0a264f8dfe0d95bde3af32b1e882061dc"
       }
+    },
+    {
+      "asset_id": "asset_derived_7cf7bfd2b844",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_ab3eeeb9dfca.png",
+      "sha256": "4cf9541b52f90d03ac279900949c8b570d41cb877dca91a3c303a6e264e93f41",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_ab3eeeb9dfca.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "咖小啡",
+        "文生图",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "咖小啡",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_44628cb0b99b"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "c7b440958c41182fc8315d94c69c72755b923d13ca5747ccf363f728853eb243"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_a203a963d5c6e759",
+        "scene_id": "scene_002",
+        "semantic_phrase": "从文化墙、门头招牌、LOGO、美陈、雕塑小品、主题公园、IP形象、电商、到海报等文生图设计功能",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "ab3eeeb9dfcaa18b9ac1c900649c7880ec30a0431fd901d3dd012bc23095d92f"
+      }
+    },
+    {
+      "asset_id": "asset_derived_fd59d30e2b30",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_9d3e3d755d59.png",
+      "sha256": "0a31226b2141f52c2954f9409f97f7435b783d69a2512542b52640ab72396f73",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_9d3e3d755d59.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "电商",
+        "文生图",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_1743c9fe5d9e"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "c7b440958c41182fc8315d94c69c72755b923d13ca5747ccf363f728853eb243"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_346cd4eba05d2c1e",
+        "scene_id": "scene_002",
+        "semantic_phrase": "从文化墙、门头招牌、LOGO、美陈、雕塑小品、主题公园、IP形象、电商、到海报等文生图设计功能",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "9d3e3d755d598bda4d1eecb11e7038b26cc1ba236ae1f842633feea3a5b85ba9"
+      }
+    },
+    {
+      "asset_id": "asset_derived_742f197181cd",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_586204d08d77.png",
+      "sha256": "925ce2aacfd96cfccbb82dd3785306e79da63ea65a70805c27b740aea2cc7229",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_586204d08d77.png",
+      "width": 1024,
+      "height": 1024,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "卫星小镇",
+        "文生图",
+        "gallery_preview",
+        "scene_003"
+      ],
+      "identity_group": "卫星小镇",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_d6abca5f8f50"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "47a199542465496f56dc4aca852ece169118561fade4255664836834f59fcd6d"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_c29a3f1bae1b9820",
+        "scene_id": "scene_003",
+        "semantic_phrase": "主题公园、IP形象、电商、到海报等文生图设计功能",
+        "target_orientation": "square",
+        "target_size": "1024x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "586204d08d77f2f0576633dcb2331273cc9ab2fda60e989943e6cf592af9630b"
+      }
+    },
+    {
+      "asset_id": "asset_derived_a9dda594cd0a",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_7255395c2a82.png",
+      "sha256": "a49f500e83928c12b43b629e45fdb9bbabae3e6edaca7242731277daa6bb8892",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_7255395c2a82.png",
+      "width": 1024,
+      "height": 1024,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "电商",
+        "文生图",
+        "gallery_preview",
+        "scene_003"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_1743c9fe5d9e"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "47a199542465496f56dc4aca852ece169118561fade4255664836834f59fcd6d"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_6e979cd6bff42d1c",
+        "scene_id": "scene_003",
+        "semantic_phrase": "主题公园、IP形象、电商、到海报等文生图设计功能",
+        "target_orientation": "square",
+        "target_size": "1024x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "7255395c2a826ab83afced5961a31c8707ebaa017e10698aa4f4cb23cc339d18"
+      }
+    },
+    {
+      "asset_id": "asset_derived_d1e1f55f1967",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_e47833c2277a.png",
+      "sha256": "9540bec90f0ed2d4eb02d36d49eeaaeabd91ec54097817a048f53fdb91d3311f",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_e47833c2277a.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "卫星小镇",
+        "文生图",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "卫星小镇",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_d6abca5f8f50"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "c7b440958c41182fc8315d94c69c72755b923d13ca5747ccf363f728853eb243"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_431c065714389222",
+        "scene_id": "scene_002",
+        "semantic_phrase": "从文化墙、门头招牌、LOGO、美陈、雕塑小品、主题公园、IP形象、电商、到海报等文生图设计功能",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "e47833c2277ac1850fe82ae99c2d653ca073b7777f58db223845cc3debe506a8"
+      }
+    },
+    {
+      "asset_id": "asset_derived_6d073ff3e069",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_43fb31711da4.png",
+      "sha256": "fd260292c5bdff34353bf466baa6f67a9624d69116d6dca083e98af5b5aaecb0",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_43fb31711da4.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "详情页",
+        "文生图",
+        "gallery_preview",
+        "scene_006"
+      ],
+      "identity_group": "详情页",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_71606cdbb2fe"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "a931c57f25a711ba0fa6153f4c6178f2eb204279319a439ebd36a2f6453926a2"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_eebf55cec0be16da",
+        "scene_id": "scene_006",
+        "semantic_phrase": "包含产品主KV、规格信息、应用场景、售后服务等模块",
+        "target_orientation": "portrait",
+        "target_size": "1024x1792",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "43fb31711da426f4bb945dabef6766fa9928e74bc7c36d308fb22473d8734712"
+      }
+    },
+    {
+      "asset_id": "asset_derived_6ede0d9dfe4a",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/电商_gallery_preview_f67827344d13.png",
+      "sha256": "163a964919364afa57d6aa90bcf0b34c83daa1f4d6d6d822d2fbba9f7775ee92",
+      "media_type": "image",
+      "filename": "电商_gallery_preview_f67827344d13.png",
+      "width": 1024,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "详情页",
+        "文生图",
+        "电商",
+        "gallery_preview",
+        "scene_006"
+      ],
+      "identity_group": "详情页",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_71606cdbb2fe"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "88a3dd747b49c61368b933cec07a28bba59be70281aff87dca3c039d433336f3"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_93859d2152416872",
+        "scene_id": "scene_006",
+        "semantic_phrase": "包含产品主KV、规格信息、应用场景、售后服务等模块",
+        "target_orientation": "square",
+        "target_size": "1024x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "f67827344d137179999c2d71c20c2e81c932fbf6a37c5018f464d518902903ed"
+      }
+    },
+    {
+      "asset_id": "asset_derived_3cc02fd0d448",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/品牌形象_contextual_result_fill_1b56d1a43faa.png",
+      "sha256": "de48d699800de7df26dad957935d2236e9725f3473c9b4bbd944bfb5c0466d8a",
+      "media_type": "image",
+      "filename": "品牌形象_contextual_result_fill_1b56d1a43faa.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "VI",
+        "品牌形象"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "八马茶业",
+        "品牌形象",
+        "VI",
+        "派生",
+        "contextual_result_fill"
+      ],
+      "identity_group": "八马茶业",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_49a7ef8bd33f"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "3ee10d9ae2c2f1e526380bc627d299c4ce8c1c207c4a374c63bf4e175c4f3fbf"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "derive_brand_image",
+        "scene_id": "scene_005",
+        "semantic_phrase": "品牌形象",
+        "target_orientation": "portrait",
+        "target_size": "1024x1792",
+        "preserve": [
+          "VI风格",
+          "设计品质"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "action_scene",
+        "relationship_id": null,
+        "beat_id": "beat_006",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "1b56d1a43faa4e9747acb32d049791eb7c2d2aa5ad0cda0d90c3b5a2fdba0c8d"
+      }
+    },
+    {
+      "asset_id": "asset_derived_147886b7ba3f",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/延伸产品_contextual_result_fill_ab6b4ee2895b.png",
+      "sha256": "eaa532f8d0524a97d5bf44bdcaf495750b68aad5a3259f856adfb7927b1c1aa8",
+      "media_type": "image",
+      "filename": "延伸产品_contextual_result_fill_ab6b4ee2895b.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO",
+        "延伸产品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "contextual_result_fill",
+        "延伸产品"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "14de5560aacb3481f814cd7abdf42d45470ca8567e18baf1b9fa02fb538da9cd"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "gap_315add6a035b",
+        "scene_id": "scene_009",
+        "semantic_phrase": "延伸产品",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "设计品质",
+          "主体信息完整性"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "missing_result_evidence",
+        "relationship_id": null,
+        "beat_id": "beat_009",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "ab6b4ee2895b09d95753dafc623a979b3df742e6fa5584184f231a6a90becf4e"
+      }
+    },
+    {
+      "asset_id": "asset_derived_a3b02eb0e30e",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/餐饮美食_contextual_result_fill_802e28c11d19.png",
+      "sha256": "ea2ea5a71e3980c4eeb08db28ea570bf4dc129bab95d8a6bd9d86099d75ff05e",
+      "media_type": "image",
+      "filename": "餐饮美食_contextual_result_fill_802e28c11d19.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO",
+        "餐饮美食"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "contextual_result_fill",
+        "餐饮美食"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "4b62fb91f40d2e9c5612cce8e62075b9efa54783733d41ec8be061bd234f00f3"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "gap_afded0fd763b",
+        "scene_id": "scene_005_derive_01",
+        "semantic_phrase": "餐饮美食",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "设计品质",
+          "主体信息完整性"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "missing_result_evidence",
+        "relationship_id": null,
+        "beat_id": "beat_005",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "802e28c11d19558122b2a742908db03a7bda6f88102494597216aa8b9d5214a5"
+      }
+    },
+    {
+      "asset_id": "asset_derived_74758a0bea1e",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/母婴服务_contextual_result_fill_ed04ae3f48d3.png",
+      "sha256": "12f330372b7ff2a15f64281ec7e4a48c7233555629ced5138a5687dbacf14a7e",
+      "media_type": "image",
+      "filename": "母婴服务_contextual_result_fill_ed04ae3f48d3.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO",
+        "母婴服务"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "contextual_result_fill",
+        "母婴服务"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "257cb7e253b7c25e7c53610aa55ec6d1ad18e0e6c10aca9689399bb58d8eba8a"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "gap_9120aad1d08f",
+        "scene_id": "scene_005_derive_02",
+        "semantic_phrase": "母婴服务",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "设计品质",
+          "主体信息完整性"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "missing_result_evidence",
+        "relationship_id": null,
+        "beat_id": "beat_005",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "ed04ae3f48d38f2178940a1307ea4170560ecf2b57095853c3271d700d7a07d1"
+      }
+    },
+    {
+      "asset_id": "asset_derived_fb00cb4d9019",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/交通出行_contextual_result_fill_70fadae1461c.png",
+      "sha256": "51ba3d00b21bb082a21a7a4a51df4e7c17183165af7660f35b990dbd2cf0494c",
+      "media_type": "image",
+      "filename": "交通出行_contextual_result_fill_70fadae1461c.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO",
+        "交通出行"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "contextual_result_fill"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "70620b037129d693e3f19a4f658469b0704b8987d0a094611f6ab5a99e7dffdd"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "gap_c718799d8535",
+        "scene_id": "scene_005_derive_03",
+        "semantic_phrase": "交通出行",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "设计品质",
+          "主体信息完整性"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "missing_result_evidence",
+        "relationship_id": null,
+        "beat_id": "beat_005",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "70fadae1461c36bee75e663bff8ba850474f1a85d16459b1120df3f7db06de4e"
+      }
+    },
+    {
+      "asset_id": "asset_derived_a54c3278bd80",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/娱乐潮玩_contextual_result_fill_1c2c8fabe901.png",
+      "sha256": "422747d910b989bba958775b55dc5b558b928ae6ca0e97cd48e05ac8bd634b50",
+      "media_type": "image",
+      "filename": "娱乐潮玩_contextual_result_fill_1c2c8fabe901.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO",
+        "娱乐潮玩"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "contextual_result_fill",
+        "娱乐潮玩"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "a3a696446af173b3f87326b06ac84d90d2219041b5925a961004753c03a56ead"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "gap_da112fa03481",
+        "scene_id": "scene_005_derive_04",
+        "semantic_phrase": "娱乐潮玩",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "设计品质",
+          "主体信息完整性"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "missing_result_evidence",
+        "relationship_id": null,
+        "beat_id": "beat_005",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "1c2c8fabe901866c7363a6f76feaded86c2fa2b8f414a96370df6bad014ea02d"
+      }
+    },
+    {
+      "asset_id": "asset_derived_e7a745fcdafe",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/科技办公_contextual_result_fill_4c4af7dc6883.png",
+      "sha256": "0a422e4d1447aa452c02fd099bcc94ae89ac364cc901752c8ca64d30abb4331f",
+      "media_type": "image",
+      "filename": "科技办公_contextual_result_fill_4c4af7dc6883.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO",
+        "科技办公"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "contextual_result_fill",
+        "科技办公"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "bf8e6dba5c5677b3b602edf978468bbdb123ecb39974763be848240144c56abe"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "gap_23724b685480",
+        "scene_id": "scene_005_derive_05",
+        "semantic_phrase": "科技办公",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "设计品质",
+          "主体信息完整性"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "missing_result_evidence",
+        "relationship_id": null,
+        "beat_id": "beat_005",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "4c4af7dc6883255a8631d756a439773a93635ed92d8f65066276264f274eba25"
+      }
+    },
+    {
+      "asset_id": "asset_derived_432f8705c403",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/LOGO_result_to_reference_mock_09c6cbbc7c8b.png",
+      "sha256": "5f575ecbad0d7037889f4cdcf068ac08ee9d2db798469c7f254692bf9b51b104",
+      "media_type": "image",
+      "filename": "LOGO_result_to_reference_mock_09c6cbbc7c8b.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "文生图",
+        "LOGO",
+        "result_to_reference_mock",
+        "scene_008"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "2f056b762168c229f5fd9fe275ff6db1ac03e3a66c5c2e11bff6935d9bcba0b1"
+      },
+      "metadata": {
+        "derive_kind": "result_to_reference_mock",
+        "request_id": "prepare_768852975fe3b4f1",
+        "scene_id": "scene_008",
+        "semantic_phrase": "可以一键生成你想要的效果",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "09c6cbbc7c8bd032a8ea58f4a9ef18e9d547f3800aac46853465dae5436cfb6c"
+      }
     }
   ]
 }

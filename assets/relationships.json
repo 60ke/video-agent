@@ -41,6 +41,15 @@
       "result_asset_id": "asset_workflow_scene_d9e3bb57462b",
       "editor_composite_asset_id": "asset_workflow_scene_d9e3bb57462b",
       "editor_modal_asset_id": "asset_workflow_scene_ea0ba761f909"
+    },
+    {
+      "relationship_id": "rel_e9c55a1ab73f",
+      "feature_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "result_asset_id": "asset_result_680f0cc6f312",
+      "reference_asset_id": "asset_derived_432f8705c403"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "schema_version": 3,
   "catalog_id": "catalog_video_agent_assets_v3",
-  "generated_at": "2026-07-16T03:41:13.957976+00:00",
+  "generated_at": "2026-07-17T10:59:48.129629+00:00",
   "source_root": "assets",
   "assets": [
     {
@@ -15168,1448 +15168,6 @@
       "metadata": {}
     },
     {
-      "asset_id": "asset_brand_ip_animation_8601c607e7eb",
-      "path": "assets/brand/kehuanxiongmao/ip/animated/柯幻熊猫_跑步_透明.gif",
-      "sha256": "8601c607e7eb757b598b1e12d60198ceb8a9e777fcceff04136d7126405da530",
-      "media_type": "video",
-      "filename": "柯幻熊猫_跑步_透明.gif",
-      "width": 640,
-      "height": 640,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_animation"
-      ],
-      "role": "brand_ip_animation",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "动画",
-        "跑步",
-        "透明背景"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "animation_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": 10.0,
-        "frame_count": 29,
-        "duration_ms": 2900,
-        "mime_type": "image/gif"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_c4ed140cbe5b",
-      "path": "assets/brand/kehuanxiongmao/ip/static/图层 1.png",
-      "sha256": "c4ed140cbe5b7d3e71b05a84b2cef262c80dadb53d00ce66295a7baa07c470cd",
-      "media_type": "image",
-      "filename": "图层 1.png",
-      "width": 3051,
-      "height": 3039,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E0_source_evidence",
-      "claims": [
-        "official_brand_identity"
-      ],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_a9fc88419a82",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_平板_01.png",
-      "sha256": "a9fc88419a82217223cb4dd4773e01327d39243a69f6d59169f77dde45abef19",
-      "media_type": "image",
-      "filename": "柯幻熊猫_平板_01.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "平板"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_c274e080948d",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_平板_02.png",
-      "sha256": "c274e080948dc5e458b73977e7b5005beaaf8662fab21f985302bc9547e2b272",
-      "media_type": "image",
-      "filename": "柯幻熊猫_平板_02.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "平板"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_6a787e5be74e",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_挥手_01.png",
-      "sha256": "6a787e5be74e9b35e8dd823abce8b8486ed108475d7393a9cc60d3a0c069a168",
-      "media_type": "image",
-      "filename": "柯幻熊猫_挥手_01.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "挥手"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_a6eeb37b5917",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_挥手_02.png",
-      "sha256": "a6eeb37b5917c7224aeaf1fe0740103e474b92fd39f50de0a7e4bf4f314db129",
-      "media_type": "image",
-      "filename": "柯幻熊猫_挥手_02.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "挥手"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_5ad56423c4e9",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_挥手_03.png",
-      "sha256": "5ad56423c4e995ea58402e0d6b469de43bab24bda1b88d29e1c2fec5149025d1",
-      "media_type": "image",
-      "filename": "柯幻熊猫_挥手_03.png",
-      "width": 5404,
-      "height": 3040,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "挥手"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_dfc73463db18",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_挥手_护目镜_01.png",
-      "sha256": "dfc73463db186953abf88c82cb4b3fb5254a3585f0e3c451bdfef8206f77dab0",
-      "media_type": "image",
-      "filename": "柯幻熊猫_挥手_护目镜_01.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "挥手",
-        "护目镜"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_0dcc663f00be",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_挥手_护目镜_02.png",
-      "sha256": "0dcc663f00be0635ca059b47abe8dca70eca1e9ea101b05f3dd5eebcfc4542c2",
-      "media_type": "image",
-      "filename": "柯幻熊猫_挥手_护目镜_02.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "挥手",
-        "护目镜"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_e97e3f393a22",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_无人机_01.png",
-      "sha256": "e97e3f393a2243ebf04c4b95fa88f81db72043a780352ba7d7a80f23c21344b5",
-      "media_type": "image",
-      "filename": "柯幻熊猫_无人机_01.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "无人机"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_ddc9eba88f3a",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_比心_01.png",
-      "sha256": "ddc9eba88f3a819321c12a9cf01b554e9732e15b726ead1ccbe62e4d1e3efd79",
-      "media_type": "image",
-      "filename": "柯幻熊猫_比心_01.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "比心"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_dbfcd846ffcb",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_01.png",
-      "sha256": "dbfcd846ffcb02f8207e39c48879c9656f827cc1dc9eef47704e88f7f1936f2a",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跑步_01.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跑步"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_c0a580414a83",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_02.png",
-      "sha256": "c0a580414a8303be442401994bc97783046a4cb470440d0ad09bec1f12f23cc7",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跑步_02.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跑步"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_e66e3ca742d1",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_03.png",
-      "sha256": "e66e3ca742d12686a51f63349d6cd93640385e0fba2562da26fc25b1f47b41d8",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跑步_03.png",
-      "width": 5404,
-      "height": 3040,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跑步"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_49ee48abd1fd",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_04.png",
-      "sha256": "49ee48abd1fd4235ded8b28cbe8975c36b98b90bfb57f7f82d123c58302f4462",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跑步_04.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跑步"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_3f109c04ae0c",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_平板_01.png",
-      "sha256": "3f109c04ae0ca4239c306c4f270da51a54b13f007f3761cf995731e181853be5",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跑步_平板_01.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跑步",
-        "平板"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_a7315caf0088",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_平板_02.png",
-      "sha256": "a7315caf0088323bd5280743d2b36314c276136b58e89cdbe7dda8464c581ce3",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跑步_平板_02.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跑步",
-        "平板"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_4d2cc0cafa3b",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_护目镜_01.png",
-      "sha256": "4d2cc0cafa3b41bb4dfdf5cb321eba81fa8177c228aa4368558255d3b257f379",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跑步_护目镜_01.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跑步",
-        "护目镜"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_cbebec0870f0",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_护目镜_02.png",
-      "sha256": "cbebec0870f008ecbc747b39320f666ddca0b9a911f9b3de10e10cafd8080686",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跑步_护目镜_02.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跑步",
-        "护目镜"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_17128f738577",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_护目镜_03.png",
-      "sha256": "17128f738577d8bc41a17d446f2eb46792a4dfcaec79735d96f45a10dd1d3272",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跑步_护目镜_03.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跑步",
-        "护目镜"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_c574c5d043ac",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跑步_护目镜_04.png",
-      "sha256": "c574c5d043acf5ff260f373c63aff18616f930968fa47f7dc805ebc251b71989",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跑步_护目镜_04.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跑步",
-        "护目镜"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_3e48e56de309",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跳跃_01.png",
-      "sha256": "3e48e56de3095d39dd70ffcdbf7898d6dee46322764dd91c478b85f1ff120186",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跳跃_01.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跳跃"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_498e58284f98",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跳跃_护目镜_01.png",
-      "sha256": "498e58284f98c8f4550d8c1807dd4f9c2c34e03b7134337abc014ac8fa81b457",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跳跃_护目镜_01.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跳跃",
-        "护目镜"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_26662b4ef44d",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_跳跃_护目镜_02.png",
-      "sha256": "26662b4ef44d43fb0f382231607e0498715a5819f2b43337dc42ead5e78db3e2",
-      "media_type": "image",
-      "filename": "柯幻熊猫_跳跃_护目镜_02.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "跳跃",
-        "护目镜"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_0ec36a605a52",
-      "path": "assets/brand/kehuanxiongmao/ip/static/柯幻熊猫_闪电_01.png",
-      "sha256": "0ec36a605a52d20aea8dfcbc01ced667ece08cb3081a16417bc28375336d8073",
-      "media_type": "image",
-      "filename": "柯幻熊猫_闪电_01.png",
-      "width": 2560,
-      "height": 1440,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "闪电"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_2dedba7fcea6",
-      "path": "assets/brand/kehuanxiongmao/ip/static/熊猫定-01.png",
-      "sha256": "2dedba7fcea6a7d726d8046d4cdc61325c4cd1691c99a00cf3bd1915f90da4ba",
-      "media_type": "image",
-      "filename": "熊猫定-01.png",
-      "width": 8220,
-      "height": 10253,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E0_source_evidence",
-      "claims": [
-        "official_brand_identity"
-      ],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "标准形象"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_fa329ef32ac2",
-      "path": "assets/brand/kehuanxiongmao/ip/static/熊猫定-02.png",
-      "sha256": "fa329ef32ac249249621b7dffc251d92404be47d5796e31f67d5c31c6d42ad72",
-      "media_type": "image",
-      "filename": "熊猫定-02.png",
-      "width": 7947,
-      "height": 10410,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E0_source_evidence",
-      "claims": [
-        "official_brand_identity"
-      ],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "标准形象"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_97e99599b3d4",
-      "path": "assets/brand/kehuanxiongmao/ip/static/熊猫定-03.png",
-      "sha256": "97e99599b3d4f7c064d164677ee39ff82d7dc007d7b1f69d929d2a05f3ff66b2",
-      "media_type": "image",
-      "filename": "熊猫定-03.png",
-      "width": 7718,
-      "height": 10175,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E0_source_evidence",
-      "claims": [
-        "official_brand_identity"
-      ],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "标准形象"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_7c0fb127724f",
-      "path": "assets/brand/kehuanxiongmao/ip/static/熊猫定-04.png",
-      "sha256": "7c0fb127724fddbfd794d37003158aeba7ea6b49f009e9af8612f1a4e4e3bd8d",
-      "media_type": "image",
-      "filename": "熊猫定-04.png",
-      "width": 6957,
-      "height": 10644,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E0_source_evidence",
-      "claims": [
-        "official_brand_identity"
-      ],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "标准形象"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_static_96482851a8e9",
-      "path": "assets/brand/kehuanxiongmao/ip/static/熊猫定-05.png",
-      "sha256": "96482851a8e99eed0857cfaa3e5b65e7abf911ac5700134de74ac86200c8244b",
-      "media_type": "image",
-      "filename": "熊猫定-05.png",
-      "width": 7291,
-      "height": 10644,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_static"
-      ],
-      "role": "brand_ip_static",
-      "production_eligible": true,
-      "evidence_class": "E0_source_evidence",
-      "claims": [
-        "official_brand_identity"
-      ],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "静态",
-        "标准形象"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/png"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_video_3ad12e70d983",
-      "path": "assets/brand/kehuanxiongmao/ip/video/柯幻熊猫_挥手.mp4",
-      "sha256": "3ad12e70d98317d52eed6d5922fc0ad780798f5053871b4f761df07977ee6ac9",
-      "media_type": "video",
-      "filename": "柯幻熊猫_挥手.mp4",
-      "width": 960,
-      "height": 720,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_video"
-      ],
-      "role": "brand_ip_video",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "视频",
-        "挥手"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "video_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": 24.0,
-        "frame_count": 121,
-        "duration_ms": 5042,
-        "mime_type": "video/mp4"
-      }
-    },
-    {
-      "asset_id": "asset_brand_ip_video_b34d500c2afe",
-      "path": "assets/brand/kehuanxiongmao/ip/video/柯幻熊猫_跑步.mp4",
-      "sha256": "b34d500c2afeffd9a7dea5ae3b508c184054b5a3945c8b3fa00d6fafef87ae3d",
-      "media_type": "video",
-      "filename": "柯幻熊猫_跑步.mp4",
-      "width": 1280,
-      "height": 720,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_ip_video"
-      ],
-      "role": "brand_ip_video",
-      "production_eligible": true,
-      "evidence_class": "E3_decorative",
-      "claims": [],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "视频",
-        "跑步"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "video_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": 24.0,
-        "frame_count": 121,
-        "duration_ms": 5042,
-        "mime_type": "video/mp4"
-      }
-    },
-    {
-      "asset_id": "asset_brand_logo_771831c2a2c6",
-      "path": "assets/brand/kehuanxiongmao/logo/柯幻熊猫_LOGO.jpg",
-      "sha256": "771831c2a2c63e1e0863da8ea030e75a2216c6e0eb82408dd94a60816dd3abea",
-      "media_type": "image",
-      "filename": "柯幻熊猫_LOGO.jpg",
-      "width": 1182,
-      "height": 1182,
-      "semantic_path": [
-        "品牌",
-        "柯幻熊猫",
-        "brand_logo"
-      ],
-      "role": "brand_logo",
-      "production_eligible": true,
-      "evidence_class": "E0_source_evidence",
-      "claims": [
-        "official_brand_identity"
-      ],
-      "tags": [
-        "柯幻熊猫",
-        "品牌IP",
-        "Logo"
-      ],
-      "identity_group": "柯幻熊猫",
-      "visual_anchors": [],
-      "quality": {
-        "status": "machine_checked",
-        "readable": true,
-        "checks": [
-          "image_decode_ok"
-        ]
-      },
-      "provenance": {
-        "origin": "brand_ip_library",
-        "parent_asset_ids": []
-      },
-      "metadata": {
-        "fps": null,
-        "frame_count": null,
-        "duration_ms": null,
-        "mime_type": "image/jpeg"
-      }
-    },
-    {
       "asset_id": "asset_brand_logo_c8a4bd8fd3c7",
       "path": "assets/brand/kehuanxiongmao/logo/柯幻熊猫_LOGO.png",
       "sha256": "c8a4bd8fd3c721e9a9f28962c6dee0f1cd8a79bb19e638ae35ee99f5fc3b4d9e",
@@ -17508,8 +16066,1083 @@
         "preferred_end_frame": null,
         "derivative_key": "4776ab83b7af7a869a5237626a561de51cd01e5493547df20d5809b4c13bceba"
       }
+    },
+    {
+      "asset_id": "asset_derived_ac2c808917ba",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/雕塑小品_contextual_result_fill_8032808ae466.png",
+      "sha256": "b12215a76aa06b6aa725d3f76a8ff22935ded3a25cf096a7b322ac2ed8b64bfa",
+      "media_type": "image",
+      "filename": "雕塑小品_contextual_result_fill_8032808ae466.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "雕塑小品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "美陈",
+        "雕塑小品",
+        "contextual_result_fill"
+      ],
+      "identity_group": "美陈",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_d17cdb7a61e6"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "fc0739a62f36354e46d2d8083627d8ef36525dc2b8f934a92bdc0fc1eaa73ad2"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "derive_sculpture_result",
+        "scene_id": "scene_003",
+        "semantic_phrase": "雕塑小品",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "result_display",
+        "relationship_id": null,
+        "beat_id": "beat_002",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "8032808ae4662f68b2f125658c7c1eace150ad2a27d0b8180d2910378f1afb48"
+      }
+    },
+    {
+      "asset_id": "asset_derived_8e27361374c1",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/主题公园_contextual_result_fill_294dc4f1a919.png",
+      "sha256": "603fff1c8b9e38c398fb919b7d4625888e461a64b049bc0655dccd19f2e0c460",
+      "media_type": "image",
+      "filename": "主题公园_contextual_result_fill_294dc4f1a919.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "主题公园"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "美陈",
+        "主题公园",
+        "contextual_result_fill"
+      ],
+      "identity_group": "美陈",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_c1d93d40e3b5"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "d00ce35b3c297ac3505759c6079779c367378d41ee09e75b03c858ede5765f82"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "derive_theme_park_result",
+        "scene_id": "scene_004",
+        "semantic_phrase": "主题公园",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "result_display",
+        "relationship_id": null,
+        "beat_id": "beat_002",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "294dc4f1a919714df9044d371795e075578c244329431d918b97a53e3392a50c"
+      }
+    },
+    {
+      "asset_id": "asset_derived_e7f6020d05b5",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_71a84bd08d49.png",
+      "sha256": "32b4f6cdbbf5aaae262fd12f4c9dc7a697258fdc14febf382e119789420e642e",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_71a84bd08d49.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "文生图",
+        "gallery_preview",
+        "scene_005"
+      ],
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_e4b3286c7596"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "edede55452b6837f27cfa49c47fde7a600ae28d9e22788c02f06fe64176d0b6b"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_05fe21ff513c40bf",
+        "scene_id": "scene_005",
+        "semantic_phrase": "IP形象、电商、到海报",
+        "target_orientation": "portrait",
+        "target_size": "1024x1792",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "71a84bd08d492f035bba35a31f7928b0a264f8dfe0d95bde3af32b1e882061dc"
+      }
+    },
+    {
+      "asset_id": "asset_derived_7cf7bfd2b844",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_ab3eeeb9dfca.png",
+      "sha256": "4cf9541b52f90d03ac279900949c8b570d41cb877dca91a3c303a6e264e93f41",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_ab3eeeb9dfca.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "咖小啡",
+        "文生图",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "咖小啡",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_44628cb0b99b"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "c7b440958c41182fc8315d94c69c72755b923d13ca5747ccf363f728853eb243"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_a203a963d5c6e759",
+        "scene_id": "scene_002",
+        "semantic_phrase": "从文化墙、门头招牌、LOGO、美陈、雕塑小品、主题公园、IP形象、电商、到海报等文生图设计功能",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "ab3eeeb9dfcaa18b9ac1c900649c7880ec30a0431fd901d3dd012bc23095d92f"
+      }
+    },
+    {
+      "asset_id": "asset_derived_fd59d30e2b30",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_9d3e3d755d59.png",
+      "sha256": "0a31226b2141f52c2954f9409f97f7435b783d69a2512542b52640ab72396f73",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_9d3e3d755d59.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "电商",
+        "文生图",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_1743c9fe5d9e"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "c7b440958c41182fc8315d94c69c72755b923d13ca5747ccf363f728853eb243"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_346cd4eba05d2c1e",
+        "scene_id": "scene_002",
+        "semantic_phrase": "从文化墙、门头招牌、LOGO、美陈、雕塑小品、主题公园、IP形象、电商、到海报等文生图设计功能",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "9d3e3d755d598bda4d1eecb11e7038b26cc1ba236ae1f842633feea3a5b85ba9"
+      }
+    },
+    {
+      "asset_id": "asset_derived_742f197181cd",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_586204d08d77.png",
+      "sha256": "925ce2aacfd96cfccbb82dd3785306e79da63ea65a70805c27b740aea2cc7229",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_586204d08d77.png",
+      "width": 1024,
+      "height": 1024,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "卫星小镇",
+        "文生图",
+        "gallery_preview",
+        "scene_003"
+      ],
+      "identity_group": "卫星小镇",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_d6abca5f8f50"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "47a199542465496f56dc4aca852ece169118561fade4255664836834f59fcd6d"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_c29a3f1bae1b9820",
+        "scene_id": "scene_003",
+        "semantic_phrase": "主题公园、IP形象、电商、到海报等文生图设计功能",
+        "target_orientation": "square",
+        "target_size": "1024x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "586204d08d77f2f0576633dcb2331273cc9ab2fda60e989943e6cf592af9630b"
+      }
+    },
+    {
+      "asset_id": "asset_derived_a9dda594cd0a",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_7255395c2a82.png",
+      "sha256": "a49f500e83928c12b43b629e45fdb9bbabae3e6edaca7242731277daa6bb8892",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_7255395c2a82.png",
+      "width": 1024,
+      "height": 1024,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "电商",
+        "文生图",
+        "gallery_preview",
+        "scene_003"
+      ],
+      "identity_group": "电商",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_1743c9fe5d9e"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "47a199542465496f56dc4aca852ece169118561fade4255664836834f59fcd6d"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_6e979cd6bff42d1c",
+        "scene_id": "scene_003",
+        "semantic_phrase": "主题公园、IP形象、电商、到海报等文生图设计功能",
+        "target_orientation": "square",
+        "target_size": "1024x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "7255395c2a826ab83afced5961a31c8707ebaa017e10698aa4f4cb23cc339d18"
+      }
+    },
+    {
+      "asset_id": "asset_derived_d1e1f55f1967",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_e47833c2277a.png",
+      "sha256": "9540bec90f0ed2d4eb02d36d49eeaaeabd91ec54097817a048f53fdb91d3311f",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_e47833c2277a.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "卫星小镇",
+        "文生图",
+        "gallery_preview",
+        "scene_002"
+      ],
+      "identity_group": "卫星小镇",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_d6abca5f8f50"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "c7b440958c41182fc8315d94c69c72755b923d13ca5747ccf363f728853eb243"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_431c065714389222",
+        "scene_id": "scene_002",
+        "semantic_phrase": "从文化墙、门头招牌、LOGO、美陈、雕塑小品、主题公园、IP形象、电商、到海报等文生图设计功能",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "e47833c2277ac1850fe82ae99c2d653ca073b7777f58db223845cc3debe506a8"
+      }
+    },
+    {
+      "asset_id": "asset_derived_6d073ff3e069",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/文生图_gallery_preview_43fb31711da4.png",
+      "sha256": "fd260292c5bdff34353bf466baa6f67a9624d69116d6dca083e98af5b5aaecb0",
+      "media_type": "image",
+      "filename": "文生图_gallery_preview_43fb31711da4.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "详情页",
+        "文生图",
+        "gallery_preview",
+        "scene_006"
+      ],
+      "identity_group": "详情页",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_71606cdbb2fe"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "a931c57f25a711ba0fa6153f4c6178f2eb204279319a439ebd36a2f6453926a2"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_eebf55cec0be16da",
+        "scene_id": "scene_006",
+        "semantic_phrase": "包含产品主KV、规格信息、应用场景、售后服务等模块",
+        "target_orientation": "portrait",
+        "target_size": "1024x1792",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "43fb31711da426f4bb945dabef6766fa9928e74bc7c36d308fb22473d8734712"
+      }
+    },
+    {
+      "asset_id": "asset_derived_6ede0d9dfe4a",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/电商_gallery_preview_f67827344d13.png",
+      "sha256": "163a964919364afa57d6aa90bcf0b34c83daa1f4d6d6d822d2fbba9f7775ee92",
+      "media_type": "image",
+      "filename": "电商_gallery_preview_f67827344d13.png",
+      "width": 1024,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "电商"
+      ],
+      "role": "gallery_preview",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "详情页",
+        "文生图",
+        "电商",
+        "gallery_preview",
+        "scene_006"
+      ],
+      "identity_group": "详情页",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_71606cdbb2fe"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "88a3dd747b49c61368b933cec07a28bba59be70281aff87dca3c039d433336f3"
+      },
+      "metadata": {
+        "derive_kind": "gallery_preview",
+        "request_id": "prepare_93859d2152416872",
+        "scene_id": "scene_006",
+        "semantic_phrase": "包含产品主KV、规格信息、应用场景、售后服务等模块",
+        "target_orientation": "square",
+        "target_size": "1024x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "f67827344d137179999c2d71c20c2e81c932fbf6a37c5018f464d518902903ed"
+      }
+    },
+    {
+      "asset_id": "asset_derived_3cc02fd0d448",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/品牌形象_contextual_result_fill_1b56d1a43faa.png",
+      "sha256": "de48d699800de7df26dad957935d2236e9725f3473c9b4bbd944bfb5c0466d8a",
+      "media_type": "image",
+      "filename": "品牌形象_contextual_result_fill_1b56d1a43faa.png",
+      "width": 1024,
+      "height": 1792,
+      "semantic_path": [
+        "文生图",
+        "VI",
+        "品牌形象"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "八马茶业",
+        "品牌形象",
+        "VI",
+        "派生",
+        "contextual_result_fill"
+      ],
+      "identity_group": "八马茶业",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_49a7ef8bd33f"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "3ee10d9ae2c2f1e526380bc627d299c4ce8c1c207c4a374c63bf4e175c4f3fbf"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "derive_brand_image",
+        "scene_id": "scene_005",
+        "semantic_phrase": "品牌形象",
+        "target_orientation": "portrait",
+        "target_size": "1024x1792",
+        "preserve": [
+          "VI风格",
+          "设计品质"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "action_scene",
+        "relationship_id": null,
+        "beat_id": "beat_006",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "1b56d1a43faa4e9747acb32d049791eb7c2d2aa5ad0cda0d90c3b5a2fdba0c8d"
+      }
+    },
+    {
+      "asset_id": "asset_derived_147886b7ba3f",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/延伸产品_contextual_result_fill_ab6b4ee2895b.png",
+      "sha256": "eaa532f8d0524a97d5bf44bdcaf495750b68aad5a3259f856adfb7927b1c1aa8",
+      "media_type": "image",
+      "filename": "延伸产品_contextual_result_fill_ab6b4ee2895b.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO",
+        "延伸产品"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "contextual_result_fill",
+        "延伸产品"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "14de5560aacb3481f814cd7abdf42d45470ca8567e18baf1b9fa02fb538da9cd"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "gap_315add6a035b",
+        "scene_id": "scene_009",
+        "semantic_phrase": "延伸产品",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "设计品质",
+          "主体信息完整性"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "missing_result_evidence",
+        "relationship_id": null,
+        "beat_id": "beat_009",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "ab6b4ee2895b09d95753dafc623a979b3df742e6fa5584184f231a6a90becf4e"
+      }
+    },
+    {
+      "asset_id": "asset_derived_a3b02eb0e30e",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/餐饮美食_contextual_result_fill_802e28c11d19.png",
+      "sha256": "ea2ea5a71e3980c4eeb08db28ea570bf4dc129bab95d8a6bd9d86099d75ff05e",
+      "media_type": "image",
+      "filename": "餐饮美食_contextual_result_fill_802e28c11d19.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO",
+        "餐饮美食"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "contextual_result_fill",
+        "餐饮美食"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "4b62fb91f40d2e9c5612cce8e62075b9efa54783733d41ec8be061bd234f00f3"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "gap_afded0fd763b",
+        "scene_id": "scene_005_derive_01",
+        "semantic_phrase": "餐饮美食",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "设计品质",
+          "主体信息完整性"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "missing_result_evidence",
+        "relationship_id": null,
+        "beat_id": "beat_005",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "802e28c11d19558122b2a742908db03a7bda6f88102494597216aa8b9d5214a5"
+      }
+    },
+    {
+      "asset_id": "asset_derived_74758a0bea1e",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/母婴服务_contextual_result_fill_ed04ae3f48d3.png",
+      "sha256": "12f330372b7ff2a15f64281ec7e4a48c7233555629ced5138a5687dbacf14a7e",
+      "media_type": "image",
+      "filename": "母婴服务_contextual_result_fill_ed04ae3f48d3.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO",
+        "母婴服务"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "contextual_result_fill",
+        "母婴服务"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "257cb7e253b7c25e7c53610aa55ec6d1ad18e0e6c10aca9689399bb58d8eba8a"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "gap_9120aad1d08f",
+        "scene_id": "scene_005_derive_02",
+        "semantic_phrase": "母婴服务",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "设计品质",
+          "主体信息完整性"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "missing_result_evidence",
+        "relationship_id": null,
+        "beat_id": "beat_005",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "ed04ae3f48d38f2178940a1307ea4170560ecf2b57095853c3271d700d7a07d1"
+      }
+    },
+    {
+      "asset_id": "asset_derived_fb00cb4d9019",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/交通出行_contextual_result_fill_70fadae1461c.png",
+      "sha256": "51ba3d00b21bb082a21a7a4a51df4e7c17183165af7660f35b990dbd2cf0494c",
+      "media_type": "image",
+      "filename": "交通出行_contextual_result_fill_70fadae1461c.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO",
+        "交通出行"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "contextual_result_fill"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "70620b037129d693e3f19a4f658469b0704b8987d0a094611f6ab5a99e7dffdd"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "gap_c718799d8535",
+        "scene_id": "scene_005_derive_03",
+        "semantic_phrase": "交通出行",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "设计品质",
+          "主体信息完整性"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "missing_result_evidence",
+        "relationship_id": null,
+        "beat_id": "beat_005",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "70fadae1461c36bee75e663bff8ba850474f1a85d16459b1120df3f7db06de4e"
+      }
+    },
+    {
+      "asset_id": "asset_derived_a54c3278bd80",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/娱乐潮玩_contextual_result_fill_1c2c8fabe901.png",
+      "sha256": "422747d910b989bba958775b55dc5b558b928ae6ca0e97cd48e05ac8bd634b50",
+      "media_type": "image",
+      "filename": "娱乐潮玩_contextual_result_fill_1c2c8fabe901.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO",
+        "娱乐潮玩"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "contextual_result_fill",
+        "娱乐潮玩"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "a3a696446af173b3f87326b06ac84d90d2219041b5925a961004753c03a56ead"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "gap_da112fa03481",
+        "scene_id": "scene_005_derive_04",
+        "semantic_phrase": "娱乐潮玩",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "设计品质",
+          "主体信息完整性"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "missing_result_evidence",
+        "relationship_id": null,
+        "beat_id": "beat_005",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "1c2c8fabe901866c7363a6f76feaded86c2fa2b8f414a96370df6bad014ea02d"
+      }
+    },
+    {
+      "asset_id": "asset_derived_e7a745fcdafe",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/科技办公_contextual_result_fill_4c4af7dc6883.png",
+      "sha256": "0a422e4d1447aa452c02fd099bcc94ae89ac364cc901752c8ca64d30abb4331f",
+      "media_type": "image",
+      "filename": "科技办公_contextual_result_fill_4c4af7dc6883.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO",
+        "科技办公"
+      ],
+      "role": "result_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "contextual_result_fill",
+        "科技办公"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "bf8e6dba5c5677b3b602edf978468bbdb123ecb39974763be848240144c56abe"
+      },
+      "metadata": {
+        "derive_kind": "contextual_result_fill",
+        "request_id": "gap_23724b685480",
+        "scene_id": "scene_005_derive_05",
+        "semantic_phrase": "科技办公",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "设计品质",
+          "主体信息完整性"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "missing_result_evidence",
+        "relationship_id": null,
+        "beat_id": "beat_005",
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "4c4af7dc6883255a8631d756a439773a93635ed92d8f65066276264f274eba25"
+      }
+    },
+    {
+      "asset_id": "asset_derived_432f8705c403",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/generated/LOGO_result_to_reference_mock_09c6cbbc7c8b.png",
+      "sha256": "5f575ecbad0d7037889f4cdcf068ac08ee9d2db798469c7f254692bf9b51b104",
+      "media_type": "image",
+      "filename": "LOGO_result_to_reference_mock_09c6cbbc7c8b.png",
+      "width": 1792,
+      "height": 1024,
+      "semantic_path": [
+        "文生图",
+        "LOGO"
+      ],
+      "role": "reference_image",
+      "production_eligible": true,
+      "evidence_class": "E2_semantic_derivative",
+      "claims": [],
+      "tags": [
+        "交通出行",
+        "文生图",
+        "LOGO",
+        "result_to_reference_mock",
+        "scene_008"
+      ],
+      "identity_group": "交通出行",
+      "visual_anchors": [],
+      "quality": {
+        "status": "machine_checked",
+        "checks": [
+          "image_decode_ok",
+          "prompt_provenance_recorded"
+        ]
+      },
+      "provenance": {
+        "origin": "gpt_image_semantic_derivative",
+        "parent_asset_ids": [
+          "asset_result_680f0cc6f312"
+        ],
+        "provider": "apiyi",
+        "model": "gpt-image-2",
+        "prompt_sha256": "2f056b762168c229f5fd9fe275ff6db1ac03e3a66c5c2e11bff6935d9bcba0b1"
+      },
+      "metadata": {
+        "derive_kind": "result_to_reference_mock",
+        "request_id": "prepare_768852975fe3b4f1",
+        "scene_id": "scene_008",
+        "semantic_phrase": "可以一键生成你想要的效果",
+        "target_orientation": "landscape",
+        "target_size": "1792x1024",
+        "preserve": [
+          "主体内容",
+          "主要文字",
+          "品牌与配色"
+        ],
+        "prompt_template_sha256": "48f3743dc38fc31b5de95ca6294b3bf4bb3d06588a3cd77d33858b5c36757c05",
+        "purpose": "asset_preflight",
+        "relationship_id": null,
+        "beat_id": null,
+        "preferred_start_frame": null,
+        "preferred_end_frame": null,
+        "derivative_key": "09c6cbbc7c8bd032a8ea58f4a9ef18e9d547f3800aac46853465dae5436cfb6c"
+      }
     }
   ],
-  "source_catalog_sha256": "f678f35a13c55901c2da6485263050d3f8fb657bab41bfa20b348123161f9706",
+  "source_catalog_sha256": "082b98e52a26bfb95e75c6206ffbfdbd55313c6a1d368232b3641fb9ef732cf1",
   "warnings": []
 }
