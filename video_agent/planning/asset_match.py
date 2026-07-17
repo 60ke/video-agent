@@ -49,18 +49,6 @@ def role_assets(catalog: AssetCatalog) -> dict[str, list[Asset]]:
     return roles
 
 
-def brand_cutaway(intent: str, roles: dict[str, list[Asset]]) -> Asset | None:
-    is_cta = any(word in intent for word in ("评论", "关注", "点赞", "收藏", "告诉我", "想看", "下期", "再见", "零基础", "轻松上手", "功能齐全"))
-    is_transition = any(word in intent for word in ("生成中", "等待", "稍等", "马上生成", "正在生成", "实景功能"))
-    if not is_cta and not is_transition:
-        return None
-    candidates = roles.get("brand_ip_video", []) + roles.get("brand_ip_animation", []) + roles.get("brand_ip_static", [])
-    if not candidates:
-        return None
-    preferred = "挥手" if is_cta else "跑步"
-    return next((asset for asset in candidates if preferred in " ".join(asset.tags + [asset.filename])), candidates[0])
-
-
 def feature_result_matches(term: str, asset: Asset) -> bool:
     labels = [_normalized_term(item) for item in [*asset.semantic_path[1:], *asset.tags] if item]
     return any(candidate in label or label in candidate for candidate in _feature_terms(term) for label in labels)
@@ -128,8 +116,6 @@ def motion_for(asset: Asset, template: str) -> str:
         return "scale_in"
     if template == "ui_feature_entry":
         return "detail_push_in"
-    if template == "brand_ip_cutaway":
-        return "brand_breath"
     ratio = (asset.width or 1) / (asset.height or 1)
     if ratio >= 1.35:
         return "full_bleed_to_safe_card"

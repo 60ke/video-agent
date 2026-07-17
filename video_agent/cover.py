@@ -94,12 +94,12 @@ def _select_references(repo_root: Path, spec: CoverSpec, catalog: AssetCatalog, 
     brand_candidates = [
         asset
         for asset in eligible
-        if asset.role in {"brand_logo", "brand_ip_static"}
+        if asset.role == "brand_logo"
         and Path(asset.path).as_posix().lower().startswith("assets/brand/kehuanxiongmao/")
     ]
     brand_candidates.sort(
         key=lambda asset: (
-            asset.role != "brand_logo",
+        asset.role != "brand_logo",
             Path(asset.path).suffix.lower() != ".png",
             asset.filename,
         )
@@ -119,7 +119,7 @@ def _select_references(repo_root: Path, spec: CoverSpec, catalog: AssetCatalog, 
     candidates = [
         asset
         for asset in eligible
-        if asset.role not in {"brand_logo", "brand_ip_static", "brand_ip_animation", "brand_ip_video"}
+        if asset.role != "brand_logo"
         and asset.asset_id in usage
         and asset.asset_id not in selected
     ]

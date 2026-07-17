@@ -132,7 +132,7 @@ def _motion(kind: str, primary: Asset | None, binding_count: int, config: dict[s
     if isinstance(configured, str):
         return configured
     if isinstance(configured, dict) and primary is not None:
-        media_key = "animated" if primary.media_type == "video" or primary.role in {"brand_ip_animation", "brand_ip_video"} else "static"
+        media_key = "animated" if primary.media_type == "video" else "static"
         selected = configured.get(media_key) or configured.get("default")
         if selected:
             return str(selected)

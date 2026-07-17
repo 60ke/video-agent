@@ -52,7 +52,7 @@ MOTION_ALLOWLIST = {
     "card_stack",
     "light_sweep",
 }
-TEMPLATE_ALLOWLIST = {"ui_params_focus", "ui_feature_entry", "editor_interaction", "result_showcase", "brand_ip_cutaway", "reference_to_result"}
+TEMPLATE_ALLOWLIST = {"ui_params_focus", "ui_feature_entry", "editor_interaction", "result_showcase", "reference_to_result"}
 TEXT_DENSE_TEMPLATES = {"ui_params_focus"}
 TEXT_DENSE_MOTION_ALLOWLIST = {"none", "fade_in", "fade_out", "scale_in", "scale_out"}
 BEAT_START_ANCHOR_PREFIX = "beat_start:"

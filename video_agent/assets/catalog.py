@@ -527,6 +527,12 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
 
     seen_brand_digests: set[str] = set()
     for path in _iter_media_recursive(brand_dir):
+        # The production brand library intentionally contains one shared logo.
+        # Customer IP/result images belong to their feature result folders and
+        # must never become a generic fallback brand cutaway.
+        if path.name != "柯幻熊猫_LOGO.png" or path.parent.name != "logo":
+            warnings.append(f"ignored non-production brand asset: {path.relative_to(assets_root).as_posix()}")
+            continue
         digest = sha256_file(path)
         if digest in seen_brand_digests:
             warnings.append(f"duplicate brand asset skipped: {path.relative_to(assets_root).as_posix()}")
