@@ -6,6 +6,7 @@ from video_agent.ai.action_scene_planner import (
     _normalize_invalid_asset_gap_decisions,
     _normalize_multi_gap_derivation_scenes,
     _normalize_scene_visual_purposes,
+    _normalize_required_scene_asset_roles,
     _validate_asset_gap_decisions,
 )
 import pytest
@@ -325,7 +326,7 @@ def test_missing_request_for_derive_decision_is_reconstructed() -> None:
                 "beat_id": "beat_001",
                 "phrase": "交通出行",
                 "decision": "derive",
-                "request_id": "derive_traffic_result",
+                "request_id": "derive_交通出行",
                 "reason": "missing request",
             }
         ],
@@ -348,10 +349,10 @@ def test_missing_request_for_derive_decision_is_reconstructed() -> None:
 
     request = normalized["derivation_requests"][0]
     scene = normalized["scenes"][0]
-    assert request["request_id"] == "derive_traffic_result"
+    assert request["request_id"].startswith("gap_")
     assert request["source_asset_id"] == source_ref
     assert scene["scene_kind"] == "result_gallery"
-    assert scene["derivation_request_ids"] == ["derive_traffic_result"]
+    assert scene["derivation_request_ids"] == [request["request_id"]]
 
 
 def test_light_sweep_scene_does_not_require_an_image_asset() -> None:
@@ -439,13 +440,60 @@ def test_scene_kind_repairs_deterministic_visual_purpose() -> None:
                 },
                 {
                     "scene_id": "scene_close",
-                    "scene_kind": "light_sweep_fallback",
+                    "scene_kind": "brand_closing",
                     "narrative_role": "closing",
                     "visual_purpose": "abstract_bridge",
+                    "asset_bindings": {},
+                    "derivation_request_ids": [],
+                    "fallback_policy": "light_sweep",
                 },
             ]
         }
     )
 
     assert normalized["scenes"][0]["visual_purpose"] == "causal_evidence"
+    assert normalized["scenes"][1]["scene_kind"] == "light_sweep_fallback"
     assert normalized["scenes"][1]["visual_purpose"] == "brand_close"
+
+
+def test_parameter_scene_repairs_feature_entry_to_matching_form() -> None:
+    entry = Asset(
+        asset_id="asset_entry",
+        path="assets/sites/logo_entry.png",
+        filename="logo_entry.png",
+        sha256="d" * 64,
+        role="feature_entry",
+        semantic_path=["文生图", "LOGO"],
+        width=1600,
+        height=900,
+        evidence_class=EvidenceClass.SOURCE,
+        provenance=Provenance(origin="test"),
+    )
+    form = Asset(
+        asset_id="asset_form",
+        path="assets/sites/logo_form.png",
+        filename="logo_form.png",
+        sha256="e" * 64,
+        role="feature_form_params",
+        semantic_path=["文生图", "LOGO"],
+        width=900,
+        height=1600,
+        evidence_class=EvidenceClass.SOURCE,
+        provenance=Provenance(origin="test"),
+    )
+    index = AIAssetIndex.build([entry, form])
+    normalized = _normalize_required_scene_asset_roles(
+        {
+            "scenes": [
+                {
+                    "scene_id": "scene_params",
+                    "scene_kind": "parameter_input",
+                    "feature_path": ["文生图", "LOGO"],
+                    "asset_bindings": {"primary": index.ref_for_asset(entry)},
+                }
+            ]
+        },
+        index,
+    )
+
+    assert normalized["scenes"][0]["asset_bindings"]["primary"] == index.ref_for_asset(form)

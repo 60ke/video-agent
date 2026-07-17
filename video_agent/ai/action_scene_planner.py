@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -695,7 +696,11 @@ def _normalize_invalid_asset_gap_decisions(
             continue
 
         source = asset_index.asset(source_ref)
-        request_id = existing_request_id or f"gap_{sha256_json([beat_id, phrase, source_ref])[:12]}"
+        request_id = (
+            existing_request_id
+            if re.fullmatch(r"[A-Za-z0-9_-]+", existing_request_id)
+            else f"gap_{sha256_json([beat_id, phrase, source_ref])[:12]}"
+        )
         scene_id = str(scene.get("scene_id"))
         target_orientation = (
             "landscape"
@@ -869,6 +874,12 @@ def _normalize_scene_visual_purposes(result: dict[str, Any]) -> dict[str, Any]:
     for scene in normalized.get("scenes", []):
         if not isinstance(scene, dict):
             continue
+        if (
+            scene.get("fallback_policy") == "light_sweep"
+            and not scene.get("asset_bindings")
+            and not scene.get("derivation_request_ids")
+        ):
+            scene["scene_kind"] = "light_sweep_fallback"
         kind = scene.get("scene_kind")
         expected = fixed.get(str(kind))
         if kind == "light_sweep_fallback":
@@ -882,6 +893,53 @@ def _normalize_scene_visual_purposes(result: dict[str, Any]) -> dict[str, Any]:
                 expected,
             )
             scene["visual_purpose"] = expected
+    return normalized
+
+
+def _normalize_required_scene_asset_roles(
+    result: dict[str, Any], asset_index: AIAssetIndex
+) -> dict[str, Any]:
+    """Repair bindings where the scene kind has one unambiguous asset role."""
+
+    normalized = json.loads(json.dumps(result, ensure_ascii=False))
+    required_roles = {"parameter_input": "feature_form_params"}
+    for scene in normalized.get("scenes", []):
+        if not isinstance(scene, dict):
+            continue
+        required_role = required_roles.get(str(scene.get("scene_kind")))
+        bindings = scene.get("asset_bindings")
+        if required_role is None or not isinstance(bindings, dict):
+            continue
+        primary_ref = bindings.get("primary")
+        if isinstance(primary_ref, str) and primary_ref in asset_index.refs:
+            if asset_index.asset(primary_ref).role == required_role:
+                continue
+        feature_path = [str(value) for value in scene.get("feature_path", [])]
+        candidates = [
+            (asset_ref, asset)
+            for asset_ref in sorted(asset_index.refs)
+            if (asset := asset_index.asset(asset_ref)).role == required_role
+            and asset.semantic_path == feature_path
+            and asset.production_eligible
+            and asset.quality.status != "rejected"
+        ]
+        if not candidates:
+            continue
+        candidates.sort(
+            key=lambda item: (
+                not bool(item[1].metadata.get("sequence_asset_ids")),
+                item[0],
+            )
+        )
+        replacement = candidates[0][0]
+        logger.info(
+            "[场景编排] 程序修正素材角色 scene=%s role=%s from=%s to=%s",
+            scene.get("scene_id"),
+            required_role,
+            primary_ref,
+            replacement,
+        )
+        bindings["primary"] = replacement
     return normalized
 
 
@@ -1062,6 +1120,7 @@ def plan_action_scenes(
             result = _normalize_empty_result_gallery_items(result, selection_report)
             result = _normalize_gallery_boundaries(result, narration)
             result = _normalize_scene_visual_purposes(result)
+            result = _normalize_required_scene_asset_roles(result, asset_index)
             _validate_semantic_order(result, narration)
             _validate_gallery_recall(result, selection_report)
             _validate_asset_gap_decisions(result, selection_report)
