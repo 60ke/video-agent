@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Callable
 
 from video_agent.contracts.v4 import (
@@ -27,7 +28,7 @@ from video_agent.contracts.v4.resolved_assets import (
     Stage4SelectionConfig,
     validate_resolved_asset_plan,
 )
-from video_agent.derivation.v4 import RegistryDerivationCapabilityResolver
+from video_agent.derivation.v4.capability_resolver import RegistryDerivationCapabilityResolver
 from video_agent.registries import CapabilityRegistryHub
 
 from .dependency_graph import topo_sort_scenes
@@ -54,15 +55,29 @@ _WEBSITE_EVIDENCE = frozenset({EvidenceClass.SOURCE, EvidenceClass.FAITHFUL})
 class AssetPlanResolver:
     registry: CapabilityRegistryHub
     usage: AssetUsageRepository = field(default_factory=AssetUsageRepository)
+    repo_root: Path | None = None
+    run_dir: Path | None = None
     capability_resolver: DerivationCapabilityResolver | None = None
     derivation_executor: DerivationExecutor | None = None
     material_gaps: list[MaterialGap] = field(default_factory=list, init=False)
 
     def __post_init__(self) -> None:
         if self.capability_resolver is None:
-            self.capability_resolver = RegistryDerivationCapabilityResolver(self.registry)
+            self.capability_resolver = RegistryDerivationCapabilityResolver(
+                self.registry,
+                repo_root=self.repo_root,
+            )
         if self.derivation_executor is None:
-            self.derivation_executor = FakeDerivationExecutor(registry=self.registry)
+            if self.repo_root is not None:
+                from video_agent.derivation.v4.executors import Stage5DerivationExecutor
+
+                self.derivation_executor = Stage5DerivationExecutor(
+                    self.repo_root,
+                    self.registry,
+                    run_dir=self.run_dir,
+                )
+            else:
+                self.derivation_executor = FakeDerivationExecutor(registry=self.registry)
 
     def resolve(
         self,

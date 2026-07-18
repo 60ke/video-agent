@@ -59,9 +59,19 @@ def run_stage4_resolution(
     allow_fake_derivation: bool,
     run_id: str,
     usage: AssetUsageRepository | SQLiteAssetUsageRepository | None = None,
+    repo_root: Path | None = None,
+    run_dir: Path | None = None,
 ) -> ResolvedAssetPlan:
     session = repository.open_resolution_session()
-    resolver = AssetPlanResolver(repository.registry, usage=usage or AssetUsageRepository())
+    if allow_fake_derivation:
+        resolver = AssetPlanResolver(repository.registry, usage=usage or AssetUsageRepository())
+    else:
+        resolver = AssetPlanResolver(
+            repository.registry,
+            usage=usage or AssetUsageRepository(),
+            repo_root=repo_root,
+            run_dir=run_dir,
+        )
     try:
         return resolver.resolve(
             scene_plan,
@@ -122,6 +132,8 @@ class V4Stage4Runner:
                 allow_fake_derivation=allow_fake_derivation,
                 run_id=self.context.run_id,
                 usage=usage,
+                repo_root=self.context.repo_root,
+                run_dir=self.context.run_dir,
             )
             used_assets = sorted(
                 {slot.asset_ref for scene in plan.scenes for slot in scene.slots if slot.asset_ref}

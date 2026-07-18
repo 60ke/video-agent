@@ -1,3 +1,3 @@
-from .capability_resolver import RegistryDerivationCapabilityResolver
+﻿from .capability_resolver import RegistryDerivationCapabilityResolver
 
 __all__ = ["RegistryDerivationCapabilityResolver"]

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from hashlib import sha256
+from pathlib import Path
 
 from video_agent.assets.v4.derivation_orchestrator import DerivationCapabilityBinding
 from video_agent.assets.v4.stage4_errors import Stage4Error
 from video_agent.contracts.v4 import DerivationEntry
 from video_agent.contracts.v4.resolved_assets import DerivationRequest
+from video_agent.derivation.v4.prompt_composer import prompt_template_sha256
+from video_agent.derivation.v4.sizing import target_size_for_orientation
 from video_agent.io import sha256_json
 from video_agent.registries import CapabilityRegistryHub
 
@@ -13,8 +15,9 @@ from video_agent.registries import CapabilityRegistryHub
 class RegistryDerivationCapabilityResolver:
     """Stage 5 registry-backed capability binding for DerivationRequest shapes."""
 
-    def __init__(self, hub: CapabilityRegistryHub) -> None:
+    def __init__(self, hub: CapabilityRegistryHub, *, repo_root: Path | None = None) -> None:
         self.hub = hub
+        self.repo_root = repo_root
 
     def resolve(self, request: DerivationRequest) -> DerivationCapabilityBinding:
         entry = self.hub.entry("derivation", request.derivation_type)
@@ -77,11 +80,16 @@ class RegistryDerivationCapabilityResolver:
                 slot_id=request.slot_id,
             )
 
-        prompt_template_sha256 = (
-            sha256(caps.prompt_template.encode("utf-8")).hexdigest()
-            if caps.prompt_template
-            else sha256(f"deterministic:{entry.id}:{caps.version}".encode("utf-8")).hexdigest()
-        )
+        if self.repo_root is not None:
+            template_sha = prompt_template_sha256(self.repo_root, entry)
+        else:
+            from hashlib import sha256
+
+            template_sha = (
+                sha256(caps.prompt_template.encode("utf-8")).hexdigest()
+                if caps.prompt_template
+                else sha256(f"deterministic:{entry.id}:{caps.version}".encode("utf-8")).hexdigest()
+            )
         prompt_input_sha256 = sha256_json(
             {
                 "derivation_type": request.derivation_type,
@@ -97,24 +105,27 @@ class RegistryDerivationCapabilityResolver:
                 "prompt_contract_version": caps.prompt_contract_version,
             }
         )
+        target_size = target_size_for_orientation(request.target_orientation)
         execution_fingerprint = sha256_json(
             {
                 "capability_id": entry.id,
                 "capability_version": caps.version,
                 "executor_kind": caps.executor_kind,
                 "provider_profile": caps.provider_profile,
-                "prompt_template_sha256": prompt_template_sha256,
+                "prompt_template_sha256": template_sha,
                 "website_truth_policy": caps.website_truth_policy,
+                "target_size": target_size,
             }
         )
+        provider_model = "pil" if caps.executor_kind == "deterministic" else "gpt-image-2"
         return DerivationCapabilityBinding(
             capability_id=entry.id,
             capability_version=caps.version,
             execution_fingerprint=execution_fingerprint,
             is_fake=False,
             provider_profile_id=caps.provider_profile or "deterministic",
-            provider_model=caps.executor_kind,
-            target_size="1024x1792",
-            prompt_template_sha256=prompt_template_sha256,
+            provider_model=provider_model,
+            target_size=target_size,
+            prompt_template_sha256=template_sha,
             prompt_input_sha256=prompt_input_sha256,
         )
