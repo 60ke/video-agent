@@ -40,6 +40,32 @@
     {"item_id": "process", "enabled": true, "requires_category": false},
     {"item_id": "causal", "enabled": true, "requires_category": false}
   ],
+  "relation_patterns": [
+    {
+      "item_id": "parameter_callout_sequence", "enabled": true, "group_type": "process",
+      "members": [
+        {"member_key": "base", "asset_role": "parameter_panel", "required": true, "order": 1},
+        {"member_key": "stage", "asset_role": "parameter_panel", "required": true, "order": 2},
+        {"member_key": "final", "asset_role": "parameter_panel", "required": true, "order": 3}
+      ]
+    },
+    {
+      "item_id": "editor_sequence", "enabled": true, "group_type": "process",
+      "members": [
+        {"member_key": "source_result", "asset_role": "result_image", "required": true, "order": 1},
+        {"member_key": "editor_page", "asset_role": "editor_page", "required": true, "order": 2},
+        {"member_key": "edited_result", "asset_role": "edited_result", "required": true, "order": 3}
+      ]
+    },
+    {
+      "item_id": "reference_result_plan", "enabled": true, "group_type": "causal",
+      "members": [
+        {"member_key": "reference_image", "asset_role": "reference_image", "required": true, "order": 1},
+        {"member_key": "result_image", "asset_role": "result_image", "required": true, "order": 2},
+        {"member_key": "flat_plan", "asset_role": "flat_plan", "required": true, "order": 3}
+      ]
+    }
+  ],
   "configured_assets": [
     {"item_id": "default_outro", "enabled": true, "requires_category": false}
   ]

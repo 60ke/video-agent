@@ -619,7 +619,16 @@ Scope 不接收素材目录、动效、音效或 TTS 时间戳。
     "visual_structures": [],
     "operation_intents": [],
     "claims": [],
-    "group_patterns": [],
+    "group_types": [],
+    "relation_patterns": [
+      {
+        "pattern_id": "editor_sequence",
+        "group_type": "process",
+        "members": [
+          {"member_key": "source_result", "asset_role": "result_image", "required": true, "order": 1}
+        ]
+      }
+    ],
     "configured_assets": []
   }
 }

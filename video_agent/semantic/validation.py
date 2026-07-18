@@ -17,7 +17,7 @@ from video_agent.contracts.v4.scene import (
     SemanticScene,
 )
 from video_agent.contracts.v4.scope import VideoScope
-from video_agent.registries import CapabilityRegistrySnapshot
+from video_agent.registries import CapabilityRegistrySnapshot, RelationPatternDefinition
 
 
 @dataclass(frozen=True)
@@ -30,6 +30,13 @@ class SceneTextSpan:
 @dataclass(frozen=True)
 class SceneValidationResult:
     scene_spans: tuple[SceneTextSpan, ...]
+
+
+@dataclass(frozen=True)
+class GroupBinding:
+    group_type: str
+    pattern_id: str
+    origin: tuple[str, ...]
 
 
 def _issue(code: str, path: str, message: str) -> ValidationIssue:
@@ -132,6 +139,7 @@ def _validate_scene(
     scene_index: int,
     earlier_scenes: dict[str, SemanticScene],
     registry: CapabilityRegistrySnapshot,
+    known_groups: dict[str, GroupBinding],
     issues: list[ValidationIssue],
 ) -> None:
     base = f"scenes[{scene_index}]"
@@ -163,7 +171,18 @@ def _validate_scene(
 
     input_map = {item.input_name: item for item in scene.inputs}
     slot_map = {slot.slot_id: slot for slot in scene.slots}
-    known_groups: dict[str, str] = {}
+    input_identity: dict[str, tuple[str, str]] = {}
+    for input_index, scene_input in enumerate(scene.inputs):
+        input_path = f"{base}.inputs[{input_index}]"
+        source_scene = earlier_scenes.get(scene_input.from_scene)
+        if not source_scene:
+            issues.append(_issue("invalid_scene_dependency", f"{input_path}.from_scene", "input must reference an earlier scene"))
+            continue
+        source_outputs = {item.output_name for item in source_scene.outputs}
+        if scene_input.from_output not in source_outputs:
+            issues.append(_issue("unknown_scene_output", f"{input_path}.from_output", f"unknown output on {scene_input.from_scene}: {scene_input.from_output}"))
+            continue
+        input_identity[scene_input.input_name] = (scene_input.from_scene, scene_input.from_output)
 
     for slot_index, slot in enumerate(scene.slots):
         slot_path = f"{base}.slots[{slot_index}]"
@@ -184,34 +203,42 @@ def _validate_scene(
         source = slot.source
         if isinstance(source, (AssetGroupQuerySource, GroupMemberSource, RelationFromInputSource)):
             _validate_registry_id(registry, "group_types", source.group_type, f"{slot_path}.source.group_type", issues)
+            pattern = registry.relation_pattern(source.pattern_id)
+            _validate_relation_member(
+                pattern=pattern,
+                group_type=source.group_type,
+                member_key=source.member_key,
+                asset_role=slot.asset_role,
+                path=f"{slot_path}.source",
+                issues=issues,
+            )
         if isinstance(source, AssetGroupQuerySource):
-            previous_type = known_groups.get(source.group_alias)
-            if previous_type and previous_type != source.group_type:
-                issues.append(_issue("group_type_mismatch", f"{slot_path}.source", "group alias changed type"))
-            known_groups[source.group_alias] = source.group_type
+            binding = GroupBinding(
+                group_type=source.group_type,
+                pattern_id=source.pattern_id,
+                origin=("asset_group_query", slot.category_id or ""),
+            )
+            _declare_or_validate_group(source.group_alias, binding, known_groups, f"{slot_path}.source", issues)
         elif isinstance(source, GroupMemberSource):
-            if known_groups.get(source.group_alias) != source.group_type:
-                issues.append(_issue("unknown_group_alias", f"{slot_path}.source.group_alias", "group_member must reference an earlier group declaration in the scene"))
+            expected = known_groups.get(source.group_alias)
+            if expected is None:
+                issues.append(_issue("unknown_group_alias", f"{slot_path}.source.group_alias", "group_member must reference an earlier group declaration"))
+            elif expected.group_type != source.group_type or expected.pattern_id != source.pattern_id:
+                issues.append(_issue("group_binding_mismatch", f"{slot_path}.source", "group alias changed type or relation pattern"))
         elif isinstance(source, (SceneInputSource, RelationFromInputSource)):
             if source.input_name not in input_map:
                 issues.append(_issue("unknown_scene_input", f"{slot_path}.source.input_name", f"unknown input: {source.input_name}"))
             if isinstance(source, RelationFromInputSource):
-                previous_type = known_groups.get(source.group_alias)
-                if previous_type and previous_type != source.group_type:
-                    issues.append(_issue("group_type_mismatch", f"{slot_path}.source", "group alias changed type"))
-                known_groups[source.group_alias] = source.group_type
+                identity = input_identity.get(source.input_name)
+                if identity is not None:
+                    binding = GroupBinding(
+                        group_type=source.group_type,
+                        pattern_id=source.pattern_id,
+                        origin=("scene_output", *identity),
+                    )
+                    _declare_or_validate_group(source.group_alias, binding, known_groups, f"{slot_path}.source", issues)
         elif isinstance(source, ConfiguredAssetSource):
             _validate_registry_id(registry, "configured_assets", source.config_key, f"{slot_path}.source.config_key", issues)
-
-    for input_index, scene_input in enumerate(scene.inputs):
-        input_path = f"{base}.inputs[{input_index}]"
-        source_scene = earlier_scenes.get(scene_input.from_scene)
-        if not source_scene:
-            issues.append(_issue("invalid_scene_dependency", f"{input_path}.from_scene", "input must reference an earlier scene"))
-            continue
-        source_outputs = {item.output_name for item in source_scene.outputs}
-        if scene_input.from_output not in source_outputs:
-            issues.append(_issue("unknown_scene_output", f"{input_path}.from_output", f"unknown output on {scene_input.from_scene}: {scene_input.from_output}"))
 
     for output_index, output in enumerate(scene.outputs):
         output_path = f"{base}.outputs[{output_index}]"
@@ -247,6 +274,53 @@ def _validate_scene(
             issues.append(_issue("unrelated_structured_slots", f"{base}.slots", f"{scene.visual_structure} cannot use unrelated asset queries"))
         if not any(slot.source.kind in {"asset_group_query", "group_member", "relation_from_input"} for slot in scene.slots):
             issues.append(_issue("missing_relation_source", f"{base}.slots", f"{scene.visual_structure} requires a group or relation source"))
+
+
+def _validate_relation_member(
+    *,
+    pattern: RelationPatternDefinition | None,
+    group_type: str,
+    member_key: str,
+    asset_role: str,
+    path: str,
+    issues: list[ValidationIssue],
+) -> None:
+    if pattern is None or not pattern.enabled:
+        issues.append(_issue("unknown_relation_pattern", f"{path}.pattern_id", "unknown or disabled relation pattern"))
+        return
+    if pattern.group_type != group_type:
+        issues.append(_issue("pattern_group_type_mismatch", f"{path}.group_type", f"pattern requires {pattern.group_type}"))
+    member = next((item for item in pattern.members if item.member_key == member_key), None)
+    if member is None:
+        issues.append(_issue("unknown_pattern_member", f"{path}.member_key", f"pattern has no member: {member_key}"))
+    elif member.asset_role != asset_role:
+        issues.append(
+            _issue(
+                "pattern_member_role_mismatch",
+                f"{path}.member_key",
+                f"pattern member {member_key} requires {member.asset_role}, got {asset_role}",
+            )
+        )
+
+
+def _declare_or_validate_group(
+    group_alias: str,
+    binding: GroupBinding,
+    known_groups: dict[str, GroupBinding],
+    path: str,
+    issues: list[ValidationIssue],
+) -> None:
+    previous = known_groups.get(group_alias)
+    if previous is None:
+        known_groups[group_alias] = binding
+    elif previous != binding:
+        issues.append(
+            _issue(
+                "group_binding_mismatch",
+                path,
+                "group alias must keep the same type, relation pattern and upstream origin across scenes",
+            )
+        )
 
 
 def _validate_gallery(scene: SemanticScene, base: str, issues: list[ValidationIssue]) -> None:
@@ -287,6 +361,7 @@ def validate_scene_semantic_plan(
     spans: list[SceneTextSpan] = []
     offset = 0
     earlier_scenes: dict[str, SemanticScene] = {}
+    known_groups: dict[str, GroupBinding] = {}
     for scene_index, scene in enumerate(ordered):
         normalized_scene = normalize_frozen_text(scene.text)
         spans.append(SceneTextSpan(scene_id=scene.scene_id, start=offset, end=offset + len(normalized_scene)))
@@ -296,6 +371,7 @@ def validate_scene_semantic_plan(
             scene_index=scene_index,
             earlier_scenes=earlier_scenes,
             registry=registry,
+            known_groups=known_groups,
             issues=issues,
         )
         earlier_scenes[scene.scene_id] = scene

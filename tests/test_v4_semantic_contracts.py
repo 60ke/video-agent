@@ -89,8 +89,27 @@ def test_sequence_rejects_unrelated_asset_queries(registry: CapabilityRegistrySn
 
 def test_scene_dependency_must_point_backward(registry: CapabilityRegistrySnapshot) -> None:
     payload = copy.deepcopy(_json("scene_semantic_plan.payload.json"))
-    payload["scenes"][4]["inputs"][0]["from_scene"] = "s006"
+    payload["scenes"][5]["inputs"][0]["from_scene"] = "s007"
     plan = SceneSemanticPlan.model_validate(payload)
     with pytest.raises(DomainValidationError) as error:
         validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
     assert any(issue.code == "invalid_scene_dependency" for issue in error.value.issues)
+
+
+def test_relation_pattern_rejects_wrong_member_role(registry: CapabilityRegistrySnapshot) -> None:
+    payload = copy.deepcopy(_json("scene_semantic_plan.payload.json"))
+    payload["scenes"][5]["slots"][1]["source"]["member_key"] = "edited_result"
+    plan = SceneSemanticPlan.model_validate(payload)
+    with pytest.raises(DomainValidationError) as error:
+        validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
+    assert any(issue.code == "pattern_member_role_mismatch" for issue in error.value.issues)
+
+
+def test_cross_scene_group_alias_keeps_same_upstream_output(registry: CapabilityRegistrySnapshot) -> None:
+    payload = copy.deepcopy(_json("scene_semantic_plan.payload.json"))
+    payload["scenes"][7]["inputs"][0]["from_scene"] = "s006"
+    payload["scenes"][7]["inputs"][0]["from_output"] = "edited_result"
+    plan = SceneSemanticPlan.model_validate(payload)
+    with pytest.raises(DomainValidationError) as error:
+        validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
+    assert any(issue.code == "group_binding_mismatch" for issue in error.value.issues)

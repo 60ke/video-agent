@@ -13,7 +13,7 @@ from video_agent.contracts.v4 import FrozenNarration
 from video_agent.io import load_model, sha256_json, utc_now, write_json_atomic
 from video_agent.orchestrator import Orchestrator as LegacyOrchestrator
 from video_agent.progress import get_logger
-from video_agent.registries import load_bootstrap_registry
+from video_agent.registries import CapabilityRegistryHub, project_registry_hub
 from video_agent.runtime import RunContext
 from video_agent.semantic import classify_video_scope, plan_scene_semantics
 
@@ -29,6 +29,7 @@ class V4Stage1Result:
     video_scope: Path
     scene_semantic_plan: Path
     registry_snapshot: Path
+    registry_projection: Path
 
 
 async def run_fixed_voice_frontend(
@@ -76,9 +77,12 @@ class V4Orchestrator:
         frozen_path = self.context.artifact("frozen_narration.json")
         write_json_atomic(frozen_path, frozen)
 
-        registry = load_bootstrap_registry(self.context.repo_root)
-        registry_path = self.context.artifact("capability_registry.stage1.json")
-        write_json_atomic(registry_path, registry)
+        registry_hub = CapabilityRegistryHub.load(self.context.repo_root / "config" / "registries" / "v4")
+        registry_snapshot_path = self.context.artifact("capability_registry.snapshot.json")
+        registry_hub.freeze(registry_snapshot_path)
+        registry = project_registry_hub(registry_hub)
+        registry_projection_path = self.context.artifact("capability_registry.stage1.json")
+        write_json_atomic(registry_projection_path, registry)
         agents_dir = self.context.run_dir / "agents"
 
         async with AIRuntimeSession(self.context.repo_root) as gateway:
@@ -125,7 +129,8 @@ class V4Orchestrator:
                     "timing_lock": timing_path.relative_to(self.context.run_dir).as_posix(),
                     "video_scope": scope_path.relative_to(self.context.run_dir).as_posix(),
                     "scene_semantic_plan": scene_path.relative_to(self.context.run_dir).as_posix(),
-                    "registry_snapshot": registry_path.relative_to(self.context.run_dir).as_posix(),
+                    "registry_snapshot": registry_snapshot_path.relative_to(self.context.run_dir).as_posix(),
+                    "registry_projection": registry_projection_path.relative_to(self.context.run_dir).as_posix(),
                 },
             },
         )
@@ -140,7 +145,8 @@ class V4Orchestrator:
             timing_lock=timing_path,
             video_scope=scope_path,
             scene_semantic_plan=scene_path,
-            registry_snapshot=registry_path,
+            registry_snapshot=registry_snapshot_path,
+            registry_projection=registry_projection_path,
         )
 
     def _ensure_speech(self, legacy: LegacyOrchestrator) -> Path:

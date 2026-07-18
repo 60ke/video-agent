@@ -15,12 +15,15 @@ class AssetGroupQuerySource(V4Contract):
     kind: Literal["asset_group_query"]
     group_alias: str = Field(min_length=1)
     group_type: str = Field(min_length=1)
+    pattern_id: str = Field(min_length=1)
+    member_key: str = Field(min_length=1)
 
 
 class GroupMemberSource(V4Contract):
     kind: Literal["group_member"]
     group_alias: str = Field(min_length=1)
     group_type: str = Field(min_length=1)
+    pattern_id: str = Field(min_length=1)
     member_key: str = Field(min_length=1)
 
 
@@ -34,6 +37,7 @@ class RelationFromInputSource(V4Contract):
     input_name: str = Field(min_length=1)
     group_alias: str = Field(min_length=1)
     group_type: str = Field(min_length=1)
+    pattern_id: str = Field(min_length=1)
     member_key: str = Field(min_length=1)
 
 

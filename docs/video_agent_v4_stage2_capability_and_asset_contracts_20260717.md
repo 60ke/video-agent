@@ -175,11 +175,19 @@ Stage 2 also formalizes the registries already used by Stage 1:
 - `operation_intent`;
 - `claim`;
 - `group_type`;
+- `relation_pattern`;
 - `configured_asset`.
 
 Claim entries add `required_evidence_classes`. Group type entries may declare
-`ordered=true` and permitted member-role patterns. The first group types are
+`ordered=true` and permitted member roles. The first group types are
 `causal`, `comparison` and ordered `process`, but these remain configuration data.
+
+`group_type` only defines the broad relationship family. `relation_pattern`
+defines the exact member contract used by a workflow, including `pattern_id`,
+`member_key`, `asset_role`, required membership and order. The initial patterns
+are `parameter_callout_sequence`, `editor_sequence` and
+`reference_result_plan`; they are dynamic Registry entries, not closed Python
+enums.
 
 ### 3.6 CapabilityRegistryHub
 
@@ -354,6 +362,7 @@ Contract rules:
 {
   "group_ref": "group://G0012",
   "group_type": "causal",
+  "pattern_id": "reference_result_plan",
   "category_id": "文生图/文化墙",
   "members": [
     {
@@ -367,6 +376,12 @@ Contract rules:
       "asset_role": "result_image",
       "asset_ref": "asset://A0123",
       "order": 2
+    },
+    {
+      "member_key": "flat_plan",
+      "asset_role": "flat_plan",
+      "asset_ref": "asset://A0124",
+      "order": 3
     }
   ],
   "status": "active",
@@ -399,8 +414,10 @@ relative keys, local evidence/source invariants, uniqueness and lifecycle shape.
 
 ### Registry validation
 
-`CapabilityRegistryHub` validates category, role, Claim, group type and configured
-asset IDs against one frozen snapshot.
+`CapabilityRegistryHub` validates category, role, Claim, group type, relation
+pattern and configured asset IDs against one frozen snapshot. AssetGroup
+validation additionally requires its members to match the selected relation
+pattern exactly.
 
 ### Repository validation
 

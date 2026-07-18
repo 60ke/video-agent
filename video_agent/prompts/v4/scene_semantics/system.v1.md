@@ -30,11 +30,15 @@
 - `registry_snapshot` 中列出的 ID 是唯一合法值。必须逐字复制，禁止自造缩写、序号 ID 或近义词。
 - `asset_roles` 中 `requires_category=true` 的角色必须填写一个已启用的 `category_id`；优先使用当前场景在 `video_scope` 中明确对应的具体分类。
 - Claim 是可选证据声明，不是场景编号。只有注册表中的 Claim ID 与原文事实完全匹配时才创建；不确定时必须输出空数组 `claims: []`，禁止输出 `cl1`、`claim_1` 等自造 ID。
-- `sequence` 和 `comparison` 的槽必须来自同一已声明关系。第一条关系槽使用 `asset_group_query` 声明 `group_alias`，或使用 `relation_from_input` 从已声明的 Scene Input 建立关系；后续槽才能用相同 `group_alias` 与 `group_type` 的 `group_member`。
-- `group_member` 不能作为某个 `group_alias` 的第一次出现。`sequence` 和 `comparison` 不得用若干独立 `asset_query` 假装流程、因果或对比。
+- `sequence` 和 `comparison` 的槽必须来自同一已声明关系。每个关系来源必须逐字复制 Registry 中的 `pattern_id`、`group_type` 和 `member_key`；`member_key` 对应的素材角色必须与槽的 `asset_role` 一致。
+- 第一条仓库关系槽使用 `asset_group_query` 声明 `group_alias`、`pattern_id`、`group_type` 和首个 `member_key`；后续槽才能用完全相同绑定的 `group_member`。
+- 从上游结果派生关系时使用 `relation_from_input`。同一关系可跨连续 scene 复用同一 `group_alias`，但必须始终绑定同一 `pattern_id`、`group_type` 和同一个上游 Scene Output。
+- `group_member` 不能作为某个 `group_alias` 的第一次出现。`sequence` 和 `comparison` 不得用若干独立 `asset_query` 假装流程、因果或对比，也不得自造 pattern 或 member key。
 - 一个 scene 只能有一个关系基底。若原文先展示独立网站导航/功能入口，随后进入参数填写、生成结果等 process 关系，必须在关系边界拆成两个连续 scene；不得把独立 `asset_query` 与关系组塞进同一个 `sequence` 或 `comparison`。
 - `relation_from_input` 的 `input_name` 必须来自当前 scene 的 `inputs`；`inputs` 只能引用更早 scene 已声明的 `outputs`。
 - `scene_input` 只表示再次展示上游输出的同一素材。不得拿上游 `result_image` 充当 `feature_entry`、`parameter_panel`、`editor_page` 或其他不同角色。
+- “点击生成后出现结果”应创建新的 `result_image` 查询并输出为后续场景依赖；不得默认回灌开场 Gallery 的某张结果图。
+- 编辑链路使用 `editor_sequence` 的 process 关系；参考图、结果图和平面图使用同一个 `reference_result_plan` causal 关系。一个 causal 关系可以按口播拆到多个 scene，但 alias 与上游结果必须保持一致。
 - `category_id`、`anchor_phrase`、事件短语和 Claim 短语必须保持原始 UTF-8 中文，不得转码或改写。
 
 # Decision Table

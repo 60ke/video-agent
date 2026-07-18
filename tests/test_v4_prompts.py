@@ -33,7 +33,8 @@ def test_scene_prompt_injects_registry_and_decision_assets() -> None:
         "visual_structures": [{"item_id": "single"}],
         "operation_intents": [],
         "claims": [],
-        "group_patterns": [],
+        "group_types": [],
+        "relation_patterns": [],
         "configured_assets": [],
     }
     prompt = load_scene_prompt(REPO_ROOT, registry)
@@ -68,6 +69,7 @@ def test_scene_registry_payload_exposes_category_requirement() -> None:
             "operation_intents": [],
             "claims": [],
             "group_types": [],
+            "relation_patterns": [],
             "configured_assets": [],
         }
     )
