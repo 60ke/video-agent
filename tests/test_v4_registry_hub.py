@@ -27,6 +27,7 @@ def test_registry_config_loads_and_resolves_categories() -> None:
         "configured_asset",
         "group_type",
         "operation_intent",
+        "relation_pattern",
         "visual_structure",
     )
     assert hub.resolve_category("文化墙").id == "文生图/文化墙"
@@ -106,6 +107,7 @@ def test_freeze_round_trip_and_stage1_projection(tmp_path: Path) -> None:
     projected = load_bootstrap_registry(Path(__file__).parents[1])
     assert projected.category("文生图/文化墙") is not None
     assert projected.item("asset_roles", "brand_ip").enabled is False
+    assert projected.relation_pattern("editor_sequence").group_type == "process"
     assert set(projected.registry_versions) == set(hub.registry_ids)
 
 

@@ -23,6 +23,20 @@ class RegistryDefinition(V4Contract):
     requires_category: bool = False
 
 
+class RelationPatternMemberDefinition(V4Contract):
+    member_key: str = Field(min_length=1)
+    asset_role: str = Field(min_length=1)
+    required: bool = True
+    order: int = Field(ge=1)
+
+
+class RelationPatternDefinition(V4Contract):
+    item_id: str = Field(min_length=1)
+    enabled: bool = True
+    group_type: str = Field(min_length=1)
+    members: list[RelationPatternMemberDefinition] = Field(min_length=1)
+
+
 class CapabilityRegistrySnapshot(V4Contract):
     categories: list[CategoryDefinition]
     asset_roles: list[RegistryDefinition]
@@ -30,6 +44,7 @@ class CapabilityRegistrySnapshot(V4Contract):
     operation_intents: list[RegistryDefinition]
     claims: list[RegistryDefinition]
     group_types: list[RegistryDefinition]
+    relation_patterns: list[RelationPatternDefinition]
     configured_assets: list[RegistryDefinition]
     registry_versions: dict[str, str] = Field(default_factory=dict)
     registry_hashes: dict[str, str] = Field(default_factory=dict)
@@ -41,9 +56,11 @@ class CapabilityRegistrySnapshot(V4Contract):
         items = getattr(self, registry_name)
         return next((item for item in items if item.item_id == item_id), None)
 
+    def relation_pattern(self, pattern_id: str) -> RelationPatternDefinition | None:
+        return next((item for item in self.relation_patterns if item.item_id == pattern_id), None)
 
-def load_bootstrap_registry(repo_root: Path) -> CapabilityRegistrySnapshot:
-    hub = CapabilityRegistryHub.load(repo_root / "config" / "registries" / "v4")
+
+def project_registry_hub(hub: CapabilityRegistryHub) -> CapabilityRegistrySnapshot:
     frozen = hub.snapshot()
     categories = [
         CategoryDefinition(
@@ -74,9 +91,32 @@ def load_bootstrap_registry(repo_root: Path) -> CapabilityRegistrySnapshot:
             )
             for entry in hub.registry(registry_id).entries
         ]
+    relation_patterns = [
+        RelationPatternDefinition(
+            item_id=entry.id,
+            enabled=entry.enabled,
+            group_type=entry.group_type,
+            members=[
+                RelationPatternMemberDefinition(
+                    member_key=member.member_key,
+                    asset_role=member.asset_role,
+                    required=member.required,
+                    order=member.order,
+                )
+                for member in entry.members
+            ],
+        )
+        for entry in hub.registry("relation_pattern").entries
+    ]
     return CapabilityRegistrySnapshot(
         categories=categories,
+        relation_patterns=relation_patterns,
         **projected,
         registry_versions={item.registry_id: item.version for item in frozen.registries},
         registry_hashes={item.registry_id: item.content_sha256 for item in frozen.registries},
     )
+
+
+def load_bootstrap_registry(repo_root: Path) -> CapabilityRegistrySnapshot:
+    hub = CapabilityRegistryHub.load(repo_root / "config" / "registries" / "v4")
+    return project_registry_hub(hub)

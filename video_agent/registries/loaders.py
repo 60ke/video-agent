@@ -9,6 +9,7 @@ from video_agent.contracts.v4 import (
     CategoryRegistryDocument,
     ClaimRegistryDocument,
     GroupTypeRegistryDocument,
+    RelationPatternRegistryDocument,
     RegistryDocument,
     RegistryDocumentType,
 )
@@ -20,6 +21,7 @@ _TYPED_DOCUMENTS = {
     "asset_role": AssetRoleRegistryDocument,
     "claim": ClaimRegistryDocument,
     "group_type": GroupTypeRegistryDocument,
+    "relation_pattern": RelationPatternRegistryDocument,
 }
 
 

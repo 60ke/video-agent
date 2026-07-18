@@ -1,0 +1,40 @@
+{
+  "registry_id": "relation_pattern",
+  "version": "2026.07.18.1",
+  "schema_version": 1,
+  "entries": [
+    {
+      "id": "parameter_callout_sequence",
+      "display_name": "参数花字序列",
+      "description": "参数面板原图、花字出现和稳定停留的有序过程",
+      "group_type": "process",
+      "members": [
+        {"member_key": "base", "asset_role": "parameter_panel", "required": true, "order": 1},
+        {"member_key": "stage", "asset_role": "parameter_panel", "required": true, "order": 2},
+        {"member_key": "final", "asset_role": "parameter_panel", "required": true, "order": 3}
+      ]
+    },
+    {
+      "id": "editor_sequence",
+      "display_name": "图片编辑序列",
+      "description": "由上游结果进入编辑页并得到编辑结果的有序过程",
+      "group_type": "process",
+      "members": [
+        {"member_key": "source_result", "asset_role": "result_image", "required": true, "order": 1},
+        {"member_key": "editor_page", "asset_role": "editor_page", "required": true, "order": 2},
+        {"member_key": "edited_result", "asset_role": "edited_result", "required": true, "order": 3}
+      ]
+    },
+    {
+      "id": "reference_result_plan",
+      "display_name": "参考图结果平面图链路",
+      "description": "同一来源结果对应的参考图、生成结果和平面导出图",
+      "group_type": "causal",
+      "members": [
+        {"member_key": "reference_image", "asset_role": "reference_image", "required": true, "order": 1},
+        {"member_key": "result_image", "asset_role": "result_image", "required": true, "order": 2},
+        {"member_key": "flat_plan", "asset_role": "flat_plan", "required": true, "order": 3}
+      ]
+    }
+  ]
+}

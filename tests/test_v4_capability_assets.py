@@ -179,17 +179,23 @@ def test_causal_and_ordered_process_groups_validate(hub: CapabilityRegistryHub) 
     reference_payload["claims"] = []
     result_payload = _asset_payload("asset://A0002")
     result_payload["claims"] = []
+    flat_payload = _asset_payload("asset://A0003", asset_role="flat_plan", filename="平面图.png")
+    flat_payload["object_key"] = "flat_plans/文生图/文化墙/平面图.png"
+    flat_payload["claims"] = []
     reference = _asset(reference_payload)
     result = _asset(result_payload)
-    assets = {reference.asset_ref: reference, result.asset_ref: result}
+    flat = _asset(flat_payload)
+    assets = {reference.asset_ref: reference, result.asset_ref: result, flat.asset_ref: flat}
 
     causal_payload = {
         "group_ref": "group://G0001",
         "group_type": "causal",
+        "pattern_id": "reference_result_plan",
         "category_id": "文生图/文化墙",
         "members": [
-            {"member_key": "reference", "asset_role": "reference_image", "asset_ref": reference.asset_ref, "order": 1},
-            {"member_key": "result", "asset_role": "result_image", "asset_ref": result.asset_ref, "order": 2},
+            {"member_key": "reference_image", "asset_role": "reference_image", "asset_ref": reference.asset_ref, "order": 1},
+            {"member_key": "result_image", "asset_role": "result_image", "asset_ref": result.asset_ref, "order": 2},
+            {"member_key": "flat_plan", "asset_role": "flat_plan", "asset_ref": flat.asset_ref, "order": 3},
         ],
         "status": "active",
         "superseded_by": None,
@@ -201,6 +207,7 @@ def test_causal_and_ordered_process_groups_validate(hub: CapabilityRegistryHub) 
     process_payload = copy.deepcopy(causal_payload)
     process_payload["group_ref"] = "group://G0002"
     process_payload["group_type"] = "process"
+    process_payload["pattern_id"] = "editor_sequence"
     process_payload["members"] = [
         {"member_key": "result", "asset_role": "result_image", "asset_ref": result.asset_ref, "order": 2}
     ]
@@ -215,6 +222,7 @@ def test_group_rejects_missing_mismatched_and_disallowed_members(hub: Capability
     payload = {
         "group_ref": "group://G0003",
         "group_type": "causal",
+        "pattern_id": "reference_result_plan",
         "category_id": "文生图/文化墙",
         "members": [
             {"member_key": "missing", "asset_role": "result_image", "asset_ref": "asset://A9999", "order": 1},

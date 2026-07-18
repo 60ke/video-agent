@@ -75,6 +75,30 @@ class GroupTypeEntry(CapabilityEntry):
     allowed_member_roles: list[str] = Field(default_factory=list)
 
 
+class RelationPatternMember(V4Contract):
+    member_key: str = Field(min_length=1)
+    asset_role: str = Field(min_length=1)
+    required: bool = True
+    order: int = Field(ge=1)
+
+
+class RelationPatternEntry(CapabilityEntry):
+    group_type: str = Field(min_length=1)
+    members: list[RelationPatternMember] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_members(self) -> "RelationPatternEntry":
+        keys = [member.member_key for member in self.members]
+        if len(keys) != len(set(keys)):
+            raise ValueError("relation pattern member_key values must be unique")
+        orders = [member.order for member in self.members]
+        if len(orders) != len(set(orders)):
+            raise ValueError("relation pattern order values must be unique")
+        if sorted(orders) != list(range(1, len(self.members) + 1)):
+            raise ValueError("relation pattern orders must be contiguous from 1")
+        return self
+
+
 class RegistryDocument(V4Contract):
     registry_id: str = Field(min_length=1)
     version: str = Field(min_length=1)
@@ -110,12 +134,20 @@ class GroupTypeRegistryDocument(V4Contract):
     entries: list[GroupTypeEntry]
 
 
+class RelationPatternRegistryDocument(V4Contract):
+    registry_id: str = Field(pattern=r"^relation_pattern$")
+    version: str = Field(min_length=1)
+    schema_version: int = Field(default=1, ge=1)
+    entries: list[RelationPatternEntry]
+
+
 RegistryDocumentType = (
     RegistryDocument
     | CategoryRegistryDocument
     | AssetRoleRegistryDocument
     | ClaimRegistryDocument
     | GroupTypeRegistryDocument
+    | RelationPatternRegistryDocument
 )
 
 

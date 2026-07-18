@@ -186,6 +186,7 @@ class AssetGroupMember(V4Contract):
 class AssetGroup(V4Contract):
     group_ref: str = Field(pattern=_GROUP_REF_PATTERN)
     group_type: str = Field(min_length=1)
+    pattern_id: str = Field(min_length=1)
     category_id: str = Field(min_length=1)
     members: list[AssetGroupMember] = Field(min_length=1)
     status: AssetStatus = AssetStatus.ACTIVE

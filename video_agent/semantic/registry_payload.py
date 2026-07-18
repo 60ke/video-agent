@@ -28,7 +28,16 @@ def scene_registry_payload(registry: CapabilityRegistrySnapshot) -> dict[str, An
         "visual_structures": _items(registry.visual_structures),
         "operation_intents": _items(registry.operation_intents),
         "claims": _items(registry.claims),
-        "group_patterns": _items(registry.group_types),
+        "group_types": _items(registry.group_types),
+        "relation_patterns": [
+            {
+                "pattern_id": pattern.item_id,
+                "group_type": pattern.group_type,
+                "members": [member.model_dump(mode="json") for member in pattern.members],
+            }
+            for pattern in registry.relation_patterns
+            if pattern.enabled
+        ],
         "configured_assets": _items(registry.configured_assets),
     }
 

@@ -9,6 +9,7 @@ from video_agent.contracts.v4 import (
     DomainValidationError,
     FrozenRegistrySnapshot,
     GroupTypeEntry,
+    RelationPatternEntry,
     ValidationIssue,
 )
 from video_agent.registries import CapabilityRegistryHub
@@ -82,12 +83,58 @@ def validate_group_against_assets(
         issues.append(
             _issue("unknown_category", "category_id", f"unknown or disabled category: {group.category_id}")
         )
+    pattern = hub.entry("relation_pattern", group.pattern_id)
+    if not isinstance(pattern, RelationPatternEntry):
+        issues.append(
+            _issue("unknown_relation_pattern", "pattern_id", f"unknown or disabled pattern: {group.pattern_id}")
+        )
+    elif pattern.group_type != group.group_type:
+        issues.append(
+            _issue(
+                "pattern_group_type_mismatch",
+                "pattern_id",
+                f"pattern {group.pattern_id} requires {pattern.group_type}, got {group.group_type}",
+            )
+        )
 
     if isinstance(group_type, GroupTypeEntry) and group_type.ordered:
         orders = sorted(member.order for member in group.members)
         expected = list(range(1, len(group.members) + 1))
         if orders != expected:
             issues.append(_issue("non_contiguous_order", "members", f"ordered group requires {expected}, got {orders}"))
+
+    if isinstance(pattern, RelationPatternEntry):
+        actual_by_key = {member.member_key: member for member in group.members}
+        expected_by_key = {member.member_key: member for member in pattern.members}
+        missing = sorted(
+            member.member_key
+            for member in pattern.members
+            if member.required and member.member_key not in actual_by_key
+        )
+        unknown = sorted(set(actual_by_key) - set(expected_by_key))
+        if missing:
+            issues.append(_issue("missing_pattern_members", "members", f"required members are missing: {missing}"))
+        if unknown:
+            issues.append(_issue("unknown_pattern_members", "members", f"members are not declared by pattern: {unknown}"))
+        for member_key in sorted(set(actual_by_key) & set(expected_by_key)):
+            actual = actual_by_key[member_key]
+            expected = expected_by_key[member_key]
+            if actual.asset_role != expected.asset_role:
+                issues.append(
+                    _issue(
+                        "pattern_member_role_mismatch",
+                        f"members[{member_key}].asset_role",
+                        f"pattern requires {expected.asset_role}, got {actual.asset_role}",
+                    )
+                )
+            if actual.order != expected.order:
+                issues.append(
+                    _issue(
+                        "pattern_member_order_mismatch",
+                        f"members[{member_key}].order",
+                        f"pattern requires order {expected.order}, got {actual.order}",
+                    )
+                )
 
     for index, member in enumerate(group.members):
         path = f"members[{index}]"

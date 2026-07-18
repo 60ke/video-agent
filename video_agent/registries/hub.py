@@ -15,6 +15,7 @@ from video_agent.contracts.v4 import (
     FrozenRegistryDocument,
     FrozenRegistrySnapshot,
     GroupTypeRegistryDocument,
+    RelationPatternRegistryDocument,
     RegistryDocumentType,
 )
 from video_agent.io import sha256_json, write_json_atomic
@@ -205,6 +206,7 @@ class CapabilityRegistryHub:
             "operation_intent",
             "claim",
             "group_type",
+            "relation_pattern",
             "configured_asset",
         }
         missing = sorted(required - self._documents.keys())
@@ -217,6 +219,9 @@ class CapabilityRegistryHub:
             raise TypeError("asset_role registry has an invalid document type")
         if not isinstance(groups, GroupTypeRegistryDocument):
             raise TypeError("group_type registry has an invalid document type")
+        patterns = self.registry("relation_pattern")
+        if not isinstance(patterns, RelationPatternRegistryDocument):
+            raise TypeError("relation_pattern registry has an invalid document type")
 
         role_ids = {entry.id for entry in roles.entries}
         group_ids = {entry.id for entry in groups.entries}
@@ -242,6 +247,28 @@ class CapabilityRegistryHub:
                 )
         for group in groups.entries:
             self._require_known(group.allowed_member_roles, role_ids, f"group_type/{group.id}.allowed_member_roles")
+        group_by_id = {entry.id: entry for entry in groups.entries}
+        for pattern in patterns.entries:
+            self._require_known([pattern.group_type], group_ids, f"relation_pattern/{pattern.id}.group_type")
+            self._require_known(
+                [member.asset_role for member in pattern.members],
+                role_ids,
+                f"relation_pattern/{pattern.id}.members.asset_role",
+            )
+            group = group_by_id.get(pattern.group_type)
+            if group is not None:
+                disallowed = sorted(
+                    {
+                        member.asset_role
+                        for member in pattern.members
+                        if member.asset_role not in group.allowed_member_roles
+                    }
+                )
+                if disallowed:
+                    raise ValueError(
+                        f"relation pattern roles are not allowed by group type {pattern.group_type}: "
+                        f"{pattern.id} -> {disallowed}"
+                    )
 
     @staticmethod
     def _require_known(values: list[str], known: set[str], path: str) -> None:
