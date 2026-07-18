@@ -1,0 +1,28 @@
+{
+  "registry_id": "group_type",
+  "version": "2026.07.18.1",
+  "schema_version": 1,
+  "entries": [
+    {
+      "id": "causal",
+      "display_name": "因果关系",
+      "description": "参考图、结果图和平面图等因果链",
+      "ordered": false,
+      "allowed_member_roles": ["reference_image", "result_image", "flat_plan"]
+    },
+    {
+      "id": "comparison",
+      "display_name": "对比关系",
+      "description": "编辑前后或其他严格配对素材",
+      "ordered": false,
+      "allowed_member_roles": ["result_image", "edited_result", "reference_image"]
+    },
+    {
+      "id": "process",
+      "display_name": "有序流程",
+      "description": "参数花字和编辑工作流的连续帧",
+      "ordered": true,
+      "allowed_member_roles": ["parameter_panel", "result_image", "editor_page", "editor_modal", "edited_result"]
+    }
+  ]
+}
