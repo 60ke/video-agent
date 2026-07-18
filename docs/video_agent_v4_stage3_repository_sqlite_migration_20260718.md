@@ -624,7 +624,9 @@ Stage 3 adds a strict `AssetRepositorySnapshot` contract:
       "object_key": "results/...png",
       "content_sha256": "...",
       "status": "active",
-      "lineage_sha256": null
+      "lineage_sha256": null,
+      "evidence_class": "E0_source_evidence",
+      "claims": ["feature_can_generate_result"]
     }
   ],
   "groups": [
@@ -649,6 +651,21 @@ database. The authoritative full records remain in SQLite. Restoring a Run:
 
 Snapshot consumers never re-run an active-only query to approximate a
 historical Run.
+
+### 10.1 Stage 6 Evidence Freeze Amendment
+
+Stage 6 Claim compilation must not query the live repository. Therefore the
+frozen asset summary includes `evidence_class` and `claims` in addition to
+identity, object hash, lifecycle and lineage hash. Both fields are copied from
+the full `AssetRecord` at freeze time and participate in the snapshot content
+hash and snapshot ID.
+
+This does not turn the snapshot into a second asset database: category, role,
+dimensions and other selection metadata remain authoritative in SQLite. It is
+the minimal immutable evidence projection required to verify claims for the
+exact assets already selected into a Run. Adding these fields requires a
+repository snapshot schema-version bump; no compatibility reader is added for
+V4 Runs created before the amendment.
 
 ## 11. Failure And Rollback Semantics
 

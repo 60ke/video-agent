@@ -10,7 +10,8 @@ Last updated: 2026-07-18
 - Stage 2 design: `video_agent_v4_stage2_capability_and_asset_contracts_20260717.md`
 - Stage 3 design: `video_agent_v4_stage3_repository_sqlite_migration_20260718.md`
 - Stage 4 design: `video_agent_v4_stage4_dependency_selection_derivation_design_20260718.md`
-- Stage 5 design draft: `video_agent_v4_stage5_executable_capability_and_derivation_design_20260718.md`
+- Stage 5 design: `video_agent_v4_stage5_executable_capability_and_derivation_design_20260718.md`
+- Stage 6 design: `video_agent_v4_stage6_anchored_timing_compiler_and_remotion_adapter_design_20260718.md`
 
 Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle exposes a missing Contract capability, the Contract must be revised explicitly; runtime compatibility aliases are forbidden.
 
@@ -21,10 +22,10 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Baseline audit | complete | Current executable pipeline is V3. Stage 1 had design documents only. |
 | Stage 1: semantic Contract and AI runtime | runtime complete / golden conformance partial | Runtime, structured prompts, trace/replay, repair and routing are implemented. Relation-pattern binding, full registry freeze and Stage 0 Rev3 semantic conformance remain open. |
 | Stage 2: capability and asset domain | complete | Typed dynamic registries, deterministic frozen snapshots, strict AssetRecord/Lineage/Group/Evidence contracts, registry-bound validation and Stage 1 projection are implemented. |
-| Stage 3: repository, SQLite, ObjectStore and migration | complete | Repository, ObjectStore, import, snapshot, audit and deterministic migration are implemented. The repaired authoritative editor workflow and the current full legacy inventory pass the real dry-run without warnings or failures. |
+| Stage 3: repository, SQLite, ObjectStore and migration | core complete / evidence snapshot amendment pending | Repository, ObjectStore, import, snapshot, audit and deterministic migration are implemented. Stage6 Unit 0 must add `evidence_class/claims` to `AssetRepositorySnapshotAsset`, bump snapshot schema and hash fixtures so Claim compilation never queries live SQLite. |
 | Stage 4: dependency, selection and derivation | complete | DoD closed: six slot sources, DAG, alias/dedup, gap policy, signature/`group_reuse`, atomic `register_derived_group`, parameter callout fields, E2 website filter, s001–s010 golden. Production wires Stage5 executor when `repo_root` set; Fake is test-only. |
-| Stage 5: effect, SFX, voice and derivation registries | design frozen / implementation in progress | Units 1–6 done (handshake, registries, Voice, capability binding, prompts + Deterministic/GPT/`Stage5DerivationExecutor`). Next: Motion Assignment and SFX intents (`MotionAudioPlan`). |
-| Stage 6: semantic timing and compilation | pending | Formal design document required before implementation. |
+| Stage 5: effect, SFX, voice and derivation registries | control plane complete / timing integration pending | Registries/Voice/Derivation/Motion-SFX, signatures, handler fingerprints and Stage0 capability matrix are complete. Stage6 Unit 3 must reconnect Motion to exact `AnchoredTimingPlan.scene_spans`, remove proportional timing fallback and move frame-dependent SFX density arbitration out of Stage5. Effect handlers remain Stage6 Remotion stubs (`noop`). |
+| Stage 6: semantic timing and compilation | design frozen / implementation pending | Design review gaps are closed. Begin with Unit 0 contracts, evidence-bearing repository snapshot amendment and fixtures before compiler or Remotion Adapter work. |
 | Stage 7: planner cutover and verification | pending | Formal design document required before implementation. |
 
 ## Working Decisions
@@ -85,6 +86,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 - [x] Active queries exclude descendants of superseded parents; historical lookup remains explicit.
 - [x] Derivation signatures are unique and reusable.
 - [x] Repository snapshots detect object/record/group tampering and restore from SQLite.
+- [ ] Stage6 evidence amendment freezes `evidence_class/claims` in each used-asset snapshot entry and includes them in snapshot hashing.
 - [x] Import preflights files, topologically resolves local lineage, preserves explicit repository refs and reports orphaned copies.
 - [x] Configured bindings enforce enabled keys, active targets and registry-declared target roles.
 - [x] Repository audit checks objects, hashes, registry validity, lineage/group/supersede cycles and configured bindings.
@@ -93,6 +95,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 
 ## Next Continuation Point
 
-Stage 4 DoD is closed. Continue Stage 5 §16 from Motion Assignment / SFX intents: migrate Effect hardcoding to Motion Assignment, emit frame-free SFX intents, and freeze `MotionAudioPlan`. Fake derivation remains test-only.
+Stage 5 control-plane DoD is closed; its exact timing integration remains Stage6 Unit 3. Next: implement Stage6 Unit 0 contracts, evidence-bearing repository snapshot amendment and fixtures.
+- Effect Registry handlers remain `noop` stubs until Stage 6 wires Remotion.
 - Full legacy suite currently has three unrelated baseline failures in `tests/test_assets.py`; they assert removed review metadata and the deleted brand-IP directory scan. These are tracked for the Stage 2 cutover rather than weakening the new Contract.
-- Stage 4 closeout verification: `python -m pytest tests/test_v4_stage4_*.py tests/test_v4_stage5_derivation_executors.py -q` PASS.
+- Stage 5 closeout verification: `python -m pytest tests/test_v4_stage5_*.py tests/test_v4_stage4_*.py -q` and `python -m ruff check video_agent/v4/stage5.py video_agent/derivation/v4 video_agent/assets/v4/derivation_orchestrator.py`.
