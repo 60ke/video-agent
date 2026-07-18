@@ -18,6 +18,7 @@ from video_agent.contracts.v4 import (
     SourceKind,
 )
 from video_agent.contracts.v4.resolved_assets import DerivationRequest, RequiredGroupSpec
+from video_agent.io import sha256_json
 from video_agent.registries import CapabilityRegistryHub
 
 from .repository import AssetDraft, AssetGroupDraft, AssetResolutionSession, GroupQuery
@@ -30,6 +31,27 @@ class DerivationCapabilityBinding:
     capability_version: str
     execution_fingerprint: str
     is_fake: bool = False
+    provider_profile_id: str = "fake"
+    provider_model: str = "fixture"
+    target_size: str = "1024x1792"
+    prompt_template_sha256: str = ""
+    prompt_input_sha256: str = ""
+
+
+@dataclass(frozen=True)
+class PreparedDerivation:
+    request_id: str
+    capability_id: str
+    capability_version: str
+    ordered_parent_refs: tuple[str, ...]
+    ordered_context_refs: tuple[str, ...]
+    prompt_template_sha256: str
+    prompt_input_sha256: str
+    provider_profile_id: str
+    provider_model: str
+    target_size: str
+    execution_fingerprint: str
+    derivation_signature: str
 
 
 @dataclass
@@ -51,17 +73,26 @@ class DerivationExecutor(Protocol):
         self,
         request: DerivationRequest,
         binding: DerivationCapabilityBinding,
+        prepared: PreparedDerivation,
         session: AssetResolutionSession,
     ) -> DerivationResultDraft: ...
 
 
 class FakeCapabilityResolver:
+    """Fixture-only resolver. Production Stage 5 must inject a registry-backed resolver."""
+
     def resolve(self, request: DerivationRequest) -> DerivationCapabilityBinding:
+        fingerprint = sha256(f"fake:{request.derivation_type}:1".encode("utf-8")).hexdigest()
         return DerivationCapabilityBinding(
-            capability_id="fake.derivation",
+            capability_id=request.derivation_type,
             capability_version="1",
-            execution_fingerprint=sha256(b"fake.derivation:1").hexdigest(),
+            execution_fingerprint=fingerprint,
             is_fake=True,
+            provider_profile_id="fake",
+            provider_model="fixture",
+            target_size="1024x1792",
+            prompt_template_sha256=sha256(b"fake-prompt-template").hexdigest(),
+            prompt_input_sha256=fingerprint,
         )
 
 
@@ -80,16 +111,18 @@ class FakeDerivationExecutor:
         self,
         request: DerivationRequest,
         binding: DerivationCapabilityBinding,
+        prepared: PreparedDerivation,
         session: AssetResolutionSession,
     ) -> DerivationResultDraft:
         if request.required_group is not None:
-            return self._execute_group(request, binding, session)
-        return self._execute_single(request, binding, session)
+            return self._execute_group(request, binding, prepared, session)
+        return self._execute_single(request, binding, prepared, session)
 
     def _execute_single(
         self,
         request: DerivationRequest,
         binding: DerivationCapabilityBinding,
+        prepared: PreparedDerivation,
         session: AssetResolutionSession,
     ) -> DerivationResultDraft:
         if request.parent_asset_refs:
@@ -101,16 +134,22 @@ class FakeDerivationExecutor:
                 parent=parent,
                 role=request.target_asset_role,
                 member_key=request.slot_id,
-                signature=request.derivation_signature,
+                signature=prepared.derivation_signature,
             )
         else:
-            draft = self._draft_without_parent(request=request, binding=binding, session=session)
+            draft = self._draft_without_parent(
+                request=request,
+                binding=binding,
+                prepared=prepared,
+                session=session,
+            )
         return DerivationResultDraft(drafts=[draft], draft_member_keys=[request.slot_id])
 
     def _execute_group(
         self,
         request: DerivationRequest,
         binding: DerivationCapabilityBinding,
+        prepared: PreparedDerivation,
         session: AssetResolutionSession,
     ) -> DerivationResultDraft:
         if self.registry is None:
@@ -134,12 +173,19 @@ class FakeDerivationExecutor:
         drafts: list[AssetDraft] = []
         draft_keys: list[str] = []
         for member in sorted(pattern.members, key=lambda item: item.order):
-            if _should_reuse_parent(request.required_group.pattern_id, member.member_key, member.asset_role, parent.asset_role):
+            if _should_reuse_parent(
+                request.required_group.pattern_id,
+                member.member_key,
+                member.asset_role,
+                parent.asset_role,
+            ):
                 reuse[member.member_key] = parent.asset_ref
                 continue
             signature = build_derivation_signature(
                 parent_refs=list(request.parent_asset_refs),
                 parent_hashes=[parent.content_sha256],
+                context_refs=list(request.context_asset_refs),
+                context_hashes=_content_hashes(session, request.context_asset_refs),
                 category_id=request.category_id,
                 role=member.asset_role,
                 pattern_id=request.required_group.pattern_id,
@@ -242,7 +288,7 @@ class FakeDerivationExecutor:
             claims=list(parent.claims) if evidence == EvidenceClass.FAITHFUL else [],
             lineage=AssetLineage(
                 parent_asset_refs=list(request.parent_asset_refs),
-                derivation_type="fake_stage4_group" if request.required_group else "fake_stage4",
+                derivation_type=request.derivation_type,
                 executor_id=binding.capability_id,
                 provider="fake",
                 model="fixture",
@@ -259,6 +305,7 @@ class FakeDerivationExecutor:
         *,
         request: DerivationRequest,
         binding: DerivationCapabilityBinding,
+        prepared: PreparedDerivation,
         session: AssetResolutionSession,
     ) -> AssetDraft:
         object_store = getattr(session.repository, "object_store", None)
@@ -269,11 +316,11 @@ class FakeDerivationExecutor:
                 scene_id=request.scene_id,
                 slot_id=request.slot_id,
             )
-        digest = bytes.fromhex(request.derivation_signature)
+        digest = bytes.fromhex(prepared.derivation_signature)
         orientation = request.target_orientation or "landscape"
         width, height = (16, 9) if orientation == "landscape" else (9, 16) if orientation == "portrait" else (12, 12)
         color = tuple(48 + (value % 160) for value in digest[:3])
-        object_key = f"derived/stage4/{request.derivation_signature}_{request.slot_id}.png"
+        object_key = f"derived/stage4/{prepared.derivation_signature}_{request.slot_id}.png"
         with NamedTemporaryFile(suffix=".png", delete=False) as handle:
             temporary = Path(handle.name)
         try:
@@ -303,14 +350,14 @@ class FakeDerivationExecutor:
             claims=[],
             lineage=AssetLineage(
                 parent_asset_refs=[],
-                derivation_type="fake_stage4_text_to_image",
+                derivation_type=request.derivation_type,
                 executor_id=binding.capability_id,
                 provider="fake",
                 model="fixture",
                 prompt_template_version=binding.capability_version,
                 prompt_sha256=binding.execution_fingerprint,
-                parameters_sha256=sha256(request.derivation_signature.encode("utf-8")).hexdigest(),
-                derivation_signature=request.derivation_signature,
+                parameters_sha256=sha256(prepared.derivation_signature.encode("utf-8")).hexdigest(),
+                derivation_signature=prepared.derivation_signature,
                 created_at=now,
             ),
         )
@@ -326,6 +373,60 @@ def _should_reuse_parent(pattern_id: str, member_key: str, member_role: str, par
     return member_role == parent_role and member_key in {"source_result", "result_image", "base"}
 
 
+def _content_hashes(session: AssetResolutionSession, refs: list[str]) -> list[str]:
+    hashes: list[str] = []
+    for ref in refs:
+        asset = session.get_asset(ref)
+        if asset is None:
+            raise Stage4Error("derivation_failed", f"asset missing for signature: {ref}")
+        hashes.append(asset.content_sha256)
+    return hashes
+
+
+def infer_derivation_type(
+    *,
+    asset_role: str,
+    pattern_id: str | None,
+    parent_asset_refs: list[str],
+    scene_id: str | None = None,
+    slot_id: str | None = None,
+) -> str:
+    """Map Stage 4 gap/relation shape to a Derivation Registry entry ID (no alias table)."""
+    if pattern_id == "editor_sequence":
+        return "result_to_editor_process"
+    if pattern_id == "parameter_callout_sequence":
+        return "site_params_flower_text_frame_sequence"
+    if pattern_id == "reference_result_plan":
+        if asset_role == "reference_image":
+            return "result_to_reference_mock"
+        if asset_role == "result_image":
+            return "reference_to_result"
+        if asset_role == "flat_plan":
+            return "result_to_flat_plan"
+        raise Stage4Error(
+            "missing_derivation_capability",
+            f"no derivation_type for reference_result_plan role={asset_role}",
+            scene_id=scene_id,
+            slot_id=slot_id,
+        )
+    if asset_role == "feature_entry":
+        return "site_feature_entry_callout_keyframe"
+    if asset_role in {"site_home", "parameter_panel"}:
+        return "site_faithful_reframe"
+    if asset_role == "edited_result":
+        return "result_to_edited_result"
+    if asset_role == "result_image" and not parent_asset_refs:
+        return "text_to_result"
+    if asset_role == "result_image" and parent_asset_refs:
+        return "normalize_gallery_asset"
+    raise Stage4Error(
+        "missing_derivation_capability",
+        f"no derivation_type for role={asset_role} pattern={pattern_id}",
+        scene_id=scene_id,
+        slot_id=slot_id,
+    )
+
+
 def build_derivation_signature(
     *,
     parent_refs: list[str],
@@ -339,11 +440,15 @@ def build_derivation_signature(
     execution_fingerprint: str,
     narrative_fingerprint: str = "",
     target_orientation: str = "",
+    context_refs: list[str] | None = None,
+    context_hashes: list[str] | None = None,
 ) -> str:
     payload = "|".join(
         [
             ",".join(parent_refs),
             ",".join(parent_hashes),
+            ",".join(context_refs or []),
+            ",".join(context_hashes or []),
             category_id or "",
             role,
             pattern_id or "",
@@ -358,6 +463,76 @@ def build_derivation_signature(
     return sha256(payload.encode("utf-8")).hexdigest()
 
 
+def prepare_derivation(
+    request: DerivationRequest,
+    binding: DerivationCapabilityBinding,
+    session: AssetResolutionSession,
+) -> PreparedDerivation:
+    """Stage 5 prepare step: bind capability fingerprints and own the final signature."""
+    parent_hashes = _content_hashes(session, list(request.parent_asset_refs))
+    context_hashes = _content_hashes(session, list(request.context_asset_refs))
+    pattern_id = request.required_group.pattern_id if request.required_group else None
+    member_key = request.required_group.member_key if request.required_group else None
+    if request.narrative_context is None:
+        narrative_fingerprint = ""
+    else:
+        narrative_fingerprint = sha256_json(request.narrative_context.model_dump(mode="json"))
+    prompt_template_sha256 = binding.prompt_template_sha256 or sha256(
+        f"template:{binding.capability_id}:{binding.capability_version}".encode("utf-8")
+    ).hexdigest()
+    prompt_input_sha256 = binding.prompt_input_sha256 or sha256_json(
+        {
+            "derivation_type": request.derivation_type,
+            "category_id": request.category_id,
+            "target_asset_role": request.target_asset_role,
+            "narrative": request.narrative_context.model_dump(mode="json") if request.narrative_context else None,
+            "target_orientation": request.target_orientation,
+        }
+    )
+    signature = build_derivation_signature(
+        parent_refs=list(request.parent_asset_refs),
+        parent_hashes=parent_hashes,
+        context_refs=list(request.context_asset_refs),
+        context_hashes=context_hashes,
+        category_id=request.category_id,
+        role=request.target_asset_role,
+        pattern_id=pattern_id,
+        member_key=member_key,
+        capability_id=binding.capability_id,
+        capability_version=binding.capability_version,
+        execution_fingerprint=binding.execution_fingerprint,
+        narrative_fingerprint=narrative_fingerprint,
+        target_orientation=request.target_orientation or "",
+    )
+    # Fold prompt/provider into the final owned signature so template/model changes invalidate reuse.
+    signature = sha256(
+        "|".join(
+            [
+                signature,
+                prompt_template_sha256,
+                prompt_input_sha256,
+                binding.provider_profile_id,
+                binding.provider_model,
+                binding.target_size,
+            ]
+        ).encode("utf-8")
+    ).hexdigest()
+    return PreparedDerivation(
+        request_id=request.request_id,
+        capability_id=binding.capability_id,
+        capability_version=binding.capability_version,
+        ordered_parent_refs=tuple(request.parent_asset_refs),
+        ordered_context_refs=tuple(request.context_asset_refs),
+        prompt_template_sha256=prompt_template_sha256,
+        prompt_input_sha256=prompt_input_sha256,
+        provider_profile_id=binding.provider_profile_id,
+        provider_model=binding.provider_model,
+        target_size=binding.target_size,
+        execution_fingerprint=binding.execution_fingerprint,
+        derivation_signature=signature,
+    )
+
+
 def fulfill_derivation(
     request: DerivationRequest,
     *,
@@ -367,7 +542,7 @@ def fulfill_derivation(
     allow_fake: bool,
     requires_stage5: bool,
     registry: CapabilityRegistryHub | None = None,
-) -> tuple[DerivationRequest, AssetGroup | None]:
+) -> tuple[DerivationRequest, PreparedDerivation, AssetGroup | None]:
     binding = resolver.resolve(request)
     if binding.is_fake and requires_stage5 and not allow_fake:
         raise Stage4Error(
@@ -376,18 +551,27 @@ def fulfill_derivation(
             scene_id=request.scene_id,
             slot_id=request.slot_id,
         )
+    if isinstance(executor, FakeDerivationExecutor) and requires_stage5 and not allow_fake:
+        raise Stage4Error(
+            "fake_executor_forbidden",
+            "fake derivation executor cannot enter production path",
+            scene_id=request.scene_id,
+            slot_id=request.slot_id,
+        )
+
+    prepared = prepare_derivation(request, binding, session)
 
     if request.required_group is None:
-        existing = session.find_by_derivation_signature(request.derivation_signature)
+        existing = session.find_by_derivation_signature(prepared.derivation_signature)
         if existing is not None:
             request.status = "signature_hit"
-            return request, None
-        draft_result = executor.execute(request, binding, session)
+            return request, prepared, None
+        draft_result = executor.execute(request, binding, prepared, session)
         request.status = "generated"
         for draft in draft_result.drafts:
             session.register_asset(draft)
         request.status = "registered"
-        return request, None
+        return request, prepared, None
 
     parent_ref = request.parent_asset_refs[0]
     existing_groups = session.query_groups(
@@ -402,7 +586,7 @@ def fulfill_derivation(
     )
     if existing_groups:
         request.status = "signature_hit"
-        return request, existing_groups[0]
+        return request, prepared, existing_groups[0]
 
     if registry is None:
         raise Stage4Error(
@@ -420,7 +604,7 @@ def fulfill_derivation(
             slot_id=request.slot_id,
         )
 
-    draft_result = executor.execute(request, binding, session)
+    draft_result = executor.execute(request, binding, prepared, session)
     request.status = "generated"
     member_refs = dict(draft_result.reuse_member_refs)
     for member_key, draft in zip(draft_result.draft_member_keys, draft_result.drafts, strict=True):
@@ -443,7 +627,7 @@ def fulfill_derivation(
         )
     )
     request.status = "registered"
-    return request, group
+    return request, prepared, group
 
 
 def required_group_spec(group_type: str, pattern_id: str, member_key: str) -> RequiredGroupSpec:

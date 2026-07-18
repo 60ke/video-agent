@@ -27,17 +27,16 @@ from video_agent.contracts.v4.resolved_assets import (
     Stage4SelectionConfig,
     validate_resolved_asset_plan,
 )
-from video_agent.io import sha256_json
+from video_agent.derivation.v4 import RegistryDerivationCapabilityResolver
 from video_agent.registries import CapabilityRegistryHub
 
 from .dependency_graph import topo_sort_scenes
 from .derivation_orchestrator import (
     DerivationCapabilityResolver,
     DerivationExecutor,
-    FakeCapabilityResolver,
     FakeDerivationExecutor,
-    build_derivation_signature,
     fulfill_derivation,
+    infer_derivation_type,
     required_group_spec,
 )
 from .gap_policy import resolve_gap_action
@@ -55,11 +54,13 @@ _WEBSITE_EVIDENCE = frozenset({EvidenceClass.SOURCE, EvidenceClass.FAITHFUL})
 class AssetPlanResolver:
     registry: CapabilityRegistryHub
     usage: AssetUsageRepository = field(default_factory=AssetUsageRepository)
-    capability_resolver: DerivationCapabilityResolver = field(default_factory=FakeCapabilityResolver)
+    capability_resolver: DerivationCapabilityResolver | None = None
     derivation_executor: DerivationExecutor | None = None
     material_gaps: list[MaterialGap] = field(default_factory=list, init=False)
 
     def __post_init__(self) -> None:
+        if self.capability_resolver is None:
+            self.capability_resolver = RegistryDerivationCapabilityResolver(self.registry)
         if self.derivation_executor is None:
             self.derivation_executor = FakeDerivationExecutor(registry=self.registry)
 
@@ -866,13 +867,11 @@ class AssetPlanResolver:
             raise Stage4Error("no_candidate_asset", f"unsupported gap action {action}", scene_id=scene.scene_id, slot_id=slot.slot_id)
 
         parent_refs = list(upstream)
-        parent_hashes = []
         target_orientation: str | None = None
         for ref in parent_refs:
             asset = session.get_asset(ref)
             if asset is None:
                 raise Stage4Error("derivation_failed", f"parent missing for derive: {ref}", scene_id=scene.scene_id, slot_id=slot.slot_id)
-            parent_hashes.append(asset.content_sha256)
             target_orientation = target_orientation or asset.orientation.value
         if not parent_refs and source_kind != "asset_query":
             raise Stage4Error(
@@ -899,45 +898,17 @@ class AssetPlanResolver:
                 )
             group_spec = required_group_spec(group_type, pattern_id, member_key)
 
-        capability = self.capability_resolver.resolve(
-            DerivationRequest(
-                request_id=f"derivation://R{derivation_seq:04d}",
-                scene_id=scene.scene_id,
-                slot_id=slot.slot_id,
-                category_id=slot.category_id,
-                target_asset_role=slot.asset_role,
-                required_group=group_spec,
-                parent_asset_refs=parent_refs,
-                evidence_ceiling="E2_semantic_derivative",
-                narrative_context=DerivationNarrativeContext(
-                    scene_text=scene.text,
-                    anchor_phrase=slot.anchor_phrase,
-                ),
-                target_orientation=target_orientation,
-                capability_id="pending",
-                capability_version="pending",
-                derivation_signature="0" * 64,
-            )
-        )
-        signature = build_derivation_signature(
-            parent_refs=parent_refs,
-            parent_hashes=parent_hashes,
-            category_id=slot.category_id,
-            role=slot.asset_role,
-            pattern_id=pattern_id,
-            member_key=member_key,
-            capability_id=capability.capability_id,
-            capability_version=capability.capability_version,
-            execution_fingerprint=capability.execution_fingerprint,
-            narrative_fingerprint=sha256_json(
-                {"scene_text": scene.text, "anchor_phrase": slot.anchor_phrase, "claims": claims or []}
-            ),
-            target_orientation=target_orientation or "",
-        )
         request = DerivationRequest(
             request_id=f"derivation://R{derivation_seq:04d}",
             scene_id=scene.scene_id,
             slot_id=slot.slot_id,
+            derivation_type=infer_derivation_type(
+                asset_role=slot.asset_role,
+                pattern_id=pattern_id,
+                parent_asset_refs=parent_refs,
+                scene_id=scene.scene_id,
+                slot_id=slot.slot_id,
+            ),
             category_id=slot.category_id,
             target_asset_role=slot.asset_role,
             required_group=group_spec,
@@ -948,11 +919,8 @@ class AssetPlanResolver:
                 anchor_phrase=slot.anchor_phrase,
             ),
             target_orientation=target_orientation,
-            capability_id=capability.capability_id,
-            capability_version=capability.capability_version,
-            derivation_signature=signature,
         )
-        request, group = fulfill_derivation(
+        request, prepared, group = fulfill_derivation(
             request,
             session=session,
             resolver=self.capability_resolver,
@@ -982,7 +950,7 @@ class AssetPlanResolver:
             resolved, decision, nested_request, next_decision, next_derivation = retry()
             return resolved, decision, request if nested_request is None else nested_request, next_decision, next_derivation
 
-        derived = session.find_by_derivation_signature(request.derivation_signature)
+        derived = session.find_by_derivation_signature(prepared.derivation_signature)
         if derived is None or derived.asset_role != slot.asset_role:
             raise Stage4Error(
                 "derivation_requery_failed",
@@ -994,7 +962,7 @@ class AssetPlanResolver:
             decision_seq,
             scene,
             slot,
-            {"kind": source_kind, "derived": True, "signature": request.derivation_signature},
+            {"kind": source_kind, "derived": True, "signature": prepared.derivation_signature},
             rank_mode="single",
             selection_scope="independent" if source_kind == "asset_query" else "dependency_reuse",
             seed_material=f"{scene.scene_id}:{slot.slot_id}:derived",

@@ -416,7 +416,7 @@ def test_relation_requires_containing_upstream(
             registry_snapshot_id="registry://test",
             scene_plan_sha256="b" * 64,
         )
-    assert exc.value.code == "missing_derivation_capability"
+    assert exc.value.code == "fake_executor_forbidden"
     assert primary.asset_ref
 
 
@@ -499,6 +499,11 @@ def test_result_gap_can_derive_without_parent_asset(
     assert asset is not None and asset.lineage is not None
     assert asset.lineage.parent_asset_refs == []
     assert plan.derivation_requests[0].status == "registered"
+    assert plan.derivation_requests[0].derivation_type == "text_to_result"
+    dumped = plan.derivation_requests[0].model_dump()
+    assert "capability_id" not in dumped
+    assert "capability_version" not in dumped
+    assert "derivation_signature" not in dumped
 
 
 def test_no_asset_transition(

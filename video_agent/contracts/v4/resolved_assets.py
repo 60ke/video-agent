@@ -86,9 +86,12 @@ class DerivationNarrativeContext(V4Contract):
 
 
 class DerivationRequest(V4Contract):
+    """Stage 4 → Stage 5 request shape. Final capability/signature live on PreparedDerivation."""
+
     request_id: str = Field(min_length=1)
     scene_id: str = Field(min_length=1)
     slot_id: str = Field(min_length=1)
+    derivation_type: str = Field(min_length=1)
     category_id: str | None = None
     target_asset_role: str = Field(min_length=1)
     required_group: RequiredGroupSpec | None = None
@@ -97,9 +100,6 @@ class DerivationRequest(V4Contract):
     narrative_context: DerivationNarrativeContext | None = None
     target_orientation: str | None = None
     evidence_ceiling: str = Field(min_length=1)
-    capability_id: str = Field(min_length=1)
-    capability_version: str = Field(min_length=1)
-    derivation_signature: str = Field(min_length=1)
     status: DerivationStatus = "pending"
 
 
