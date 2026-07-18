@@ -8,6 +8,7 @@ Last updated: 2026-07-18
 - Stage 0 golden scenario: `video_agent_v4_stage0_golden_scenario_rev3_20260718.md`
 - Stage 1 design: `video_agent_v4_stage1_semantic_contract_and_ai_runtime_design_20260717.md`
 - Stage 2 design: `video_agent_v4_stage2_capability_and_asset_contracts_20260717.md`
+- Stage 3 design: `video_agent_v4_stage3_repository_sqlite_migration_20260718.md`
 
 Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle exposes a missing Contract capability, the Contract must be revised explicitly; runtime compatibility aliases are forbidden.
 
@@ -18,7 +19,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Baseline audit | complete | Current executable pipeline is V3. Stage 1 had design documents only. |
 | Stage 1: semantic Contract and AI runtime | runtime complete / golden conformance partial | Runtime, structured prompts, trace/replay, repair and routing are implemented. Relation-pattern binding, full registry freeze and Stage 0 Rev3 semantic conformance remain open. |
 | Stage 2: capability and asset domain | complete | Typed dynamic registries, deterministic frozen snapshots, strict AssetRecord/Lineage/Group/Evidence contracts, registry-bound validation and Stage 1 projection are implemented. |
-| Stage 3: repository, SQLite, ObjectStore and migration | pending | Formal design document required before implementation. |
+| Stage 3: repository, SQLite, ObjectStore and migration | implementation complete / legacy data repair required | Repository, ObjectStore, import, snapshot, audit and deterministic migration are implemented. The real legacy migration remains fail-loud because authoritative editor relationships are incomplete. |
 | Stage 4: dependency, selection and derivation | pending | Formal design document required before implementation. |
 | Stage 5: effect, SFX, voice and derivation registries | pending | Formal design document required before implementation. |
 | Stage 6: semantic timing and compilation | pending | Formal design document required before implementation. |
@@ -54,6 +55,9 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 - `python -m pytest tests/test_v4_registry_hub.py tests/test_v4_capability_assets.py tests/test_v4_stage1_orchestrator.py tests/test_v4_semantic_contracts.py tests/test_v4_prompts.py tests/test_v4_ai_runtime.py tests/test_v4_semantic_stages.py tests/test_v4_runtime_routing.py -q`: PASS (42 tests).
 - `python -m ruff check video_agent/contracts/v4 video_agent/registries video_agent/assets/v4_validation.py video_agent/semantic tests/test_v4_registry_hub.py tests/test_v4_capability_assets.py tests/test_v4_stage1_orchestrator.py tests/test_v4_semantic_contracts.py tests/test_v4_prompts.py tests/test_v4_ai_runtime.py tests/test_v4_semantic_stages.py tests/test_v4_runtime_routing.py`: PASS.
 - `python main.py v4-stage1 --case cases/v4_stage0_golden_20260717 --resume 20260717_211546_a4ed36`: PASS after Stage 2 registry cutover; validated Scope and Scene artifacts remain at the same run path.
+- `python -m pytest tests/test_v4_stage3_repository.py -q`: PASS (15 tests), including video probing, snapshot restore, import lineage ordering/collision protection, configured-role validation and integrity audit.
+- `python -m pytest tests/test_v4_*.py -q`: PASS (59 tests).
+- `python -m ruff check video_agent/assets/v4 video_agent/cli.py video_agent/registries/hub.py tests/test_v4_stage3_repository.py`: PASS.
 
 ## Stage 2 Definition Of Done
 
@@ -67,7 +71,24 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 - [x] Role and category IDs remain dynamic strings validated against the frozen registry boundary.
 - [x] Stage 0 real-provider Scope and Scene Semantics execution still passes.
 
+## Deferred TODOs
+
+- [ ] **GPT Image 派生提示词质量**：`assets/derived/generated` 已清空；旧 `contextual_result_fill` / gallery preview / result_to_* 产物存在明显串类或语义错误（例如 `母婴服务_contextual_result_fill_*.png`）。当前优先推进 V4 架构，暂不修提示词。进入 Stage 4/5 派生执行前，必须重做 Derivation Prompt 模板与验收样例，禁止直接复用旧生成图或旧 prompt 指纹。
+
+## Stage 3 Definition Of Done
+
+- [x] SQLite repository, deterministic IDs, immutable registration and supersede behavior are implemented.
+- [x] ObjectStore validates images and videos, rejects unsupported audio and verifies immutable hashes.
+- [x] Active queries exclude descendants of superseded parents; historical lookup remains explicit.
+- [x] Derivation signatures are unique and reusable.
+- [x] Repository snapshots detect object/record/group tampering and restore from SQLite.
+- [x] Import preflights files, topologically resolves local lineage, preserves explicit repository refs and reports orphaned copies.
+- [x] Configured bindings enforce enabled keys, active targets and registry-declared target roles.
+- [x] Repository audit checks objects, hashes, registry validity, lineage/group/supersede cycles and configured bindings.
+- [x] Legacy dry-run follows the real transaction path and rolls back all repository writes.
+- [ ] Repair incomplete authoritative editor relationships/workflow data, then pass a real `migrate-legacy --dry-run`.
+
 ## Next Continuation Point
 
-Stage 3 is the first incomplete item. Write `docs/video_agent_v4_stage3_repository_sqlite_migration_20260718.md` before implementation, covering repository interfaces, SQLite schema, local ObjectStore, immutable registration/supersede behavior, deterministic migration from legacy catalogs/relationships/derived registries, idempotent reruns and rollback evidence.
+Repair the incomplete editor relationships reported by real Stage 3 migration without synthesizing fake `edited_result` assets. After the real dry-run succeeds, freeze the migration report and begin the Stage 4 design document.
 - Full legacy suite currently has three unrelated baseline failures in `tests/test_assets.py`; they assert removed review metadata and the deleted brand-IP directory scan. These are tracked for the Stage 2 cutover rather than weakening the new Contract.

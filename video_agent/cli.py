@@ -11,6 +11,15 @@ from video_agent.assets import build_catalog, generate_editor_flow_assets
 from video_agent.assets.site_entry_batch import generate_site_entry_keyframes
 from video_agent.assets.site_params_sequence import generate_parameter_frame_sequences
 from video_agent.assets.video_material_import import import_video_material_images
+from video_agent.assets.v4 import (
+    AssetImportError,
+    AssetQuery,
+    LocalObjectStore,
+    SQLiteAssetRepository,
+    audit_repository,
+    import_manifest,
+    migrate_legacy,
+)
 from video_agent.audio.register import register_sfx_library
 from video_agent.case_admin import clean_cases, export_case_videos
 from video_agent.contracts import CaseConfig, VoiceConfig
@@ -23,6 +32,7 @@ from video_agent.runtime import RunContext, STAGES
 from video_agent.script_lock import locked_narration_from_text
 from video_agent.speech.minimax import local_minimax_voice_id
 from video_agent.v4 import V4Orchestrator
+from video_agent.registries import CapabilityRegistryHub
 
 
 logger = get_logger()
@@ -36,6 +46,17 @@ def _print(value: Any, as_json: bool) -> None:
             print(f"{key}: {item}")
 
 
+def _exception_result(exc: Exception) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "ok": False,
+        "error": exc.__class__.__name__,
+        "message": str(exc),
+    }
+    if isinstance(exc, AssetImportError):
+        result["orphans"] = list(exc.orphans)
+    return result
+
+
 def command_catalog(args: argparse.Namespace) -> dict[str, Any]:
     root = Path(args.assets).resolve()
     output = Path(args.output).resolve() if args.output else root / "catalog.json"
@@ -47,7 +68,12 @@ def command_run(args: argparse.Namespace) -> dict[str, Any]:
     case_dir = Path(args.case).resolve()
     context = RunContext.open(case_dir, args.resume) if args.resume else RunContext.create(case_dir)
     final_video = Orchestrator(context).run(from_stage=args.from_stage, until_stage=args.until_stage)
-    return {"ok": True, "run_id": context.run_id, "run_dir": context.run_dir.as_posix(), "final_video": final_video.as_posix() if final_video else None}
+    return {
+        "ok": True,
+        "run_id": context.run_id,
+        "run_dir": context.run_dir.as_posix(),
+        "final_video": final_video.as_posix() if final_video else None,
+    }
 
 
 def command_v4_stage1(args: argparse.Namespace) -> dict[str, Any]:
@@ -240,6 +266,57 @@ def command_import_video_materials(args: argparse.Namespace) -> dict[str, Any]:
     return {"ok": True, **result}
 
 
+def _v4_repository(args: argparse.Namespace) -> SQLiteAssetRepository:
+    root = Path(__file__).resolve().parents[1]
+    config = load_json(root / "config" / "assets.v4.json")
+    db = Path(args.db).resolve() if args.db else (root / config["database"]).resolve()
+    object_root = (
+        Path(args.object_root).resolve()
+        if getattr(args, "object_root", None)
+        else (root / config["object_root"]).resolve()
+    )
+    hub = CapabilityRegistryHub.load(root / "config" / "registries" / "v4")
+    return SQLiteAssetRepository(db, LocalObjectStore(object_root), hub)
+
+
+def command_v4_assets_migrate(args: argparse.Namespace) -> dict[str, Any]:
+    repository = _v4_repository(args)
+    try:
+        return {"ok": True, **migrate_legacy(repository, repository.object_store.root, dry_run=args.dry_run)}
+    finally:
+        repository.close()
+
+
+def command_v4_assets_import(args: argparse.Namespace) -> dict[str, Any]:
+    repository = _v4_repository(args)
+    try:
+        return {"ok": True, **import_manifest(repository, Path(args.manifest).resolve())}
+    finally:
+        repository.close()
+
+
+def command_v4_assets_inspect(args: argparse.Namespace) -> dict[str, Any]:
+    repository = _v4_repository(args)
+    try:
+        if args.asset_ref:
+            asset = repository.get_asset(args.asset_ref)
+            return {"ok": True, "asset": asset.model_dump(mode="json") if asset else None}
+        return {
+            "ok": True,
+            "assets": [item.model_dump(mode="json") for item in repository.query_assets(AssetQuery(active_only=False))],
+        }
+    finally:
+        repository.close()
+
+
+def command_v4_assets_audit(args: argparse.Namespace) -> dict[str, Any]:
+    repository = _v4_repository(args)
+    try:
+        return audit_repository(repository)
+    finally:
+        repository.close()
+
+
 def command_cover_postprocess(args: argparse.Namespace) -> dict[str, Any]:
     case_dir = Path(args.case).resolve()
     run_id = args.run or load_json(case_dir / "latest_run.json")["run_id"]
@@ -326,6 +403,28 @@ def build_parser() -> argparse.ArgumentParser:
     v4_stage1.add_argument("--resume")
     v4_stage1.set_defaults(handler=command_v4_stage1)
 
+    v4_assets = sub.add_parser("v4-assets", help="Manage the V4 asset repository")
+    v4_assets.add_argument("--json", dest="sub_json", action="store_true")
+    v4_assets_sub = v4_assets.add_subparsers(dest="v4_assets_command", required=True)
+    v4_migrate = v4_assets_sub.add_parser("migrate-legacy")
+    v4_migrate.add_argument("--dry-run", action="store_true")
+    v4_migrate.add_argument("--db")
+    v4_migrate.add_argument("--object-root")
+    v4_migrate.set_defaults(handler=command_v4_assets_migrate)
+    v4_import = v4_assets_sub.add_parser("import")
+    v4_import.add_argument("--manifest", required=True)
+    v4_import.add_argument("--db")
+    v4_import.add_argument("--object-root")
+    v4_import.set_defaults(handler=command_v4_assets_import)
+    v4_inspect = v4_assets_sub.add_parser("inspect")
+    v4_inspect.add_argument("--asset-ref")
+    v4_inspect.add_argument("--db")
+    v4_inspect.set_defaults(handler=command_v4_assets_inspect)
+    v4_audit = v4_assets_sub.add_parser("audit")
+    v4_audit.add_argument("--db")
+    v4_audit.add_argument("--object-root")
+    v4_audit.set_defaults(handler=command_v4_assets_audit)
+
     inspect = sub.add_parser("inspect", help="Inspect a V3 run")
     inspect.add_argument("--json", dest="sub_json", action="store_true")
     inspect.add_argument("--case", required=True)
@@ -404,7 +503,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         result = args.handler(args)
     except Exception as exc:  # noqa: BLE001
-        result = {"ok": False, "error": exc.__class__.__name__, "message": str(exc)}
+        result = _exception_result(exc)
     _print(result, args.json)
     return 0 if result.get("ok") else 1
 

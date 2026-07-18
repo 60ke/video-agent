@@ -269,6 +269,17 @@ class CapabilityRegistryHub:
                         f"relation pattern roles are not allowed by group type {pattern.group_type}: "
                         f"{pattern.id} -> {disallowed}"
                     )
+        for configured in self.registry("configured_asset").entries:
+            allowed_roles = configured.capabilities.get("allowed_asset_roles")
+            if not isinstance(allowed_roles, list) or not allowed_roles:
+                raise ValueError(
+                    f"configured_asset/{configured.id}.capabilities.allowed_asset_roles must be a non-empty list"
+                )
+            self._require_known(
+                [str(role) for role in allowed_roles],
+                role_ids,
+                f"configured_asset/{configured.id}.capabilities.allowed_asset_roles",
+            )
 
     @staticmethod
     def _require_known(values: list[str], known: set[str], path: str) -> None:

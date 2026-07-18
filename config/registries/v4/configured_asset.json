@@ -1,9 +1,19 @@
 {
   "registry_id": "configured_asset",
-  "version": "2026.07.18.1",
+  "version": "2026.07.18.2",
   "schema_version": 1,
   "entries": [
-    {"id": "default_outro", "display_name": "默认片尾", "description": "柯幻熊猫固定片尾"},
-    {"id": "default_brand_logo", "display_name": "官方品牌 LOGO", "description": "唯一允许的品牌缺图回退资产"}
+    {
+      "id": "default_outro",
+      "display_name": "默认片尾",
+      "description": "柯幻熊猫固定片尾",
+      "capabilities": {"allowed_asset_roles": ["outro"]}
+    },
+    {
+      "id": "default_brand_logo",
+      "display_name": "官方品牌 LOGO",
+      "description": "唯一允许的品牌缺图回退资产",
+      "capabilities": {"allowed_asset_roles": ["brand_logo"]}
+    }
   ]
 }

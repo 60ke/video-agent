@@ -135,11 +135,7 @@ class AssetRecord(V4Contract):
             raise ValueError("filename must equal the final object_key segment")
 
         expected_orientation = (
-            Orientation.LANDSCAPE
-            if self.width > self.height
-            else Orientation.PORTRAIT
-            if self.height > self.width
-            else Orientation.SQUARE
+            Orientation.LANDSCAPE if self.width > self.height else Orientation.PORTRAIT if self.height > self.width else Orientation.SQUARE
         )
         if self.orientation != expected_orientation:
             raise ValueError(f"orientation must match dimensions: expected {expected_orientation.value}")
@@ -213,3 +209,30 @@ class AssetGroup(V4Contract):
         if self.superseded_by == self.group_ref:
             raise ValueError("an asset group cannot supersede itself")
         return self
+
+
+class AssetRepositorySnapshotAsset(V4Contract):
+    asset_ref: str = Field(pattern=_ASSET_REF_PATTERN)
+    object_key: str
+    content_sha256: str = Field(pattern=_SHA256_PATTERN)
+    status: AssetStatus
+    lineage_sha256: str | None = Field(default=None, pattern=_SHA256_PATTERN)
+
+
+class AssetRepositorySnapshotGroup(V4Contract):
+    group_ref: str = Field(pattern=_GROUP_REF_PATTERN)
+    content_sha256: str = Field(pattern=_SHA256_PATTERN)
+
+
+class AssetRepositorySnapshot(V4Contract):
+    snapshot_id: str = Field(pattern=r"^asset-snapshot://sha256/[a-f0-9]{64}$")
+    created_at: datetime
+    repository_schema_version: int = Field(ge=1)
+    content_sha256: str = Field(pattern=_SHA256_PATTERN)
+    assets: list[AssetRepositorySnapshotAsset]
+    groups: list[AssetRepositorySnapshotGroup]
+
+    @field_validator("created_at")
+    @classmethod
+    def validate_created_at(cls, value: datetime) -> datetime:
+        return _require_timezone(value)
