@@ -1,6 +1,6 @@
 # Video Agent V4 Stage 6：语义锚点、帧级编译与 Remotion Adapter 设计
 
-状态：设计初稿，等待审查；禁止直接实施
+状态：设计已冻结；允许按 Unit 0–7 分阶段实施
 
 日期：2026-07-18
 
@@ -19,6 +19,8 @@
 Stage 6 的最高优先级不是“尽量同步”，而是执行仓库根目录 `AGENTS.md` 的硬合同：
 
 > 同一语义短语的口播、字幕、画面首次命中、字幕高亮和 SFX 实际峰值必须绑定同一个词级 Anchor。
+
+关于片尾语义，以 Stage 0 金标和本设计为准：`default_outro` 是最后 CTA 语义场景 s010 的 configured asset，不是口播结束后默认再插入一次的独立视频；仅显式 `postroll_frames` 才追加无口播尾帧。框架 §3.6 中“独立于正文”的表述指片尾不参与随机选材，不表示它脱离最后一句口播 Anchor。
 
 ## 2. 目标
 
@@ -89,6 +91,31 @@ flowchart LR
 
 因此现有 `motion/v4/timing_budget.py` 的比例 fallback 不进入 V4 主线。场景文本不能精确对齐时，应在 Anchor Compiler fail-loud，而不是猜一个时长继续执行。
 
+## 4.1 Stage 5 Runtime Amend
+
+Stage 5 的能力注册、派生执行、Voice、Motion/SFX 控制面仍视为完成；Stage 6 实施必须对其时间输入接线做一次无兼容修订。该修订属于 Stage 6 Unit 3，不另建旧 `TimingLock` 适配层。
+
+| 项 | 修订前 | Stage 6 强制修订 |
+|---|---|---|
+| 运行顺序 | TTS → legacy TimingLock → Stage5 Motion | TTS → `SpeechTimingLock` → Anchor Compiler → `AnchoredTimingPlan` → Stage5 Motion |
+| Motion 时间输入 | `TimingLock` | `AnchoredTimingPlan.scene_spans` |
+| 场景预算 | 精确匹配失败后按全文比例估算 | 只接受精确 `AnchoredSceneSpan`，失败即停止 |
+| 语音指纹 | 含 V3 phrase anchors 的 TimingLock 哈希 | `speech_timing_lock_sha256` 只哈希纯语音事实 |
+| 语义时间指纹 | 无 | `MotionAudioPlan.anchored_timing_plan_sha256` 必填 |
+| Effect 过滤 | 按 `minimum_scene_frames` 和估算预算 | 按 Registry 变体的真实最小预算和精确 scene span |
+| 兼容 | 读取 V3 `TimingLock.phrase_anchors` | 禁止兼容读取 |
+
+`MotionAudioPlan` 修订后必须同时携带：
+
+```json
+{
+  "speech_timing_lock_sha256": "纯语音事实哈希",
+  "anchored_timing_plan_sha256": "语义 Anchor 计划哈希"
+}
+```
+
+Stage 5 DoD 增补一项运行时集成条件：Motion assignment 已使用精确 scene span，且比例 fallback 不可达。在该条件由 Stage 6 Unit 3 落地前，进度描述应理解为“Stage 5 控制面完成，Stage 6 时间接线待完成”，不能宣称 V4 Motion 主路径已最终冻结。
+
 ## 5. 不可变产物边界
 
 ### 5.1 SpeechTimingLock
@@ -123,6 +150,53 @@ flowchart LR
 
 V4 不为旧 `TimingLock.phrase_anchors` 建兼容读取层。实施时应把现有 `build_timing_lock()` 拆成“语音事实构建”和“语义 Anchor 构建”两个模块。
 
+精确 Contract：
+
+```text
+SpeechTokenTimingV4
+  token_id: str
+  text: str
+  start_ms: int
+  end_ms: int
+  start_frame: int
+  end_frame: int                 # exclusive
+  beat_id: str | null
+
+SpeechPauseEventV4
+  pause_id: str
+  after_token_id: str
+  requested_ms: int
+  measured_start_ms: int
+  measured_end_ms: int
+  measured_start_frame: int
+  measured_end_frame: int
+
+SpeechBeatSpanV4
+  beat_id: str
+  token_ids: list[str]
+  start_frame: int
+  end_frame: int                 # exclusive
+
+SpeechTimingLock
+  schema_version: int
+  case_id: str
+  run_id: str
+  narration_sha256: str
+  audio_object_key: str          # Run 内相对 POSIX 路径
+  audio_sha256: str
+  voice_profile_id: str
+  voice_profile_version: str
+  voice_profile_sha256: str
+  fps: int
+  duration_ms: int
+  duration_frames: int
+  tokens: list[SpeechTokenTimingV4]
+  pause_events: list[SpeechPauseEventV4]
+  beat_spans: list[SpeechBeatSpanV4]
+```
+
+所有帧区间使用 `[start_frame, end_frame)`。`audio_object_key` 禁止宿主机绝对路径。
+
 ### 5.2 AnchoredTimingPlan
 
 `AnchoredTimingPlan` 是 `SpeechTimingLock + SceneSemanticPlan` 的唯一语义时间解释：
@@ -153,7 +227,6 @@ PhraseAnchor
   anchor_id
   scene_id
   text
-  occurrence
   token_ids
   onset_ms / end_ms
   onset_frame / end_frame
@@ -165,6 +238,49 @@ AnchorBinding
   anchor_id
   binding_kind              # slot | operation | claim | effect_event | sfx_intent
   source_id                 # slot_id/event_id/claim_id/intent_id
+```
+
+这里的类型全名是 `video_agent.contracts.v4.anchored_timing.PhraseAnchorV4`。禁止 import 或复用 V3 `video_agent.contracts.timing.PhraseAnchor`；后者要求 `beat_id`，语义和字段均不兼容。
+
+精确顶层 Contract：
+
+```text
+AnchoredTimingPlan
+  schema_version: int
+  case_id: str
+  run_id: str
+  narration_sha256: str
+  speech_timing_lock_sha256: str
+  scene_plan_sha256: str
+  fps: int
+  duration_frames: int
+  scene_spans: list[AnchoredSceneSpan]
+  anchors: list[PhraseAnchorV4]
+  bindings: list[AnchorBinding]
+```
+
+最小 mock：
+
+```json
+{
+  "schema_version": 1,
+  "case_id": "case_x",
+  "run_id": "run_x",
+  "narration_sha256": "...",
+  "speech_timing_lock_sha256": "...",
+  "scene_plan_sha256": "...",
+  "fps": 30,
+  "duration_frames": 596,
+  "scene_spans": [
+    {"scene_id": "s002", "token_ids": ["tok_0008"], "start_frame": 61, "end_frame": 146}
+  ],
+  "anchors": [
+    {"anchor_id": "anchor://s002/slot_g1", "scene_id": "s002", "text": "文化墙", "token_ids": ["tok_0008"], "onset_ms": 2040, "end_ms": 2360, "onset_frame": 61, "end_frame": 71, "hit_frame": 61}
+  ],
+  "bindings": [
+    {"binding_id": "binding://s002/slot_g1", "scene_id": "s002", "anchor_id": "anchor://s002/slot_g1", "binding_kind": "slot", "source_id": "g1"}
+  ]
+}
 ```
 
 同一场景、同一文本出现位置只生成一个 canonical `PhraseAnchor`。槽位、事件、Claim、EffectEvent 和 SFX Intent 通过 `AnchorBinding` 共用它，不复制并重新计算帧号。
@@ -191,6 +307,156 @@ CompiledVideoTimeline
 ```
 
 V4 不继续使用 `preferred_min_sec/preferred_max_sec/hard_max_sec` 约束正文。正文长度由冻结口播和固定片尾配置决定。
+
+### 5.4 Unit 0：精确帧级 Contract
+
+任何 Stage 6 代码实施前，先冻结以下 Pydantic Contract。字段不得在 Remotion TSX 中另起一套名字。
+
+```text
+CompiledLayout
+  x: int
+  y: int
+  width: int
+  height: int
+  fit: contain | cover
+  border_radius: int
+  opacity: float                  # 0..1
+  background_style_id: str
+  safe_area_profile_id: str
+
+CompiledRenderAsset
+  asset_ref: str
+  object_key: str                 # Run 内相对 POSIX 路径
+  sha256: str
+  media_kind: image | video
+  width: int
+  height: int
+  duration_ms: int | null
+  has_alpha: bool
+
+CompiledVisualTrack
+  track_id: str
+  track_kind: base | overlay
+  clips: list[CompiledVisualClip]
+
+CompiledVisualClip
+  clip_id: str
+  scene_id: str
+  slot_id: str | null
+  group_ref: str | null
+  member_key: str | null
+  asset_bindings: dict[str, asset_ref]
+  start_frame: int
+  end_frame: int                 # exclusive
+  semantic_hit_frame: int
+  hold_reason: reading | appreciation | pause | scene_span | null
+  layout_profile_id: str
+  layout: CompiledLayout
+  effect_instance_id: str
+  z_index: int
+
+CompiledEffectEvent
+  event_id: str
+  event_type: str
+  anchor_id: str
+  hit_frame: int
+  start_frame: int
+  end_frame: int
+
+CompiledEffectInstance
+  effect_instance_id: str
+  effect_id: str
+  effect_version: str
+  adapter_id: str                # 默认与 effect_id 相同
+  variant_id: full | compact | instant
+  direction: none | left | right | up | down
+  parameters: dict
+  events: list[CompiledEffectEvent]
+
+CompiledSubtitleCueV4
+  cue_id: str
+  scene_id: str
+  anchor_id: str | null
+  text: str
+  start_frame: int
+  end_frame: int                 # exclusive
+  slot_id: subtitle_top | subtitle_lower
+  style_id: default | gallery_yellow
+  emphasize_text: str | null
+  emphasize_start_frame: int | null
+  single_line: Literal[true]
+
+CompiledAudioTrackV4
+  track_id: str
+  kind: voice | bgm | sfx | outro
+  object_key: str
+  sha256: str
+  start_frame: int
+  gain_db: float
+  anchor_id: str | null
+  semantic_id: str | null
+  hit_frame: int | null
+  configured_sync_offset_ms: int
+  effective_sync_offset_ms: int
+  trim_start_ms: int
+  expected_peak_frame: int | null
+  max_duration_ms: int | null
+  fade_in_ms: int
+  fade_out_ms: int
+
+CompiledVideoTimeline
+  schema_version: int
+  case_id: str
+  run_id: str
+  width: int
+  height: int
+  fps: int
+  narration_frame_count: int
+  postroll_frames: int
+  frame_count: int
+  platform_profile_id: str
+  registry_snapshot_id: str
+  speech_timing_lock_sha256: str
+  anchored_timing_plan_sha256: str
+  resolved_asset_plan_sha256: str
+  motion_audio_plan_sha256: str
+  used_assets_snapshot_id: str
+  render_assets: list[CompiledRenderAsset]
+  visual_tracks: list[CompiledVisualTrack]
+  effect_instances: list[CompiledEffectInstance]
+  subtitle_track: list[CompiledSubtitleCueV4]
+  audio_tracks: list[CompiledAudioTrackV4]
+```
+
+`effect_instance_id` 必须在 clip 和 `effect_instances` 中形成 1:1 可解析引用；一个 effect instance 可以携带多个按 Anchor 编译的 event，但不能跨 continuity group 偷换配置。
+
+最小 timeline mock：
+
+```json
+{
+  "schema_version": 1,
+  "case_id": "case_x",
+  "run_id": "run_x",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "narration_frame_count": 596,
+  "postroll_frames": 0,
+  "frame_count": 596,
+  "platform_profile_id": "douyin_portrait_v1",
+  "registry_snapshot_id": "registry-snapshot-x",
+  "speech_timing_lock_sha256": "...",
+  "anchored_timing_plan_sha256": "...",
+  "resolved_asset_plan_sha256": "...",
+  "motion_audio_plan_sha256": "...",
+  "used_assets_snapshot_id": "assets-snapshot-x",
+  "render_assets": [],
+  "visual_tracks": [{"track_id": "base", "track_kind": "base", "clips": []}],
+  "effect_instances": [],
+  "subtitle_track": [],
+  "audio_tracks": []
+}
+```
 
 ## 6. Anchor Compiler
 
@@ -221,10 +487,11 @@ Anchor 短语的来源仅限：
 
 1. 优先按源对象在场景中的声明顺序，从局部游标向后匹配；
 2. 同一短语被多个对象引用且指向同一文本位置时，共用 Anchor；
-3. 同一短语在场景中出现多次时，使用 `occurrence` 固化实际位置；
-4. 如果声明顺序无法消除歧义，Contract 必须显式补 `anchor_occurrence`，程序不得猜最近位置；
-5. Anchor 文本必须是场景原文的原样短语，不接受同义词、关键词扩写或模糊匹配；
-6. 标点可以不属于词级 Token，但必须通过 display slice 恢复到字幕文本。
+3. 第一版不增加 `anchor_occurrence`，避免同时回改 Stage 1 Scene Contract 和 Stage 5 intents；
+4. 同一短语在同一场景出现多次且无法由声明顺序和已绑定 canonical Anchor 唯一解释时，返回 `anchor_phrase_ambiguous` 并 fail-loud；
+5. 程序不得默认取第一次、最后一次或最近位置；未来确有业务需求时再以一次无兼容 Contract 升级增加 occurrence；
+6. Anchor 文本必须是场景原文的原样短语，不接受同义词、关键词扩写或模糊匹配；
+7. 标点可以不属于词级 Token，但必须通过 display slice 恢复到字幕文本。
 
 ### 6.3 帧换算
 
@@ -332,19 +599,51 @@ source_result -> editor_page -> editor_modal? -> edited_result
 - `event_bindings`；
 - `fallback_effect_ids`。
 
-Stage 6 需要为每种 event binding 补充最小执行参数，不能把动画时长继续硬编码在 TSX：
+Stage 6 需要为每种 event binding 补充最小执行参数，不能把动画时长继续硬编码在 TSX。Effect Registry schema version 必须 bump，Hub 拒绝未迁移的启用条目：
 
 ```json
 {
   "event_timing": {
     "enter": {
       "activation": "at_anchor",
-      "reveal_frames": 10,
-      "semantic_visible_at_hit": true
+      "semantic_visible_at_hit": true,
+      "variants": [
+        {"variant_id": "full", "minimum_interval_frames": 30, "reveal_frames": 12, "readable_settle_frames": 18},
+        {"variant_id": "compact", "minimum_interval_frames": 18, "reveal_frames": 8, "readable_settle_frames": 10},
+        {"variant_id": "instant", "minimum_interval_frames": 1, "reveal_frames": 1, "readable_settle_frames": 0}
+      ]
     }
   }
 }
 ```
+
+精确增量 Contract：
+
+```text
+EffectTimingVariant
+  variant_id: full | compact | instant
+  minimum_interval_frames: int >= 1
+  reveal_frames: int >= 1
+  readable_settle_frames: int >= 0
+
+EffectEventTiming
+  activation: at_anchor | scene_start
+  semantic_visible_at_hit: bool
+  variants: non-empty list[EffectTimingVariant]
+
+EffectCapabilities.event_timing
+  dict[event_type, EffectEventTiming]
+```
+
+Hub 校验：
+
+- `event_bindings` 中每个 event type 必须在 `event_timing` 有且只有一个配置；
+- `event_timing` 不得出现未列入 `event_bindings` 的 key；
+- `none` 等 `event_bindings=[]` 的条目必须使用空 map；
+- variant ID 不重复，按 `full > compact > instant` 质量顺序选择；
+- 每个 variant 满足 `minimum_interval_frames >= reveal_frames + readable_settle_frames`；
+- 条目级 `minimum_scene_frames` 只保留为场景级快速排除下界，不得大于该 effect 最短合法 event variant；最终合法性必须逐 event 检查，不能用该字段替代；
+- Registry version、内容哈希和 Hub snapshot 随迁移变化，旧 Run 仍从其冻结快照重放。
 
 约束：
 
@@ -357,19 +656,22 @@ Stage 6 需要为每种 event binding 补充最小执行参数，不能把动画
 
 ### 8.2 精确预算与 fallback
 
-Stage 5 根据 `AnchoredSceneSpan` 的精确帧预算沿 Registry fallback 链选出合法 effect。Stage 6 编译时只做复验：
+Stage 5 根据 `AnchoredSceneSpan`、event Anchor 和每个 effect 的最短合法 variant 沿 Registry fallback 链选出合法 effect。它只判断每个必需 event “至少一个 variant 能运行”，不提前冻结具体 variant。Stage 6 编译时在同一 effect ID 内选择所有必需 event 均可执行的最高质量 variant，并做复验：
 
 ```text
 scene_frames >= minimum_scene_frames
-若 requires_readable_hold:
-  event_complete_frame + readable_settle_frames <= semantic interval end
+available_event_frames = semantic_interval_end - event_hit_frame
+available_event_frames >= variant.minimum_interval_frames
+event_hit_frame + reveal_frames + readable_settle_frames <= semantic_interval_end
 ```
+
+`semantic_interval_end` 是该 event 对应语义的下一个 Anchor onset；若没有下一个 Anchor，则为当前 Scene end。Gallery 中因此天然使用“当前词起 → 下一词起”的区间，不会借用后一个 Gallery 项的时间。
 
 复验失败时 Stage 6 fail-loud，并报告 scene/effect/event/available/required。它不静默换 effect，因为 `MotionAudioPlan` 已被冻结。
 
 连续场景组中任一成员不满足组动效时，应在 Stage 5 对整个组统一选择 fallback；禁止 Stage 6 只替换中间一张，破坏组内连贯性。
 
-同一 `effect_id` 可以在 Adapter 内声明 `full/compact/instant` 三种确定性执行变体。Stage 6 根据实际区间选择合法变体，这不改变 Stage 5 已冻结的 effect 身份；若全部变体都不合法，说明 Stage 5 基于精确预算的 fallback 选择存在错误，应 fail-loud 返回上游实现修正，不能在已冻结计划上偷偷换 ID。
+变体选择结果只写入 `CompiledEffectInstance.variant_id` 和 Remotion Adapter props，不回写 `MotionAudioPlan`。若全部变体都不合法，说明 Stage 5 基于精确预算的 fallback 选择存在错误，应 fail-loud 返回上游实现修正，不能在已冻结计划上偷偷换 ID。
 
 ## 9. 字幕编译
 
@@ -410,6 +712,15 @@ scene_frames >= minimum_scene_frames
 ### 10.1 Anchor 绑定
 
 每个 `SfxIntent` 通过 `anchor_phrase` 解析到 canonical PhraseAnchor：
+
+Stage 5 与 Stage 6 的职责必须分开：
+
+| 层 | 负责 | 禁止 |
+|---|---|---|
+| Stage 5 | 选择 `sfx_id`、语义来源、优先级，并做不依赖帧号的粗粒度重复意图折叠 | 不计算播放帧、实际峰值、时间窗口密度或冷却命中 |
+| Stage 6 | 解析 Anchor，按最终毫秒/帧位置执行窗口密度、同类冷却和冲突仲裁 | 不更换 `sfx_id`，不新增 Stage 5 未选择的音效 |
+
+Stage 6 的最终仲裁只允许 `keep`、`attenuate` 或 `suppress`。被抑制的 intent 仍保留在编译审计信息中并写明原因，不能为了“听起来更丰富”替换成另一 semantic ID。
 
 - `operation_semantic` 优先级高于 `effect_event`；
 - 同一语义事件只保留一个主音效；
@@ -461,7 +772,9 @@ Claim 校验在编译阶段使用三类冻结事实：
 
 1. `SceneClaim` 的 phrase、supporting_slots 和 evidence_window；
 2. `ResolvedAssetPlan` 的实际槽位资产/关系组成员；
-3. Stage 3 Repository 冻结记录的 evidence class 和 claims。
+3. `used-assets snapshot` 中冻结的 evidence class 和 claims。
+
+编译期禁止查询 live SQLite。若 `ResolvedAssetPlan` 当前只在 `SelectionDecision` 的候选摘要中携带 evidence/claims，Stage 4 输出需要增加按已选 `asset_ref` 冻结的 `ResolvedEvidenceBinding`，或由 used-assets snapshot 提供同形只读投影；不能从活动 Repository 临时补读。
 
 规则：
 
@@ -522,16 +835,37 @@ Remotion Adapter 不得重复保存：
 
 ```text
 RemotionEffectProps
-  effect_instance_id
-  effect_id / effect_version
-  start_frame / end_frame
-  hit_frames{}
-  direction
-  layout
-  parameters
-  assets{}
-  ordered_items[]
+  effect_instance_id: str
+  effect_id: str
+  effect_version: str
+  variant_id: full | compact | instant
+  start_frame: int
+  end_frame: int                   # exclusive
+  events: list[RemotionEffectEventProps]
+  direction: none | left | right | up | down
+  layout: CompiledLayout
+  parameters: dict
+  assets: dict[binding_name, object_key]
+  ordered_items: list[RemotionOrderedItem]
+
+RemotionEffectEventProps
+  event_id: str
+  event_type: str
+  anchor_id: str
+  hit_frame: int                   # 相对 effect instance
+  start_frame: int                 # 相对 effect instance
+  end_frame: int                   # 相对 effect instance, exclusive
+
+RemotionOrderedItem
+  item_id: str
+  asset_binding_name: str
+  member_key: str | null
+  start_frame: int                 # 相对 effect instance
+  end_frame: int                   # 相对 effect instance, exclusive
+  hit_frame: int                   # 相对 effect instance
 ```
+
+`RemotionEffectProps` 由 `CompiledVisualClip + CompiledEffectInstance + render_assets` 纯投影得到，不能在 TSX 内重新解释 Anchor、查询 Registry 或猜测 layout。所有 frame 都是整数；Adapter 内部只允许用相对 frame 做插值。
 
 每个启用且被计划引用的 Effect 必须有对应 Adapter。导出 timeline 前执行 coverage check；缺实现时 fail-loud，不回退到通用 fade。
 
@@ -598,6 +932,30 @@ Stage 6 不引入 AI 视觉审核。只保留下列 fail-loud 结构校验：
 
 校验产物是结构化 `stage6_validation.json`，只记录规则、输入引用和失败细节，不评价画面美感。
 
+### 16.1 结构化错误码
+
+所有 fail-loud 错误必须使用稳定错误码，不以异常文本作为程序分支：
+
+| error_code | 触发条件 |
+|---|---|
+| `speech_text_mismatch` | Speech Token 还原文本与冻结文案不一致 |
+| `scene_span_gap` | 相邻 Scene span 存在未归属 Token 或帧区间 |
+| `scene_span_overlap` | Scene span 发生语义或帧重叠 |
+| `anchor_unresolved` | 场景内找不到指定原文短语 |
+| `anchor_phrase_ambiguous` | 同场景短语重复且第一版无法唯一定位 |
+| `timeline_base_track_gap` | base 轨未覆盖完整正文帧区间 |
+| `timeline_base_track_overlap` | base 轨出现重叠 |
+| `effect_budget_revalidation_failed` | Stage 5 冻结的 effect 不满足精确 scene span |
+| `effect_variant_unavailable` | 同一 effect ID 的所有 Registry 变体均不合法 |
+| `sfx_peak_tolerance_exceeded` | 注册 WAV 实际峰值与视觉 hit 超出 profile 容差 |
+| `subtitle_single_line_overflow` | 语义拆分和允许字号范围内仍无法单行显示 |
+| `claim_evidence_not_visible` | Claim 窗口内不存在合法冻结证据 |
+| `adapter_coverage_missing` | 被引用 effect 没有真实 V4 Remotion Adapter |
+| `material_snapshot_mismatch` | used-assets snapshot 与冻结 object key/hash 不一致 |
+| `media_decode_preflight_failed` | Remotion/FFmpeg 前置解码失败 |
+
+`stage6_validation.json` 至少保存 `error_code`、`scene_id`、`slot_id/event_id`、`anchor_id`、输入产物哈希和可读 detail。detail 可变化，error code 不得随意改名。
+
 ## 17. Resume 与指纹
 
 Stage 6 输入指纹至少包含：
@@ -634,6 +992,17 @@ Stage 6 产物创建后不可原地更新。任一输入变化生成新的 stage
 | s008 | single or causal member / flat_plan | 复用 s007 group binding，flat_plan 在导出短语进入 |
 | s009 | no_asset_transition | 无素材 LightSweep，字幕和 sweep 共用场景 Anchor |
 | s010 | configured outro | default_outro 从最后 CTA 场景开始并保持到口播结束，不使用 brand_logo 冒充 |
+
+### 18.1 Stage 5 §18 冻结项闭环
+
+| Stage 5 待冻结项 | Stage 6 关闭方式 | 状态 |
+|---|---|---|
+| `MotionAudioPlan` 精确 Contract | §4.1 增加双哈希，§5.4 冻结帧级消费 Contract | 本设计关闭，Unit 0/3 实施 |
+| Effect event 到 Anchor 的命名 | §6 使用 V4 canonical Anchor，§8 以 `event_bindings`/`event_timing` 校验 | 本设计关闭 |
+| SFX Intent 分层和优先级 | §10.1 固定 Stage5 粗筛、Stage6 最终仲裁 | 本设计关闭 |
+| Effect 最短时长与 fallback | §8 由 Registry variant + 精确 scene span 控制 | 本设计关闭，Unit 3/6 实施 |
+| Voice 与 SpeechTimingLock 指纹 | §4.1、§5.1、§17 分离 voice、speech、anchor 哈希 | 本设计关闭 |
+| Stage6 只编帧、不反改 Stage5 | §3、§8.2 明确不换 effect/SFX/material | 本设计关闭 |
 
 ## 19. 模块布局建议
 
@@ -673,7 +1042,42 @@ remotion/src/v4/
 
 V4 模块不得 import V3 `VisualPlan`、旧 `EFFECTS` 常量或旧单体 Planner。成熟算法应提取到无 V3 业务依赖的共享纯函数，再由 V3/V4 各自 Contract 调用；切主线后删除 V3 调用方。
 
+### 19.1 CLI 与 Remotion Composition 边界
+
+Stage 6 提供一个可 Resume 的开发入口：
+
+```powershell
+python main.py v4-stage6 --case <case_id> --run <run_id>
+```
+
+该命令按产物状态执行两个内部 phase：
+
+1. `anchor`：读取 `SpeechTimingLock + SceneSemanticPlan`，生成 `AnchoredTimingPlan`；
+2. `compile-render`：在 Stage 5 已生成 `MotionAudioPlan` 后，生成 `CompiledVideoTimeline`、冻结渲染包并渲染。
+
+主 Orchestrator 在 TTS 后调用 `anchor`，再进入 Stage 5 Motion/SFX，随后调用 `compile-render`。CLI 不得用单次函数顺序掩盖这两个运行时插入点；若缺少所需上游产物，应打印缺失阶段并停止。
+
+Remotion 新建独立 Composition：
+
+```text
+composition_id = V4Timeline
+props = remotion.timeline.json
+```
+
+- `V4Timeline` 只消费 `CompiledVideoTimeline` 的冻结投影；
+- Stage 6 不修改 V3 `VerticalDemo` 的业务路径；
+- 两条 composition 在 Stage 7 切主线前并存，但禁止 V4 回退调用 V3 shot/motion 分支；
+- Stage 7 切换后再删除 V3 composition 与旧 props，不在 Stage 6 提前清理。
+
 ## 20. 实施顺序
+
+### Unit 0：冻结精确 Contract 与 Fixture
+
+- 将 §5.1-§5.4 的四份 Contract 落为 Pydantic schema；
+- 固定 `CompiledVisualClip`、字幕、音频、Effect 实例与 Remotion props 的 JSON fixture；
+- 固定错误码、V4 PhraseAnchor 全名和重复短语 fail-loud 语义；
+- 固定 Effect Registry `event_timing` schema/version 与 Hub 校验；
+- 在 Unit 0 完成前不开始 Timeline Compiler 或 Remotion Adapter。
 
 ### Unit 1：SpeechTimingLock 拆分
 
@@ -732,7 +1136,9 @@ V4 模块不得 import V3 `VisualPlan`、旧 `EFFECTS` 常量或旧单体 Planne
 ## 21. Definition of Done
 
 - [ ] `SpeechTimingLock` 不含 Scene 派生的 PhraseAnchor；
+- [ ] 四份精确 Contract、mock JSON 与稳定错误码已冻结；
 - [ ] `AnchoredTimingPlan` 由 Scene 原文短语在场景 Token 范围内精确生成；
+- [ ] 同场景重复短语无法唯一定位时使用 `anchor_phrase_ambiguous` fail-loud；
 - [ ] Motion assignment 使用精确 scene span，不使用比例时长 fallback；
 - [ ] `CompiledVideoTimeline` 完整覆盖正文，s010 正确承接固定片尾，显式配置时才追加 post-roll；
 - [ ] Gallery 图片、黄色字幕和可选 SFX 在词起 Anchor 命中；
@@ -740,8 +1146,11 @@ V4 模块不得 import V3 `VisualPlan`、旧 `EFFECTS` 常量或旧单体 Planne
 - [ ] Claim Anchor 上的素材身份与证据等级合法；
 - [ ] 字幕按自然语义和真实宽度生成，永不输出两行；
 - [ ] SFX 首帧补偿和实际峰值容差生效；
+- [ ] Stage 5 只做 SFX 粗筛，Stage 6 只做 keep/attenuate/suppress 且不更换 ID；
 - [ ] Effect 最短时长和 readable settle 只读取 Registry 自身规则；
+- [ ] Effect `event_timing`、variant 与 Registry/Hub 版本校验生效；
 - [ ] 所有被引用 Effect 均有真实 Remotion Adapter，无通用 fade 静默兜底；
+- [ ] `V4Timeline` 独立 Composition 能完整消费冻结 props，且不进入 V3 `VerticalDemo` 分支；
 - [ ] 1080x1920、30 fps 与抖音安全区来自冻结 profile；
 - [ ] 原图不因 `objectFit: fill` 发生形变；
 - [ ] Remotion/FFmpeg 只读取 Run 内冻结相对路径；
@@ -752,7 +1161,7 @@ V4 模块不得 import V3 `VisualPlan`、旧 `EFFECTS` 常量或旧单体 Planne
 ## 22. 进入 Stage 7 前必须冻结
 
 1. `SpeechTimingLock`、`AnchoredTimingPlan`、`CompiledVideoTimeline` 精确 Contract；
-2. 场景、短语和重复 occurrence 的定位规则；
+2. 场景、短语及重复短语 fail-loud 的定位规则；
 3. Gallery、sequence、causal、comparison 的帧边界语义；
 4. Effect event timing 增量字段；
 5. SFX 实际峰值与冲突解决算法；
