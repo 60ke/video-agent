@@ -7,7 +7,7 @@
 权威上游：
 
 - `video_agent_v4_architecture_framework_rev3_20260717.md`
-- `video_agent_v4_stage0_golden_scenario_rev2_20260717.md`
+- `video_agent_v4_stage0_golden_scenario_rev3_20260718.md`
 
 本文是 V4 八项正式设计中的第 1、2 项，并补齐二者实施所必需的 AI Runtime：
 

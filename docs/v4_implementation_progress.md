@@ -5,18 +5,18 @@ Last updated: 2026-07-18
 ## Authority
 
 - Architecture: `video_agent_v4_architecture_framework_rev3_20260717.md`
-- Stage 0 golden scenario: `video_agent_v4_stage0_golden_scenario_rev2_20260717.md`
+- Stage 0 golden scenario: `video_agent_v4_stage0_golden_scenario_rev3_20260718.md`
 - Stage 1 design: `video_agent_v4_stage1_semantic_contract_and_ai_runtime_design_20260717.md`
 - Stage 2 design: `video_agent_v4_stage2_capability_and_asset_contracts_20260717.md`
 
-When examples drift from the Stage 1 design, the Stage 1 strict Contract is authoritative. Golden fixtures preserve the Stage 0 meaning while using the final Stage 1 field names.
+Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle exposes a missing Contract capability, the Contract must be revised explicitly; runtime compatibility aliases are forbidden.
 
 ## Current Status
 
 | Stage | Status | Notes |
 |---|---|---|
 | Baseline audit | complete | Current executable pipeline is V3. Stage 1 had design documents only. |
-| Stage 1: semantic Contract and AI runtime | complete | Strict contracts, structured prompts, exact runtime schema injection, trace/replay, field repair, quality rebuild, routing and `V4Orchestrator` are implemented. Stage 0 real-provider execution produced validated Scope and Scene artifacts. |
+| Stage 1: semantic Contract and AI runtime | runtime complete / golden conformance partial | Runtime, structured prompts, trace/replay, repair and routing are implemented. Relation-pattern binding, full registry freeze and Stage 0 Rev3 semantic conformance remain open. |
 | Stage 2: capability and asset domain | complete | Typed dynamic registries, deterministic frozen snapshots, strict AssetRecord/Lineage/Group/Evidence contracts, registry-bound validation and Stage 1 projection are implemented. |
 | Stage 3: repository, SQLite, ObjectStore and migration | pending | Formal design document required before implementation. |
 | Stage 4: dependency, selection and derivation | pending | Formal design document required before implementation. |
@@ -28,7 +28,7 @@ When examples drift from the Stage 1 design, the Stage 1 strict Contract is auth
 
 1. V4 contracts are isolated under `video_agent/contracts/v4`; V3 contracts remain untouched until cutover.
 2. V4 AI nodes emit phrases copied from frozen narration. Python owns IDs outside each semantic object, registry validation, dependency validation and all timing.
-3. The Stage 0 legacy example fields (`scope`, `presentation_index`, `structure`) are migrated in fixtures to Stage 1 fields (`scope_mode`, `order`, `visual_structure`). Runtime compatibility aliases will not be added.
+3. Stage 0 Rev3 and its target fixtures use `scope_mode`, `order` and `visual_structure`. The former `scope`, `presentation_index`, `structure` and `continuity_group` fields are retired; runtime compatibility aliases will not be added.
 4. Required root validation scripts (`test.txt` through `test4.txt`) remain local validation inputs and are not committed.
 5. Structured semantic models default to `thinking=false`: these nodes transform a frozen contract and must spend their token budget on the JSON object. Model settings remain overrideable in `config/ai_runtime.v4.json`.
 6. The Gateway appends the exact Pydantic-generated JSON Schema to every structured request. The effective prompt is fingerprinted and exported, so a stale shallow prompt cannot pass replay boundaries.

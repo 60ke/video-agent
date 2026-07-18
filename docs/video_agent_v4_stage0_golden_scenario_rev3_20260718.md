@@ -1,8 +1,12 @@
-# Video Agent V4 阶段 0：固定文案黄金执行链路（Rev2）
+# Video Agent V4 阶段 0：固定文案黄金执行链路（Rev3）
 
-日期：2026-07-17
+日期：2026-07-18
 
-状态：阶段 0 设计稿 Rev2，待确认
+状态：语义金标已确认；Stage 1 字段对齐已完成；关系模式 Contract 收口与 Pass B 未完成
+
+本文是固定文案黄金场景的唯一语义金标。字段表达以 Stage 1 正式 Contract 为准，不保留旧字段别名或兼容写法。若本文与 Stage 1 实现出现差异，应先判断是本文语义错误还是 Stage 1 Contract 缺少必要表达能力；不得用运行时兼容层掩盖冲突。
+
+阶段 0 是黄金 oracle，不是通用视频都必须复制的十场景模板。十个场景只用于覆盖本固定文案中的 Gallery、参数过程、编辑过程、因果关系、无素材过渡和固定片尾能力。
 
 上游文档：`video_agent_v4_architecture_framework_rev3_20260717.md`
 
@@ -47,7 +51,7 @@
 |---|---|
 | 网站主页开场 | s001 |
 | 多分类结果 Gallery 与逐词切图 | s002 |
-| Gallery 首项作为下游主素材 | s002 -> s005 |
+| Gallery 逐词切图，不把枚举素材冒充后续生成结果 | s002 |
 | 文化墙功能入口 | s003 |
 | 参数页花字流程序列 | s004 |
 | 上游结果图重新展示 | s005 |
@@ -162,7 +166,7 @@ FrozenNarration
 
 SceneSemanticPlan
 -> [程序] 文案完整覆盖、注册表、输入输出和 DAG 校验
--> [程序] 按 dependency_depth 解析素材，按 presentation_index 保持播放顺序
+-> [程序] 按 dependency_depth 解析素材，按 order 保持播放顺序
 -> [程序] 关系组展开 / 合法派生 / 持久化注册
 -> ResolvedAssetPlan
 -> [程序] 动效分配 + SFX 分配 + BGM 选择
@@ -180,7 +184,7 @@ AnchoredTimingPlan + ResolvedAssetPlan + Motion/SFX/BGM
 
 素材解析顺序和视频展示顺序是两个概念：
 
-- `presentation_index`：由冻结文案决定，严格递增，决定播放顺序；
+- `order`：由冻结文案决定，严格递增，决定播放顺序；
 - `dependency_depth`：由场景依赖图计算，只决定素材解析先后。
 
 ## 4. AI 节点 1：Scope Classifier
@@ -192,7 +196,7 @@ AnchoredTimingPlan + ResolvedAssetPlan + Motion/SFX/BGM
 你是柯幻熊猫短视频的功能范围分类器。
 
 # Goal
-根据冻结文案判断视频围绕一个具体功能分类（single），还是多个具体功能分类（multiple），并确定叙事主分类。
+根据冻结文案判断视频围绕一个具体功能分类（single_category），还是多个具体功能分类（multi_category），并确定叙事主分类。
 
 # Inputs
 - frozen_narration：不可修改的完整口播文案。
@@ -200,8 +204,8 @@ AnchoredTimingPlan + ResolvedAssetPlan + Motion/SFX/BGM
 
 # Allowed Decisions
 - 只从 enabled_scope_categories 中选择文案明确提到或通过别名明确指代的分类。
-- scope 只能是 single 或 multiple。
-- primary_category_id 必须来自 category_ids。
+- scope_mode 只能是 single_category 或 multi_category。
+- categories 中最多一个 is_primary=true；文案存在明确举例重点时必须有一个 primary。
 
 # Forbidden Decisions
 - 不得创造、改写或补全分类 ID。
@@ -233,10 +237,14 @@ AnchoredTimingPlan + ResolvedAssetPlan + Motion/SFX/BGM
 
 ```json
 {
-  "schema_version": "v4.video_scope.1",
-  "scope": "single|multiple",
-  "category_ids": ["注册表中的 category_id"],
-  "primary_category_id": "category_ids 之一"
+  "scope_mode": "single_category|multi_category",
+  "categories": [
+    {
+      "category_id": "注册表中的 category_id",
+      "mention_phrases": ["冻结文案中的原文短语"],
+      "is_primary": true
+    }
+  ]
 }
 ```
 
@@ -253,10 +261,12 @@ AnchoredTimingPlan + ResolvedAssetPlan + Motion/SFX/BGM
 
 ```json
 {
-  "schema_version": "v4.video_scope.1",
-  "scope": "multiple",
-  "category_ids": ["文生图/文化墙", "文生图/门头招牌", "文生图/美陈"],
-  "primary_category_id": "文生图/文化墙"
+  "scope_mode": "multi_category",
+  "categories": [
+    {"category_id": "文生图/文化墙", "mention_phrases": ["文化墙"], "is_primary": true},
+    {"category_id": "文生图/门头招牌", "mention_phrases": ["门头招牌"], "is_primary": false},
+    {"category_id": "文生图/美陈", "mention_phrases": ["美陈"], "is_primary": false}
+  ]
 }
 ```
 
@@ -296,7 +306,7 @@ Scene Semantics Agent 只回答：
 # Allowed Decisions
 - 按独立画面语义切分 scenes。
 - scenes 必须按原文顺序排列；所有 scene.text 顺序拼接后必须与 frozen_narration 完全一致，不得遗漏、重叠或改写字符。
-- structure 只能是 single、parallel、causal、comparison、sequence。
+- visual_structure 只能来自 Visual Structure Registry。本黄金场景使用 single、gallery、comparison、sequence、no_asset_transition。
 - 每个素材槽必须从 asset_query、scene_input、relation_from_input、asset_group_query、group_member、configured_asset 中选择一种来源。
 - 关系组类型和 member_key 必须命中 enabled_relation_patterns。
 - 使用“它、这个、继续、基于上图”等指代时，必须通过命名 input 引用明确的上游 output。
@@ -323,9 +333,12 @@ Scene Semantics Agent 只回答：
   "schema_version": "v4.scene_semantics.request.1",
   "frozen_narration": "想让门店设计不再等档期？打开柯幻熊猫，一个网站搞定全部设计。文化墙、门头招牌、美陈，都能一键出图。以文化墙为例，进入功能页，填上行业和风格，点击生成，一整面文化墙方案直接出来了。细节不满意？选中它继续编辑，改完直接用。还能上传实景参考图，按你的现场出效果，连施工平面图都能一并导出。设计这件事，从没这么省心。搜索柯幻熊猫，今天就试试。",
   "video_scope": {
-    "scope": "multiple",
-    "category_ids": ["文生图/文化墙", "文生图/门头招牌", "文生图/美陈"],
-    "primary_category_id": "文生图/文化墙"
+    "scope_mode": "multi_category",
+    "categories": [
+      {"category_id": "文生图/文化墙", "mention_phrases": ["文化墙"], "is_primary": true},
+      {"category_id": "文生图/门头招牌", "mention_phrases": ["门头招牌"], "is_primary": false},
+      {"category_id": "文生图/美陈", "mention_phrases": ["美陈"], "is_primary": false}
+    ]
   },
   "enabled_categories": [
     {"category_id": "文生图/文化墙", "name": "文化墙", "aliases": []},
@@ -362,14 +375,12 @@ Scene Semantics Agent 只回答：
 
 ```json
 {
-  "schema_version": "v4.scene_semantics.1",
   "scenes": [
     {
       "scene_id": "s001",
-      "presentation_index": 1,
+      "order": 1,
       "text": "冻结文案的连续原文片段",
-      "structure": "single|parallel|causal|comparison|sequence",
-      "continuity_group": null,
+      "visual_structure": "single|gallery|comparison|sequence|no_asset_transition",
       "slots": [
         {
           "slot_id": "场景内唯一",
@@ -378,14 +389,7 @@ Scene Semantics Agent 只回答：
           "hold_policy": "until_next_slot|scene_end",
           "category_id": "注册表 category_id 或 null",
           "asset_role": "注册表 role_id",
-          "source": {
-            "kind": "asset_query|scene_input|relation_from_input|asset_group_query|group_member|configured_asset",
-            "input_name": null,
-            "group_alias": null,
-            "group_type": null,
-            "member_key": null,
-            "config_key": null
-          },
+          "source": {"kind": "asset_query"},
           "subtitle_emphasis": "none|keyword"
         }
       ],
@@ -427,13 +431,26 @@ Scene Semantics Agent 只回答：
 }
 ```
 
+`SlotSource` 是严格判别联合，不使用“所有可选字段均置 null”的宽松对象。目标形态如下：
+
+```json
+{"kind": "asset_query"}
+{"kind": "scene_input", "input_name": "source_result"}
+{"kind": "configured_asset", "config_key": "default_outro"}
+{"kind": "asset_group_query", "group_alias": "culture_wall_parameters", "pattern_id": "parameter_callout_sequence", "group_type": "process", "member_key": "base"}
+{"kind": "group_member", "group_alias": "culture_wall_parameters", "pattern_id": "parameter_callout_sequence", "group_type": "process", "member_key": "stage"}
+{"kind": "relation_from_input", "input_name": "source_result", "group_alias": "culture_wall_editing", "pattern_id": "editor_sequence", "group_type": "process", "member_key": "editor_page"}
+```
+
 约束：
 
 - `scene.text` 全量覆盖文案；
 - `anchor_phrase`、event phrase、claim phrase 必须是所属 scene.text 的原文子串；
 - `scene_input` 必须指定 input_name；
-- `relation_from_input` 必须指定 input_name、group_type 和 member_key；关系或成员缺失时，由素材服务根据 Derivation Registry 选择合法派生器，Scene Agent 不选择技术派生类型；
-- `asset_group_query` 建立 group_alias，后续 `group_member` 引用同一 alias；
+- `relation_from_input` 必须指定 input_name、group_alias、pattern_id、group_type 和 member_key；关系或成员缺失时，由素材服务根据 Derivation Registry 选择合法派生器，Scene Agent 不选择技术派生类型；
+- `asset_group_query` 以 group_alias 建立本计划内的局部绑定，通过 pattern_id 指向注册表模式，并以 member_key 指定首个展示成员；后续 `group_member` 引用同一 alias 和 pattern_id；
+- `pattern_id` 是注册表中的可复用关系模式，`group_alias` 是本计划内的局部绑定名，两者概念不同；同一关系组跨场景复用时必须复用同一 alias；
+- 当前 Stage 1 SlotSource 尚未包含 pattern_id，AssetGroupQuerySource 也没有 member_key。二者是 Stage 1/2 一致性收口的必需 Contract 修订，Pass B 前必须落地，不得用 alias 命名或隐式首成员约定代替；
 - output 必须通过 bound_slot 绑定实际素材身份；
 - `no_asset=true` 时 slots、inputs、outputs 和 claims 为空；
 - AI 不输出字符位置。程序按 scenes 顺序和 phrase 出现顺序解析唯一字符区间。
@@ -444,14 +461,12 @@ Scene Semantics Agent 只回答：
 
 ```json
 {
-  "schema_version": "v4.scene_semantics.1",
   "scenes": [
     {
       "scene_id": "s001",
-      "presentation_index": 1,
+      "order": 1,
       "text": "想让门店设计不再等档期？打开柯幻熊猫，一个网站搞定全部设计。",
-      "structure": "single",
-      "continuity_group": null,
+      "visual_structure": "single",
       "slots": [
         {
           "slot_id": "home",
@@ -460,7 +475,7 @@ Scene Semantics Agent 只回答：
           "hold_policy": "scene_end",
           "category_id": "网站/主页",
           "asset_role": "site_home",
-          "source": {"kind": "asset_query", "input_name": null, "group_alias": null, "group_type": null, "member_key": null, "config_key": null},
+          "source": {"kind": "asset_query"},
           "subtitle_emphasis": "none"
         }
       ],
@@ -472,43 +487,40 @@ Scene Semantics Agent 只回答：
     },
     {
       "scene_id": "s002",
-      "presentation_index": 2,
+      "order": 2,
       "text": "文化墙、门头招牌、美陈，都能一键出图。",
-      "structure": "parallel",
-      "continuity_group": "gallery_services",
+      "visual_structure": "gallery",
       "slots": [
-        {"slot_id": "g1", "anchor_phrase": "文化墙", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "文生图/文化墙", "asset_role": "result_image", "source": {"kind": "asset_query", "input_name": null, "group_alias": null, "group_type": null, "member_key": null, "config_key": null}, "subtitle_emphasis": "keyword"},
-        {"slot_id": "g2", "anchor_phrase": "门头招牌", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "文生图/门头招牌", "asset_role": "result_image", "source": {"kind": "asset_query", "input_name": null, "group_alias": null, "group_type": null, "member_key": null, "config_key": null}, "subtitle_emphasis": "keyword"},
-        {"slot_id": "g3", "anchor_phrase": "美陈", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "文生图/美陈", "asset_role": "result_image", "source": {"kind": "asset_query", "input_name": null, "group_alias": null, "group_type": null, "member_key": null, "config_key": null}, "subtitle_emphasis": "keyword"}
+        {"slot_id": "g1", "anchor_phrase": "文化墙", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "文生图/文化墙", "asset_role": "result_image", "source": {"kind": "asset_query"}, "subtitle_emphasis": "keyword"},
+        {"slot_id": "g2", "anchor_phrase": "门头招牌", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "文生图/门头招牌", "asset_role": "result_image", "source": {"kind": "asset_query"}, "subtitle_emphasis": "keyword"},
+        {"slot_id": "g3", "anchor_phrase": "美陈", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "文生图/美陈", "asset_role": "result_image", "source": {"kind": "asset_query"}, "subtitle_emphasis": "keyword"}
       ],
       "events": [],
       "inputs": [],
-      "outputs": [{"output_name": "primary_output", "bound_slot": "g1", "asset_role": "result_image"}],
+      "outputs": [],
       "claims": [{"claim_id": "feature_can_generate_result", "phrase": "都能一键出图", "quantifier": "all", "supporting_slots": ["g1", "g2", "g3"], "evidence_window": "scene_span"}],
       "no_asset": false
     },
     {
       "scene_id": "s003",
-      "presentation_index": 3,
+      "order": 3,
       "text": "以文化墙为例，进入功能页，",
-      "structure": "single",
-      "continuity_group": "workflow_文化墙",
+      "visual_structure": "single",
       "slots": [
-        {"slot_id": "entry", "anchor_phrase": "进入功能页", "entry_policy": "scene_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "feature_entry", "source": {"kind": "asset_query", "input_name": null, "group_alias": null, "group_type": null, "member_key": null, "config_key": null}, "subtitle_emphasis": "none"}
+        {"slot_id": "entry", "anchor_phrase": "进入功能页", "entry_policy": "scene_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "feature_entry", "source": {"kind": "asset_query"}, "subtitle_emphasis": "none"}
       ],
       "events": [{"event_id": "open_feature", "phrase": "进入功能页", "intent": "click", "target_slot": "entry"}],
       "inputs": [], "outputs": [], "claims": [], "no_asset": false
     },
     {
       "scene_id": "s004",
-      "presentation_index": 4,
+      "order": 4,
       "text": "填上行业和风格，点击生成，",
-      "structure": "sequence",
-      "continuity_group": "workflow_文化墙",
+      "visual_structure": "sequence",
       "slots": [
-        {"slot_id": "p_base", "anchor_phrase": "填上", "entry_policy": "scene_start", "hold_policy": "until_next_slot", "category_id": "文生图/文化墙", "asset_role": "parameter_panel", "source": {"kind": "asset_group_query", "input_name": null, "group_alias": "params_sequence", "group_type": "process", "member_key": "base", "config_key": null}, "subtitle_emphasis": "none"},
-        {"slot_id": "p_stage", "anchor_phrase": "行业和风格", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "文生图/文化墙", "asset_role": "parameter_panel", "source": {"kind": "group_member", "input_name": null, "group_alias": "params_sequence", "group_type": "process", "member_key": "stage", "config_key": null}, "subtitle_emphasis": "none"},
-        {"slot_id": "p_final", "anchor_phrase": "点击生成", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "parameter_panel", "source": {"kind": "group_member", "input_name": null, "group_alias": "params_sequence", "group_type": "process", "member_key": "final", "config_key": null}, "subtitle_emphasis": "none"}
+        {"slot_id": "p_base", "anchor_phrase": "填上", "entry_policy": "scene_start", "hold_policy": "until_next_slot", "category_id": "文生图/文化墙", "asset_role": "parameter_panel", "source": {"kind": "asset_group_query", "group_alias": "culture_wall_parameters", "pattern_id": "parameter_callout_sequence", "group_type": "process", "member_key": "base"}, "subtitle_emphasis": "none"},
+        {"slot_id": "p_stage", "anchor_phrase": "行业和风格", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "文生图/文化墙", "asset_role": "parameter_panel", "source": {"kind": "group_member", "group_alias": "culture_wall_parameters", "pattern_id": "parameter_callout_sequence", "group_type": "process", "member_key": "stage"}, "subtitle_emphasis": "none"},
+        {"slot_id": "p_final", "anchor_phrase": "点击生成", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "parameter_panel", "source": {"kind": "group_member", "group_alias": "culture_wall_parameters", "pattern_id": "parameter_callout_sequence", "group_type": "process", "member_key": "final"}, "subtitle_emphasis": "none"}
       ],
       "events": [
         {"event_id": "fill_fields", "phrase": "填上行业和风格", "intent": "type", "target_slot": "p_stage"},
@@ -518,29 +530,27 @@ Scene Semantics Agent 只回答：
     },
     {
       "scene_id": "s005",
-      "presentation_index": 5,
+      "order": 5,
       "text": "一整面文化墙方案直接出来了。",
-      "structure": "single",
-      "continuity_group": "workflow_文化墙",
+      "visual_structure": "single",
       "slots": [
-        {"slot_id": "result", "anchor_phrase": "一整面文化墙方案", "entry_policy": "scene_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "result_image", "source": {"kind": "scene_input", "input_name": "featured_result", "group_alias": null, "group_type": null, "member_key": null, "config_key": null}, "subtitle_emphasis": "none"}
+        {"slot_id": "result", "anchor_phrase": "一整面文化墙方案", "entry_policy": "scene_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "result_image", "source": {"kind": "asset_query"}, "subtitle_emphasis": "none"}
       ],
       "events": [],
-      "inputs": [{"input_name": "featured_result", "from_scene": "s002", "from_output": "primary_output", "required": true}],
+      "inputs": [],
       "outputs": [{"output_name": "primary_result", "bound_slot": "result", "asset_role": "result_image"}],
       "claims": [{"claim_id": "feature_can_generate_result", "phrase": "一整面文化墙方案", "quantifier": "any", "supporting_slots": ["result"], "evidence_window": "anchor"}],
       "no_asset": false
     },
     {
       "scene_id": "s006",
-      "presentation_index": 6,
+      "order": 6,
       "text": "细节不满意？选中它继续编辑，改完直接用。",
-      "structure": "sequence",
-      "continuity_group": "workflow_文化墙",
+      "visual_structure": "sequence",
       "slots": [
-        {"slot_id": "selected", "anchor_phrase": "选中它", "entry_policy": "scene_start", "hold_policy": "until_next_slot", "category_id": "文生图/文化墙", "asset_role": "result_image", "source": {"kind": "scene_input", "input_name": "source_result", "group_alias": null, "group_type": null, "member_key": null, "config_key": null}, "subtitle_emphasis": "none"},
-        {"slot_id": "editor", "anchor_phrase": "继续编辑", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "文生图/文化墙", "asset_role": "editor_page", "source": {"kind": "relation_from_input", "input_name": "source_result", "group_alias": "editor_sequence", "group_type": "process", "member_key": "editor_page", "config_key": null}, "subtitle_emphasis": "none"},
-        {"slot_id": "edited", "anchor_phrase": "改完直接用", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "edited_result", "source": {"kind": "relation_from_input", "input_name": "source_result", "group_alias": "editor_sequence", "group_type": "process", "member_key": "edited_result", "config_key": null}, "subtitle_emphasis": "none"}
+        {"slot_id": "selected", "anchor_phrase": "选中它", "entry_policy": "scene_start", "hold_policy": "until_next_slot", "category_id": "文生图/文化墙", "asset_role": "result_image", "source": {"kind": "scene_input", "input_name": "source_result"}, "subtitle_emphasis": "none"},
+        {"slot_id": "editor", "anchor_phrase": "继续编辑", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "文生图/文化墙", "asset_role": "editor_page", "source": {"kind": "relation_from_input", "input_name": "source_result", "group_alias": "culture_wall_editing", "pattern_id": "editor_sequence", "group_type": "process", "member_key": "editor_page"}, "subtitle_emphasis": "none"},
+        {"slot_id": "edited", "anchor_phrase": "改完直接用", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "edited_result", "source": {"kind": "relation_from_input", "input_name": "source_result", "group_alias": "culture_wall_editing", "pattern_id": "editor_sequence", "group_type": "process", "member_key": "edited_result"}, "subtitle_emphasis": "none"}
       ],
       "events": [
         {"event_id": "select_result", "phrase": "选中它", "intent": "select", "target_slot": "selected"},
@@ -552,26 +562,24 @@ Scene Semantics Agent 只回答：
     },
     {
       "scene_id": "s007",
-      "presentation_index": 7,
+      "order": 7,
       "text": "还能上传实景参考图，按你的现场出效果，",
-      "structure": "causal",
-      "continuity_group": "workflow_文化墙",
+      "visual_structure": "comparison",
       "slots": [
-        {"slot_id": "reference", "anchor_phrase": "上传实景参考图", "entry_policy": "scene_start", "hold_policy": "until_next_slot", "category_id": "文生图/文化墙", "asset_role": "reference_image", "source": {"kind": "relation_from_input", "input_name": "shown_result", "group_alias": "reference_result_pair", "group_type": "causal", "member_key": "reference_image", "config_key": null}, "subtitle_emphasis": "none"},
-        {"slot_id": "generated", "anchor_phrase": "按你的现场出效果", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "result_image", "source": {"kind": "scene_input", "input_name": "shown_result", "group_alias": null, "group_type": null, "member_key": null, "config_key": null}, "subtitle_emphasis": "none"}
+        {"slot_id": "reference", "anchor_phrase": "上传实景参考图", "entry_policy": "scene_start", "hold_policy": "until_next_slot", "category_id": "文生图/文化墙", "asset_role": "reference_image", "source": {"kind": "relation_from_input", "input_name": "source_result", "group_alias": "culture_wall_reference_flow", "pattern_id": "reference_result_plan", "group_type": "causal", "member_key": "reference_image"}, "subtitle_emphasis": "none"},
+        {"slot_id": "generated", "anchor_phrase": "按你的现场出效果", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "result_image", "source": {"kind": "scene_input", "input_name": "source_result"}, "subtitle_emphasis": "none"}
       ],
       "events": [{"event_id": "upload_reference", "phrase": "上传实景参考图", "intent": "upload", "target_slot": "reference"}],
-      "inputs": [{"input_name": "shown_result", "from_scene": "s005", "from_output": "primary_result", "required": true}],
+      "inputs": [{"input_name": "source_result", "from_scene": "s005", "from_output": "primary_result", "required": true}],
       "outputs": [], "claims": [], "no_asset": false
     },
     {
       "scene_id": "s008",
-      "presentation_index": 8,
+      "order": 8,
       "text": "连施工平面图都能一并导出。",
-      "structure": "single",
-      "continuity_group": "workflow_文化墙",
+      "visual_structure": "single",
       "slots": [
-        {"slot_id": "plan", "anchor_phrase": "施工平面图", "entry_policy": "scene_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "flat_plan", "source": {"kind": "relation_from_input", "input_name": "source_result", "group_alias": "result_plan_pair", "group_type": "causal", "member_key": "flat_plan", "config_key": null}, "subtitle_emphasis": "none"}
+        {"slot_id": "plan", "anchor_phrase": "施工平面图", "entry_policy": "scene_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "flat_plan", "source": {"kind": "relation_from_input", "input_name": "source_result", "group_alias": "culture_wall_reference_flow", "pattern_id": "reference_result_plan", "group_type": "causal", "member_key": "flat_plan"}, "subtitle_emphasis": "none"}
       ],
       "events": [{"event_id": "export_plan", "phrase": "导出", "intent": "export", "target_slot": "plan"}],
       "inputs": [{"input_name": "source_result", "from_scene": "s005", "from_output": "primary_result", "required": true}],
@@ -579,20 +587,18 @@ Scene Semantics Agent 只回答：
     },
     {
       "scene_id": "s009",
-      "presentation_index": 9,
+      "order": 9,
       "text": "设计这件事，从没这么省心。",
-      "structure": "single",
-      "continuity_group": null,
+      "visual_structure": "no_asset_transition",
       "slots": [], "events": [], "inputs": [], "outputs": [], "claims": [], "no_asset": true
     },
     {
       "scene_id": "s010",
-      "presentation_index": 10,
+      "order": 10,
       "text": "搜索柯幻熊猫，今天就试试。",
-      "structure": "single",
-      "continuity_group": null,
+      "visual_structure": "single",
       "slots": [
-        {"slot_id": "outro", "anchor_phrase": "搜索柯幻熊猫", "entry_policy": "scene_start", "hold_policy": "scene_end", "category_id": null, "asset_role": "outro", "source": {"kind": "configured_asset", "input_name": null, "group_alias": null, "group_type": null, "member_key": null, "config_key": "default_outro"}, "subtitle_emphasis": "none"}
+        {"slot_id": "outro", "anchor_phrase": "搜索柯幻熊猫", "entry_policy": "scene_start", "hold_policy": "scene_end", "category_id": null, "asset_role": "outro", "source": {"kind": "configured_asset", "config_key": "default_outro"}, "subtitle_emphasis": "none"}
       ],
       "events": [], "inputs": [], "outputs": [], "claims": [], "no_asset": false
     }
@@ -600,13 +606,17 @@ Scene Semantics Agent 只回答：
 }
 ```
 
+s004 的 `generate` event 表达“点击生成”；s005 在该动作之后首次查询并确立本次文化墙 `result_image`。当前 Scene Contract 的 output 只能绑定已经显示的素材槽，因此不得让 s004 的参数面板槽伪装成尚未出现的结果输出。s005 也不得复用 s002 Gallery 的文化墙枚举图来冒充本次生成结果。
+
+s007 的 `visual_structure=comparison` 描述参考图与结果图的画面呈现方式；其素材关系仍是 `group_type=causal`。画面结构与素材关系是正交维度，不得互相替代。
+
 ## 7. 程序校验与字段纠错
 
 ### 7.1 SceneSemanticPlan 校验
 
 程序依次验证：
 
-1. `presentation_index` 从 1 连续递增；
+1. `order` 从 1 连续递增；
 2. scenes 文本顺序拼接后逐字符等于 FrozenNarration；
 3. 所有 phrase 可在所属 scene.text 内按顺序唯一解析；
 4. category、role、intent 和 claim 命中冻结注册表；
@@ -614,7 +624,7 @@ Scene Semantics Agent 只回答：
 6. input/output 引用存在，output.bound_slot 存在；
 7. 依赖图无环；
 8. Gallery 顺序与原文枚举顺序一致；
-9. sequence 的 group_alias、group_type 和 member_key 自洽；
+9. sequence/causal 的 group_alias、pattern_id、group_type 和 member_key 命中同一冻结关系模式；
 10. Claim supporting_slots 存在且证据窗口合法。
 
 ### 7.2 字段级纠错请求
@@ -653,12 +663,13 @@ Scene Semantics Agent 只回答：
 | A0002 | 文化墙社区服务结果图 | result_image | original |
 | A0003 | 门头招牌企业结果图 | result_image | original |
 | A0004 | 美陈结果图 | result_image | original |
-| A0005 | 文化墙功能入口截图 | feature_entry | original，正式执行前需解决现有重复 ID 数据问题 |
+| A0005 | 文化墙功能入口截图 | feature_entry | fixture-owned original；不依赖旧目录中的重复 ID |
 | A0006 | 文化墙参数面板截图 | parameter_panel | original |
-| A0007 | 带 A0002 的编辑工作区 | editor_page | GPT Image derived |
-| A0008 | A0002 编辑后结果 | edited_result | GPT Image derived |
-| A0009 | A0002 对应的场景参考图 | reference_image | GPT Image derived |
-| A0010 | A0002 对应平面图 | flat_plan | GPT Image derived |
+| A0007 | 带 A0011 的编辑工作区 | editor_page | GPT Image derived |
+| A0008 | A0011 编辑后结果 | edited_result | GPT Image derived |
+| A0009 | A0011 对应的场景参考图 | reference_image | GPT Image derived |
+| A0010 | A0011 对应平面图 | flat_plan | GPT Image derived |
+| A0011 | 点击生成后展示的文化墙结果图 | result_image | fixture-owned original；与 s002 Gallery 的 A0002 身份不同 |
 
 关系组：
 
@@ -666,26 +677,38 @@ Scene Semantics Agent 只回答：
 [
   {
     "group_ref": "group://G0001",
+    "pattern_id": "editor_sequence",
     "group_type": "process",
     "category_id": "文生图/文化墙",
     "members": [
-      {"member_key": "source_result", "asset_ref": "asset://A0002", "asset_role": "result_image"},
+      {"member_key": "source_result", "asset_ref": "asset://A0011", "asset_role": "result_image"},
       {"member_key": "editor_page", "asset_ref": "asset://A0007", "asset_role": "editor_page"},
       {"member_key": "edited_result", "asset_ref": "asset://A0008", "asset_role": "edited_result"}
     ]
   },
   {
     "group_ref": "group://G0002",
+    "pattern_id": "reference_result_plan",
     "group_type": "causal",
     "category_id": "文生图/文化墙",
     "members": [
       {"member_key": "reference_image", "asset_ref": "asset://A0009", "asset_role": "reference_image"},
-      {"member_key": "result_image", "asset_ref": "asset://A0002", "asset_role": "result_image"},
+      {"member_key": "result_image", "asset_ref": "asset://A0011", "asset_role": "result_image"},
       {"member_key": "flat_plan", "asset_ref": "asset://A0010", "asset_role": "flat_plan"}
     ]
   }
 ]
 ```
+
+黄金计划中的局部绑定为：
+
+| group_alias | pattern_id | 物理组 | 使用场景 |
+|---|---|---|---|
+| culture_wall_parameters | parameter_callout_sequence | 参数面板派生组 | s004 |
+| culture_wall_editing | editor_sequence | G0001 | s006 |
+| culture_wall_reference_flow | reference_result_plan | G0002 | s007、s008 |
+
+s007、s008 消费同一个 `culture_wall_reference_flow`，只是在各自口播窗口展示不同成员。关系模式允许三成员，不代表每个场景必须同时展示全部成员。
 
 GPT Image 反推参考图可以用于“上传参考图 -> 生成结果”的功能演示。无需建立另一种场景结构，只需如实记录 `source_kind=derived`、`origin_type=gpt_image`、父素材和 prompt 血缘。
 
@@ -707,18 +730,18 @@ s002.g2        -> A0003
 s002.g3        -> A0004
 s003.entry     -> A0005
 s004           -> 参数面板 process 组（A0006 派生并注册 base/stage/final）
-s005.result    -> A0002（显式继承 s002.primary_output）
-s006.selected  -> A0002
+s005.result    -> A0011（生成动作后的首次结果查询；不继承 s002 Gallery）
+s006.selected  -> A0011
 s006.editor    -> A0007（G0001）
 s006.edited    -> A0008（G0001）
 s007.reference -> A0009（G0002）
-s007.generated -> A0002（显式继承 s005.primary_result）
+s007.generated -> A0011（显式继承 s005.primary_result）
 s008.plan      -> A0010（G0002）
 s009           -> no_asset
 s010.outro     -> config.default_outro
 ```
 
-显式依赖导致 A0002 多次出现，是叙事连续性，不参与独立随机选择的去重。
+s005 首次确立本次文化墙结果素材身份。s006-s008 对 A0011 的显式依赖是叙事连续性，不参与独立随机选择的去重。s002 的 Gallery 只承担枚举展示，不向生成流程输出素材身份。
 
 ### 9.1 参数序列派生
 
@@ -750,7 +773,7 @@ AI 不参与本节决策。
 
 ```text
 s001  网站主页：从 Effect Registry 的 site_home 候选中按 seed 选择
-s002  parallel Gallery：整组选择一次 SlideGallery 或同能力动效，组内方向与容器一致
+s002  Gallery：整组选择一次 SlideGallery 或同能力动效，组内方向与容器一致
 s003  功能入口：入口聚焦类动效
 s004  参数序列：花字渐显序列
 s005  单结果图：结果细节展示
@@ -881,10 +904,17 @@ cover.png
 body.mp4
 final/video.mp4（正文 + 固定片尾）
 run_manifest.json
-ai_requests/scope_request.json
-ai_requests/scope_response.json
-ai_requests/scene_semantics_request.json
-ai_requests/scene_semantics_response.json
+capability_registry.snapshot.json
+agents/01_scope_classifier/request.system.md
+agents/01_scope_classifier/request.input.json
+agents/01_scope_classifier/response.raw.json
+agents/01_scope_classifier/response.validated.json
+agents/01_scope_classifier/manifest.json
+agents/02_scene_semantics/request.system.md
+agents/02_scene_semantics/request.input.json
+agents/02_scene_semantics/response.raw.json
+agents/02_scene_semantics/response.validated.json
+agents/02_scene_semantics/manifest.json
 speech_timing_lock.json
 anchored_timing_plan.json
 resolved_asset_plan.json
@@ -897,12 +927,16 @@ compiled_video_timeline.json
 
 Pass B 是一次真实黄金链路构造，不是手工补帧或运行 AI 图片审核：
 
-1. 使用 FrozenNarration 调用真实 MiniMax，冻结 SpeechTimingLock；
-2. 将本文两份完整 AI 请求和理想响应保存为 fixture；
-3. 由 AnchorCompiler 自动生成 AnchoredTimingPlan；
-4. 将当前素材通过迁移别名映射成 A0001-A0010；
-5. 由程序生成 ResolvedAssetPlan 和 CompiledVideoTimeline；
-6. 记录所有无法进入正式 Contract 的字段差异，修订 V4 Contract，不修改黄金语义去迁就旧实现。
+1. 为 SlotSource 增加冻结 `pattern_id`，并为 AssetGroupQuerySource 增加首成员 `member_key`；
+2. 将本文两份完整 AI 请求和理想响应更新为 Stage 0 Rev3 fixture；
+3. 使用 FrozenNarration 调用真实 MiniMax，冻结 SpeechTimingLock；
+4. 由 AnchorCompiler 自动生成 AnchoredTimingPlan；
+5. 将当前素材通过 fixture 别名映射成 A0001-A0011；
+6. 由程序生成 ResolvedAssetPlan 和 CompiledVideoTimeline；
+7. 验证 s005 不复用 s002 Gallery 身份，s006-s008 都继承 s005.primary_result；
+8. 记录所有无法进入正式 Contract 的字段差异，修订 V4 Contract，不修改黄金语义去迁就旧实现。
+
+上述事项当前尚未执行完成，因此不得把“旧 fixture 能通过现有 schema 校验”等同于 Pass B 完成。
 
 阶段 0 完成条件：四个核心对象之间无隐式猜测。
 

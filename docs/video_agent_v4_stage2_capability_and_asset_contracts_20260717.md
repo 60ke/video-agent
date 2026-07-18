@@ -9,7 +9,7 @@ Date: 2026-07-17
 This design implements architecture item §8-3 from:
 
 - `docs/video_agent_v4_architecture_framework_rev3_20260717.md`
-- `docs/video_agent_v4_stage0_golden_scenario_rev2_20260717.md`
+- `docs/video_agent_v4_stage0_golden_scenario_rev3_20260718.md`
 - `docs/video_agent_v4_stage1_semantic_contract_and_ai_runtime_design_20260717.md`
 
 Stage 2 defines and validates:
