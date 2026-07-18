@@ -1,0 +1,27 @@
+---
+description: V4 Codex collaboration session ID and rollout file to consult until V4 closeout
+alwaysApply: true
+---
+
+# V4 Codex Collaboration Session
+
+Until Video Agent V4 is fully closed out, Cursor and Codex keep bouncing design/review/implementation. When the user asks to sync Codex output, review findings, or “看会话 id”, consult this session first.
+
+## Primary Codex session
+
+- **Session / thread ID:** `019f6f4e-00c2-71d3-ac81-2d7366cdd027`
+- **Rollout file:** `C:\Users\CNGG\.codex\sessions\2026\07\17\rollout-2026-07-17T17-00-15-019f6f4e-00c2-71d3-ac81-2d7366cdd027.jsonl`
+- **cwd:** `C:\Users\CNGG\Documents\video_generate\video-agent`
+- **Origin:** Codex Desktop (long-running V4 architecture / Stage0–Stage4 thread; forked from earlier video-agent Codex sessions)
+
+## How to use it
+
+1. Prefer searching/reading that rollout JSONL over guessing from git alone.
+2. The file can be multi-GB — do **not** read it linearly end-to-end. Use targeted search (keywords, recent timestamps, `agent_message` / user turns) and small windows.
+3. Treat Codex conclusions as peer review input; still verify against current repo state and authority docs under `docs/video_agent_v4_*`.
+4. If the rollout path moves (archive/rotate), re-resolve by session id `019f6f4e-00c2-71d3-ac81-2d7366cdd027` under `C:\Users\CNGG\.codex\sessions` or `archived_sessions`.
+
+## Related Cursor chat (this implementation lane)
+
+- **Cursor agent transcript id:** `4876684f-d92c-4f2a-a806-acd595b25145`
+- Path pattern: `agent-transcripts/4876684f-d92c-4f2a-a806-acd595b25145/`
