@@ -16,6 +16,10 @@ from video_agent.progress import get_logger
 from video_agent.registries import CapabilityRegistryHub, project_registry_hub
 from video_agent.runtime import RunContext
 from video_agent.semantic import classify_video_scope, plan_scene_semantics
+from video_agent.speech.v4.voice_resolve import (
+    apply_resolved_voice_to_case_voice,
+    resolve_fixed_voice_profile,
+)
 from video_agent.v4.stage4 import V4Stage4Result, V4Stage4Runner
 
 
@@ -95,10 +99,30 @@ class V4Orchestrator:
 
         registry_hub = CapabilityRegistryHub.load(self.context.repo_root / "config" / "registries" / "v4")
         registry_snapshot_path = self.context.artifact("capability_registry.snapshot.json")
-        registry_hub.freeze(registry_snapshot_path)
+        registry_snapshot = registry_hub.freeze(registry_snapshot_path)
         registry = project_registry_hub(registry_hub)
         registry_projection_path = self.context.artifact("capability_registry.stage1.json")
         write_json_atomic(registry_projection_path, registry)
+
+        case_voice = self.context.case.voice
+        resolved_voice = resolve_fixed_voice_profile(
+            registry_hub,
+            repo_root=self.context.repo_root,
+            voice_profile_id=case_voice.voice_profile_id,
+            speed_override=case_voice.speed if case_voice.voice_profile_id is not None else None,
+            emotion_override=case_voice.emotion,
+            registry_snapshot_id=registry_snapshot.snapshot_id,
+        )
+        resolved_voice_path = self.context.artifact("resolved_voice_profile.json")
+        write_json_atomic(resolved_voice_path, resolved_voice)
+        voice_payload = apply_resolved_voice_to_case_voice(
+            case_voice.model_dump(mode="json"),
+            resolved_voice,
+            repo_root=self.context.repo_root,
+        )
+        self.context.case = self.context.case.model_copy(
+            update={"voice": case_voice.model_validate(voice_payload)}
+        )
         agents_dir = self.context.run_dir / "agents"
 
         async with AIRuntimeSession(self.context.repo_root) as gateway:
@@ -147,6 +171,7 @@ class V4Orchestrator:
                     "scene_semantic_plan": scene_path.relative_to(self.context.run_dir).as_posix(),
                     "registry_snapshot": registry_snapshot_path.relative_to(self.context.run_dir).as_posix(),
                     "registry_projection": registry_projection_path.relative_to(self.context.run_dir).as_posix(),
+                    "resolved_voice_profile": resolved_voice_path.relative_to(self.context.run_dir).as_posix(),
                 },
             },
         )

@@ -33,6 +33,9 @@ class VoiceConfig(Contract):
     emotion: str | None = None
     subtitle_type: Literal["word"] = "word"
     pause_profile: str = "disabled"
+    # Stage 5 Voice Registry ID for fixed resolve before TTS. When set (or when
+    # V4 Stage1 runs), speed/voice_id are projected from the frozen registry.
+    voice_profile_id: str | None = None
 
 
 class SemanticSfx(Contract):
