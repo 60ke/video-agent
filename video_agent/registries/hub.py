@@ -12,18 +12,27 @@ from video_agent.contracts.v4 import (
     CapabilityEntry,
     CategoryEntry,
     CategoryRegistryDocument,
+    DerivationEntry,
+    DerivationRegistryDocument,
+    EffectEntry,
+    EffectRegistryDocument,
     FrozenRegistryDocument,
     FrozenRegistrySnapshot,
     GroupTypeRegistryDocument,
     RelationPatternRegistryDocument,
     RegistryDocumentType,
+    SfxEntry,
+    SfxProfileRegistryDocument,
+    SfxRegistryDocument,
+    VoiceRegistryDocument,
 )
-from video_agent.io import sha256_json, write_json_atomic
+from video_agent.io import sha256_file, sha256_json, write_json_atomic
 
 from .loaders import load_registry_directory, parse_registry_document
 
 
 _SPACE_RE = re.compile(r"\s+")
+_STAGE5_REQUIRED = frozenset({"derivation", "effect", "sfx", "sfx_profile", "voice"})
 
 
 def normalize_registry_text(value: str) -> str:
@@ -31,8 +40,16 @@ def normalize_registry_text(value: str) -> str:
 
 
 class CapabilityRegistryHub:
-    def __init__(self, documents: list[RegistryDocumentType]) -> None:
+    def __init__(
+        self,
+        documents: list[RegistryDocumentType],
+        *,
+        project_root: Path | None = None,
+        require_stage5: bool = False,
+    ) -> None:
         self._documents: dict[str, RegistryDocumentType] = {}
+        self._project_root = project_root
+        self._require_stage5 = require_stage5
         for document in documents:
             if document.registry_id in self._documents:
                 raise ValueError(f"duplicate registry_id: {document.registry_id}")
@@ -41,7 +58,12 @@ class CapabilityRegistryHub:
 
     @classmethod
     def load(cls, root: Path) -> "CapabilityRegistryHub":
-        return cls(load_registry_directory(root))
+        root = root.resolve()
+        return cls(
+            load_registry_directory(root),
+            project_root=root.parents[2],
+            require_stage5=True,
+        )
 
     @classmethod
     def from_snapshot(cls, snapshot: FrozenRegistrySnapshot) -> "CapabilityRegistryHub":
@@ -209,6 +231,8 @@ class CapabilityRegistryHub:
             "relation_pattern",
             "configured_asset",
         }
+        if self._require_stage5:
+            required |= set(_STAGE5_REQUIRED)
         missing = sorted(required - self._documents.keys())
         if missing:
             raise ValueError(f"required registries are missing: {missing}")
@@ -280,6 +304,84 @@ class CapabilityRegistryHub:
                 role_ids,
                 f"configured_asset/{configured.id}.capabilities.allowed_asset_roles",
             )
+        self._validate_stage5_registries(role_ids=role_ids, structure_ids=structure_ids)
+
+    def _validate_stage5_registries(self, *, role_ids: set[str], structure_ids: set[str]) -> None:
+        pattern_ids = {entry.id for entry in self.registry("relation_pattern").entries}
+        if "derivation" in self._documents:
+            document = self.registry("derivation")
+            if not isinstance(document, DerivationRegistryDocument):
+                raise TypeError("derivation registry has an invalid document type")
+            for entry in document.entries:
+                if not isinstance(entry, DerivationEntry):
+                    raise TypeError(f"derivation/{entry.id} has an invalid entry type")
+                caps = entry.capabilities
+                self._require_known(caps.input_roles, role_ids, f"derivation/{entry.id}.input_roles")
+                self._require_known(caps.context_roles, role_ids, f"derivation/{entry.id}.context_roles")
+                self._require_known(caps.output_roles, role_ids, f"derivation/{entry.id}.output_roles")
+                self._require_known(
+                    caps.allowed_group_patterns,
+                    pattern_ids,
+                    f"derivation/{entry.id}.allowed_group_patterns",
+                )
+
+        if "effect" in self._documents:
+            document = self.registry("effect")
+            if not isinstance(document, EffectRegistryDocument):
+                raise TypeError("effect registry has an invalid document type")
+            effect_ids = {entry.id for entry in document.entries}
+            for entry in document.entries:
+                if not isinstance(entry, EffectEntry):
+                    raise TypeError(f"effect/{entry.id} has an invalid entry type")
+                caps = entry.capabilities
+                self._require_known(caps.visual_structures, structure_ids, f"effect/{entry.id}.visual_structures")
+                self._require_known(caps.asset_roles, role_ids, f"effect/{entry.id}.asset_roles")
+                self._require_known(
+                    caps.fallback_effect_ids,
+                    effect_ids,
+                    f"effect/{entry.id}.fallback_effect_ids",
+                )
+
+        if "sfx" in self._documents:
+            document = self.registry("sfx")
+            if not isinstance(document, SfxRegistryDocument):
+                raise TypeError("sfx registry has an invalid document type")
+            sfx_ids = {entry.id for entry in document.entries}
+            for entry in document.entries:
+                if not isinstance(entry, SfxEntry):
+                    raise TypeError(f"sfx/{entry.id} has an invalid entry type")
+                self._require_known(
+                    entry.capabilities.alternate_sfx_ids,
+                    sfx_ids,
+                    f"sfx/{entry.id}.alternate_sfx_ids",
+                )
+                self._validate_sfx_asset_file(entry)
+
+        if "sfx_profile" in self._documents:
+            document = self.registry("sfx_profile")
+            if not isinstance(document, SfxProfileRegistryDocument):
+                raise TypeError("sfx_profile registry has an invalid document type")
+
+        if "voice" in self._documents:
+            document = self.registry("voice")
+            if not isinstance(document, VoiceRegistryDocument):
+                raise TypeError("voice registry has an invalid document type")
+
+    def _validate_sfx_asset_file(self, entry: SfxEntry) -> None:
+        if self._project_root is None:
+            return
+        audio_path = self._project_root / entry.capabilities.relative_path
+        if not audio_path.is_file():
+            raise ValueError(f"sfx/{entry.id} audio file missing: {entry.capabilities.relative_path}")
+        actual = sha256_file(audio_path)
+        if actual != entry.capabilities.content_sha256:
+            raise ValueError(f"sfx/{entry.id} content hash mismatch: {entry.capabilities.relative_path}")
+        if (
+            entry.capabilities.sample_rate != 48_000
+            or entry.capabilities.sample_width_bits != 16
+            or entry.capabilities.channels != 2
+        ):
+            raise ValueError(f"sfx/{entry.id} must declare 48kHz/16-bit/stereo")
 
     @staticmethod
     def _require_known(values: list[str], known: set[str], path: str) -> None:

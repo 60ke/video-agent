@@ -1,0 +1,23 @@
+{
+  "registry_id": "voice",
+  "version": "2026.07.18.1",
+  "schema_version": 1,
+  "entries": [
+    {
+      "id": "minimax_adman_clear_01",
+      "display_name": "清晰广告男声",
+      "description": "当前项目默认 MiniMax 音色；voice_id 通过本地 config 引用解析",
+      "capabilities": {
+        "provider": "minimax",
+        "provider_voice_ref": "local:minimax.voice_id",
+        "language": "zh-CN",
+        "traits": ["清晰", "有节奏", "广告种草"],
+        "default_speed": 1.2,
+        "supported_emotions": [],
+        "resolve_mode": "fixed",
+        "subtitle_type": "zh",
+        "priority": 100
+      }
+    }
+  ]
+}

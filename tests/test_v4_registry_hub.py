@@ -25,11 +25,20 @@ def test_registry_config_loads_and_resolves_categories() -> None:
         "category",
         "claim",
         "configured_asset",
+        "derivation",
+        "effect",
         "group_type",
         "operation_intent",
         "relation_pattern",
+        "sfx",
+        "sfx_profile",
         "visual_structure",
+        "voice",
     )
+    assert hub.require_entry("derivation", "text_to_result").capabilities.minimum_parents == 0
+    assert hub.require_entry("sfx", "typing").capabilities.sample_rate == 48000
+    assert hub.require_entry("sfx_profile", "normal").capabilities.prefer_operation_semantic is True
+    assert hub.require_entry("voice", "minimax_adman_clear_01").capabilities.default_speed == 1.2
     assert hub.resolve_category("文化墙").id == "文生图/文化墙"
     assert hub.resolve_category("  文 化 墙  ").id == "文生图/文化墙"
 
@@ -128,4 +137,35 @@ def test_invalid_handler_fails_during_hub_startup() -> None:
     changed = [bad_visual if item.registry_id == "visual_structure" else item for item in documents]
 
     with pytest.raises(ValueError, match="handler not found"):
+        CapabilityRegistryHub(changed)
+
+
+def test_stage5_typed_registries_cross_validate() -> None:
+    hub = CapabilityRegistryHub.load(REGISTRY_ROOT)
+    assert hub.require_entry("derivation", "result_to_reference_mock").capabilities.executor_kind == "gpt_image"
+    assert hub.require_entry("effect", "slide_gallery").capabilities.minimum_scene_frames == 36
+    assert hub.require_entry("voice", "minimax_adman_clear_01").capabilities.resolve_mode == "fixed"
+    snapshot = hub.snapshot()
+    assert {item.registry_id for item in snapshot.registries} >= {
+        "derivation",
+        "effect",
+        "sfx",
+        "sfx_profile",
+        "voice",
+    }
+
+
+def test_stage5_derivation_rejects_unknown_role_references() -> None:
+    documents = _documents()
+    derivation = next(item for item in documents if item.registry_id == "derivation")
+    bad_entry = derivation.entries[0].model_copy(
+        update={
+            "capabilities": derivation.entries[0].capabilities.model_copy(
+                update={"output_roles": ["not_a_real_role"]}
+            )
+        }
+    )
+    bad_derivation = derivation.model_copy(update={"entries": [bad_entry, *derivation.entries[1:]]})
+    changed = [bad_derivation if item.registry_id == "derivation" else item for item in documents]
+    with pytest.raises(ValueError, match="unknown cross-registry references"):
         CapabilityRegistryHub(changed)

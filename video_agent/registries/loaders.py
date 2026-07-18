@@ -8,10 +8,15 @@ from video_agent.contracts.v4 import (
     AssetRoleRegistryDocument,
     CategoryRegistryDocument,
     ClaimRegistryDocument,
+    DerivationRegistryDocument,
+    EffectRegistryDocument,
     GroupTypeRegistryDocument,
     RelationPatternRegistryDocument,
     RegistryDocument,
     RegistryDocumentType,
+    SfxProfileRegistryDocument,
+    SfxRegistryDocument,
+    VoiceRegistryDocument,
 )
 from video_agent.io import load_json
 
@@ -22,6 +27,11 @@ _TYPED_DOCUMENTS = {
     "claim": ClaimRegistryDocument,
     "group_type": GroupTypeRegistryDocument,
     "relation_pattern": RelationPatternRegistryDocument,
+    "derivation": DerivationRegistryDocument,
+    "effect": EffectRegistryDocument,
+    "sfx": SfxRegistryDocument,
+    "sfx_profile": SfxProfileRegistryDocument,
+    "voice": VoiceRegistryDocument,
 }
 
 
