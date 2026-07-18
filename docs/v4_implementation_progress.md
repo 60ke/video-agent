@@ -10,6 +10,7 @@ Last updated: 2026-07-18
 - Stage 2 design: `video_agent_v4_stage2_capability_and_asset_contracts_20260717.md`
 - Stage 3 design: `video_agent_v4_stage3_repository_sqlite_migration_20260718.md`
 - Stage 4 design: `video_agent_v4_stage4_dependency_selection_derivation_design_20260718.md`
+- Stage 5 design draft: `video_agent_v4_stage5_executable_capability_and_derivation_design_20260718.md`
 
 Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle exposes a missing Contract capability, the Contract must be revised explicitly; runtime compatibility aliases are forbidden.
 
@@ -22,7 +23,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Stage 2: capability and asset domain | complete | Typed dynamic registries, deterministic frozen snapshots, strict AssetRecord/Lineage/Group/Evidence contracts, registry-bound validation and Stage 1 projection are implemented. |
 | Stage 3: repository, SQLite, ObjectStore and migration | complete | Repository, ObjectStore, import, snapshot, audit and deterministic migration are implemented. The repaired authoritative editor workflow and the current full legacy inventory pass the real dry-run without warnings or failures. |
 | Stage 4: dependency, selection and derivation | implementation complete | Stable DAG resolution, Run-scoped group binding, exact category/role/evidence filtering, weighted selection, material-gap classification, frozen Registry/Asset snapshots, persistent usage history and repository-backed derivation reuse are implemented. Fake derivation covers deterministic fixtures; real GPT Image execution remains Stage 5. |
-| Stage 5: effect, SFX, voice and derivation registries | pending | Formal design document required before implementation. |
+| Stage 5: effect, SFX, voice and derivation registries | design drafted / pending review | Formal design now defines typed registries, real derivation execution, Voice resolution and frame-free Motion/SFX intents. No Stage 5 production code has been implemented. |
 | Stage 6: semantic timing and compilation | pending | Formal design document required before implementation. |
 | Stage 7: planner cutover and verification | pending | Formal design document required before implementation. |
 
@@ -92,5 +93,5 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 
 ## Next Continuation Point
 
-Design Stage 5 around the frozen Stage 4 `DerivationRequest` contract. The executor must provide versioned prompt/model fingerprints, persist generated assets through Stage 3, and preserve Stage 4's explicit dependencies and repository snapshot semantics; it must not absorb timing, motion or SFX responsibilities.
+Review and freeze the Stage 5 design before implementation. The first implementation unit must be typed Registry contracts and Hub validation; real GPT Image, Motion and SFX work remain separate later commits. Stage 5 may consume `SpeechTimingLock` for eligibility but must emit frame-free intents; Stage 6 remains the sole owner of PhraseAnchor, subtitle cues, frame timing and SFX peak placement.
 - Full legacy suite currently has three unrelated baseline failures in `tests/test_assets.py`; they assert removed review metadata and the deleted brand-IP directory scan. These are tracked for the Stage 2 cutover rather than weakening the new Contract.
