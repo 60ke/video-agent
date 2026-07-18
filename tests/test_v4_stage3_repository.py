@@ -689,7 +689,7 @@ def _write_legacy_fixture(root: Path, *, incomplete_editor: bool = False) -> dic
         "sequences": [
             {
                 "sequence_id": "seq_1",
-                "feature_path": ["文化墙"],
+                "feature_path": ["图文广告", "易拉宝", "展架"],
                 "frames": {
                     "base": {"path": "assets/derived/sites/seq_base.png", "sha256": sha256_file(paths["base"])},
                     "stage": {"path": "assets/derived/sites/seq_stage.png", "sha256": sha256_file(paths["stage"])},

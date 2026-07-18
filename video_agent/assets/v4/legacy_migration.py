@@ -815,6 +815,17 @@ def _feature_key(path: list[str] | tuple[str, ...]) -> tuple[str, ...]:
     return tuple(parts)
 
 
+def _canonical_category_id(
+    path: list[str] | tuple[str, ...],
+    repository: SQLiteAssetRepository,
+    role: str,
+) -> str:
+    category = _category(list(path), repository, role)
+    if not category:
+        raise ValueError(f"missing category for {role}: {list(path)}")
+    return "/".join(category)
+
+
 def _build_workflow_index(
     items: list[dict[str, Any]],
     hash_refs: dict[str, str],
@@ -872,7 +883,7 @@ def _register_relationship_groups(
         if not editor_intent and not causal_intent:
             return
         raise ValueError(f"relationship missing feature_path: {rel_id}")
-    category = "/".join(_feature_key(category_parts))
+    category = _canonical_category_id(category_parts, repository, "result_image")
 
     reference_id = relationship.get("reference_asset_id")
     result_id = relationship.get("result_asset_id")
@@ -1034,7 +1045,9 @@ def _register_parameter_sequences(
                     order=order,
                 )
             )
-        category = "/".join(_feature_key(sequence.get("feature_path", [])))
+        category = _canonical_category_id(
+            sequence.get("feature_path", []), repository, "parameter_panel"
+        )
         group = repository._register_group(
             AssetGroupDraft("process", "parameter_callout_sequence", category, members)
         )
@@ -1064,6 +1077,9 @@ def _register_remaining_workflow_editor_groups(
                 continue
             if not bucket.category:
                 raise ValueError(f"workflow {flow_id} missing category for editor_sequence")
+            category = _canonical_category_id(
+                bucket.category.split("/"), repository, "result_image"
+            )
             members = [
                 AssetGroupMember(
                     member_key="source_result",
@@ -1085,7 +1101,7 @@ def _register_remaining_workflow_editor_groups(
                 ),
             ]
             group = repository._register_group(
-                AssetGroupDraft("process", "editor_sequence", bucket.category, members)
+                AssetGroupDraft("process", "editor_sequence", category, members)
             )
             registered_editor_keys.add(key)
             report["groups"].append(
