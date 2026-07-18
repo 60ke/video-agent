@@ -289,16 +289,27 @@ def test_stage0_golden_s001_to_s010(tmp_path: Path, hub: CapabilityRegistryHub) 
     assert by_id["s003"].slots[0].asset_ref == seeded["entry"]
     assert resolved.group_bindings["culture_wall_parameters"] == seeded["params"]
     assert [slot.member_key for slot in by_id["s004"].slots] == ["base", "stage", "final"]
+    assert all(slot.group_ref == seeded["params"] for slot in by_id["s004"].slots)
 
     primary = by_id["s005"].outputs["primary_result"]
     assert primary in {seeded["cw1"], seeded["cw2"]}
     assert primary != by_id["s002"].slots[0].asset_ref
 
     assert resolved.group_bindings["culture_wall_editing"] == seeded[f"editor:{primary}"]
+    assert [slot.member_key for slot in by_id["s006"].slots] == [
+        "source_result",
+        "editor_page",
+        "edited_result",
+    ]
+    assert all(slot.group_ref == seeded[f"editor:{primary}"] for slot in by_id["s006"].slots)
+
     assert resolved.group_bindings["culture_wall_reference_flow"] == seeded[f"causal:{primary}"]
+    assert [slot.member_key for slot in by_id["s007"].slots] == ["reference_image", "result_image"]
+    assert by_id["s008"].slots[0].member_key == "flat_plan"
     assert by_id["s007"].slots[0].group_ref == by_id["s008"].slots[0].group_ref == seeded[f"causal:{primary}"]
     assert by_id["s009"].slots == []
     assert by_id["s010"].slots[0].asset_ref == seeded["outro"]
+    assert not resolved.derivation_requests
     repo.close()
 
 

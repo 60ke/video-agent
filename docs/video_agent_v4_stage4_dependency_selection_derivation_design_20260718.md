@@ -1,6 +1,6 @@
 # Video Agent V4 Stage 4：依赖解析、素材选择与派生闭环设计
 
-状态：设计冻结，Stage4 代码实施完成；真实派生执行器由 Stage5 接入
+状态：设计冻结，Stage4 DoD 已关闭；真实派生执行器由 Stage5 生产路径接入
 
 日期：2026-07-18
 上游权威：
@@ -771,33 +771,35 @@ Stage 4 代码只能依赖 Stage 3 Repository Protocol，不读取 `assets/catal
 
 ## 18. Definition Of Done
 
-- [ ] 六类 Slot Source 均有唯一、明确、fail-loud 的解析路径。
-- [ ] 场景依赖按稳定拓扑顺序解析，输出冻结后下游只使用实际 `asset_ref`。
-- [ ] 分类、角色、Claim、关系完整性是硬过滤，方向和来源只是软排序。
-- [ ] `relation_from_input` 只能命中包含指定上游素材的完整关系组。
-- [ ] Stage 3 `GroupQuery` 支持按包含的 asset refs 和 required member keys 走索引查询，不做全表扫描。
-- [ ] Group alias 是 Run 级不可变 binding；s007/s008 必须解析为同一个 causal group。
-- [ ] Gallery 按每个 anchor phrase 选择素材，不存在全局图片数量上限。
-- [ ] s005 独立查询并排除 s002 Gallery 身份，随后 s006-s008 显式复用 s005.primary_result。
-- [ ] 独立查询去重，scene_input/relation/group member/configured 依赖复用不参与独立去重。
-- [ ] 同 base revision、Run overlay、配置与 seed 重跑得到完全相同的 `ResolvedAssetPlan`。
-- [ ] 无明确语义要求时无需 AI；AI 排序器不能返回候选集外素材。
-- [ ] 原图优先不覆盖显式依赖或叙事关系。
-- [ ] 网站源缺失、无图承接、可派生缺口三者严格区分。
-- [ ] 派生先查 signature，产物通过 Stage 3 原子注册后重新查询。
-- [ ] signature hit 不调用 executor；signature miss 只调用一次并在注册后命中原查询。
-- [ ] Stage 5 未提供生产 capability binding 时，fake binding 不得进入生产路径。
-- [ ] 派生图保留 lineage/source_kind/evidence，不能冒充真实网站证据。
-- [ ] E2 网站相似图不能通过 real website Claim；可追溯 E1 忠实派生可以。
-- [ ] 编辑流程使用上游冻结结果，文化墙现有完整 editor group 可直接复用。
-- [ ] causal/process 场景不允许从无关系素材临时拼装。
-- [ ] 缺少任一 required group member 时 fail-loud 或进入合法关系派生，不接受残组。
-- [ ] 参数序列缺失时按 Stage0 字段规则派生 base/stage/final，并原子注册 process 组。
-- [ ] causal 选择严格执行四级优先级，反推参考图保留 E2 和 lineage。
-- [ ] 选择历史独立存储，不修改不可变 AssetRecord。
-- [ ] Run 保存选择原因、缺口、派生请求、pre/post Repository 指纹、used snapshot、Registry 快照和完整输入指纹。
-- [ ] Stage 4 不引入动效、SFX、TTS、字幕或帧时长逻辑。
-- [ ] Stage 0 黄金场景的 s001-s010 全部得到预期素材来源、关系组和依赖绑定。
+实施关闭（2026-07-18）：下列条目已由 Stage4 代码与 tests/test_v4_stage4_*.py 覆盖。真实执行器由 Stage5 生产路径接入；Stage4 不再把 Fake 当作生产结果。
+
+- [x] 六类 Slot Source 均有唯一、明确、fail-loud 的解析路径。
+- [x] 场景依赖按稳定拓扑顺序解析，输出冻结后下游只使用实际 `asset_ref`。
+- [x] 分类、角色、Claim、关系完整性是硬过滤，方向和来源只是软排序。
+- [x] `relation_from_input` 只能命中包含指定上游素材的完整关系组。
+- [x] Stage 3 `GroupQuery` 支持按包含的 asset refs 和 required member keys 走索引查询，不做全表扫描。
+- [x] Group alias 是 Run 级不可变 binding；s007/s008 必须解析为同一个 causal group。
+- [x] Gallery 按每个 anchor phrase 选择素材，不存在全局图片数量上限。
+- [x] s005 独立查询并排除 s002 Gallery 身份，随后 s006-s008 显式复用 s005.primary_result。
+- [x] 独立查询去重，scene_input/relation/group member/configured 依赖复用不参与独立去重。
+- [x] 同 base revision、Run overlay、配置与 seed 重跑得到完全相同的 `ResolvedAssetPlan`。
+- [x] 无明确语义要求时无需 AI；AI 排序器未实现时 enabled=true fail-loud，不能返回候选集外素材。
+- [x] 原图优先不覆盖显式依赖或叙事关系。
+- [x] 网站源缺失、无图承接、可派生缺口三者严格区分。
+- [x] 派生先查 signature，产物通过 Stage 3 register_derived_group 原子注册后重新查询。
+- [x] signature hit 不调用 executor；已有完整组复用标记为 group_reuse；signature miss 只调用一次并在注册后命中原查询。
+- [x] Stage 5 未提供生产 capability binding 时，fake binding 不得进入生产路径。
+- [x] 派生图保留 lineage/source_kind/evidence，不能冒充真实网站证据。
+- [x] E2 网站相似图不能通过 real website Claim；可追溯 E1 忠实派生可以。
+- [x] 编辑流程使用上游冻结结果，文化墙现有完整 editor group 可直接复用。
+- [x] causal/process 场景不允许从无关系素材临时拼装。
+- [x] 缺少任一 required group member 时 fail-loud 或进入合法关系派生，不接受残组。
+- [x] 参数序列缺失时按 Stage0 字段规则（spoken ∩ registered → callout_fields）派生 base/stage/final，并原子注册 process 组。
+- [x] causal 选择严格执行四级优先级，反推参考图保留 E2 和 lineage。
+- [x] 选择历史独立存储，不修改不可变 AssetRecord。
+- [x] Run 保存选择原因、缺口、派生请求、pre/post Repository 指纹、used snapshot、Registry 快照和完整输入指纹。
+- [x] Stage 4 不引入动效、SFX、TTS、字幕或帧时长逻辑。
+- [x] Stage 0 黄金场景的 s001-s010 全部得到预期素材来源、关系组和依赖绑定。
 
 ## 19. 进入 Stage 5 前仍需确认
 

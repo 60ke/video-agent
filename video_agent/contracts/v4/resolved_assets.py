@@ -11,7 +11,14 @@ SlotResolveStatus = Literal["resolved_asset", "resolved_group_member", "resolved
 RankMode = Literal["single", "deterministic_weighted", "semantic_ranked"]
 SelectionScope = Literal["independent", "dependency_reuse", "group_binding", "configured"]
 GapAction = Literal["fail_missing_source", "fail_missing_config", "derive", "resolve_no_asset"]
-DerivationStatus = Literal["pending", "signature_hit", "generated", "registered", "failed"]
+DerivationStatus = Literal[
+    "pending",
+    "signature_hit",
+    "group_reuse",
+    "generated",
+    "registered",
+    "failed",
+]
 MaterialGapReason = Literal[
     "missing_source_asset",
     "missing_configured_asset",
@@ -83,6 +90,10 @@ class DerivationNarrativeContext(V4Contract):
     anchor_phrase: str = Field(min_length=1)
     previous_scene_summary: str | None = None
     next_scene_summary: str | None = None
+    # Stage0 parameter sequence: spoken ∩ registered page fields → callout_fields.
+    spoken_operation_fields: list[str] = Field(default_factory=list)
+    registered_required_fields: list[str] = Field(default_factory=list)
+    callout_fields: list[str] = Field(default_factory=list)
 
 
 class DerivationRequest(V4Contract):

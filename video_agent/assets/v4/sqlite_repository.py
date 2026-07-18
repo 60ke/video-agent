@@ -526,6 +526,51 @@ class SQLiteAssetRepository:
         with self.transaction():
             return self._register_group(draft)
 
+    def register_derived_group(
+        self,
+        *,
+        drafts: list[AssetDraft],
+        draft_member_keys: list[str],
+        reuse_member_refs: dict[str, str],
+        group_type: str,
+        pattern_id: str,
+        category_id: str,
+        member_specs: list[tuple[str, str, int]],
+    ) -> AssetGroup:
+        """Register new member drafts + group binding in one SQLite transaction.
+
+        ``member_specs`` is ``(member_key, asset_role, order)`` for every required
+        member. Refs come from ``reuse_member_refs`` or newly registered drafts.
+        """
+        if len(drafts) != len(draft_member_keys):
+            raise ValueError("drafts and draft_member_keys length mismatch")
+        with self.transaction():
+            member_refs = dict(reuse_member_refs)
+            for key, draft in zip(draft_member_keys, drafts, strict=True):
+                asset = self._register_asset(draft)
+                member_refs[key] = asset.asset_ref
+            members: list[AssetGroupMember] = []
+            for member_key, asset_role, order in member_specs:
+                ref = member_refs.get(member_key)
+                if ref is None:
+                    raise ValueError(f"missing member ref for {member_key}")
+                members.append(
+                    AssetGroupMember(
+                        member_key=member_key,
+                        asset_role=asset_role,
+                        asset_ref=ref,
+                        order=order,
+                    )
+                )
+            return self._register_group(
+                AssetGroupDraft(
+                    group_type=group_type,
+                    pattern_id=pattern_id,
+                    category_id=category_id,
+                    members=members,
+                )
+            )
+
     def _register_group(self, draft: AssetGroupDraft) -> AssetGroup:
         ref, now = self._allocate("group"), datetime.now(timezone.utc)
         revision = self._bump_revision()

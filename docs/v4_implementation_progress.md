@@ -22,8 +22,8 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Stage 1: semantic Contract and AI runtime | runtime complete / golden conformance partial | Runtime, structured prompts, trace/replay, repair and routing are implemented. Relation-pattern binding, full registry freeze and Stage 0 Rev3 semantic conformance remain open. |
 | Stage 2: capability and asset domain | complete | Typed dynamic registries, deterministic frozen snapshots, strict AssetRecord/Lineage/Group/Evidence contracts, registry-bound validation and Stage 1 projection are implemented. |
 | Stage 3: repository, SQLite, ObjectStore and migration | complete | Repository, ObjectStore, import, snapshot, audit and deterministic migration are implemented. The repaired authoritative editor workflow and the current full legacy inventory pass the real dry-run without warnings or failures. |
-| Stage 4: dependency, selection and derivation | implementation complete / handoff revised | DerivationRequest is now request-shape only (`derivation_type`); final signature is owned by Stage 5 `PreparedDerivation` prepare path (fake fixture still used until production executors land). |
-| Stage 5: effect, SFX, voice and derivation registries | design frozen / implementation in progress | Units 1–6 done: handshake, registries, Voice fixed resolve, capability binding, per-capability prompts + Deterministic/GPT Image/`Stage5DerivationExecutor` (production Stage4 wires real executor; Fake remains test-only via `allow_fake_derivation`). Next: Stage3 registration polish if needed, then Motion Assignment and SFX intents. |
+| Stage 4: dependency, selection and derivation | complete | DoD closed: six slot sources, DAG, alias/dedup, gap policy, signature/`group_reuse`, atomic `register_derived_group`, parameter callout fields, E2 website filter, s001–s010 golden. Production wires Stage5 executor when `repo_root` set; Fake is test-only. |
+| Stage 5: effect, SFX, voice and derivation registries | design frozen / implementation in progress | Units 1–6 done (handshake, registries, Voice, capability binding, prompts + Deterministic/GPT/`Stage5DerivationExecutor`). Next: Motion Assignment and SFX intents (`MotionAudioPlan`). |
 | Stage 6: semantic timing and compilation | pending | Formal design document required before implementation. |
 | Stage 7: planner cutover and verification | pending | Formal design document required before implementation. |
 
@@ -93,5 +93,6 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 
 ## Next Continuation Point
 
-Continue Stage 5 §16 from unit 7/8: Stage3 registration polish if gaps remain, then migrate Effect hardcoding to Motion Assignment, emit frame-free SFX intents, and freeze `MotionAudioPlan`. Fake derivation remains test-only.
+Stage 4 DoD is closed. Continue Stage 5 §16 from Motion Assignment / SFX intents: migrate Effect hardcoding to Motion Assignment, emit frame-free SFX intents, and freeze `MotionAudioPlan`. Fake derivation remains test-only.
 - Full legacy suite currently has three unrelated baseline failures in `tests/test_assets.py`; they assert removed review metadata and the deleted brand-IP directory scan. These are tracked for the Stage 2 cutover rather than weakening the new Contract.
+- Stage 4 closeout verification: `python -m pytest tests/test_v4_stage4_*.py tests/test_v4_stage5_derivation_executors.py -q` PASS.

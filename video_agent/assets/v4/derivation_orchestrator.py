@@ -11,7 +11,6 @@ from PIL import Image
 
 from video_agent.contracts.v4 import (
     AssetGroup,
-    AssetGroupMember,
     AssetLineage,
     EvidenceClass,
     RelationPatternEntry,
@@ -21,7 +20,7 @@ from video_agent.contracts.v4.resolved_assets import DerivationRequest, Required
 from video_agent.io import sha256_json
 from video_agent.registries import CapabilityRegistryHub
 
-from .repository import AssetDraft, AssetGroupDraft, AssetResolutionSession, GroupQuery
+from .repository import AssetDraft, AssetResolutionSession, GroupQuery
 from .stage4_errors import Stage4Error
 
 
@@ -585,7 +584,9 @@ def fulfill_derivation(
         )
     )
     if existing_groups:
-        request.status = "signature_hit"
+        # Existing complete group bound to the parent — reuse without execute.
+        # Distinct from derivation_signature hit on a newly prepared request.
+        request.status = "group_reuse"
         return request, prepared, existing_groups[0]
 
     if registry is None:
@@ -604,27 +605,40 @@ def fulfill_derivation(
             slot_id=request.slot_id,
         )
 
+    # Signature hit on the prepared request target: skip executor when the
+    # prepared derivation already exists as an asset (member-level reuse still
+    # happens inside the executor via per-member signatures).
+    existing_prepared = session.find_by_derivation_signature(prepared.derivation_signature)
+    if existing_prepared is not None:
+        # Re-query for a complete group that already includes this prepared asset.
+        prepared_groups = session.query_groups(
+            GroupQuery(
+                group_types=(request.required_group.group_type,),
+                pattern_ids=(request.required_group.pattern_id,),
+                category_ids=(request.category_id,) if request.category_id else (),
+                containing_asset_refs=(existing_prepared.asset_ref,),
+                required_member_keys=(request.required_group.member_key,),
+                active_only=True,
+            )
+        )
+        if prepared_groups:
+            request.status = "signature_hit"
+            return request, prepared, prepared_groups[0]
+
     draft_result = executor.execute(request, binding, prepared, session)
     request.status = "generated"
-    member_refs = dict(draft_result.reuse_member_refs)
-    for member_key, draft in zip(draft_result.draft_member_keys, draft_result.drafts, strict=True):
-        member_refs[member_key] = session.register_asset(draft).asset_ref
-    members = [
-        AssetGroupMember(
-            member_key=member.member_key,
-            asset_role=member.asset_role,
-            asset_ref=member_refs[member.member_key],
-            order=member.order,
-        )
+    member_specs = [
+        (member.member_key, member.asset_role, member.order)
         for member in sorted(pattern.members, key=lambda item: item.order)
     ]
-    group = session.register_group(
-        AssetGroupDraft(
-            group_type=request.required_group.group_type,
-            pattern_id=request.required_group.pattern_id,
-            category_id=request.category_id or draft_result.category_id or "",
-            members=members,
-        )
+    group = session.register_derived_group(
+        drafts=list(draft_result.drafts),
+        draft_member_keys=list(draft_result.draft_member_keys),
+        reuse_member_refs=dict(draft_result.reuse_member_refs),
+        group_type=request.required_group.group_type,
+        pattern_id=request.required_group.pattern_id,
+        category_id=request.category_id or draft_result.category_id or "",
+        member_specs=member_specs,
     )
     request.status = "registered"
     return request, prepared, group

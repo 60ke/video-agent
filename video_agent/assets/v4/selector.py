@@ -36,6 +36,11 @@ def select_asset(
 ) -> tuple[AssetRecord, RankMode, dict[str, float]]:
     if not candidates:
         raise ValueError("select_asset requires at least one candidate")
+    if config.semantic_ranker.enabled:
+        raise ValueError(
+            "semantic_ranker.enabled=true but AI semantic ranker is not implemented; "
+            "disable it or provide an explicit Stage5 ranker before enabling"
+        )
     if len(candidates) == 1:
         return candidates[0], "single", {"only_candidate": 1.0}
 

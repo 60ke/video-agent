@@ -128,6 +128,17 @@ class AssetRepository(Protocol):
         visibility: ResolutionVisibility | None = None,
     ) -> list[AssetGroup]: ...
     def register_group(self, draft: AssetGroupDraft) -> AssetGroup: ...
+    def register_derived_group(
+        self,
+        *,
+        drafts: list[AssetDraft],
+        draft_member_keys: list[str],
+        reuse_member_refs: dict[str, str],
+        group_type: str,
+        pattern_id: str,
+        category_id: str,
+        member_specs: list[tuple[str, str, int]],
+    ) -> AssetGroup: ...
     def supersede_group(self, old_ref: str, replacement: AssetGroupDraft) -> AssetGroup: ...
     def bind_configured_asset(self, config_key: str, asset_ref: str) -> None: ...
     def validate_configured_asset_binding(self, config_key: str, asset_ref: str) -> AssetRecord: ...
@@ -188,6 +199,31 @@ class AssetResolutionSession:
 
     def register_group(self, draft: AssetGroupDraft) -> AssetGroup:
         group = self.repository.register_group(draft)
+        self.run_created_group_refs.add(group.group_ref)
+        return group
+
+    def register_derived_group(
+        self,
+        *,
+        drafts: list[AssetDraft],
+        draft_member_keys: list[str],
+        reuse_member_refs: dict[str, str],
+        group_type: str,
+        pattern_id: str,
+        category_id: str,
+        member_specs: list[tuple[str, str, int]],
+    ) -> AssetGroup:
+        group = self.repository.register_derived_group(
+            drafts=drafts,
+            draft_member_keys=draft_member_keys,
+            reuse_member_refs=reuse_member_refs,
+            group_type=group_type,
+            pattern_id=pattern_id,
+            category_id=category_id,
+            member_specs=member_specs,
+        )
+        for member in group.members:
+            self.run_created_asset_refs.add(member.asset_ref)
         self.run_created_group_refs.add(group.group_ref)
         return group
 

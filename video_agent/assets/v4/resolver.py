@@ -913,6 +913,15 @@ class AssetPlanResolver:
                 )
             group_spec = required_group_spec(group_type, pattern_id, member_key)
 
+        spoken_fields: list[str] = []
+        registered_fields: list[str] = []
+        callout_fields: list[str] = []
+        if pattern_id == "parameter_callout_sequence":
+            from .parameter_fields import parameter_narrative_fields
+
+            parent = session.get_asset(parent_refs[0]) if parent_refs else None
+            spoken_fields, registered_fields, callout_fields = parameter_narrative_fields(scene, parent)
+
         request = DerivationRequest(
             request_id=f"derivation://R{derivation_seq:04d}",
             scene_id=scene.scene_id,
@@ -932,6 +941,9 @@ class AssetPlanResolver:
             narrative_context=DerivationNarrativeContext(
                 scene_text=scene.text,
                 anchor_phrase=slot.anchor_phrase,
+                spoken_operation_fields=spoken_fields,
+                registered_required_fields=registered_fields,
+                callout_fields=callout_fields,
             ),
             target_orientation=target_orientation,
         )
