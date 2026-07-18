@@ -19,7 +19,7 @@
 
 仓库：`60ke/video-agent`
 
-本地工作区：`C:/Users/CNGG/Documents/video_generate/video-agent`
+当前开发分支：https://github.com/60ke/video-agent/tree/codex/parameter-frame-sequence 
 
 产品目标：为「柯幻熊猫」网站自动生成适合抖音发布的高质量竖屏功能种草视频。输入可以是固定文案，也可以是目标描述；系统完成文案理解、素材选择、必要的 GPT Image 派生、TTS、字幕、动效、音效、精确卡点和成片渲染。
 
