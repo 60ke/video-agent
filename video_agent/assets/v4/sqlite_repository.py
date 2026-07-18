@@ -31,10 +31,12 @@ from .repository import (
     AssetGroupDraft,
     AssetNotFoundError,
     AssetQuery,
+    AssetResolutionSession,
     GroupQuery,
+    ResolutionVisibility,
 )
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 3
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS repository_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -44,7 +46,8 @@ CREATE TABLE IF NOT EXISTS assets (
  media_type TEXT NOT NULL, module TEXT, category_id TEXT, category_path_json TEXT NOT NULL, asset_role TEXT NOT NULL,
  case_label TEXT, industry TEXT, description TEXT, width INTEGER NOT NULL, height INTEGER NOT NULL, orientation TEXT NOT NULL,
  animated INTEGER NOT NULL, source_kind TEXT NOT NULL, origin_type TEXT NOT NULL, evidence_class TEXT NOT NULL,
- claims_json TEXT NOT NULL, status TEXT NOT NULL, superseded_by TEXT REFERENCES assets(asset_ref), created_at TEXT NOT NULL);
+ claims_json TEXT NOT NULL, status TEXT NOT NULL, superseded_by TEXT REFERENCES assets(asset_ref), created_at TEXT NOT NULL,
+ created_revision INTEGER NOT NULL DEFAULT 1, superseded_revision INTEGER);
 CREATE TABLE IF NOT EXISTS asset_lineage (
  asset_ref TEXT PRIMARY KEY REFERENCES assets(asset_ref), derivation_type TEXT NOT NULL, executor_id TEXT NOT NULL,
  provider TEXT, model TEXT, prompt_template_version TEXT, prompt_sha256 TEXT, parameters_sha256 TEXT NOT NULL,
@@ -54,7 +57,8 @@ CREATE TABLE IF NOT EXISTS asset_parents (
  parent_order INTEGER NOT NULL, PRIMARY KEY(asset_ref,parent_asset_ref), UNIQUE(asset_ref,parent_order));
 CREATE TABLE IF NOT EXISTS asset_groups (
  group_ref TEXT PRIMARY KEY, group_type TEXT NOT NULL, pattern_id TEXT NOT NULL, category_id TEXT NOT NULL,
- status TEXT NOT NULL, superseded_by TEXT REFERENCES asset_groups(group_ref), created_at TEXT NOT NULL);
+ status TEXT NOT NULL, superseded_by TEXT REFERENCES asset_groups(group_ref), created_at TEXT NOT NULL,
+ created_revision INTEGER NOT NULL DEFAULT 1, superseded_revision INTEGER);
 CREATE TABLE IF NOT EXISTS asset_group_members (
  group_ref TEXT NOT NULL REFERENCES asset_groups(group_ref), member_key TEXT NOT NULL, asset_role TEXT NOT NULL,
  asset_ref TEXT NOT NULL REFERENCES assets(asset_ref), member_order INTEGER NOT NULL,
@@ -63,6 +67,7 @@ CREATE INDEX IF NOT EXISTS idx_assets_active_role_category_orientation ON assets
 CREATE UNIQUE INDEX IF NOT EXISTS idx_asset_lineage_derivation_signature ON asset_lineage(derivation_signature);
 CREATE INDEX IF NOT EXISTS idx_asset_groups_active_pattern_category ON asset_groups(status,pattern_id,category_id);
 CREATE INDEX IF NOT EXISTS idx_asset_group_members_asset ON asset_group_members(asset_ref);
+CREATE INDEX IF NOT EXISTS idx_asset_group_members_key ON asset_group_members(member_key);
 CREATE TABLE IF NOT EXISTS configured_asset_bindings (
  config_key TEXT PRIMARY KEY, asset_ref TEXT NOT NULL REFERENCES assets(asset_ref), updated_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS legacy_id_map (
@@ -95,8 +100,62 @@ class SQLiteAssetRepository:
             value = self.connection.execute("SELECT value FROM repository_meta WHERE key='schema_version'").fetchone()
             if value is None:
                 self.connection.execute("INSERT INTO repository_meta VALUES ('schema_version',?)", (str(SCHEMA_VERSION),))
-            elif value["value"] != str(SCHEMA_VERSION):
-                raise AssetConflictError(f"unsupported repository schema version: {value['value']}")
+                self.connection.execute("INSERT INTO repository_meta VALUES ('repository_revision','0')")
+            else:
+                version = value["value"]
+                if version == "1":
+                    self._migrate_v1_to_v2()
+                    version = "2"
+                if version == "2":
+                    self._migrate_v2_to_v3()
+                    version = "3"
+                if version != str(SCHEMA_VERSION):
+                    raise AssetConflictError(f"unsupported repository schema version: {version}")
+            self.connection.execute(
+                "CREATE INDEX IF NOT EXISTS idx_assets_created_revision ON assets(created_revision)"
+            )
+            self.connection.execute(
+                "CREATE INDEX IF NOT EXISTS idx_asset_groups_created_revision ON asset_groups(created_revision)"
+            )
+            revision = self.connection.execute(
+                "SELECT value FROM repository_meta WHERE key='repository_revision'"
+            ).fetchone()
+            if revision is None:
+                self.connection.execute("INSERT INTO repository_meta VALUES ('repository_revision','0')")
+
+    def _migrate_v1_to_v2(self) -> None:
+        asset_cols = {row["name"] for row in self.connection.execute("PRAGMA table_info(assets)")}
+        if "created_revision" not in asset_cols:
+            self.connection.execute("ALTER TABLE assets ADD COLUMN created_revision INTEGER NOT NULL DEFAULT 1")
+        group_cols = {row["name"] for row in self.connection.execute("PRAGMA table_info(asset_groups)")}
+        if "created_revision" not in group_cols:
+            self.connection.execute(
+                "ALTER TABLE asset_groups ADD COLUMN created_revision INTEGER NOT NULL DEFAULT 1"
+            )
+        self.connection.execute(
+            "CREATE INDEX IF NOT EXISTS idx_assets_created_revision ON assets(created_revision)"
+        )
+        self.connection.execute(
+            "CREATE INDEX IF NOT EXISTS idx_asset_groups_created_revision ON asset_groups(created_revision)"
+        )
+        self.connection.execute(
+            "CREATE INDEX IF NOT EXISTS idx_asset_group_members_key ON asset_group_members(member_key)"
+        )
+        self.connection.execute(
+            "INSERT OR IGNORE INTO repository_meta VALUES ('repository_revision','1')"
+        )
+        self.connection.execute(
+            "UPDATE repository_meta SET value='2' WHERE key='schema_version'"
+        )
+
+    def _migrate_v2_to_v3(self) -> None:
+        asset_cols = {row["name"] for row in self.connection.execute("PRAGMA table_info(assets)")}
+        if "superseded_revision" not in asset_cols:
+            self.connection.execute("ALTER TABLE assets ADD COLUMN superseded_revision INTEGER")
+        group_cols = {row["name"] for row in self.connection.execute("PRAGMA table_info(asset_groups)")}
+        if "superseded_revision" not in group_cols:
+            self.connection.execute("ALTER TABLE asset_groups ADD COLUMN superseded_revision INTEGER")
+        self.connection.execute("UPDATE repository_meta SET value='3' WHERE key='schema_version'")
 
     @contextmanager
     def transaction(self) -> Iterator[None]:
@@ -109,13 +168,134 @@ class SQLiteAssetRepository:
         else:
             self.connection.execute("COMMIT")
 
-    def get_asset(self, asset_ref: str, *, include_superseded: bool = True) -> AssetRecord | None:
-        row = self.connection.execute("SELECT * FROM assets WHERE asset_ref=?", (asset_ref,)).fetchone()
-        if row is None or (not include_superseded and row["status"] != AssetStatus.ACTIVE.value):
-            return None
-        return self._asset_from_row(row)
+    def current_revision(self) -> int:
+        row = self.connection.execute(
+            "SELECT value FROM repository_meta WHERE key='repository_revision'"
+        ).fetchone()
+        return int(row["value"]) if row else 0
 
-    def query_assets(self, query: AssetQuery) -> list[AssetRecord]:
+    def repository_fingerprint(self, *, as_of_revision: int | None = None) -> str:
+        revision = self.current_revision() if as_of_revision is None else as_of_revision
+        assets = [
+            {
+                "asset_ref": row["asset_ref"],
+                "content_sha256": row["content_sha256"],
+                "status": self._status_at_revision(row, revision),
+                "created_revision": row["created_revision"],
+            }
+            for row in self.connection.execute(
+                "SELECT asset_ref, content_sha256, status, created_revision, superseded_revision FROM assets "
+                "WHERE created_revision <= ? ORDER BY asset_ref",
+                (revision,),
+            )
+        ]
+        groups = [
+            {
+                "group_ref": row["group_ref"],
+                "status": self._status_at_revision(row, revision),
+                "created_revision": row["created_revision"],
+                "members_sha256": self._group_content_sha256(
+                    self._group_from_row(row, visibility=ResolutionVisibility(revision))
+                ),
+            }
+            for row in self.connection.execute(
+                "SELECT * FROM asset_groups WHERE created_revision <= ? ORDER BY group_ref",
+                (revision,),
+            )
+        ]
+        return sha256_json(
+            {
+                "as_of_revision": revision,
+                "assets": assets,
+                "groups": groups,
+                "repository_schema_version": SCHEMA_VERSION,
+            }
+        )
+
+    def open_resolution_session(self) -> AssetResolutionSession:
+        base = self.current_revision()
+        return AssetResolutionSession(
+            repository=self,
+            base_revision=base,
+            pre_run_repository_fingerprint=self.repository_fingerprint(as_of_revision=base),
+        )
+
+    def _bump_revision(self) -> int:
+        current = self.current_revision()
+        nxt = current + 1
+        self.connection.execute(
+            "UPDATE repository_meta SET value=? WHERE key='repository_revision'", (str(nxt),)
+        )
+        return nxt
+
+    def _append_visibility(
+        self,
+        clauses: list[str],
+        values: list[object],
+        *,
+        alias: str,
+        ref_column: str,
+        visibility: ResolutionVisibility | None,
+        extra_refs: tuple[str, ...],
+    ) -> None:
+        if visibility is None:
+            return
+        if extra_refs:
+            placeholders = ",".join("?" for _ in extra_refs)
+            clauses.append(
+                f"({alias}.created_revision <= ? OR {alias}.{ref_column} IN ({placeholders}))"
+            )
+            values.append(visibility.as_of_revision)
+            values.extend(extra_refs)
+        else:
+            clauses.append(f"{alias}.created_revision <= ?")
+            values.append(visibility.as_of_revision)
+
+    @staticmethod
+    def _status_at_revision(row: sqlite3.Row, revision: int) -> str:
+        superseded_revision = row["superseded_revision"]
+        if row["created_revision"] <= revision and (
+            superseded_revision is None or superseded_revision > revision
+        ):
+            return AssetStatus.ACTIVE.value
+        return AssetStatus.SUPERSEDED.value
+
+    def _is_active_in_visibility(
+        self,
+        row: sqlite3.Row,
+        ref: str,
+        visibility: ResolutionVisibility | None,
+        extra_refs: tuple[str, ...],
+    ) -> bool:
+        if visibility is None or ref in extra_refs:
+            return row["status"] == AssetStatus.ACTIVE.value
+        return self._status_at_revision(row, visibility.as_of_revision) == AssetStatus.ACTIVE.value
+
+    def get_asset(
+        self,
+        asset_ref: str,
+        *,
+        include_superseded: bool = True,
+        visibility: ResolutionVisibility | None = None,
+    ) -> AssetRecord | None:
+        row = self.connection.execute("SELECT * FROM assets WHERE asset_ref=?", (asset_ref,)).fetchone()
+        if row is None:
+            return None
+        if visibility is not None:
+            if row["created_revision"] > visibility.as_of_revision and asset_ref not in visibility.extra_asset_refs:
+                return None
+        if not include_superseded and not self._is_active_in_visibility(
+            row, asset_ref, visibility, visibility.extra_asset_refs if visibility else ()
+        ):
+            return None
+        return self._asset_from_row(row, visibility=visibility)
+
+    def query_assets(
+        self,
+        query: AssetQuery,
+        *,
+        visibility: ResolutionVisibility | None = None,
+    ) -> list[AssetRecord]:
         clauses, values = [], []
         for column, items in (
             ("category_id", query.category_ids),
@@ -127,15 +307,42 @@ class SQLiteAssetRepository:
                 clauses.append(f"a.{column} IN ({','.join('?' for _ in items)})")
                 values.extend(item.value if hasattr(item, "value") else item for item in items)
         if query.active_only:
-            clauses.append("a.status='active'")
+            if visibility is None:
+                clauses.append("a.status='active'")
+                parent_inactive = "parent.status='superseded'"
+            else:
+                if visibility.extra_asset_refs:
+                    placeholders = ",".join("?" for _ in visibility.extra_asset_refs)
+                    clauses.append(
+                        f"((a.asset_ref IN ({placeholders}) AND a.status='active') OR "
+                        "(a.created_revision <= ? AND (a.superseded_revision IS NULL OR a.superseded_revision > ?)))"
+                    )
+                    values.extend(visibility.extra_asset_refs)
+                else:
+                    clauses.append(
+                        "a.created_revision <= ? AND (a.superseded_revision IS NULL OR a.superseded_revision > ?)"
+                    )
+                values.extend((visibility.as_of_revision, visibility.as_of_revision))
+                parent_inactive = "parent.superseded_revision IS NOT NULL AND parent.superseded_revision <= ?"
+                values.append(visibility.as_of_revision)
             clauses.append(
-                "NOT EXISTS (WITH RECURSIVE ancestors(ref) AS (SELECT parent_asset_ref FROM asset_parents WHERE asset_ref=a.asset_ref UNION ALL SELECT p.parent_asset_ref FROM asset_parents p JOIN ancestors x ON p.asset_ref=x.ref) SELECT 1 FROM ancestors JOIN assets parent ON parent.asset_ref=ancestors.ref WHERE parent.status='superseded')"
+                "NOT EXISTS (WITH RECURSIVE ancestors(ref) AS (SELECT parent_asset_ref FROM asset_parents WHERE asset_ref=a.asset_ref UNION ALL SELECT p.parent_asset_ref FROM asset_parents p JOIN ancestors x ON p.asset_ref=x.ref) SELECT 1 FROM ancestors JOIN assets parent ON parent.asset_ref=ancestors.ref WHERE "
+                + parent_inactive
+                + ")"
             )
         for claim in query.claims:
             clauses.append("EXISTS (SELECT 1 FROM json_each(a.claims_json) WHERE value=?)")
             values.append(claim)
+        self._append_visibility(
+            clauses,
+            values,
+            alias="a",
+            ref_column="asset_ref",
+            visibility=visibility,
+            extra_refs=visibility.extra_asset_refs if visibility else (),
+        )
         sql = "SELECT a.* FROM assets a" + (" WHERE " + " AND ".join(clauses) if clauses else "") + " ORDER BY a.asset_ref"
-        return [self._asset_from_row(row) for row in self.connection.execute(sql, values)]
+        return [self._asset_from_row(row, visibility=visibility) for row in self.connection.execute(sql, values)]
 
     def register_asset(self, draft: AssetDraft) -> AssetRecord:
         with self.transaction():
@@ -144,6 +351,7 @@ class SQLiteAssetRepository:
     def _register_asset(self, draft: AssetDraft) -> AssetRecord:
         self.object_store.verify(draft.object_key, draft.content_sha256)
         ref = self._allocate("asset")
+        revision = self._bump_revision()
         now = datetime.now(timezone.utc)
         lineage = draft.lineage
         if lineage is not None:
@@ -153,7 +361,7 @@ class SQLiteAssetRepository:
         asset = AssetRecord(asset_ref=ref, created_at=now, status=AssetStatus.ACTIVE, superseded_by=None, **draft.__dict__)
         validate_asset_against_registry(asset, self.registry)
         self.connection.execute(
-            """INSERT INTO assets VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            """INSERT INTO assets VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 ref,
                 asset.filename,
@@ -178,6 +386,8 @@ class SQLiteAssetRepository:
                 asset.status.value,
                 None,
                 now.isoformat(),
+                revision,
+                None,
             ),
         )
         if lineage:
@@ -210,22 +420,60 @@ class SQLiteAssetRepository:
             if old.status != AssetStatus.ACTIVE:
                 raise AssetConflictError(f"asset is not active: {old_ref}")
             new = self._register_asset(replacement)
-            self.connection.execute("UPDATE assets SET status='superseded', superseded_by=? WHERE asset_ref=?", (new.asset_ref, old_ref))
+            self.connection.execute(
+                "UPDATE assets SET status='superseded', superseded_by=?, superseded_revision=? WHERE asset_ref=?",
+                (new.asset_ref, self.current_revision(), old_ref),
+            )
             return new
 
-    def find_by_derivation_signature(self, signature: str) -> AssetRecord | None:
+    def find_by_derivation_signature(
+        self,
+        signature: str,
+        *,
+        visibility: ResolutionVisibility | None = None,
+    ) -> AssetRecord | None:
+        clauses = ["l.derivation_signature=?"]
+        values: list[object] = [signature]
+        self._append_visibility(
+            clauses,
+            values,
+            alias="a",
+            ref_column="asset_ref",
+            visibility=visibility,
+            extra_refs=visibility.extra_asset_refs if visibility else (),
+        )
         row = self.connection.execute(
-            "SELECT a.* FROM assets a JOIN asset_lineage l ON l.asset_ref=a.asset_ref WHERE l.derivation_signature=?", (signature,)
+            "SELECT a.* FROM assets a JOIN asset_lineage l ON l.asset_ref=a.asset_ref WHERE "
+            + " AND ".join(clauses),
+            values,
         ).fetchone()
-        return self._asset_from_row(row) if row else None
+        return self._asset_from_row(row, visibility=visibility) if row else None
 
-    def get_group(self, group_ref: str, *, include_superseded: bool = True) -> AssetGroup | None:
+    def get_group(
+        self,
+        group_ref: str,
+        *,
+        include_superseded: bool = True,
+        visibility: ResolutionVisibility | None = None,
+    ) -> AssetGroup | None:
         row = self.connection.execute("SELECT * FROM asset_groups WHERE group_ref=?", (group_ref,)).fetchone()
-        if row is None or (not include_superseded and row["status"] != AssetStatus.ACTIVE.value):
+        if row is None:
             return None
-        return self._group_from_row(row)
+        if visibility is not None:
+            if row["created_revision"] > visibility.as_of_revision and group_ref not in visibility.extra_group_refs:
+                return None
+        if not include_superseded and not self._is_active_in_visibility(
+            row, group_ref, visibility, visibility.extra_group_refs if visibility else ()
+        ):
+            return None
+        return self._group_from_row(row, visibility=visibility)
 
-    def query_groups(self, query: GroupQuery) -> list[AssetGroup]:
+    def query_groups(
+        self,
+        query: GroupQuery,
+        *,
+        visibility: ResolutionVisibility | None = None,
+    ) -> list[AssetGroup]:
         clauses, values = [], []
         for column, items in (("group_type", query.group_types), ("pattern_id", query.pattern_ids), ("category_id", query.category_ids)):
             if items:
@@ -237,10 +485,42 @@ class SQLiteAssetRepository:
                 f"AND m.asset_role IN ({','.join('?' for _ in query.member_roles)}))"
             )
             values.extend(query.member_roles)
+        for asset_ref in query.containing_asset_refs:
+            clauses.append(
+                "EXISTS (SELECT 1 FROM asset_group_members m WHERE m.group_ref=g.group_ref AND m.asset_ref=?)"
+            )
+            values.append(asset_ref)
+        for member_key in query.required_member_keys:
+            clauses.append(
+                "EXISTS (SELECT 1 FROM asset_group_members m WHERE m.group_ref=g.group_ref AND m.member_key=?)"
+            )
+            values.append(member_key)
         if query.active_only:
-            clauses.append("g.status='active'")
+            if visibility is None:
+                clauses.append("g.status='active'")
+            elif visibility.extra_group_refs:
+                placeholders = ",".join("?" for _ in visibility.extra_group_refs)
+                clauses.append(
+                    f"((g.group_ref IN ({placeholders}) AND g.status='active') OR "
+                    "(g.created_revision <= ? AND (g.superseded_revision IS NULL OR g.superseded_revision > ?)))"
+                )
+                values.extend(visibility.extra_group_refs)
+                values.extend((visibility.as_of_revision, visibility.as_of_revision))
+            else:
+                clauses.append(
+                    "g.created_revision <= ? AND (g.superseded_revision IS NULL OR g.superseded_revision > ?)"
+                )
+                values.extend((visibility.as_of_revision, visibility.as_of_revision))
+        self._append_visibility(
+            clauses,
+            values,
+            alias="g",
+            ref_column="group_ref",
+            visibility=visibility,
+            extra_refs=visibility.extra_group_refs if visibility else (),
+        )
         sql = "SELECT g.* FROM asset_groups g" + (" WHERE " + " AND ".join(clauses) if clauses else "") + " ORDER BY g.group_ref"
-        return [self._group_from_row(row) for row in self.connection.execute(sql, values)]
+        return [self._group_from_row(row, visibility=visibility) for row in self.connection.execute(sql, values)]
 
     def register_group(self, draft: AssetGroupDraft) -> AssetGroup:
         with self.transaction():
@@ -248,12 +528,13 @@ class SQLiteAssetRepository:
 
     def _register_group(self, draft: AssetGroupDraft) -> AssetGroup:
         ref, now = self._allocate("group"), datetime.now(timezone.utc)
+        revision = self._bump_revision()
         group = AssetGroup(group_ref=ref, status=AssetStatus.ACTIVE, superseded_by=None, created_at=now, **draft.__dict__)
         assets = {member.asset_ref: self.get_asset(member.asset_ref) for member in group.members}
         validate_group_against_assets(group, {ref: asset for ref, asset in assets.items() if asset is not None}, self.registry)
         self.connection.execute(
-            "INSERT INTO asset_groups VALUES (?,?,?,?,?,?,?)",
-            (ref, group.group_type, group.pattern_id, group.category_id, "active", None, now.isoformat()),
+            "INSERT INTO asset_groups VALUES (?,?,?,?,?,?,?,?,?)",
+            (ref, group.group_type, group.pattern_id, group.category_id, "active", None, now.isoformat(), revision, None),
         )
         self.connection.executemany(
             "INSERT INTO asset_group_members VALUES (?,?,?,?,?)",
@@ -270,13 +551,15 @@ class SQLiteAssetRepository:
                 raise AssetConflictError(f"group is not active: {old_ref}")
             new = self._register_group(replacement)
             self.connection.execute(
-                "UPDATE asset_groups SET status='superseded', superseded_by=? WHERE group_ref=?", (new.group_ref, old_ref)
+                "UPDATE asset_groups SET status='superseded', superseded_by=?, superseded_revision=? WHERE group_ref=?",
+                (new.group_ref, self.current_revision(), old_ref),
             )
             return new
 
     def bind_configured_asset(self, config_key: str, asset_ref: str) -> None:
         with self.transaction():
             self.validate_configured_asset_binding(config_key, asset_ref)
+            self._bump_revision()
             self.connection.execute(
                 "INSERT INTO configured_asset_bindings VALUES (?,?,?) ON CONFLICT(config_key) DO UPDATE SET asset_ref=excluded.asset_ref,updated_at=excluded.updated_at",
                 (config_key, asset_ref, datetime.now(timezone.utc).isoformat()),
@@ -296,9 +579,16 @@ class SQLiteAssetRepository:
             )
         return asset
 
-    def configured_asset(self, config_key: str) -> AssetRecord | None:
+    def configured_asset(
+        self,
+        config_key: str,
+        *,
+        visibility: ResolutionVisibility | None = None,
+    ) -> AssetRecord | None:
         row = self.connection.execute("SELECT asset_ref FROM configured_asset_bindings WHERE config_key=?", (config_key,)).fetchone()
-        return self.get_asset(row["asset_ref"], include_superseded=False) if row else None
+        return (
+            self.get_asset(row["asset_ref"], include_superseded=False, visibility=visibility) if row else None
+        )
 
     def freeze(self, asset_refs: list[str], group_refs: list[str]) -> AssetRepositorySnapshot:
         assets = [self.get_asset(ref) for ref in sorted(set(asset_refs))]
@@ -320,7 +610,13 @@ class SQLiteAssetRepository:
                 )
             )
         snapshot_groups = [
-            AssetRepositorySnapshotGroup(group_ref=group.group_ref, content_sha256=sha256_json(group)) for group in groups if group
+            AssetRepositorySnapshotGroup(
+                group_ref=group.group_ref,
+                content_sha256=self._group_content_sha256(group),
+                status=group.status,
+            )
+            for group in groups
+            if group
         ]
         digest = self._snapshot_digest(snapshot_assets, snapshot_groups)
         return AssetRepositorySnapshot(
@@ -350,7 +646,6 @@ class SQLiteAssetRepository:
             if (
                 asset.object_key != summary.object_key
                 or asset.content_sha256 != summary.content_sha256
-                or asset.status != summary.status
                 or lineage_hash != summary.lineage_sha256
             ):
                 raise AssetConflictError(f"snapshot asset drift: {summary.asset_ref}")
@@ -359,7 +654,7 @@ class SQLiteAssetRepository:
             group = self.get_group(summary.group_ref, include_superseded=True)
             if group is None:
                 raise AssetNotFoundError(summary.group_ref)
-            if sha256_json(group) != summary.content_sha256:
+            if self._group_content_sha256(group) != summary.content_sha256:
                 raise AssetConflictError(f"snapshot group drift: {summary.group_ref}")
 
     def restore_snapshot(self, snapshot: AssetRepositorySnapshot) -> tuple[list[AssetRecord], list[AssetGroup]]:
@@ -369,12 +664,39 @@ class SQLiteAssetRepository:
         for summary in snapshot.assets:
             asset = self.get_asset(summary.asset_ref, include_superseded=True)
             assert asset is not None
-            assets.append(asset)
+            assets.append(
+                asset.model_copy(
+                    update={
+                        "status": summary.status,
+                        "superseded_by": None if summary.status == AssetStatus.ACTIVE else asset.superseded_by,
+                    }
+                )
+            )
         for summary in snapshot.groups:
             group = self.get_group(summary.group_ref, include_superseded=True)
             assert group is not None
-            groups.append(group)
+            groups.append(
+                group.model_copy(
+                    update={
+                        "status": summary.status,
+                        "superseded_by": None if summary.status == AssetStatus.ACTIVE else group.superseded_by,
+                    }
+                )
+            )
         return assets, groups
+
+    @staticmethod
+    def _group_content_sha256(group: AssetGroup) -> str:
+        """Hash immutable group identity and membership, not mutable lifecycle state."""
+        return sha256_json(
+            {
+                "group_ref": group.group_ref,
+                "group_type": group.group_type,
+                "pattern_id": group.pattern_id,
+                "category_id": group.category_id,
+                "members": [member.model_dump(mode="json") for member in group.members],
+            }
+        )
 
     def _snapshot_digest(
         self,
@@ -394,7 +716,12 @@ class SQLiteAssetRepository:
         self.connection.execute("UPDATE id_sequences SET next_value=? WHERE entity_type=?", (value + 1, entity_type))
         return f"{'asset://A' if entity_type == 'asset' else 'group://G'}{value:04d}"
 
-    def _asset_from_row(self, row: sqlite3.Row) -> AssetRecord:
+    def _asset_from_row(
+        self,
+        row: sqlite3.Row,
+        *,
+        visibility: ResolutionVisibility | None = None,
+    ) -> AssetRecord:
         lineage_row = self.connection.execute("SELECT * FROM asset_lineage WHERE asset_ref=?", (row["asset_ref"],)).fetchone()
         lineage = None
         if lineage_row:
@@ -416,6 +743,13 @@ class SQLiteAssetRepository:
                 derivation_signature=lineage_row["derivation_signature"],
                 created_at=datetime.fromisoformat(lineage_row["created_at"]),
             )
+        status = AssetStatus(row["status"])
+        superseded_by = row["superseded_by"]
+        if visibility is not None and self._is_active_in_visibility(
+            row, row["asset_ref"], visibility, visibility.extra_asset_refs
+        ):
+            status = AssetStatus.ACTIVE
+            superseded_by = None
         return AssetRecord(
             asset_ref=row["asset_ref"],
             filename=row["filename"],
@@ -437,13 +771,18 @@ class SQLiteAssetRepository:
             origin_type=row["origin_type"],
             evidence_class=EvidenceClass(row["evidence_class"]),
             claims=json.loads(row["claims_json"]),
-            status=AssetStatus(row["status"]),
-            superseded_by=row["superseded_by"],
+            status=status,
+            superseded_by=superseded_by,
             lineage=lineage,
             created_at=datetime.fromisoformat(row["created_at"]),
         )
 
-    def _group_from_row(self, row: sqlite3.Row) -> AssetGroup:
+    def _group_from_row(
+        self,
+        row: sqlite3.Row,
+        *,
+        visibility: ResolutionVisibility | None = None,
+    ) -> AssetGroup:
         members = [
             AssetGroupMember(
                 member_key=item["member_key"], asset_role=item["asset_role"], asset_ref=item["asset_ref"], order=item["member_order"]
@@ -452,13 +791,20 @@ class SQLiteAssetRepository:
                 "SELECT * FROM asset_group_members WHERE group_ref=? ORDER BY member_order", (row["group_ref"],)
             )
         ]
+        status = AssetStatus(row["status"])
+        superseded_by = row["superseded_by"]
+        if visibility is not None and self._is_active_in_visibility(
+            row, row["group_ref"], visibility, visibility.extra_group_refs
+        ):
+            status = AssetStatus.ACTIVE
+            superseded_by = None
         return AssetGroup(
             group_ref=row["group_ref"],
             group_type=row["group_type"],
             pattern_id=row["pattern_id"],
             category_id=row["category_id"],
             members=members,
-            status=AssetStatus(row["status"]),
-            superseded_by=row["superseded_by"],
+            status=status,
+            superseded_by=superseded_by,
             created_at=datetime.fromisoformat(row["created_at"]),
         )

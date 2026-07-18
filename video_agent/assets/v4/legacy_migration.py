@@ -695,7 +695,15 @@ def _placeholder_lineage(
 def _role(item: dict[str, Any]) -> str | None:
     if item.get("role") == "brand_ip":
         return None
-    if item.get("derive_kind") in {"edited_result", "result_to_edit_state"} or item.get("editor_flow_role") == "edited_result":
+    meta = item.get("metadata") if isinstance(item.get("metadata"), dict) else {}
+    derive_kind = item.get("derive_kind") or meta.get("derive_kind")
+    editor_flow_role = item.get("editor_flow_role") or meta.get("editor_flow_role")
+    workflow_step = item.get("workflow_step") or meta.get("workflow_step")
+    if (
+        derive_kind in {"edited_result", "result_to_edit_state"}
+        or editor_flow_role == "edited_result"
+        or workflow_step == "edited_result"
+    ):
         return "edited_result"
     role = ROLE_MAP.get(item.get("role"))
     if role is None:
@@ -760,12 +768,22 @@ def _provenance(
     content_sha256: str,
 ) -> tuple[SourceKind, EvidenceClass, ParentHint | None, AssetLineage | None]:
     provenance = item.get("provenance") or {}
+    item_meta = item.get("metadata") if isinstance(item.get("metadata"), dict) else {}
     origin = str(provenance.get("origin") or meta.get("origin") or "")
     parents = [str(value) for value in (provenance.get("parent_asset_ids") or meta.get("parent_asset_ids") or []) if value]
     parent_hashes = [str(value) for value in (meta.get("parent_sha256s") or []) if value]
     if meta.get("source_sha256"):
         parent_hashes.append(str(meta["source_sha256"]))
-    derive_kind = item.get("derive_kind") or meta.get("derive_kind")
+    source_artwork = (
+        item_meta.get("source_artwork_sha256")
+        or item.get("source_artwork_sha256")
+        or meta.get("source_artwork_sha256")
+    )
+    if source_artwork:
+        parent_hashes.append(str(source_artwork))
+    derive_kind = item.get("derive_kind") or meta.get("derive_kind") or item_meta.get("derive_kind")
+    if not derive_kind and (item.get("editor_flow_role") or item_meta.get("editor_flow_role")) == "edited_result":
+        derive_kind = "edited_result"
     explicit = item.get("evidence_class")
 
     if meta.get("source_sha256") and meta.get("derive_kind"):

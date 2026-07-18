@@ -47,12 +47,7 @@ class ConfiguredAssetSource(V4Contract):
 
 
 SlotSource = Annotated[
-    AssetQuerySource
-    | AssetGroupQuerySource
-    | GroupMemberSource
-    | SceneInputSource
-    | RelationFromInputSource
-    | ConfiguredAssetSource,
+    AssetQuerySource | AssetGroupQuerySource | GroupMemberSource | SceneInputSource | RelationFromInputSource | ConfiguredAssetSource,
     Field(discriminator="kind"),
 ]
 

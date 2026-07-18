@@ -23,7 +23,7 @@ from video_agent.assets.v4 import (
     import_manifest,
     migrate_legacy,
 )
-from video_agent.contracts.v4 import AssetGroupMember, AssetLineage, EvidenceClass, SourceKind
+from video_agent.contracts.v4 import AssetGroupMember, AssetLineage, AssetStatus, EvidenceClass, SourceKind
 from video_agent.io import sha256_file
 from video_agent.registries import CapabilityRegistryHub
 from video_agent.cli import _exception_result
@@ -90,7 +90,7 @@ def test_schema_init_is_idempotent(tmp_path: Path) -> None:
     first = SQLiteAssetRepository(tmp_path / "repo.sqlite3", store, hub)
     first.close()
     second = SQLiteAssetRepository(tmp_path / "repo.sqlite3", store, hub)
-    assert second.connection.execute("SELECT value FROM repository_meta WHERE key='schema_version'").fetchone()["value"] == "1"
+    assert second.connection.execute("SELECT value FROM repository_meta WHERE key='schema_version'").fetchone()["value"] == "3"
     second.close()
 
 
@@ -166,6 +166,56 @@ def test_register_query_supersede_signature_and_freeze(repo: SQLiteAssetReposito
     path.write_bytes(b"not-an-image-anymore")
     with pytest.raises(Exception):
         repo.validate_snapshot(first)
+
+
+def test_resolution_session_keeps_pre_supersede_asset_and_group_view(
+    repo: SQLiteAssetRepository,
+    tmp_path: Path,
+) -> None:
+    original = repo.register_asset(_draft(repo, _image(tmp_path / "original.png"), "results/original.png"))
+    reference = repo.register_asset(
+        _draft(repo, _image(tmp_path / "reference-session.png", "green"), "results/reference-session.png", "reference_image")
+    )
+    plan = repo.register_asset(
+        _draft(repo, _image(tmp_path / "plan-session.png", "yellow"), "results/plan-session.png", "flat_plan")
+    )
+    group = repo.register_group(
+        AssetGroupDraft(
+            "causal",
+            "reference_result_plan",
+            "文生图/文化墙",
+            [
+                AssetGroupMember(member_key="reference_image", asset_role="reference_image", asset_ref=reference.asset_ref, order=1),
+                AssetGroupMember(member_key="result_image", asset_role="result_image", asset_ref=original.asset_ref, order=2),
+                AssetGroupMember(member_key="flat_plan", asset_role="flat_plan", asset_ref=plan.asset_ref, order=3),
+            ],
+        )
+    )
+    session = repo.open_resolution_session()
+
+    replacement = repo.supersede_asset(
+        original.asset_ref,
+        _draft(repo, _image(tmp_path / "replacement-session.png", "blue"), "results/replacement-session.png"),
+    )
+    repo.supersede_group(
+        group.group_ref,
+        AssetGroupDraft(
+            "causal",
+            "reference_result_plan",
+            "文生图/文化墙",
+            [
+                AssetGroupMember(member_key="reference_image", asset_role="reference_image", asset_ref=reference.asset_ref, order=1),
+                AssetGroupMember(member_key="result_image", asset_role="result_image", asset_ref=replacement.asset_ref, order=2),
+                AssetGroupMember(member_key="flat_plan", asset_role="flat_plan", asset_ref=plan.asset_ref, order=3),
+            ],
+        ),
+    )
+
+    assert original.asset_ref in {item.asset_ref for item in session.query_assets(AssetQuery())}
+    assert replacement.asset_ref not in {item.asset_ref for item in session.query_assets(AssetQuery())}
+    assert session.get_asset(original.asset_ref, include_superseded=False).status is AssetStatus.ACTIVE
+    assert [item.group_ref for item in session.query_groups(GroupQuery())] == [group.group_ref]
+    assert session.get_group(group.group_ref, include_superseded=False).status is AssetStatus.ACTIVE
 
 
 def test_group_pattern_validation(repo: SQLiteAssetRepository, tmp_path: Path) -> None:

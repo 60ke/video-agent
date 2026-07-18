@@ -45,7 +45,7 @@ class Orientation(str, Enum):
 
 
 class AssetLineage(V4Contract):
-    parent_asset_refs: list[str] = Field(min_length=1)
+    parent_asset_refs: list[str] = Field(default_factory=list)
     derivation_type: str = Field(min_length=1)
     executor_id: str = Field(min_length=1)
     provider: str | None = None
@@ -222,6 +222,7 @@ class AssetRepositorySnapshotAsset(V4Contract):
 class AssetRepositorySnapshotGroup(V4Contract):
     group_ref: str = Field(pattern=_GROUP_REF_PATTERN)
     content_sha256: str = Field(pattern=_SHA256_PATTERN)
+    status: AssetStatus
 
 
 class AssetRepositorySnapshot(V4Contract):

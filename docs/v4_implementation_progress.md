@@ -21,7 +21,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Stage 1: semantic Contract and AI runtime | runtime complete / golden conformance partial | Runtime, structured prompts, trace/replay, repair and routing are implemented. Relation-pattern binding, full registry freeze and Stage 0 Rev3 semantic conformance remain open. |
 | Stage 2: capability and asset domain | complete | Typed dynamic registries, deterministic frozen snapshots, strict AssetRecord/Lineage/Group/Evidence contracts, registry-bound validation and Stage 1 projection are implemented. |
 | Stage 3: repository, SQLite, ObjectStore and migration | complete | Repository, ObjectStore, import, snapshot, audit and deterministic migration are implemented. The repaired authoritative editor workflow and the current full legacy inventory pass the real dry-run without warnings or failures. |
-| Stage 4: dependency, selection and derivation | design draft complete / awaiting review | The formal design covers stable DAG resolution, exact repository selection, group binding, deterministic weighting, gap classification and repository-backed derivation reuse. No Stage 4 code has been implemented. |
+| Stage 4: dependency, selection and derivation | implementation complete | Stable DAG resolution, Run-scoped group binding, exact category/role/evidence filtering, weighted selection, material-gap classification, frozen Registry/Asset snapshots, persistent usage history and repository-backed derivation reuse are implemented. Fake derivation covers deterministic fixtures; real GPT Image execution remains Stage 5. |
 | Stage 5: effect, SFX, voice and derivation registries | pending | Formal design document required before implementation. |
 | Stage 6: semantic timing and compilation | pending | Formal design document required before implementation. |
 | Stage 7: planner cutover and verification | pending | Formal design document required before implementation. |
@@ -92,5 +92,5 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 
 ## Next Continuation Point
 
-Review and freeze `video_agent_v4_stage4_dependency_selection_derivation_design_20260718.md` before handing implementation to Cursor. Stage 4 implementation must preserve explicit cross-scene dependencies, exact category/role filtering, deterministic selection and repository-backed derivation reuse; it must not add timing, motion or SFX responsibilities.
+Design Stage 5 around the frozen Stage 4 `DerivationRequest` contract. The executor must provide versioned prompt/model fingerprints, persist generated assets through Stage 3, and preserve Stage 4's explicit dependencies and repository snapshot semantics; it must not absorb timing, motion or SFX responsibilities.
 - Full legacy suite currently has three unrelated baseline failures in `tests/test_assets.py`; they assert removed review metadata and the deleted brand-IP directory scan. These are tracked for the Stage 2 cutover rather than weakening the new Contract.

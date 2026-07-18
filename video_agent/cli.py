@@ -89,6 +89,24 @@ def command_v4_stage1(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def command_v4_stage4(args: argparse.Namespace) -> dict[str, Any]:
+    case_dir = Path(args.case).resolve()
+    context = RunContext.open(case_dir, args.resume) if args.resume else RunContext.create(case_dir)
+    result = V4Orchestrator(context).run_stage4(
+        run_seed=args.seed,
+        allow_fake_derivation=args.allow_fake_derivation,
+        db=Path(args.db).resolve() if args.db else None,
+        object_root=Path(args.object_root).resolve() if args.object_root else None,
+    )
+    return {
+        "ok": True,
+        "run_id": context.run_id,
+        "run_dir": context.run_dir.as_posix(),
+        "resolved_asset_plan": result.resolved_asset_plan.as_posix(),
+        "manifest": result.manifest.as_posix(),
+    }
+
+
 def command_generate_video(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(__file__).resolve().parents[1]
     cases_root = Path(args.cases).resolve()
@@ -402,6 +420,16 @@ def build_parser() -> argparse.ArgumentParser:
     v4_stage1.add_argument("--case", required=True)
     v4_stage1.add_argument("--resume")
     v4_stage1.set_defaults(handler=command_v4_stage1)
+
+    v4_stage4 = sub.add_parser("v4-stage4", help="Resolve Stage4 assets into ResolvedAssetPlan")
+    v4_stage4.add_argument("--json", dest="sub_json", action="store_true")
+    v4_stage4.add_argument("--case", required=True)
+    v4_stage4.add_argument("--resume")
+    v4_stage4.add_argument("--seed", default="default")
+    v4_stage4.add_argument("--allow-fake-derivation", action="store_true")
+    v4_stage4.add_argument("--db")
+    v4_stage4.add_argument("--object-root")
+    v4_stage4.set_defaults(handler=command_v4_stage4)
 
     v4_assets = sub.add_parser("v4-assets", help="Manage the V4 asset repository")
     v4_assets.add_argument("--json", dest="sub_json", action="store_true")

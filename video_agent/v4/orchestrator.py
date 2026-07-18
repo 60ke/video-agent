@@ -16,6 +16,7 @@ from video_agent.progress import get_logger
 from video_agent.registries import CapabilityRegistryHub, project_registry_hub
 from video_agent.runtime import RunContext
 from video_agent.semantic import classify_video_scope, plan_scene_semantics
+from video_agent.v4.stage4 import V4Stage4Result, V4Stage4Runner
 
 
 logger = get_logger()
@@ -50,13 +51,28 @@ async def run_fixed_voice_frontend(
 
 
 class V4Orchestrator:
-    """V4 semantic frontend while later V4 stages are still being implemented."""
+    """V4 orchestrator for completed stage entrypoints."""
 
     def __init__(self, context: RunContext) -> None:
         self.context = context
 
     def run_stage1(self) -> V4Stage1Result:
         return asyncio.run(self._run_stage1())
+
+    def run_stage4(
+        self,
+        *,
+        run_seed: str = "default",
+        allow_fake_derivation: bool = False,
+        db: Path | None = None,
+        object_root: Path | None = None,
+    ) -> V4Stage4Result:
+        return V4Stage4Runner(self.context).run(
+            run_seed=run_seed,
+            allow_fake_derivation=allow_fake_derivation,
+            db=db,
+            object_root=object_root,
+        )
 
     async def _run_stage1(self) -> V4Stage1Result:
         started = time.perf_counter()

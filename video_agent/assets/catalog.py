@@ -412,26 +412,43 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
                 warnings.append(f"workflow scene lacks semantic path: {path.name}")
                 continue
             role = str(item.get("role") or "workflow_scene")
+            editor_flow_role = item.get("editor_flow_role")
+            source_artwork_sha256 = item.get("source_artwork_sha256")
+            parent_ids: list[str] = []
+            if source_artwork_sha256:
+                parent_ids.append(_asset_id("result", str(source_artwork_sha256)))
+            if editor_flow_role == "edited_result" or item.get("derive_kind") in {"edited_result", "result_to_edit_state"}:
+                role = "result_image"
+                evidence = EvidenceClass.SEMANTIC
+                origin = "user_provided_edited_result" if item.get("source") == "user_provided_edited_result" else "gpt_image_editor_flow"
+            elif source_artwork_sha256 and editor_flow_role in {"page", "modal"}:
+                evidence = EvidenceClass.SEMANTIC
+                origin = "gpt_image_editor_flow" if item.get("editor_flow_sequence_id") else "curated_workflow_scene"
+            else:
+                evidence = EvidenceClass.SOURCE
+                origin = "gpt_image_editor_flow" if item.get("editor_flow_sequence_id") else "curated_workflow_scene"
             assets.append(
                 Asset(
                     asset_id=_asset_id("workflow_scene", digest), path=path.relative_to(assets_root.parent).as_posix(),
                     sha256=digest, filename=path.name, width=width, height=height, semantic_path=semantic_path,
-                    role=role, production_eligible=True, evidence_class=EvidenceClass.SOURCE,
-                    claims=[str(value) for value in item.get("claims", []) if str(value)],
+                    role=role, production_eligible=True, evidence_class=evidence,
+                    claims=[] if evidence is EvidenceClass.SEMANTIC else [str(value) for value in item.get("claims", []) if str(value)],
                     tags=[str(value) for value in item.get("tags", []) if str(value)],
                     quality=AssetQuality(readable=True, checks=checks),
                     provenance=Provenance(
-                        origin="gpt_image_editor_flow" if item.get("editor_flow_sequence_id") else "curated_workflow_scene",
+                        origin=origin,
+                        parent_asset_ids=parent_ids,
                         provider=item.get("provider"), model=item.get("model"), prompt_sha256=item.get("prompt_sha256"),
                         response_id=item.get("response_id"),
                     ),
                     metadata={
                         "workflow_step": item.get("workflow_step"), "source": item.get("source"),
                         "editor_flow_sequence_id": item.get("editor_flow_sequence_id"),
-                        "editor_flow_role": item.get("editor_flow_role"),
+                        "editor_flow_role": editor_flow_role,
+                        "derive_kind": item.get("derive_kind") or ("edited_result" if editor_flow_role == "edited_result" else None),
                         "editor_flow_asset_ids": sequence_asset_ids.get(str(item.get("editor_flow_sequence_id")), {}),
                         "source_artwork_path": item.get("source_artwork_path"),
-                        "source_artwork_sha256": item.get("source_artwork_sha256"),
+                        "source_artwork_sha256": source_artwork_sha256,
                         "focus_target": item.get("focus_target"), "focus_rect": item.get("focus_rect"),
                     },
                 )

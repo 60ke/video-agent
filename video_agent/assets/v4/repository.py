@@ -43,7 +43,18 @@ class GroupQuery:
     pattern_ids: tuple[str, ...] = ()
     category_ids: tuple[str, ...] = ()
     member_roles: tuple[str, ...] = ()
+    containing_asset_refs: tuple[str, ...] = ()
+    required_member_keys: tuple[str, ...] = ()
     active_only: bool = True
+
+
+@dataclass(frozen=True)
+class ResolutionVisibility:
+    """Fixed candidate view: base revision plus the current Run overlay."""
+
+    as_of_revision: int
+    extra_asset_refs: tuple[str, ...] = ()
+    extra_group_refs: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -79,21 +90,119 @@ class AssetGroupDraft:
 
 
 class AssetRepository(Protocol):
-    def get_asset(self, asset_ref: str, *, include_superseded: bool = True) -> AssetRecord | None: ...
-    def query_assets(self, query: AssetQuery) -> list[AssetRecord]: ...
+    def current_revision(self) -> int: ...
+    def repository_fingerprint(self, *, as_of_revision: int | None = None) -> str: ...
+    def open_resolution_session(self) -> AssetResolutionSession: ...
+    def get_asset(
+        self,
+        asset_ref: str,
+        *,
+        include_superseded: bool = True,
+        visibility: ResolutionVisibility | None = None,
+    ) -> AssetRecord | None: ...
+    def query_assets(
+        self,
+        query: AssetQuery,
+        *,
+        visibility: ResolutionVisibility | None = None,
+    ) -> list[AssetRecord]: ...
     def register_asset(self, draft: AssetDraft) -> AssetRecord: ...
     def supersede_asset(self, old_ref: str, replacement: AssetDraft) -> AssetRecord: ...
-    def find_by_derivation_signature(self, signature: str) -> AssetRecord | None: ...
-    def get_group(self, group_ref: str, *, include_superseded: bool = True) -> AssetGroup | None: ...
-    def query_groups(self, query: GroupQuery) -> list[AssetGroup]: ...
+    def find_by_derivation_signature(
+        self,
+        signature: str,
+        *,
+        visibility: ResolutionVisibility | None = None,
+    ) -> AssetRecord | None: ...
+    def get_group(
+        self,
+        group_ref: str,
+        *,
+        include_superseded: bool = True,
+        visibility: ResolutionVisibility | None = None,
+    ) -> AssetGroup | None: ...
+    def query_groups(
+        self,
+        query: GroupQuery,
+        *,
+        visibility: ResolutionVisibility | None = None,
+    ) -> list[AssetGroup]: ...
     def register_group(self, draft: AssetGroupDraft) -> AssetGroup: ...
     def supersede_group(self, old_ref: str, replacement: AssetGroupDraft) -> AssetGroup: ...
     def bind_configured_asset(self, config_key: str, asset_ref: str) -> None: ...
     def validate_configured_asset_binding(self, config_key: str, asset_ref: str) -> AssetRecord: ...
-    def configured_asset(self, config_key: str) -> AssetRecord | None: ...
+    def configured_asset(
+        self,
+        config_key: str,
+        *,
+        visibility: ResolutionVisibility | None = None,
+    ) -> AssetRecord | None: ...
     def freeze(self, asset_refs: list[str], group_refs: list[str]) -> AssetRepositorySnapshot: ...
     def validate_snapshot(self, snapshot: AssetRepositorySnapshot) -> None: ...
     def restore_snapshot(self, snapshot: AssetRepositorySnapshot) -> tuple[list[AssetRecord], list[AssetGroup]]: ...
+
+
+@dataclass
+class AssetResolutionSession:
+    """Run-scoped repository view: base revision UNION this Run's registrations."""
+
+    repository: AssetRepository
+    base_revision: int
+    pre_run_repository_fingerprint: str
+    run_created_asset_refs: set[str] = field(default_factory=set)
+    run_created_group_refs: set[str] = field(default_factory=set)
+
+    def visibility(self) -> ResolutionVisibility:
+        return ResolutionVisibility(
+            as_of_revision=self.base_revision,
+            extra_asset_refs=tuple(sorted(self.run_created_asset_refs)),
+            extra_group_refs=tuple(sorted(self.run_created_group_refs)),
+        )
+
+    def get_asset(self, asset_ref: str, *, include_superseded: bool = True) -> AssetRecord | None:
+        return self.repository.get_asset(
+            asset_ref, include_superseded=include_superseded, visibility=self.visibility()
+        )
+
+    def query_assets(self, query: AssetQuery) -> list[AssetRecord]:
+        return self.repository.query_assets(query, visibility=self.visibility())
+
+    def find_by_derivation_signature(self, signature: str) -> AssetRecord | None:
+        return self.repository.find_by_derivation_signature(signature, visibility=self.visibility())
+
+    def get_group(self, group_ref: str, *, include_superseded: bool = True) -> AssetGroup | None:
+        return self.repository.get_group(
+            group_ref, include_superseded=include_superseded, visibility=self.visibility()
+        )
+
+    def query_groups(self, query: GroupQuery) -> list[AssetGroup]:
+        return self.repository.query_groups(query, visibility=self.visibility())
+
+    def configured_asset(self, config_key: str) -> AssetRecord | None:
+        return self.repository.configured_asset(config_key, visibility=self.visibility())
+
+    def register_asset(self, draft: AssetDraft) -> AssetRecord:
+        asset = self.repository.register_asset(draft)
+        self.run_created_asset_refs.add(asset.asset_ref)
+        return asset
+
+    def register_group(self, draft: AssetGroupDraft) -> AssetGroup:
+        group = self.repository.register_group(draft)
+        self.run_created_group_refs.add(group.group_ref)
+        return group
+
+    def supersede_asset(self, old_ref: str, replacement: AssetDraft) -> AssetRecord:
+        asset = self.repository.supersede_asset(old_ref, replacement)
+        self.run_created_asset_refs.add(asset.asset_ref)
+        return asset
+
+    def supersede_group(self, old_ref: str, replacement: AssetGroupDraft) -> AssetGroup:
+        group = self.repository.supersede_group(old_ref, replacement)
+        self.run_created_group_refs.add(group.group_ref)
+        return group
+
+    def freeze_used(self, asset_refs: list[str], group_refs: list[str]) -> AssetRepositorySnapshot:
+        return self.repository.freeze(asset_refs, group_refs)
 
 
 def asset_draft_from_record(asset: AssetRecord) -> AssetDraft:
