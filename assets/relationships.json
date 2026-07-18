@@ -8,19 +8,9 @@
         "文化墙"
       ],
       "result_asset_id": "asset_result_8752a5f9188d",
-      "editor_composite_asset_id": "asset_derived_86ada9b68a27",
-      "edited_result_asset_id": "asset_derived_33f397ae3988",
-      "reference_asset_id": "asset_derived_d1982f7aacae",
-      "flat_plan_asset_id": "asset_derived_bec541999e8e"
-    },
-    {
-      "relationship_id": "rel_d36f2da9661d",
-      "feature_path": [
-        "文生图",
-        "文化墙"
-      ],
-      "result_asset_id": "asset_workflow_scene_a81af7c714a4",
-      "editor_composite_asset_id": "asset_workflow_scene_a81af7c714a4"
+      "editor_composite_asset_id": "asset_workflow_scene_eef134264b4b",
+      "editor_modal_asset_id": "asset_workflow_scene_8809433ff642",
+      "edited_result_asset_id": "asset_workflow_scene_67f7363c4abc"
     },
     {
       "relationship_id": "rel_272d62a4cbf3",
@@ -28,19 +18,7 @@
         "文生图",
         "文化墙"
       ],
-      "result_asset_id": "asset_result_87e354216ebb",
-      "reference_asset_id": "asset_derived_46408851b80d",
-      "flat_plan_asset_id": "asset_derived_bdd3c654ba9e"
-    },
-    {
-      "relationship_id": "rel_813ce5db3193",
-      "feature_path": [
-        "文生图",
-        "文化墙"
-      ],
-      "result_asset_id": "asset_workflow_scene_d9e3bb57462b",
-      "editor_composite_asset_id": "asset_workflow_scene_d9e3bb57462b",
-      "editor_modal_asset_id": "asset_workflow_scene_ea0ba761f909"
+      "result_asset_id": "asset_result_87e354216ebb"
     },
     {
       "relationship_id": "rel_e9c55a1ab73f",
@@ -48,8 +26,23 @@
         "文生图",
         "LOGO"
       ],
-      "result_asset_id": "asset_result_680f0cc6f312",
-      "reference_asset_id": "asset_derived_432f8705c403"
+      "result_asset_id": "asset_result_680f0cc6f312"
+    },
+    {
+      "relationship_id": "rel_081de9d2ccc2",
+      "feature_path": [
+        "文生图",
+        "电商"
+      ],
+      "result_asset_id": "asset_result_081de9d2ccc2"
+    },
+    {
+      "relationship_id": "rel_bfe3e177eb0f",
+      "feature_path": [
+        "文生图",
+        "活动物料"
+      ],
+      "result_asset_id": "asset_result_bfe3e177eb0f"
     }
   ]
 }

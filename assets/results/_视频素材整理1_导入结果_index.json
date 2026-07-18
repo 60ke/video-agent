@@ -69,20 +69,20 @@
       "height": 1152
     },
     {
-      "asset_filename": "柯幻熊猫_文生图_文化墙_活动物料_结果图_01.png",
+      "asset_filename": "柯幻熊猫_文生图_活动物料_综合套装_结果图_01.png",
       "feature_path": [
         "文生图",
-        "文化墙"
+        "活动物料"
       ],
-      "feature_id": "文化墙",
+      "feature_id": "活动物料",
       "variant_kind": "external_video_material",
-      "industry_label": "活动物料",
+      "industry_label": "综合套装",
       "content_type": "curated_external_result",
       "sequence": "01",
       "supported_claims": [
         "curated_result_image",
-        "文化墙结果展示",
-        "活动物料案例"
+        "活动物料结果展示",
+        "综合套装案例"
       ],
       "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/活动物料.png",
       "source_sha256": "83edbd4346c9fffad4dc20905cf0e7741d795f63ed3e17e10277a55a8f7fc593",
@@ -90,20 +90,20 @@
       "height": 1536
     },
     {
-      "asset_filename": "柯幻熊猫_文生图_文化墙_电商_结果图_01.png",
+      "asset_filename": "柯幻熊猫_文生图_电商_详情长图_结果图_02.png",
       "feature_path": [
         "文生图",
-        "文化墙"
+        "电商"
       ],
-      "feature_id": "文化墙",
+      "feature_id": "电商",
       "variant_kind": "external_video_material",
-      "industry_label": "电商",
+      "industry_label": "详情长图",
       "content_type": "curated_external_result",
-      "sequence": "01",
+      "sequence": "02",
       "supported_claims": [
         "curated_result_image",
-        "文化墙结果展示",
-        "电商案例"
+        "电商结果展示",
+        "详情长图案例"
       ],
       "source_staging": "C:/Users/CNGG/Documents/视频素材整理1/文化墙/电商.png",
       "source_sha256": "494559fa4f721b0c43d6fe315654d017f9130c22385868f220a55f47496d176a",

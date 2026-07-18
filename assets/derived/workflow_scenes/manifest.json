@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "workflow": "fixed_editor_flow_materials",
-  "generated_at": "2026-07-15T12:35:34.071463+00:00",
+  "generated_at": "2026-07-18T06:15:00.000000+00:00",
   "assets": [
     {
       "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/workflow_scenes/文生图/文化墙/柯幻熊猫_文生图_文化墙_编辑页面关键帧.png",
@@ -52,16 +52,7 @@
       "editor_flow_sequence_id": "editor_flow_55a639a45cc372",
       "source_artwork_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_社区服务_结果图_01.png",
       "source_artwork_sha256": "8752a5f9188d3c4eedd7669bc4b0859ce620245c8c28af9bacc9f89e679a2d96",
-      "editor_template_sha256": "1984d7bda43bfd853d175441236af75c50becb826d2112e6f5b0f98b59e67a67",
-      "modal_template_sha256": "c4a8e3ebcf7ecdec4840a1af887ec2fc1551d78cb2e89c2026f83737f432c913",
-      "prompt_sha256": "a201ab572a5476289523bd18d15913a93c8cbfbf0ec1c474628adcba8e80969c",
       "focus_target": "局部编辑",
-      "focus_rect": {
-        "x": 0.8,
-        "y": 0.7,
-        "w": 0.13,
-        "h": 0.17
-      },
       "claims": [
         "image_editing_available",
         "local_editing_available"
@@ -69,18 +60,16 @@
       "tags": [
         "编辑页面",
         "局部编辑",
-        "放大镜聚焦",
-        "文化墙"
+        "文化墙",
+        "真实截图"
       ],
-      "quality_status": "machine_checked",
-      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/workflow_scenes/文生图/文化墙/editor_flow_55a639a45cc372/柯幻熊猫_文生图_文化墙_完整编辑页.png",
-      "sha256": "d9e3bb57462bae255b2ecf158ac0d2a557b9c0bb17a2f584ea61a1678db87aed",
+      "quality_status": "human_approved",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/workflow_scenes/文生图/文化墙/editor_flow_55a639a45cc372/柯幻熊猫_文生图_文化墙_真实编辑页.png",
+      "sha256": "eef134264b4bf978ea5be021704cd62c9ca301e5555fb186936aa4496747cc4b",
       "role": "editor_workspace",
       "workflow_step": "editor_page",
       "editor_flow_role": "page",
-      "provider": "apiyi",
-      "model": "gpt-image-2",
-      "response_id": null
+      "source": "user_provided_editor_screenshot"
     },
     {
       "semantic_path": [
@@ -90,35 +79,47 @@
       "editor_flow_sequence_id": "editor_flow_55a639a45cc372",
       "source_artwork_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_社区服务_结果图_01.png",
       "source_artwork_sha256": "8752a5f9188d3c4eedd7669bc4b0859ce620245c8c28af9bacc9f89e679a2d96",
-      "editor_template_sha256": "1984d7bda43bfd853d175441236af75c50becb826d2112e6f5b0f98b59e67a67",
-      "modal_template_sha256": "c4a8e3ebcf7ecdec4840a1af887ec2fc1551d78cb2e89c2026f83737f432c913",
-      "prompt_sha256": "a201ab572a5476289523bd18d15913a93c8cbfbf0ec1c474628adcba8e80969c",
       "focus_target": "局部编辑",
-      "focus_rect": {
-        "x": 0.8,
-        "y": 0.7,
-        "w": 0.13,
-        "h": 0.17
-      },
       "claims": [
         "image_editing_available",
         "local_editing_available"
       ],
       "tags": [
-        "编辑页面",
         "局部编辑",
-        "放大镜聚焦",
-        "文化墙"
+        "弹窗",
+        "文化墙",
+        "真实截图"
       ],
-      "quality_status": "machine_checked",
-      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/workflow_scenes/文生图/文化墙/editor_flow_55a639a45cc372/柯幻熊猫_文生图_文化墙_局部编辑弹窗.png",
-      "sha256": "ea0ba761f909b0b874b096b9ef04f16df0f3ad5884a6a4ee93a55192bb46dae3",
+      "quality_status": "human_approved",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/workflow_scenes/文生图/文化墙/editor_flow_55a639a45cc372/柯幻熊猫_文生图_文化墙_真实局部编辑弹窗.png",
+      "sha256": "8809433ff642c8615e99d562cd9b2e8fd4ee623f551c2e23440f1107ad321989",
       "role": "editor_local_modal",
       "workflow_step": "local_edit_modal",
       "editor_flow_role": "modal",
-      "provider": "apiyi",
-      "model": "gpt-image-2",
-      "response_id": null
+      "source": "user_provided_editor_screenshot"
+    },
+    {
+      "semantic_path": [
+        "文生图",
+        "文化墙"
+      ],
+      "editor_flow_sequence_id": "editor_flow_55a639a45cc372",
+      "source_artwork_path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/results/柯幻熊猫_文生图_文化墙_社区服务_结果图_01.png",
+      "source_artwork_sha256": "8752a5f9188d3c4eedd7669bc4b0859ce620245c8c28af9bacc9f89e679a2d96",
+      "derive_kind": "edited_result",
+      "claims": [],
+      "tags": [
+        "编辑后结果",
+        "文化墙",
+        "真实素材"
+      ],
+      "quality_status": "human_approved",
+      "path": "C:/Users/CNGG/Documents/video_generate/video-agent/assets/derived/workflow_scenes/文生图/文化墙/editor_flow_55a639a45cc372/柯幻熊猫_文生图_文化墙_编辑后结果.png",
+      "sha256": "67f7363c4abc18da18fba8cfa85f310ccf898a6b25d18068c7c18f3de255e8ae",
+      "role": "result_image",
+      "workflow_step": "edited_result",
+      "editor_flow_role": "edited_result",
+      "source": "user_provided_edited_result"
     }
   ]
 }
