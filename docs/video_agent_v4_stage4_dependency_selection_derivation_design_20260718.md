@@ -242,11 +242,14 @@ missing_derivation_capability
 
 ### 5.4 DerivationRequest
 
+Stage 5 handoff amendment（2026-07-18）：Stage 4 只产生派生需求形状，最终 capability binding、Prompt/model/size 指纹和 `derivation_signature` 由 Stage 5 `PreparedDerivation` 产生。以下为目标 Contract；现有 Stage 4 临时字段在 Stage 5 第一实施单元直接删除，不保留兼容别名。
+
 ```json
 {
   "request_id": "derivation://R0001",
   "scene_id": "s006",
   "slot_id": "editor_page",
+  "derivation_type": "result_to_editor_process",
   "category_id": "text_to_image.culture_wall",
   "target_asset_role": "editor_page",
   "required_group": {
@@ -263,10 +266,7 @@ missing_derivation_capability
     "next_scene_summary": "展示编辑后的结果"
   },
   "target_orientation": "landscape",
-  "evidence_ceiling": "E2_semantic_derivative",
-  "capability_id": "resolved_by_stage5_registry",
-  "capability_version": "resolved_by_stage5_registry",
-  "derivation_signature": "..."
+  "evidence_ceiling": "E2_semantic_derivative"
 }
 ```
 
@@ -561,21 +561,21 @@ fail_missing_source | fail_missing_config | derive | resolve_no_asset
 
 ### 12.1 能力边界
 
-Stage 4 定义以下 Protocol：
+Stage 4 定义以下 Protocol。Stage 5 handoff amendment 后不再暴露“先 resolve binding、后由 Stage 4 算签名”的接口：
 
 ```text
-DerivationCapabilityResolver
-  resolve(request_shape, frozen_registry) -> capability binding
+DerivationPreparationService
+  prepare(request_shape, frozen_registry, repository_session) -> PreparedDerivation
 
 DerivationExecutor
-  execute(request, capability_binding) -> DerivationResultDraft
+  execute(prepared_derivation, repository_session) -> DerivationResultDraft
 ```
 
-Stage 5 负责具体 Derivation Registry、Prompt 模板、模型、供应商、参数和 executor 实现。Stage 4 使用冻结的 fake capability binding（固定 ID、版本、输入/输出角色和 fixture 文件）验证 request、signature、注册和重查闭环。生产配置必须显式声明 `requires_stage5_registry=true`；Stage 5 未提供真实 binding 时 fail-loud，不允许拿 fake binding 生成生产素材。
+Stage 5 负责具体 Derivation Registry、Prompt 模板、模型、供应商、参数和 executor 实现。Stage 4 使用冻结的 fake capability binding 验证 request、注册和重查闭环；测试签名同样必须经过 Stage 5-compatible prepare 接口产生。生产配置必须显式声明 `requires_stage5_registry=true`；Stage 5 未提供真实 binding 时 fail-loud，不允许拿 fake binding 生成生产素材。
 
 ### 12.2 Signature 与复用
 
-`derivation_signature` 至少包含：
+最终 `derivation_signature` 由 Stage 5 `PreparedDerivation` 计算，至少包含：
 
 ```text
 父素材 asset_ref + 内容哈希
@@ -589,13 +589,15 @@ Prompt 模板内容哈希
 
 流程：
 
-1. 先调用 `find_by_derivation_signature`；
-2. 命中活动素材且 lineage、角色、分类正确时复用；
-3. 未命中才执行生成；
-4. 使用 Stage 3 ObjectStore 和 Repository 原子注册；
-5. 多资产结果同时注册 AssetGroup；
-6. 重新执行原槽查询；
-7. 只有查询命中后才能继续冻结场景。
+1. Stage 4 把 `DerivationRequest` 交给 Stage 5 prepare；
+2. Stage 5 绑定 capability、Prompt、模型、尺寸并计算最终签名；
+3. Stage 4 调用 `find_by_derivation_signature`；
+4. 命中活动素材且 lineage、角色、分类正确时复用；
+5. 未命中才执行生成；
+6. 使用 Stage 3 ObjectStore 和 Repository 原子注册；
+7. 多资产结果同时注册 AssetGroup；
+8. 重新执行原槽查询；
+9. 只有查询命中后才能继续冻结场景。
 
 禁止把临时 PNG 路径直接写进 `ResolvedAssetPlan`。
 
