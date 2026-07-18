@@ -704,6 +704,7 @@ def _write_legacy_fixture(root: Path, *, incomplete_editor: bool = False) -> dic
                 "output_path": str(paths["entry_out"]),
                 "output_sha256": sha256_file(paths["entry_out"]),
                 "source_sha256": sha256_file(paths["source_shot"]),
+                "parent_sha256s": [sha256_file(paths["source_shot"])],
                 "feature_path": ["文化墙"],
                 "provider": "apiyi",
                 "model": "gpt-image-2",

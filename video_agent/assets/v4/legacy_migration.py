@@ -646,6 +646,7 @@ def _apply_parent_hint(
             if value not in hash_refs:
                 raise ValueError(f"missing parent hash {value} for {plan.draft.object_key}")
             parent_refs.append(hash_refs[value])
+    parent_refs = list(dict.fromkeys(parent_refs))
     lineage = AssetLineage(
         parent_asset_refs=parent_refs,
         derivation_type=plan.draft.lineage.derivation_type,
@@ -731,6 +732,9 @@ def _category(path: list[str], repository: SQLiteAssetRepository, role: str) -> 
         category = repository.registry.resolve_category(candidate)
         if category is not None:
             return category.id.split("/")
+    category = repository.registry.resolve_category(path[-1])
+    if category is not None:
+        return category.id.split("/")
     role_entry = repository.registry.entry("asset_role", role)
     if role_entry and getattr(role_entry, "requires_category", False):
         raise ValueError(f"unknown legacy category: {path}")

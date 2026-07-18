@@ -1,12 +1,12 @@
 {
   "registry_id": "category",
-  "version": "2026.07.18.1",
+  "version": "2026.07.18.2",
   "schema_version": 1,
   "entries": [
     {"id": "网站/主页", "display_name": "网站主页", "description": "柯幻熊猫网站主页", "module": "网站", "category_path": ["主页"], "aliases": ["首页"], "scope_eligible": false},
     {"id": "文生图/文化墙", "display_name": "文化墙", "module": "文生图", "category_path": ["文化墙"], "aliases": []},
     {"id": "文生图/门头招牌", "display_name": "门头招牌", "module": "文生图", "category_path": ["门头招牌"], "aliases": ["门店招牌", "门头"]},
-    {"id": "文生图/景观小品", "display_name": "景观小品", "module": "文生图", "category_path": ["景观小品"], "aliases": []},
+    {"id": "文生图/景观小品", "display_name": "景观小品", "module": "文生图", "category_path": ["景观小品"], "aliases": ["操作景观小品界面"]},
     {"id": "文生图/雕塑小品", "display_name": "雕塑小品", "module": "文生图", "category_path": ["雕塑小品"], "aliases": []},
     {"id": "文生图/美陈", "display_name": "美陈", "module": "文生图", "category_path": ["美陈"], "aliases": ["商业美陈"]},
     {"id": "文生图/活动美陈", "display_name": "活动美陈", "module": "文生图", "category_path": ["活动美陈"], "aliases": []},
@@ -23,6 +23,21 @@
     {"id": "文生图/海报", "display_name": "海报", "module": "文生图", "category_path": ["海报"], "aliases": []},
     {"id": "文生图/活动物料", "display_name": "活动物料", "module": "文生图", "category_path": ["活动物料"], "aliases": []},
     {"id": "文生图/图文广告", "display_name": "图文广告", "module": "文生图", "category_path": ["图文广告"], "aliases": []},
+    {"id": "文生图/图文广告/车贴", "display_name": "车贴", "module": "文生图", "category_path": ["图文广告", "车贴"], "aliases": []},
+    {"id": "文生图/图文广告/贴纸", "display_name": "贴纸", "module": "文生图", "category_path": ["图文广告", "贴纸"], "aliases": []},
+    {"id": "文生图/图文广告/灯箱", "display_name": "灯箱", "module": "文生图", "category_path": ["图文广告", "灯箱"], "aliases": []},
+    {"id": "文生图/图文广告/菜单", "display_name": "菜单", "module": "文生图", "category_path": ["图文广告", "菜单"], "aliases": []},
+    {"id": "文生图/图文广告/展板", "display_name": "展板", "module": "文生图", "category_path": ["图文广告", "展板"], "aliases": []},
+    {"id": "文生图/图文广告/直播背景", "display_name": "直播背景", "module": "文生图", "category_path": ["图文广告", "直播背景"], "aliases": []},
+    {"id": "文生图/图文广告/banner", "display_name": "banner", "module": "文生图", "category_path": ["图文广告", "banner"], "aliases": ["Banner"]},
+    {"id": "文生图/图文广告/朋友圈海报", "display_name": "朋友圈海报", "module": "文生图", "category_path": ["图文广告", "朋友圈海报"], "aliases": []},
+    {"id": "文生图/图文广告/单页", "display_name": "单页", "module": "文生图", "category_path": ["图文广告", "单页"], "aliases": []},
+    {"id": "文生图/图文广告/台历", "display_name": "台历", "module": "文生图", "category_path": ["图文广告", "台历"], "aliases": []},
+    {"id": "文生图/图文广告/名片", "display_name": "名片", "module": "文生图", "category_path": ["图文广告", "名片"], "aliases": []},
+    {"id": "文生图/图文广告/高炮", "display_name": "高炮", "module": "文生图", "category_path": ["图文广告", "高炮"], "aliases": []},
+    {"id": "文生图/图文广告/易拉宝展架", "display_name": "易拉宝/展架", "module": "文生图", "category_path": ["图文广告", "易拉宝展架"], "aliases": ["文生图/图文广告/易拉宝/展架"]},
+    {"id": "文生图/图文广告/电梯广告", "display_name": "电梯广告", "module": "文生图", "category_path": ["图文广告", "电梯广告"], "aliases": []},
+    {"id": "文生图/图文广告/胸卡&工牌", "display_name": "胸卡&工牌", "module": "文生图", "category_path": ["图文广告", "胸卡&工牌"], "aliases": []},
     {"id": "文生图/主题公园", "display_name": "主题公园", "module": "文生图", "category_path": ["主题公园"], "aliases": []}
   ]
 }
