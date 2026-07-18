@@ -19,8 +19,8 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Baseline audit | complete | Current executable pipeline is V3. Stage 1 had design documents only. |
 | Stage 1: semantic Contract and AI runtime | runtime complete / golden conformance partial | Runtime, structured prompts, trace/replay, repair and routing are implemented. Relation-pattern binding, full registry freeze and Stage 0 Rev3 semantic conformance remain open. |
 | Stage 2: capability and asset domain | complete | Typed dynamic registries, deterministic frozen snapshots, strict AssetRecord/Lineage/Group/Evidence contracts, registry-bound validation and Stage 1 projection are implemented. |
-| Stage 3: repository, SQLite, ObjectStore and migration | implementation complete / legacy data repair required | Repository, ObjectStore, import, snapshot, audit and deterministic migration are implemented. The real legacy migration remains fail-loud because authoritative editor relationships are incomplete. |
-| Stage 4: dependency, selection and derivation | pending | Formal design document required before implementation. |
+| Stage 3: repository, SQLite, ObjectStore and migration | complete | Repository, ObjectStore, import, snapshot, audit and deterministic migration are implemented. The repaired authoritative editor workflow and the current full legacy inventory pass the real dry-run without warnings or failures. |
+| Stage 4: dependency, selection and derivation | design in progress | Formal design is the active work item; implementation must wait for design review. |
 | Stage 5: effect, SFX, voice and derivation registries | pending | Formal design document required before implementation. |
 | Stage 6: semantic timing and compilation | pending | Formal design document required before implementation. |
 | Stage 7: planner cutover and verification | pending | Formal design document required before implementation. |
@@ -58,6 +58,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 - `python -m pytest tests/test_v4_stage3_repository.py -q`: PASS (15 tests), including video probing, snapshot restore, import lineage ordering/collision protection, configured-role validation and integrity audit.
 - `python -m pytest tests/test_v4_*.py -q`: PASS (59 tests).
 - `python -m ruff check video_agent/assets/v4 video_agent/cli.py video_agent/registries/hub.py tests/test_v4_stage3_repository.py`: PASS.
+- `python main.py v4-assets --json migrate-legacy --dry-run`: PASS against the current authoritative asset inventory. Input fingerprint `7570211709036e8cc13e6229f3eef1264974c69db60541c2bbef362e898b7870`; editor process group `group://G0001`; warnings and failures are empty.
 
 ## Stage 2 Definition Of Done
 
@@ -86,9 +87,9 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 - [x] Configured bindings enforce enabled keys, active targets and registry-declared target roles.
 - [x] Repository audit checks objects, hashes, registry validity, lineage/group/supersede cycles and configured bindings.
 - [x] Legacy dry-run follows the real transaction path and rolls back all repository writes.
-- [ ] Repair incomplete authoritative editor relationships/workflow data, then pass a real `migrate-legacy --dry-run`.
+- [x] Repaired authoritative editor relationships/workflow data pass a real `migrate-legacy --dry-run` without warnings or failures.
 
 ## Next Continuation Point
 
-Repair the incomplete editor relationships reported by real Stage 3 migration without synthesizing fake `edited_result` assets. After the real dry-run succeeds, freeze the migration report and begin the Stage 4 design document.
+Complete and review the Stage 4 dependency, selection and derivation design. Stage 4 implementation must preserve explicit cross-scene dependencies, exact category/role filtering, deterministic selection and repository-backed derivation reuse; it must not add timing, motion or SFX responsibilities.
 - Full legacy suite currently has three unrelated baseline failures in `tests/test_assets.py`; they assert removed review metadata and the deleted brand-IP directory scan. These are tracked for the Stage 2 cutover rather than weakening the new Contract.
