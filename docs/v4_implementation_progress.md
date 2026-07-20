@@ -12,6 +12,7 @@ Last updated: 2026-07-20
 - Stage 4 design: `video_agent_v4_stage4_dependency_selection_derivation_design_20260718.md`
 - Stage 5 design: `video_agent_v4_stage5_executable_capability_and_derivation_design_20260718.md`
 - Stage 6 design: `video_agent_v4_stage6_anchored_timing_compiler_and_remotion_adapter_design_20260718.md`
+- Stage 7 design: `video_agent_v4_stage7_production_cutover_and_acceptance_design_20260720.md`
 
 Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle exposes a missing Contract capability, the Contract must be revised explicitly; runtime compatibility aliases are forbidden.
 
@@ -25,8 +26,8 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Stage 3: repository, SQLite, ObjectStore and migration | complete | Repository, ObjectStore, import, snapshot (schema v4 with `evidence_class/claims`), audit and migration are implemented. |
 | Stage 4: dependency, selection and derivation | complete | DoD closed: six slot sources, DAG, alias/dedup, gap policy, signature/`group_reuse`, atomic `register_derived_group`, parameter callout fields, E2 website filter, s001–s010 golden. Production wires Stage5 executor when `repo_root` set; Fake is test-only. |
 | Stage 5: effect, SFX, voice and derivation registries | control plane complete / Stage6 timing wired | Registries/Voice/Derivation/Motion-SFX complete. Motion now consumes exact `AnchoredTimingPlan.scene_spans`; proportional fallback removed; Stage5 SFX no longer truncates distinct Anchors via `window_event_budget`. |
-| Stage 6: semantic timing and compilation | Pass B closed / Git checkpoint open | Real MiniMax Pass B closed on run `20260720_110920_904455` (145 tokens, 24.7s, 19 SFX, Remotion+FFmpeg final.mp4). JSON reload uses `load_model(..., strict=False)`. Remaining: Stage6 Git checkpoint. |
-| Stage 7: planner cutover and verification | pending | Formal design document required before implementation. |
+| Stage 6: semantic timing and compilation | complete / frozen | Real MiniMax Pass B closed on run `20260720_110920_904455` (145 tokens, 24.7s, 19 SFX, Remotion+FFmpeg final.mp4). Independent Git checkpoint: `a5130312`. |
+| Stage 7: production cutover and acceptance | design drafted / pending review | Formal design added. Implementation is blocked until the cutover contract is reviewed and frozen. |
 
 ## Working Decisions
 
@@ -86,7 +87,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 - [x] Active queries exclude descendants of superseded parents; historical lookup remains explicit.
 - [x] Derivation signatures are unique and reusable.
 - [x] Repository snapshots detect object/record/group tampering and restore from SQLite.
-- [ ] Stage6 evidence amendment freezes `evidence_class/claims` in each used-asset snapshot entry and includes them in snapshot hashing.
+- [x] Stage6 evidence amendment freezes `evidence_class/claims` in each used-asset snapshot entry and includes them in snapshot hashing.
 - [x] Import preflights files, topologically resolves local lineage, preserves explicit repository refs and reports orphaned copies.
 - [x] Configured bindings enforce enabled keys, active targets and registry-declared target roles.
 - [x] Repository audit checks objects, hashes, registry validity, lineage/group/supersede cycles and configured bindings.
@@ -142,7 +143,7 @@ $env:STAGE6_GOLDEN_RENDER='1'; python -m pytest tests/test_v4_stage6_golden_comp
 
 ## Next Continuation Point
 
-Stage0 Pass B is closed. Remaining before Stage7:
-1. Create an independent Stage6 Git checkpoint (exclude case runs, derived smoke images, `test*.txt`).
-2. Optionally re-run Pass B against production `var/v4` assets instead of seeded Pass-B sqlite when catalog coverage is ready.
-3. Do not start Stage7 design until the Stage6 checkpoint is committed.
+Stage0 Pass B and the independent Stage6 checkpoint are closed. The next continuation point is Stage7 design review:
+1. Review and freeze `video_agent_v4_stage7_production_cutover_and_acceptance_design_20260720.md`.
+2. Do not change the public production entrypoint or delete V3 code before the Stage7 cutover contract is frozen.
+3. A production-repository Pass B may be re-run later as additional evidence; it is not a blocker for Stage7 design review.
