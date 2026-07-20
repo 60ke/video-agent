@@ -56,6 +56,10 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def sha256_bytes(value: bytes) -> str:
+    return hashlib.sha256(value).hexdigest()
+
+
 def sha256_json(value: Any) -> str:
     if isinstance(value, BaseModel):
         value = value.model_dump(mode="json", exclude_none=True)

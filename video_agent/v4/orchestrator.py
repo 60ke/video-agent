@@ -8,18 +8,21 @@ from pathlib import Path
 from typing import TypeVar
 
 from video_agent.ai_runtime import AIRuntimeSession
-from video_agent.contracts import Narration
 from video_agent.contracts.v4 import FrozenNarration
-from video_agent.io import load_model, sha256_json, utc_now, write_json_atomic
-from video_agent.orchestrator import Orchestrator as LegacyOrchestrator
+from video_agent.io import sha256_json, utc_now, write_json_atomic
 from video_agent.progress import get_logger
 from video_agent.registries import CapabilityRegistryHub, project_registry_hub
 from video_agent.runtime import RunContext
 from video_agent.semantic import classify_video_scope, plan_scene_semantics
-from video_agent.speech.v4.voice_resolve import (
-    apply_resolved_voice_to_case_voice,
-    resolve_fixed_voice_profile,
+from video_agent.semantic.goal_narration import generate_goal_narration, goal_input_fingerprint
+from video_agent.speech.v4.narration_freeze import (
+    freeze_goal_narration,
+    freeze_script_narration,
+    resolve_script_text,
+    write_frozen_narration,
 )
+from video_agent.speech.v4.tts import ensure_native_speech_timing_lock
+from video_agent.speech.v4.voice_resolve import resolve_fixed_voice_profile
 from video_agent.v4.stage4 import V4Stage4Result, V4Stage4Runner
 from video_agent.v4.stage5 import V4Stage5Result, V4Stage5Runner
 from video_agent.v4.stage6 import V4Stage6Result, V4Stage6Runner
@@ -108,25 +111,59 @@ class V4Orchestrator:
             skip_ffmpeg=skip_ffmpeg,
         )
 
+    def _input_mode(self) -> str:
+        case = self.context.case
+        if case.mode == "script_locked" or case.narration_source:
+            return "script"
+        return "goal"
+
+    async def _ensure_frozen_narration(self, gateway: object) -> FrozenNarration:
+        frozen_path = self.context.artifact("frozen_narration.json")
+        if frozen_path.is_file():
+            from video_agent.io import load_model
+
+            return load_model(frozen_path, FrozenNarration)
+
+        mode = self._input_mode()
+        agents_dir = self.context.run_dir / "agents"
+        if mode == "script":
+            text, raw = resolve_script_text(
+                self.context.case_dir,
+                narration_source=self.context.case.narration_source,
+            )
+            frozen = freeze_script_narration(text=text, source_bytes=raw)
+            # Persist canonical script copy when missing.
+            source_script = self.context.case_dir / "input" / "source_script.txt"
+            if not source_script.is_file():
+                source_script.parent.mkdir(parents=True, exist_ok=True)
+                source_script.write_text(frozen.text + "\n", encoding="utf-8")
+        else:
+            goal = self.context.case.goal.strip()
+            response, invocation = await generate_goal_narration(
+                gateway=gateway,  # type: ignore[arg-type]
+                repo_root=self.context.repo_root,
+                run_id=self.context.run_id,
+                goal=goal,
+                trace_dir=agents_dir / "00_goal_narration",
+            )
+            write_json_atomic(
+                self.context.artifact("goal_narration.response.json"),
+                response,
+            )
+            write_json_atomic(
+                self.context.artifact("goal_narration.input_fingerprint.json"),
+                {"fingerprint": goal_input_fingerprint(goal), "goal": goal},
+            )
+            frozen = freeze_goal_narration(
+                spoken_text=response.spoken_text,
+                goal=goal,
+                response_fingerprint=invocation.request_fingerprint,
+            )
+        write_frozen_narration(frozen_path, frozen)
+        return frozen
+
     async def _run_stage1(self) -> V4Stage1Result:
         started = time.perf_counter()
-        legacy = LegacyOrchestrator(self.context)
-        catalog_path = self.context.artifact("asset_catalog.source.json")
-        narration_path = self.context.artifact("narration.json")
-        if not catalog_path.is_file():
-            legacy.stage_catalog()
-        if not narration_path.is_file():
-            legacy.stage_narration()
-
-        narration = load_model(narration_path, Narration)
-        frozen = FrozenNarration(
-            text=narration.spoken_text,
-            source=self.context.case.mode,
-            source_fingerprint=f"sha256:{sha256_json(narration)}",
-        )
-        frozen_path = self.context.artifact("frozen_narration.json")
-        write_json_atomic(frozen_path, frozen)
-
         registry_hub = CapabilityRegistryHub.load(self.context.repo_root / "config" / "registries" / "v4")
         registry_snapshot_path = self.context.artifact("capability_registry.snapshot.json")
         registry_snapshot = registry_hub.freeze(registry_snapshot_path)
@@ -145,19 +182,24 @@ class V4Orchestrator:
         )
         resolved_voice_path = self.context.artifact("resolved_voice_profile.json")
         write_json_atomic(resolved_voice_path, resolved_voice)
-        voice_payload = apply_resolved_voice_to_case_voice(
-            case_voice.model_dump(mode="json"),
-            resolved_voice,
-            repo_root=self.context.repo_root,
-        )
-        self.context.case = self.context.case.model_copy(
-            update={"voice": case_voice.model_validate(voice_payload)}
-        )
-        agents_dir = self.context.run_dir / "agents"
 
+        agents_dir = self.context.run_dir / "agents"
         async with AIRuntimeSession(self.context.repo_root) as gateway:
+            frozen = await self._ensure_frozen_narration(gateway)
+            frozen_path = self.context.artifact("frozen_narration.json")
+            narration_sha256 = sha256_json({"text": frozen.text})
+
             timing_path, scope_result = await run_fixed_voice_frontend(
-                speech_job=lambda: self._ensure_speech(legacy),
+                speech_job=lambda: ensure_native_speech_timing_lock(
+                    case_id=self.context.case.case_id,
+                    run_id=self.context.run_id,
+                    run_dir=self.context.run_dir,
+                    repo_root=self.context.repo_root,
+                    frozen_text=frozen.text,
+                    narration_sha256=narration_sha256,
+                    voice_profile=resolved_voice,
+                    fps=int(self.context.case.format.fps),
+                ),
                 scope_job=classify_video_scope(
                     gateway=gateway,
                     repo_root=self.context.repo_root,
@@ -192,6 +234,8 @@ class V4Orchestrator:
                 "completed_at": utc_now(),
                 "elapsed_ms": round((time.perf_counter() - started) * 1000),
                 "parallel_frontend": True,
+                "input_mode": self._input_mode(),
+                "legacy_orchestrator": False,
                 "scope_replayed": scope_invocation.replayed,
                 "scene_replayed": scene_invocation.replayed,
                 "outputs": {
@@ -206,7 +250,7 @@ class V4Orchestrator:
             },
         )
         logger.info(
-            "[V4][Stage1] 完成 case=%s run=%s elapsed=%.2fs",
+            "[V4][Stage1] 完成 case=%s run=%s elapsed=%.2fs native_speech=1",
             self.context.case.case_id,
             self.context.run_id,
             time.perf_counter() - started,
@@ -219,82 +263,3 @@ class V4Orchestrator:
             registry_snapshot=registry_snapshot_path,
             registry_projection=registry_projection_path,
         )
-
-    def _ensure_speech(self, legacy: LegacyOrchestrator) -> Path:
-        speech_path = self.context.artifact("speech_timing_lock.json")
-        if speech_path.is_file():
-            return speech_path
-
-        from video_agent.contracts import TimingLock
-        from video_agent.contracts.v4 import ResolvedVoiceProfile, SpeechBeatSpanV4, SpeechTimingLock, SpeechTokenTimingV4
-        from video_agent.io import sha256_file
-        from video_agent.timing.v4.speech_lock import voice_profile_content_sha256
-        from video_agent.timing.v4.timebase import duration_frames, ms_to_hit_frame, ms_to_interval_end
-
-        timing_path = self.context.artifact("timing_lock.json")
-        if not timing_path.is_file():
-            timing_path = legacy.stage_speech()
-        timing = load_model(timing_path, TimingLock)
-        voice_path = self.context.artifact("resolved_voice_profile.json")
-        if not voice_path.is_file():
-            raise FileNotFoundError("resolved_voice_profile.json required before SpeechTimingLock")
-        voice = load_model(voice_path, ResolvedVoiceProfile)
-
-        # Project V3 TimingLock voice facts only — never carry phrase_anchors forward.
-        tokens: list[SpeechTokenTimingV4] = []
-        for index, token in enumerate(timing.tokens):
-            start_frame = ms_to_hit_frame(token.start_ms, timing.fps)
-            end_frame = max(start_frame + 1, ms_to_interval_end(token.end_ms, timing.fps))
-            tokens.append(
-                SpeechTokenTimingV4(
-                    token_id=f"tok_{index:04d}",
-                    text=token.text,
-                    start_ms=token.start_ms,
-                    end_ms=token.end_ms,
-                    start_frame=start_frame,
-                    end_frame=end_frame,
-                    beat_id=None,
-                )
-            )
-        frames = max(duration_frames(timing.duration_ms, timing.fps), tokens[-1].end_frame if tokens else 0)
-        audio_object_key = "audio/speech.wav"
-        audio_src = Path(timing.audio_path)
-        if not audio_src.is_file():
-            audio_src = self.context.run_dir / timing.audio_path
-        audio_dest = self.context.run_dir / audio_object_key
-        audio_dest.parent.mkdir(parents=True, exist_ok=True)
-        if audio_src.is_file() and audio_src.resolve() != audio_dest.resolve():
-            import shutil
-
-            shutil.copy2(audio_src, audio_dest)
-        elif not audio_dest.is_file() and audio_src.is_file():
-            import shutil
-
-            shutil.copy2(audio_src, audio_dest)
-
-        speech = SpeechTimingLock(
-            schema_version=1,
-            case_id=self.context.case.case_id,
-            run_id=self.context.run_id,
-            narration_sha256=sha256_json(load_model(self.context.artifact("narration.json"), Narration)),
-            audio_object_key=audio_object_key,
-            audio_sha256=sha256_file(audio_dest if audio_dest.is_file() else audio_src),
-            voice_profile_id=voice.profile_id,
-            voice_profile_version=voice.profile_version,
-            voice_profile_sha256=voice_profile_content_sha256(voice),
-            fps=timing.fps,
-            duration_ms=timing.duration_ms,
-            duration_frames=frames,
-            tokens=tokens,
-            pause_events=[],
-            beat_spans=[
-                SpeechBeatSpanV4(
-                    beat_id="speech_full",
-                    token_ids=[token.token_id for token in tokens],
-                    start_frame=tokens[0].start_frame if tokens else 0,
-                    end_frame=frames,
-                )
-            ],
-        )
-        write_json_atomic(speech_path, speech)
-        return speech_path
