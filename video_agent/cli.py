@@ -23,12 +23,9 @@ from video_agent.assets.v4 import (
 from video_agent.audio.register import register_sfx_library
 from video_agent.case_admin import clean_cases, export_case_videos
 from video_agent.contracts import CaseConfig, VoiceConfig
-from video_agent.cover import postprocess_cover
-from video_agent.outro import postprocess_outro
-from video_agent.io import load_json, load_model, write_json_atomic
+from video_agent.io import load_json, write_json_atomic
 from video_agent.progress import configure_logging, get_logger
-from video_agent.runtime import RunContext, STAGES
-from video_agent.script_lock import locked_narration_from_text
+from video_agent.runtime import RunContext
 from video_agent.speech.minimax import local_minimax_voice_id
 from video_agent.v4 import V4Orchestrator
 from video_agent.registries import CapabilityRegistryHub
@@ -234,7 +231,7 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
     case_dir.mkdir(parents=True, exist_ok=False)
     repo_root = Path(__file__).resolve().parents[1]
     voice_id = local_minimax_voice_id(repo_root)
-    voice = VoiceConfig(voice_id=voice_id) if voice_id else VoiceConfig()
+    voice = VoiceConfig(voice_id=voice_id or VoiceConfig().voice_id, voice_profile_id="minimax_adman_clear_01")
     script_text = _script_text(args)
     config = CaseConfig(
         case_id=args.case_id,
@@ -242,17 +239,17 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
         feature_path=args.feature_path or [],
         voice=voice,
         mode="script_locked" if script_text else "material_first",
-        narration_source="input/narration.json" if script_text else None,
-        ai_enabled=False,
+        narration_source="input/source_script.txt" if script_text else None,
+        ai_enabled=not bool(script_text),
     )
     write_json_atomic(case_dir / "case.json", config)
-    (case_dir / "input").mkdir()
+    input_dir = case_dir / "input"
+    input_dir.mkdir()
     result = {"ok": True, "case": case_dir.as_posix(), "case_json": (case_dir / "case.json").as_posix()}
     if script_text:
-        narration_path = case_dir / "input" / "narration.json"
-        narration = locked_narration_from_text(config.case_id, script_text)
-        write_json_atomic(narration_path, narration)
-        result.update({"narration": narration_path.as_posix(), "beats": len(narration.beats), "locked": True})
+        script_path = input_dir / "source_script.txt"
+        script_path.write_text(script_text + "\n", encoding="utf-8")
+        result.update({"script": script_path.as_posix(), "locked": True})
     return result
 
 
@@ -274,21 +271,21 @@ def command_script_lock(args: argparse.Namespace) -> dict[str, Any]:
     config_path = case_dir / "case.json"
     if not config_path.is_file():
         raise FileNotFoundError(f"case.json not found: {config_path}")
-    text = _script_text(args)
-    if text is None:
+    script = _script_text(args)
+    if script is None:
         raise ValueError("provide --script-text or --script-file")
     config = CaseConfig.model_validate(load_json(config_path)).model_copy(
-        update={"mode": "script_locked", "narration_source": "input/narration.json", "ai_enabled": False}
+        update={"mode": "script_locked", "narration_source": "input/source_script.txt", "ai_enabled": False}
     )
-    narration = locked_narration_from_text(config.case_id, text)
-    narration_path = case_dir / "input" / "narration.json"
-    write_json_atomic(narration_path, narration)
+    input_dir = case_dir / "input"
+    input_dir.mkdir(exist_ok=True)
+    script_path = input_dir / "source_script.txt"
+    script_path.write_text(script + "\n", encoding="utf-8")
     write_json_atomic(config_path, config)
     return {
         "ok": True,
         "case": case_dir.as_posix(),
-        "narration": narration_path.as_posix(),
-        "beats": len(narration.beats),
+        "script": script_path.as_posix(),
         "locked": True,
     }
 
@@ -400,24 +397,6 @@ def command_v4_assets_audit(args: argparse.Namespace) -> dict[str, Any]:
         repository.close()
 
 
-def command_cover_postprocess(args: argparse.Namespace) -> dict[str, Any]:
-    case_dir = Path(args.case).resolve()
-    run_id = args.run or load_json(case_dir / "latest_run.json")["run_id"]
-    run_dir = case_dir / "runs" / run_id
-    spec = Path(args.spec).resolve() if args.spec else case_dir / "input" / "cover.json"
-    report = postprocess_cover(Path(__file__).resolve().parents[1], case_dir, run_dir, spec)
-    case = load_model(case_dir / "case.json", CaseConfig)
-    if case.outro_enabled:
-        postprocess_outro(Path(__file__).resolve().parents[1], run_dir, case.outro_source)
-    return {
-        "ok": True,
-        "run_id": run_id,
-        "video": (run_dir / "final" / "video.mp4").as_posix(),
-        "cover": report["cover"],
-        "crop_preview": report["crop_preview"],
-        "cover_frames": report["cover_frames"],
-    }
-
 
 def command_cases_export(args: argparse.Namespace) -> dict[str, Any]:
     return {"ok": True, **export_case_videos(Path(args.cases), Path(args.destination))}
@@ -430,7 +409,7 @@ def command_cases_clean(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="video-agent", description="Video Agent V3 material-first video compiler")
+    parser = argparse.ArgumentParser(prog="video-agent", description="Video Agent V4 production video compiler")
     parser.add_argument("--json", action="store_true")
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -447,13 +426,13 @@ def build_parser() -> argparse.ArgumentParser:
     generate.add_argument("--case-id", help="Optional explicit case ID; defaults to a unique timestamp ID")
     generate.set_defaults(handler=command_generate_video)
 
-    catalog = sub.add_parser("catalog", help="Build the global V3 asset catalog")
+    catalog = sub.add_parser("catalog", help="Build the legacy asset catalog (admin)")
     catalog.add_argument("--json", dest="sub_json", action="store_true")
     catalog.add_argument("--assets", default="assets")
     catalog.add_argument("--output")
     catalog.set_defaults(handler=command_catalog)
 
-    init = sub.add_parser("init", help="Initialize a V3 case")
+    init = sub.add_parser("init", help="Initialize a V4 case")
     init.add_argument("--json", dest="sub_json", action="store_true")
     init.add_argument("--case", required=True)
     init.add_argument("--case-id", required=True)
@@ -464,7 +443,7 @@ def build_parser() -> argparse.ArgumentParser:
     init_script.add_argument("--script-file", help="UTF-8 text file to lock as the narration")
     init.set_defaults(handler=command_init)
 
-    script_lock = sub.add_parser("script-lock", help="Turn exact text into locked narration for an existing case")
+    script_lock = sub.add_parser("script-lock", help="Lock exact source script text for an existing V4 case")
     script_lock.add_argument("--json", dest="sub_json", action="store_true")
     script_lock.add_argument("--case", required=True)
     script_source = script_lock.add_mutually_exclusive_group(required=True)
@@ -472,12 +451,10 @@ def build_parser() -> argparse.ArgumentParser:
     script_source.add_argument("--script-file", help="UTF-8 text file containing exact narration")
     script_lock.set_defaults(handler=command_script_lock)
 
-    run = sub.add_parser("run", help="Run the single V3 production DAG")
+    run = sub.add_parser("run", help="Run the single V4 production DAG")
     run.add_argument("--json", dest="sub_json", action="store_true")
     run.add_argument("--case", required=True)
     run.add_argument("--resume")
-    run.add_argument("--from-stage", choices=STAGES)
-    run.add_argument("--until-stage", choices=STAGES)
     run.set_defaults(handler=command_run)
 
     v4_stage1 = sub.add_parser("v4-stage1", help="Run the V4 semantic frontend with parallel speech and scope")
@@ -542,7 +519,7 @@ def build_parser() -> argparse.ArgumentParser:
     v4_audit.add_argument("--object-root")
     v4_audit.set_defaults(handler=command_v4_assets_audit)
 
-    inspect = sub.add_parser("inspect", help="Inspect a V3 run")
+    inspect = sub.add_parser("inspect", help="Inspect a production run")
     inspect.add_argument("--json", dest="sub_json", action="store_true")
     inspect.add_argument("--case", required=True)
     inspect.add_argument("--run")
@@ -590,13 +567,6 @@ def build_parser() -> argparse.ArgumentParser:
     import_materials.add_argument("--json", dest="sub_json", action="store_true")
     import_materials.add_argument("--source", required=True)
     import_materials.set_defaults(handler=command_import_video_materials)
-
-    cover = sub.add_parser("cover-postprocess", help="Generate a V2-style GPT Image cover and prepend exactly one frame after rendering")
-    cover.add_argument("--json", dest="sub_json", action="store_true")
-    cover.add_argument("--case", required=True)
-    cover.add_argument("--run")
-    cover.add_argument("--spec", help="Defaults to <case>/input/cover.json")
-    cover.set_defaults(handler=command_cover_postprocess)
 
     cases_export = sub.add_parser("cases-export", help="Copy every final case video into one destination folder")
     cases_export.add_argument("--json", dest="sub_json", action="store_true")

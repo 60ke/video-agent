@@ -13,7 +13,7 @@ def probe_media_size(path: Path) -> tuple[int, int, str, int | None]:
         raise Stage6Error("media_decode_preflight_failed", f"media missing: {path}")
     suffix = path.suffix.lower()
     if suffix in {".mp4", ".webm", ".mov", ".m4v"}:
-        from video_agent.render.ffmpeg import ffprobe
+        from video_agent.media import ffprobe
 
         payload = ffprobe(path)
         streams = payload.get("streams") or []

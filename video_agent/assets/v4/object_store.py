@@ -12,7 +12,7 @@ from PIL import Image
 
 from video_agent.contracts.v4 import Orientation
 from video_agent.io import sha256_file
-from video_agent.render.ffmpeg import ffprobe
+from video_agent.media import ffprobe
 
 
 class ObjectStoreError(RuntimeError):

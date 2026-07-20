@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from video_agent.assets.site_params_sequence import CANVAS_SIZE, _fit_canvas, _stage_frame
+from video_agent.media import CANVAS_SIZE, fit_canvas, stage_frame
 
 
 _FONT_CANDIDATES = (
@@ -35,7 +35,7 @@ def load_chinese_font(size: int) -> ImageFont.ImageFont:
 def fit_to_douyin_canvas(source: Path, output: Path) -> None:
     """Pixel-preserving 9:16 reframe used by site_faithful_reframe."""
     content = source.read_bytes()
-    frame = _fit_canvas(content)
+    frame = fit_canvas(content)
     frame.save(output, format="PNG")
 
 
@@ -76,7 +76,7 @@ def apply_feature_entry_callout(
 ) -> None:
     """Overlay a persisted or deterministic red double-ellipse callout (E1)."""
     content = source.read_bytes()
-    frame = _fit_canvas(content)
+    frame = fit_canvas(content)
     draw = ImageDraw.Draw(frame)
     width, height = frame.size
     boxes = _parse_callout_boxes(description)
@@ -162,7 +162,7 @@ def render_parameter_flower_frames(
     stage = registered difference blend between base and final
     """
     content = source.read_bytes()
-    base = _fit_canvas(content)
+    base = fit_canvas(content)
     base.save(output_base, format="PNG")
     callout = _callout_text(callout_fields)
     final = _draw_flower_text(base, callout)
@@ -171,7 +171,7 @@ def render_parameter_flower_frames(
     final_arr = np.array(final.convert("RGB"), dtype=np.int16)
     delta = np.abs(final_arr - base_arr).max(axis=2)
     mask = np.where(delta > 12, 255, 0).astype(np.uint8)
-    stage = _stage_frame(base, final, mask, strength=0.55)
+    stage = stage_frame(base, final, mask, strength=0.55)
     stage.save(output_stage, format="PNG")
     final.save(output_final, format="PNG")
     return {

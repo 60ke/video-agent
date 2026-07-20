@@ -9,7 +9,6 @@ from .catalog import build_catalog as _build_catalog
 from .catalog import catalog_snapshot
 from .editor_flow import generate_editor_flow_assets
 from .materializer import materialize_assets
-from .preparer import prepare_scene_assets
 
 
 def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCatalog:
@@ -19,4 +18,4 @@ def build_catalog(assets_root: Path, output_path: Path | None = None) -> AssetCa
     return catalog
 
 
-__all__ = ["build_catalog", "catalog_snapshot", "generate_editor_flow_assets", "materialize_assets", "prepare_scene_assets"]
+__all__ = ["build_catalog", "catalog_snapshot", "generate_editor_flow_assets", "materialize_assets"]

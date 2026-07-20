@@ -1,5 +1,17 @@
-from .minimax import MinimaxClient, MinimaxResult
-from .pause_compiler import compile_narration_markup, strip_tts_markup
-from .timing_lock import build_timing_lock
+from .minimax import (
+    MinimaxClient,
+    MinimaxResult,
+    apply_minimax_local_voice_defaults,
+    load_minimax_local_config,
+    local_minimax_voice_id,
+    normalize_tokens,
+)
 
-__all__ = ["MinimaxClient", "MinimaxResult", "build_timing_lock", "compile_narration_markup", "strip_tts_markup"]
+__all__ = [
+    "MinimaxClient",
+    "MinimaxResult",
+    "apply_minimax_local_voice_defaults",
+    "load_minimax_local_config",
+    "local_minimax_voice_id",
+    "normalize_tokens",
+]

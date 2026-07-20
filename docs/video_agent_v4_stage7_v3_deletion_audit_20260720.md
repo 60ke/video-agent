@@ -1,12 +1,12 @@
 # Video Agent V4 Stage 7：V3 删除审计
 
-状态：**Unit 0 已冻结；Unit 6 执行前必须按实际 import graph 复核**
+状态：**Unit 6 已执行完成（2026-07-20）**
 
 日期：2026-07-20
 
 ## 1. 边界
 
-本审计只冻结 V4 生产切换时的删除分类，不在 Unit 0 删除任何 V3 文件，也不修改公共 CLI。正式切换只能由 Stage 7 Unit 5 与 Unit 6 组成同一发布边界。
+本审计冻结 V4 生产切换时的删除分类。Unit 6 已按 import graph 删除 V3 业务路径，并将可复用探测/画布能力抽到 `video_agent.media`。
 
 ## 2. A 类：Unit 6 删除
 

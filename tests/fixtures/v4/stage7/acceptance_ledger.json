@@ -1,6 +1,6 @@
 {
   "schema_version": "v4.stage7_acceptance_ledger.1",
-  "status": "unit7_passed",
+  "status": "unit7_passed_unit6_purged",
   "completed_at": "2026-07-20",
   "branch": "codex/parameter-frame-sequence",
   "units": {
@@ -10,7 +10,10 @@
     "3": {"status": "done", "notes": "V4ProductionOrchestrator DAG + structured/delivery QA"},
     "4": {"status": "done", "notes": "CoverBrief + independent cover.png finalizer; no prepend"},
     "5": {"status": "done", "notes": "public generate/run → V4ProductionOrchestrator"},
-    "6": {"status": "partial", "notes": "VerticalDemo removed from Remotion Root; V3 render_remotion_video fail-loud; V3 modules retained for non-production tests until full purge"},
+    "6": {
+      "status": "done",
+      "notes": "Removed V3 Orchestrator/planning/compiler/renderer/scene/qa/cover-prepend/VerticalDemo; shared ffprobe/canvas/minimax extracted to video_agent.media and speech.minimax"
+    },
     "6.5": {
       "status": "passed",
       "entrypoint": "scripts/run_production_asset_coverage_gate.py",
@@ -42,13 +45,15 @@
     "legacy_orchestrator_in_v4_stage1": false,
     "public_cli_uses_v4_production": true,
     "vertical_demo_registered": false,
+    "vertical_demo_file_present": false,
+    "cover_prepend_present": false,
     "bgm_default_enabled": false,
     "production_repository_gate": true,
     "live_script_final_deliverables": true,
-    "live_goal_final_deliverables": true
+    "live_goal_final_deliverables": true,
+    "v3_production_modules_removed": true
   },
   "blockers_for_final_tag": [
-    "Optional full V3 module purge after import-graph audit",
     "Register real BGM profile before enabling bgm"
   ],
   "release_tag": "v4-stage7-cutover"

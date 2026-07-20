@@ -10,18 +10,6 @@ from .io import load_json, write_json_atomic
 from .speech.minimax import apply_minimax_local_voice_defaults
 
 
-STAGES = (
-    "catalog",
-    "narration",
-    "speech",
-    "scene",
-    "prepare_assets",
-    "visual",
-    "compile",
-    "render",
-)
-
-
 @dataclass(frozen=True)
 class RunContext:
     repo_root: Path

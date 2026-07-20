@@ -1,3 +1,1 @@
-from .text_client import OpenAICompatibleTextClient
-
-__all__ = ["OpenAICompatibleTextClient"]
+"""AI helpers package — V3 planners removed; keep gpt_image / prompt_loader."""

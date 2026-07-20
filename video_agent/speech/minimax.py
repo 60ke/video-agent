@@ -6,11 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import httpx
-
-from video_agent.contracts import CaseConfig, Narration
 from video_agent.io import load_json, write_json_atomic
-from video_agent.speech.pause_compiler import compile_narration_markup
 
 
 DEFAULT_ENDPOINT = "https://api.minimaxi.com/v1/t2a_v2"
@@ -120,9 +116,6 @@ def normalize_tokens(raw: Any) -> list[dict[str, Any]]:
             source_begin = _value(item, ("word_begin", "token_begin"))
             source_end = _value(item, ("word_end", "token_end"))
             source_span = (text, int(source_begin), int(source_end)) if source_begin is not None and source_end is not None else None
-            # MiniMax can duplicate a numeric word with the same source span
-            # (for example two `20` tokens in `20多个`) while assigning them
-            # different audio spans. It is one spoken token, not two words.
             if source_span and source_span in seen_source_spans:
                 continue
             if source_span:
@@ -132,6 +125,8 @@ def normalize_tokens(raw: Any) -> list[dict[str, Any]]:
 
 
 class MinimaxClient:
+    """Shared MiniMax auth/endpoint shell. Plain-text TTS lives in speech.v4.tts."""
+
     def __init__(self, repo_root: Path) -> None:
         config = load_minimax_local_config(repo_root)
         self.api_key = str(os.getenv("MINIMAX_API_KEY") or config.get("api_key") or "").strip()
@@ -139,68 +134,3 @@ class MinimaxClient:
         self.defaults = config
         if not self.api_key:
             raise ValueError("Minimax API key missing in config/minimax.local.json or MINIMAX_API_KEY")
-
-    def synthesize(self, case: CaseConfig, narration: Narration, work_dir: Path) -> MinimaxResult:
-        markup_text = compile_narration_markup(narration)
-        voice_id = str(self.defaults.get("voice_id") or "").strip() or case.voice.voice_id
-        model = str(self.defaults.get("model") or "").strip() or case.voice.model
-        payload: dict[str, Any] = {
-            "model": model,
-            "text": markup_text,
-            "stream": False,
-            "voice_setting": {
-                "voice_id": voice_id,
-                "speed": case.voice.speed,
-                "vol": float(self.defaults.get("vol", 1.0)),
-                "pitch": int(self.defaults.get("pitch", 0)),
-            },
-            "audio_setting": {
-                "sample_rate": int(self.defaults.get("sample_rate", 32000)),
-                "bitrate": int(self.defaults.get("bitrate", 128000)),
-                "format": "mp3",
-                "channel": 1,
-            },
-            "subtitle_enable": True,
-            "subtitle_type": "word",
-        }
-        if case.voice.emotion:
-            payload["voice_setting"]["emotion"] = case.voice.emotion
-        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
-        with httpx.Client(timeout=180.0) as client:
-            response = client.post(self.endpoint, headers=headers, json=payload)
-            response.raise_for_status()
-            body = response.json()
-            base = body.get("base_resp", {})
-            if base.get("status_code") not in (0, None):
-                raise RuntimeError(f"Minimax API error: {base.get('status_msg')}")
-            data = body.get("data") or {}
-            audio_hex = data.get("audio")
-            if not audio_hex:
-                raise RuntimeError("Minimax returned no audio")
-            subtitle_url = data.get("subtitle_file")
-            if not subtitle_url:
-                raise RuntimeError("Minimax returned no word subtitle file")
-            subtitle_response = client.get(subtitle_url)
-            subtitle_response.raise_for_status()
-            raw_subtitles = subtitle_response.json()
-
-        work_dir.mkdir(parents=True, exist_ok=True)
-        audio_path = work_dir / "voice.mp3"
-        raw_path = work_dir / "minimax_response.json"
-        alignment_path = work_dir / "minimax_alignment.json"
-        audio_path.write_bytes(bytes.fromhex(audio_hex))
-        tokens = normalize_tokens(raw_subtitles)
-        duration_ms = _duration_ms(audio_path)
-        write_json_atomic(
-            raw_path,
-            {
-                "trace_id": body.get("trace_id"),
-                "base_resp": body.get("base_resp"),
-                "extra_info": body.get("extra_info"),
-                "subtitle_file": subtitle_url,
-                "request": {"model": payload["model"], "voice_setting": payload["voice_setting"], "text": markup_text},
-                "subtitles": raw_subtitles,
-            },
-        )
-        write_json_atomic(alignment_path, {"duration_ms": duration_ms, "tokens": tokens})
-        return MinimaxResult(audio_path, alignment_path, raw_path, duration_ms, tokens, body.get("trace_id"))

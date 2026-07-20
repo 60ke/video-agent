@@ -10,6 +10,7 @@ import numpy as np
 from PIL import Image
 
 from video_agent.ai.gpt_image import edit_image
+from video_agent.media import CANVAS_SIZE, fit_canvas, stage_frame
 from video_agent.assets.manifest_utils import without_legacy_review_fields
 from video_agent.assets.site_params_batch import (
     IMAGE_SUFFIXES,
@@ -19,9 +20,6 @@ from video_agent.assets.site_params_batch import (
     parse_site_params_filename,
 )
 from video_agent.io import load_json, sha256_file, utc_now, write_json_atomic
-
-
-CANVAS_SIZE = (1080, 1920)
 
 
 def _prompt_base(source: SiteParamsSource) -> str:
@@ -47,15 +45,7 @@ def _prompt_final(source: SiteParamsSource, callout_text: str, labels: tuple[str
 
 
 def _fit_canvas(content: bytes) -> Image.Image:
-    from io import BytesIO
-
-    with Image.open(BytesIO(content)) as source:
-        image = source.convert("RGB")
-    scale = max(CANVAS_SIZE[0] / image.width, CANVAS_SIZE[1] / image.height)
-    resized = image.resize((round(image.width * scale), round(image.height * scale)), Image.Resampling.LANCZOS)
-    left = max(0, (resized.width - CANVAS_SIZE[0]) // 2)
-    top = max(0, (resized.height - CANVAS_SIZE[1]) // 2)
-    return resized.crop((left, top, left + CANVAS_SIZE[0], top + CANVAS_SIZE[1]))
+    return fit_canvas(content)
 
 
 def _register_final(base: Image.Image, final: Image.Image) -> tuple[Image.Image, np.ndarray, dict[str, Any]]:
@@ -111,11 +101,7 @@ def _register_final(base: Image.Image, final: Image.Image) -> tuple[Image.Image,
 
 
 def _stage_frame(base: Image.Image, final: Image.Image, mask: np.ndarray, strength: float = 0.55) -> Image.Image:
-    base_rgb = np.array(base.convert("RGB"), dtype=np.float32)
-    final_rgb = np.array(final.convert("RGB"), dtype=np.float32)
-    alpha = (mask.astype(np.float32)[..., None] / 255.0) * strength
-    staged = (base_rgb * (1 - alpha) + final_rgb * alpha).clip(0, 255).astype(np.uint8)
-    return Image.fromarray(staged)
+    return stage_frame(base, final, mask, strength=strength)
 
 
 def _frame_path(frames_dir: Path, source: SiteParamsSource, state: str) -> Path:

@@ -27,7 +27,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Stage 4: dependency, selection and derivation | complete | DoD closed: six slot sources, DAG, alias/dedup, gap policy, signature/`group_reuse`, atomic `register_derived_group`, parameter callout fields, E2 website filter, s001–s010 golden. Production wires Stage5 executor when `repo_root` set; Fake is test-only. |
 | Stage 5: effect, SFX, voice and derivation registries | control plane complete / Stage6 timing wired | Registries/Voice/Derivation/Motion-SFX complete. Motion now consumes exact `AnchoredTimingPlan.scene_spans`; proportional fallback removed; Stage5 SFX no longer truncates distinct Anchors via `window_event_budget`. |
 | Stage 6: semantic timing and compilation | complete / frozen | Real MiniMax Pass B closed on run `20260720_110920_904455` (145 tokens, 24.7s, 19 SFX, Remotion+FFmpeg final.mp4). Independent Git checkpoint: `a5130312`. |
-| Stage 7: production cutover and acceptance | Unit7 passed / cutover tag ready | Units 0–6.5 complete. Live `--script` and `--goal` acceptance both produced `final/video.mp4` + `final/cover.png`. BGM remains disabled; V3 purge optional. |
+| Stage 7: production cutover and acceptance | Unit6 purged / Unit7 passed / tag ready | V3 production DAG, VerticalDemo, and cover prepend removed. Shared media helpers extracted. Live script/goal acceptance closed. Remaining optional: real BGM profile. |
 
 ## Working Decisions
 
@@ -144,10 +144,13 @@ $env:STAGE6_GOLDEN_RENDER='1'; python -m pytest tests/test_v4_stage6_golden_comp
 
 ## Next Continuation Point
 
-Stage7 Unit7 acceptance is closed on branch. Remaining optional follow-ups:
-1. Create/verify the final release tag `v4-stage7-cutover` covering Unit5+Unit6 cutover commits.
+Stage7 Unit6 V3 purge and Unit7 acceptance are closed on branch. Remaining optional follow-ups:
+1. Create the final release tag `v4-stage7-cutover` covering Unit5+Unit6 cutover commits.
 2. Keep BGM disabled until a real Profile is registered.
-3. Optional: full V3 module purge after import-graph audit (Unit6 still partial).
+
+### Unit6 V3 purge (2026-07-20)
+
+Removed V3 Orchestrator, planning, scene/renderer, V3 compiler/render shells, TimingLock/VisualPlan/RenderPlan contracts, cover prepend, outro postprocess, VerticalDemo, and V3-only tests. Shared `ffprobe` / canvas helpers live under `video_agent.media`; MiniMax auth shell remains contract-free in `speech.minimax`.
 
 ### Unit7 script acceptance (2026-07-20)
 
