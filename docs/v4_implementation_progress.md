@@ -20,14 +20,14 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 
 | Stage | Status | Notes |
 |---|---|---|
-| Baseline audit | complete | Current executable pipeline is V3. Stage 1 had design documents only. |
-| Stage 1: semantic Contract and AI runtime | runtime complete / golden conformance partial | Runtime, structured prompts, trace/replay, repair and routing are implemented. Relation-pattern binding, full registry freeze and Stage 0 Rev3 semantic conformance remain open. |
+| Baseline audit | complete | Public production entry remains V3; V4 Stages 1-6 are implemented behind explicit development entrypoints. |
+| Stage 1: semantic Contract and AI runtime | runtime complete / production cutover conformance pending | Runtime, structured prompts, trace/replay, repair, routing and full registry freeze are implemented. Real-provider Stage 0 semantic conformance remains a Stage7 cutover gate. |
 | Stage 2: capability and asset domain | complete | Typed dynamic registries, deterministic frozen snapshots, strict AssetRecord/Lineage/Group/Evidence contracts, registry-bound validation and Stage 1 projection are implemented. |
 | Stage 3: repository, SQLite, ObjectStore and migration | complete | Repository, ObjectStore, import, snapshot (schema v4 with `evidence_class/claims`), audit and migration are implemented. |
 | Stage 4: dependency, selection and derivation | complete | DoD closed: six slot sources, DAG, alias/dedup, gap policy, signature/`group_reuse`, atomic `register_derived_group`, parameter callout fields, E2 website filter, s001–s010 golden. Production wires Stage5 executor when `repo_root` set; Fake is test-only. |
 | Stage 5: effect, SFX, voice and derivation registries | control plane complete / Stage6 timing wired | Registries/Voice/Derivation/Motion-SFX complete. Motion now consumes exact `AnchoredTimingPlan.scene_spans`; proportional fallback removed; Stage5 SFX no longer truncates distinct Anchors via `window_event_budget`. |
 | Stage 6: semantic timing and compilation | complete / frozen | Real MiniMax Pass B closed on run `20260720_110920_904455` (145 tokens, 24.7s, 19 SFX, Remotion+FFmpeg final.mp4). Independent Git checkpoint: `a5130312`. |
-| Stage 7: production cutover and acceptance | design drafted / pending review | Formal design added. Implementation is blocked until the cutover contract is reviewed and frozen. |
+| Stage 7: production cutover and acceptance | reviewed / pending freeze | Cursor review incorporated: BGM/QA, atomic Unit5+6 release, real Voice ID, Goal Narration contract and production repository gate are now explicit. No implementation is allowed before Unit0 freezes the contract. |
 
 ## Working Decisions
 
