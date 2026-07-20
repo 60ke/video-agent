@@ -57,7 +57,7 @@ class MaterialSlot(V4Contract):
     anchor_phrase: str = Field(min_length=1)
     entry_policy: Literal["scene_start", "phrase_start"]
     hold_policy: Literal["until_next_slot", "scene_end"]
-    category_id: str | None
+    category_id: str | None = None
     asset_role: str = Field(min_length=1)
     source: SlotSource
     subtitle_emphasis: Literal["none", "keyword"]
