@@ -109,6 +109,9 @@ class SQLiteAssetRepository:
                 if version == "2":
                     self._migrate_v2_to_v3()
                     version = "3"
+                if version == "3":
+                    self._migrate_v3_to_v4()
+                    version = "4"
                 if version != str(SCHEMA_VERSION):
                     raise AssetConflictError(f"unsupported repository schema version: {version}")
             self.connection.execute(
@@ -156,6 +159,24 @@ class SQLiteAssetRepository:
         if "superseded_revision" not in group_cols:
             self.connection.execute("ALTER TABLE asset_groups ADD COLUMN superseded_revision INTEGER")
         self.connection.execute("UPDATE repository_meta SET value='3' WHERE key='schema_version'")
+
+    def _migrate_v3_to_v4(self) -> None:
+        """Bump repository schema to 4.
+
+        Snapshot contracts now require evidence_class/claims projections. Those
+        columns already exist on assets rows; this migration only advances the
+        repository schema marker so open() accepts production DBs created at v3.
+        """
+        asset_cols = {row["name"] for row in self.connection.execute("PRAGMA table_info(assets)")}
+        if "evidence_class" not in asset_cols:
+            self.connection.execute(
+                "ALTER TABLE assets ADD COLUMN evidence_class TEXT NOT NULL DEFAULT 'E0_source_evidence'"
+            )
+        if "claims_json" not in asset_cols:
+            self.connection.execute(
+                "ALTER TABLE assets ADD COLUMN claims_json TEXT NOT NULL DEFAULT '[]'"
+            )
+        self.connection.execute("UPDATE repository_meta SET value='4' WHERE key='schema_version'")
 
     @contextmanager
     def transaction(self) -> Iterator[None]:

@@ -1,0 +1,32 @@
+{
+  "schema_version": "v4.production_asset_coverage_ledger.1",
+  "gate_id": "production_repository",
+  "status": "passed",
+  "completed_at": "2026-07-20T06:46:11.904094+00:00",
+  "db": "var/v4/assets.sqlite3",
+  "object_root": "assets",
+  "allow_fake_derivation": false,
+  "passed": true,
+  "missing": [],
+  "role_counts": {
+    "site_home": 1,
+    "feature_entry": 58,
+    "parameter_panel": 109,
+    "result_image": 82,
+    "reference_image": 22,
+    "editor_page": 2,
+    "flat_plan": 3,
+    "outro": 1,
+    "brand_logo": 1
+  },
+  "flat_plan_asset_refs": [
+    "asset://A0280",
+    "asset://A0281",
+    "asset://A0282"
+  ],
+  "fingerprint": "e95a03cc7c42f73a47138ef945d8ee32c922f111b3085a6efa90e6b9a2723034",
+  "notes": [
+    "Gate defaults object_root from config/assets.v4.json (assets).",
+    "flat_plan role backfilled via scripts/backfill_flat_plan_assets.py from existing plane-named source files."
+  ]
+}

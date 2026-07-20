@@ -83,15 +83,28 @@ def main() -> int:
     configure_logging()
     parser = argparse.ArgumentParser(description="Stage7 Unit6.5 production asset coverage gate")
     parser.add_argument("--db", default="var/v4/assets.sqlite3")
-    parser.add_argument("--object-root", default="var/v4/objects")
+    parser.add_argument(
+        "--object-root",
+        default=None,
+        help="Object store root. Defaults to config/assets.v4.json object_root (assets).",
+    )
     parser.add_argument("--output", default="var/v4/production_asset_coverage_report.json")
     parser.add_argument("--repo-root", default=".")
     args = parser.parse_args()
+    repo_root = Path(args.repo_root).resolve()
+    if args.object_root:
+        object_root = Path(args.object_root).resolve()
+    else:
+        config_path = repo_root / "config" / "assets.v4.json"
+        if config_path.is_file():
+            object_root = (repo_root / json.loads(config_path.read_text(encoding="utf-8"))["object_root"]).resolve()
+        else:
+            object_root = (repo_root / "assets").resolve()
     report = run_coverage_gate(
         db=Path(args.db).resolve(),
-        object_root=Path(args.object_root).resolve(),
+        object_root=object_root,
         output=Path(args.output).resolve(),
-        repo_root=Path(args.repo_root).resolve(),
+        repo_root=repo_root,
     )
     logger.info("[V4][unit6.5] passed=%s missing=%s", report["passed"], report["missing"])
     print(

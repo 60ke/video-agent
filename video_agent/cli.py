@@ -362,8 +362,10 @@ def _v4_repository(args: argparse.Namespace) -> SQLiteAssetRepository:
 
 def command_v4_assets_migrate(args: argparse.Namespace) -> dict[str, Any]:
     repository = _v4_repository(args)
+    root = Path(__file__).resolve().parents[1]
+    assets_root = Path(args.assets).resolve() if getattr(args, "assets", None) else (root / "assets")
     try:
-        return {"ok": True, **migrate_legacy(repository, repository.object_store.root, dry_run=args.dry_run)}
+        return {"ok": True, **migrate_legacy(repository, assets_root, dry_run=args.dry_run)}
     finally:
         repository.close()
 
@@ -524,6 +526,7 @@ def build_parser() -> argparse.ArgumentParser:
     v4_migrate.add_argument("--dry-run", action="store_true")
     v4_migrate.add_argument("--db")
     v4_migrate.add_argument("--object-root")
+    v4_migrate.add_argument("--assets", help="Legacy assets root containing catalog.json")
     v4_migrate.set_defaults(handler=command_v4_assets_migrate)
     v4_import = v4_assets_sub.add_parser("import")
     v4_import.add_argument("--manifest", required=True)

@@ -27,7 +27,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Stage 4: dependency, selection and derivation | complete | DoD closed: six slot sources, DAG, alias/dedup, gap policy, signature/`group_reuse`, atomic `register_derived_group`, parameter callout fields, E2 website filter, s001–s010 golden. Production wires Stage5 executor when `repo_root` set; Fake is test-only. |
 | Stage 5: effect, SFX, voice and derivation registries | control plane complete / Stage6 timing wired | Registries/Voice/Derivation/Motion-SFX complete. Motion now consumes exact `AnchoredTimingPlan.scene_spans`; proportional fallback removed; Stage5 SFX no longer truncates distinct Anchors via `window_event_budget`. |
 | Stage 6: semantic timing and compilation | complete / frozen | Real MiniMax Pass B closed on run `20260720_110920_904455` (145 tokens, 24.7s, 19 SFX, Remotion+FFmpeg final.mp4). Independent Git checkpoint: `a5130312`. |
-| Stage 7: production cutover and acceptance | Units 0-6.5 landed / Unit7 docs open | Native speech, golden validators, Production Orchestrator, public CLI→V4, VerticalDemo removed, coverage gate script added. Remaining: full production acceptance ledger + release tag. |
+| Stage 7: production cutover and acceptance | Units 0-6.5 passed / Unit7 live open | Native speech, golden validators, Production Orchestrator, public CLI→V4, VerticalDemo removed. Unit6.5 production repository gate passed (`flat_plan` backfilled). Remaining: live MiniMax script/goal acceptance + Unit5+6 release tag. |
 
 ## Working Decisions
 
@@ -144,8 +144,8 @@ $env:STAGE6_GOLDEN_RENDER='1'; python -m pytest tests/test_v4_stage6_golden_comp
 
 ## Next Continuation Point
 
-Stage7 Units 0–6.5 are implemented on branch. Next:
-1. Run Unit6.5 coverage gate against production ar/v4 and record ledger.
-2. Run seeded golden + script/goal acceptance; freeze Unit7 acceptance ledger.
-3. Create the final release tag covering Unit5+Unit6 cutover commits.
-4. Keep BGM disabled until a real Profile is registered.
+Stage7 Units 0–6.5 are complete on branch (Unit6.5 production gate passed). Next:
+1. Run live MiniMax `--script` / `--goal` production acceptance; freeze Unit7 acceptance ledger.
+2. Create the final release tag covering Unit5+Unit6 cutover commits.
+3. Keep BGM disabled until a real Profile is registered.
+4. Optional: full V3 module purge after import-graph audit (Unit6 still partial).
