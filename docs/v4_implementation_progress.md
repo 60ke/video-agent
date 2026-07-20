@@ -27,7 +27,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Stage 4: dependency, selection and derivation | complete | DoD closed: six slot sources, DAG, alias/dedup, gap policy, signature/`group_reuse`, atomic `register_derived_group`, parameter callout fields, E2 website filter, s001–s010 golden. Production wires Stage5 executor when `repo_root` set; Fake is test-only. |
 | Stage 5: effect, SFX, voice and derivation registries | control plane complete / Stage6 timing wired | Registries/Voice/Derivation/Motion-SFX complete. Motion now consumes exact `AnchoredTimingPlan.scene_spans`; proportional fallback removed; Stage5 SFX no longer truncates distinct Anchors via `window_event_budget`. |
 | Stage 6: semantic timing and compilation | complete / frozen | Real MiniMax Pass B closed on run `20260720_110920_904455` (145 tokens, 24.7s, 19 SFX, Remotion+FFmpeg final.mp4). Independent Git checkpoint: `a5130312`. |
-| Stage 7: production cutover and acceptance | Units 0-6.5 passed / Unit7 script passed, goal open | Native speech, golden validators, Production Orchestrator, public CLI→V4. Unit6.5 gate passed (roles + reference_result_plan group). Live `--script` acceptance produced final/video.mp4 + cover.png. Remaining: `--goal` acceptance + Unit5+6 release tag. |
+| Stage 7: production cutover and acceptance | Unit7 passed / cutover tag ready | Units 0–6.5 complete. Live `--script` and `--goal` acceptance both produced `final/video.mp4` + `final/cover.png`. BGM remains disabled; V3 purge optional. |
 
 ## Working Decisions
 
@@ -144,11 +144,10 @@ $env:STAGE6_GOLDEN_RENDER='1'; python -m pytest tests/test_v4_stage6_golden_comp
 
 ## Next Continuation Point
 
-Stage7 Units 0–6.5 are complete; Unit7 script acceptance passed on branch. Next:
-1. Run live MiniMax `--goal` production acceptance; freeze Unit7 acceptance ledger.
-2. Create the final release tag covering Unit5+Unit6 cutover commits.
-3. Keep BGM disabled until a real Profile is registered.
-4. Optional: full V3 module purge after import-graph audit (Unit6 still partial).
+Stage7 Unit7 acceptance is closed on branch. Remaining optional follow-ups:
+1. Create/verify the final release tag `v4-stage7-cutover` covering Unit5+Unit6 cutover commits.
+2. Keep BGM disabled until a real Profile is registered.
+3. Optional: full V3 module purge after import-graph audit (Unit6 still partial).
 
 ### Unit7 script acceptance (2026-07-20)
 
@@ -159,3 +158,14 @@ Stage7 Units 0–6.5 are complete; Unit7 script acceptance passed on branch. Nex
 | Final video | `final/video.mp4` (~3.5 MB, 729 frames) |
 | Final cover | `final/cover.png` |
 | Entrypoint | Stage0 golden script via `generate-video` + continue from assets |
+
+### Unit7 goal acceptance (2026-07-20)
+
+| Field | Value |
+|---|---|
+| Case | `stage7_accept_goal_20260720` |
+| Run | `20260720_150920_d610d8` |
+| Final video | `final/video.mp4` (432 frames) |
+| Final cover | `final/cover.png` |
+| Entrypoint | `python main.py generate-video --goal ...` (full V4 production DAG) |
+| Elapsed | ~92.5s |

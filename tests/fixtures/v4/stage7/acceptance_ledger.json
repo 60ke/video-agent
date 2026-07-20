@@ -1,6 +1,6 @@
 {
   "schema_version": "v4.stage7_acceptance_ledger.1",
-  "status": "script_acceptance_passed_goal_open",
+  "status": "unit7_passed",
   "completed_at": "2026-07-20",
   "branch": "codex/parameter-frame-sequence",
   "units": {
@@ -18,7 +18,7 @@
       "reference_result_plan_group_ref": "group://G0018"
     },
     "7": {
-      "status": "partial",
+      "status": "passed",
       "script_acceptance": {
         "status": "passed",
         "case_id": "stage7_accept_script_20260720c",
@@ -27,7 +27,15 @@
         "final_cover": "cases/stage7_accept_script_20260720c/runs/20260720_145636_af70ac/final/cover.png",
         "frames": 729
       },
-      "goal_acceptance": {"status": "open"}
+      "goal_acceptance": {
+        "status": "passed",
+        "case_id": "stage7_accept_goal_20260720",
+        "run_id": "20260720_150920_d610d8",
+        "final_video": "cases/stage7_accept_goal_20260720/runs/20260720_150920_d610d8/final/video.mp4",
+        "final_cover": "cases/stage7_accept_goal_20260720/runs/20260720_150920_d610d8/final/cover.png",
+        "frames": 432,
+        "elapsed_s": 92.47
+      }
     }
   },
   "checks": {
@@ -36,11 +44,12 @@
     "vertical_demo_registered": false,
     "bgm_default_enabled": false,
     "production_repository_gate": true,
-    "live_script_final_deliverables": true
+    "live_script_final_deliverables": true,
+    "live_goal_final_deliverables": true
   },
   "blockers_for_final_tag": [
-    "Live MiniMax --goal production acceptance with final/video.mp4",
     "Optional full V3 module purge after import-graph audit",
     "Register real BGM profile before enabling bgm"
-  ]
+  ],
+  "release_tag": "v4-stage7-cutover"
 }
