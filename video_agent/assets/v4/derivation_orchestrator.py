@@ -180,22 +180,10 @@ class FakeDerivationExecutor:
             ):
                 reuse[member.member_key] = parent.asset_ref
                 continue
-            signature = build_derivation_signature(
-                parent_refs=list(request.parent_asset_refs),
-                parent_hashes=[parent.content_sha256],
-                context_refs=list(request.context_asset_refs),
-                context_hashes=_content_hashes(session, request.context_asset_refs),
-                category_id=request.category_id,
-                role=member.asset_role,
-                pattern_id=request.required_group.pattern_id,
+            signature = member_derivation_signature(
+                prepared,
                 member_key=member.member_key,
-                capability_id=binding.capability_id,
-                capability_version=binding.capability_version,
-                execution_fingerprint=binding.execution_fingerprint,
-                narrative_fingerprint=sha256(
-                    f"{request.scene_id}|{request.slot_id}".encode("utf-8")
-                ).hexdigest(),
-                target_orientation=request.target_orientation or "",
+                member_role=member.asset_role,
             )
             existing = session.find_by_derivation_signature(signature)
             if existing is not None:
@@ -460,6 +448,31 @@ def build_derivation_signature(
         ]
     )
     return sha256(payload.encode("utf-8")).hexdigest()
+
+
+def member_derivation_signature(
+    prepared: PreparedDerivation,
+    *,
+    member_key: str,
+    member_role: str,
+) -> str:
+    """Derive a group-member signature from PreparedDerivation ownership.
+
+    Must not rebuild a weaker signature that omits prompt/narrative fingerprints.
+    Member identity is layered on top of prepared.derivation_signature, which already
+    folds parent hashes, narrative context, prompt template/input, and provider sizing.
+    """
+    return sha256(
+        "|".join(
+            [
+                prepared.derivation_signature,
+                prepared.prompt_input_sha256,
+                prepared.prompt_template_sha256,
+                member_key,
+                member_role,
+            ]
+        ).encode("utf-8")
+    ).hexdigest()
 
 
 def prepare_derivation(

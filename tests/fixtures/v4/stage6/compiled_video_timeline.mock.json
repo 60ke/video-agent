@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "case_id": "case_x",
+  "run_id": "run_x",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "narration_frame_count": 60,
+  "postroll_frames": 0,
+  "frame_count": 60,
+  "platform_profile_id": "douyin_portrait_v1",
+  "registry_snapshot_id": "reg",
+  "speech_timing_lock_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "anchored_timing_plan_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "resolved_asset_plan_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "motion_audio_plan_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "used_assets_snapshot_id": "assets-snapshot-x",
+  "render_assets": [],
+  "visual_tracks": [
+    {
+      "track_id": "base",
+      "track_kind": "base",
+      "clips": []
+    }
+  ],
+  "effect_instances": [
+    {
+      "effect_instance_id": "fx1",
+      "effect_id": "none",
+      "effect_version": "1",
+      "adapter_id": "none",
+      "variant_id": "instant",
+      "direction": "none",
+      "parameters": {},
+      "events": []
+    }
+  ],
+  "subtitle_track": [],
+  "audio_tracks": []
+}

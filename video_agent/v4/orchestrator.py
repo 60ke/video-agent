@@ -21,6 +21,8 @@ from video_agent.speech.v4.voice_resolve import (
     resolve_fixed_voice_profile,
 )
 from video_agent.v4.stage4 import V4Stage4Result, V4Stage4Runner
+from video_agent.v4.stage5 import V4Stage5Result, V4Stage5Runner
+from video_agent.v4.stage6 import V4Stage6Result, V4Stage6Runner
 
 
 logger = get_logger()
@@ -76,6 +78,34 @@ class V4Orchestrator:
             allow_fake_derivation=allow_fake_derivation,
             db=db,
             object_root=object_root,
+        )
+
+    def run_stage5(
+        self,
+        *,
+        run_seed: str = "default",
+        sfx_profile_id: str = "normal",
+    ) -> V4Stage5Result:
+        return V4Stage5Runner(self.context).run(
+            run_seed=run_seed,
+            sfx_profile_id=sfx_profile_id,
+        )
+
+    def run_stage6(
+        self,
+        *,
+        phase: str | None = None,
+        postroll_frames: int = 0,
+        object_root: Path | None = None,
+        render: bool = False,
+        skip_ffmpeg: bool = False,
+    ) -> V4Stage6Result:
+        return V4Stage6Runner(self.context).run(
+            phase=phase,
+            postroll_frames=postroll_frames,
+            object_root=object_root,
+            render=render,
+            skip_ffmpeg=skip_ffmpeg,
         )
 
     async def _run_stage1(self) -> V4Stage1Result:
@@ -166,7 +196,7 @@ class V4Orchestrator:
                 "scene_replayed": scene_invocation.replayed,
                 "outputs": {
                     "frozen_narration": frozen_path.relative_to(self.context.run_dir).as_posix(),
-                    "timing_lock": timing_path.relative_to(self.context.run_dir).as_posix(),
+                    "speech_timing_lock": timing_path.relative_to(self.context.run_dir).as_posix(),
                     "video_scope": scope_path.relative_to(self.context.run_dir).as_posix(),
                     "scene_semantic_plan": scene_path.relative_to(self.context.run_dir).as_posix(),
                     "registry_snapshot": registry_snapshot_path.relative_to(self.context.run_dir).as_posix(),
@@ -191,5 +221,80 @@ class V4Orchestrator:
         )
 
     def _ensure_speech(self, legacy: LegacyOrchestrator) -> Path:
+        speech_path = self.context.artifact("speech_timing_lock.json")
+        if speech_path.is_file():
+            return speech_path
+
+        from video_agent.contracts import TimingLock
+        from video_agent.contracts.v4 import ResolvedVoiceProfile, SpeechBeatSpanV4, SpeechTimingLock, SpeechTokenTimingV4
+        from video_agent.io import sha256_file
+        from video_agent.timing.v4.speech_lock import voice_profile_content_sha256
+        from video_agent.timing.v4.timebase import duration_frames, ms_to_hit_frame, ms_to_interval_end
+
         timing_path = self.context.artifact("timing_lock.json")
-        return timing_path if timing_path.is_file() else legacy.stage_speech()
+        if not timing_path.is_file():
+            timing_path = legacy.stage_speech()
+        timing = load_model(timing_path, TimingLock)
+        voice_path = self.context.artifact("resolved_voice_profile.json")
+        if not voice_path.is_file():
+            raise FileNotFoundError("resolved_voice_profile.json required before SpeechTimingLock")
+        voice = load_model(voice_path, ResolvedVoiceProfile)
+
+        # Project V3 TimingLock voice facts only — never carry phrase_anchors forward.
+        tokens: list[SpeechTokenTimingV4] = []
+        for index, token in enumerate(timing.tokens):
+            start_frame = ms_to_hit_frame(token.start_ms, timing.fps)
+            end_frame = max(start_frame + 1, ms_to_interval_end(token.end_ms, timing.fps))
+            tokens.append(
+                SpeechTokenTimingV4(
+                    token_id=f"tok_{index:04d}",
+                    text=token.text,
+                    start_ms=token.start_ms,
+                    end_ms=token.end_ms,
+                    start_frame=start_frame,
+                    end_frame=end_frame,
+                    beat_id=None,
+                )
+            )
+        frames = max(duration_frames(timing.duration_ms, timing.fps), tokens[-1].end_frame if tokens else 0)
+        audio_object_key = "audio/speech.wav"
+        audio_src = Path(timing.audio_path)
+        if not audio_src.is_file():
+            audio_src = self.context.run_dir / timing.audio_path
+        audio_dest = self.context.run_dir / audio_object_key
+        audio_dest.parent.mkdir(parents=True, exist_ok=True)
+        if audio_src.is_file() and audio_src.resolve() != audio_dest.resolve():
+            import shutil
+
+            shutil.copy2(audio_src, audio_dest)
+        elif not audio_dest.is_file() and audio_src.is_file():
+            import shutil
+
+            shutil.copy2(audio_src, audio_dest)
+
+        speech = SpeechTimingLock(
+            schema_version=1,
+            case_id=self.context.case.case_id,
+            run_id=self.context.run_id,
+            narration_sha256=sha256_json(load_model(self.context.artifact("narration.json"), Narration)),
+            audio_object_key=audio_object_key,
+            audio_sha256=sha256_file(audio_dest if audio_dest.is_file() else audio_src),
+            voice_profile_id=voice.profile_id,
+            voice_profile_version=voice.profile_version,
+            voice_profile_sha256=voice_profile_content_sha256(voice),
+            fps=timing.fps,
+            duration_ms=timing.duration_ms,
+            duration_frames=frames,
+            tokens=tokens,
+            pause_events=[],
+            beat_spans=[
+                SpeechBeatSpanV4(
+                    beat_id="speech_full",
+                    token_ids=[token.token_id for token in tokens],
+                    start_frame=tokens[0].start_frame if tokens else 0,
+                    end_frame=frames,
+                )
+            ],
+        )
+        write_json_atomic(speech_path, speech)
+        return speech_path

@@ -1,6 +1,6 @@
 # Video Agent V4 Stage 5：可执行能力注册与派生执行设计
 
-状态：设计已冻结；按 §16 实施中（Unit 1–6 完成）
+状态：设计已冻结；§16 Unit 1–10 代码落地；E1 花字/callout 已换确定性合成器
 
 日期：2026-07-18
 
@@ -757,27 +757,29 @@ voice_provider_incompatible
 
 ## 17. Definition of Done
 
-- [ ] 五类 Registry 均由 Hub typed load、交叉校验并冻结；
-- [ ] 当前 V4 Run 不再读取 `EFFECTS` 或 V3 动效枚举作为权威源；
-- [ ] 当前 6 个 SFX 的文件哈希、格式和语义配置进入冻结 Registry；
-- [ ] `fixed` Voice Profile 在 TTS 前解析，默认速度来自 Registry/Case 覆盖；
-- [ ] Stage 4 生产路径拒绝 Fake executor；
-- [ ] 最终 `derivation_signature` 只由 `PreparedDerivation` 计算，Stage 4 不预计算；
-- [ ] `site_params_flower_text_frame_sequence` 原子注册 base/stage/final 三成员组；
-- [ ] `editor_sequence` 只要求 source_result/editor_page/edited_result，modal 仅为可选 context；
-- [ ] 真实派生使用 Stage 4 父素材、上下文和目标角色，不重新选图；
-- [ ] 网站截图缺失时 fail-loud，不生成伪截图；
-- [ ] 派生输出通过 Stage 3 注册 lineage/group/signature 后才可被 Stage 4 选中；
-- [ ] 相同签名不重复调用 GPT Image；
-- [ ] 不同 Prompt、模型、父素材或尺寸必然产生不同签名；
-- [ ] Gallery/sequence 的 effect、方向、容器和背景按组冻结；
-- [ ] MotionAudioPlan 不包含帧号或字幕 Cue；
-- [ ] SFX 只输出语义意图，最终峰值对齐留给 Stage 6；
-- [ ] SFX 保持独立音频资产边界，不进入 Stage 3 视觉 ObjectStore；
-- [ ] 无 AI 视觉审核、reviewed/human_approved 字段或品牌 IP 缺图兜底；
-- [ ] Stage 0 s001-s010 能力矩阵均有合法 binding 或明确 fail-loud；
-- [ ] Registry/Prompt/model/handler 变化使 Resume 失效；
-- [ ] API Key、绝对路径和本地 secret 不进入快照、trace 或 Git。
+- [x] 五类 Registry 均由 Hub typed load、交叉校验并冻结；
+- [x] 当前 V4 Run 不再读取 `EFFECTS` 或 V3 动效枚举作为权威源；
+- [x] 当前 6 个 SFX 的文件哈希、格式和语义配置进入冻结 Registry；
+- [x] `fixed` Voice Profile 在 TTS 前解析，默认速度来自 Registry/Case 覆盖；
+- [x] Stage 4 生产路径拒绝 Fake executor；
+- [x] 最终 `derivation_signature` 只由 `PreparedDerivation` 计算，Stage 4 不预计算；
+- [x] `site_params_flower_text_frame_sequence` 原子注册 base/stage/final 三成员组；
+- [x] `editor_sequence` 只要求 source_result/editor_page/edited_result，modal 仅为可选 context；
+- [x] 真实派生使用 Stage 4 父素材、上下文和目标角色，不重新选图；
+- [x] 网站截图缺失时 fail-loud，不生成伪截图；
+- [x] 派生输出通过 Stage 3 注册 lineage/group/signature 后才可被 Stage 4 选中；
+- [x] 相同签名不重复调用 GPT Image；
+- [x] 不同 Prompt、模型、父素材或尺寸必然产生不同签名；
+- [x] Gallery/sequence 的 effect、方向、容器和背景按组冻结；
+- [x] MotionAudioPlan 不包含帧号或字幕 Cue；
+- [x] SFX 只输出语义意图，最终峰值对齐留给 Stage 6；
+- [x] SFX 保持独立音频资产边界，不进入 Stage 3 视觉 ObjectStore；
+- [x] 无 AI 视觉审核、reviewed/human_approved 字段或品牌 IP 缺图兜底；
+- [x] Stage 0 s001-s010 能力矩阵均有合法 binding 或明确 fail-loud；
+- [x] Registry/Prompt/model/handler 变化使 Resume 失效；
+- [x] API Key、绝对路径和本地 secret 不进入快照、trace 或 Git。
+
+注：Effect Registry `handler` 在 Stage 5 仅为可导入占位（`runtime: noop`）；像素级 Remotion 执行归 Stage 6 Render Adapter，不作为 Stage 5 DoD 的“完整可执行”宣称。
 
 ## 18. 进入 Stage 6 前必须冻结
 

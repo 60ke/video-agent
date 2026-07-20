@@ -90,7 +90,7 @@ def test_schema_init_is_idempotent(tmp_path: Path) -> None:
     first = SQLiteAssetRepository(tmp_path / "repo.sqlite3", store, hub)
     first.close()
     second = SQLiteAssetRepository(tmp_path / "repo.sqlite3", store, hub)
-    assert second.connection.execute("SELECT value FROM repository_meta WHERE key='schema_version'").fetchone()["value"] == "3"
+    assert second.connection.execute("SELECT value FROM repository_meta WHERE key='schema_version'").fetchone()["value"] == "4"
     second.close()
 
 

@@ -143,7 +143,10 @@ def test_invalid_handler_fails_during_hub_startup() -> None:
 def test_stage5_typed_registries_cross_validate() -> None:
     hub = CapabilityRegistryHub.load(REGISTRY_ROOT)
     assert hub.require_entry("derivation", "result_to_reference_mock").capabilities.executor_kind == "gpt_image"
-    assert hub.require_entry("effect", "slide_gallery").capabilities.minimum_scene_frames == 36
+    assert hub.require_entry("effect", "slide_gallery").capabilities.event_timing[
+        "item_transition"
+    ].variants[0].minimum_interval_frames == 36
+    assert hub.require_entry("effect", "slide_gallery").capabilities.minimum_scene_frames == 1
     assert hub.require_entry("voice", "minimax_adman_clear_01").capabilities.resolve_mode == "fixed"
     snapshot = hub.snapshot()
     assert {item.registry_id for item in snapshot.registries} >= {

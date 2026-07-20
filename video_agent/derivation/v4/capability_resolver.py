@@ -6,6 +6,7 @@ from video_agent.assets.v4.derivation_orchestrator import DerivationCapabilityBi
 from video_agent.assets.v4.stage4_errors import Stage4Error
 from video_agent.contracts.v4 import DerivationEntry
 from video_agent.contracts.v4.resolved_assets import DerivationRequest
+from video_agent.derivation.v4.handler_fingerprint import handler_source_fingerprint
 from video_agent.derivation.v4.prompt_composer import prompt_template_sha256
 from video_agent.derivation.v4.sizing import target_size_for_orientation
 from video_agent.io import sha256_json
@@ -106,6 +107,7 @@ class RegistryDerivationCapabilityResolver:
             }
         )
         target_size = target_size_for_orientation(request.target_orientation)
+        handler_sha = handler_source_fingerprint(entry.handler)
         execution_fingerprint = sha256_json(
             {
                 "capability_id": entry.id,
@@ -115,6 +117,8 @@ class RegistryDerivationCapabilityResolver:
                 "prompt_template_sha256": template_sha,
                 "website_truth_policy": caps.website_truth_policy,
                 "target_size": target_size,
+                "handler": entry.handler or "",
+                "handler_source_sha256": handler_sha,
             }
         )
         provider_model = "pil" if caps.executor_kind == "deterministic" else "gpt-image-2"

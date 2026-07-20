@@ -1,0 +1,776 @@
+{
+  "schema_version": 1,
+  "case_id": "v4_stage0_golden",
+  "run_id": "golden_compile",
+  "narration_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "speech_timing_lock_sha256": "52cc1cca3d5298aebfc2938eebc2f394842de6d4055f82f9d4c9c79a6beea4d0",
+  "scene_plan_sha256": "f2dce643733068778f8adffaf76487417c4e3747d9a1f05072ebbcc92b911b83",
+  "fps": 30,
+  "duration_frames": 336,
+  "scene_spans": [
+    {
+      "scene_id": "s001",
+      "token_ids": [
+        "tok_0000",
+        "tok_0001",
+        "tok_0002",
+        "tok_0003",
+        "tok_0004",
+        "tok_0005",
+        "tok_0006",
+        "tok_0007",
+        "tok_0008",
+        "tok_0009",
+        "tok_0010",
+        "tok_0011",
+        "tok_0012",
+        "tok_0013",
+        "tok_0014",
+        "tok_0015",
+        "tok_0016",
+        "tok_0017",
+        "tok_0018",
+        "tok_0019",
+        "tok_0020",
+        "tok_0021",
+        "tok_0022",
+        "tok_0023",
+        "tok_0024",
+        "tok_0025",
+        "tok_0026",
+        "tok_0027",
+        "tok_0028"
+      ],
+      "start_frame": 0,
+      "end_frame": 60
+    },
+    {
+      "scene_id": "s002",
+      "token_ids": [
+        "tok_0030",
+        "tok_0031",
+        "tok_0032",
+        "tok_0033",
+        "tok_0034",
+        "tok_0035",
+        "tok_0036",
+        "tok_0037",
+        "tok_0038",
+        "tok_0039",
+        "tok_0040",
+        "tok_0041",
+        "tok_0042",
+        "tok_0043",
+        "tok_0044",
+        "tok_0045",
+        "tok_0046",
+        "tok_0047"
+      ],
+      "start_frame": 60,
+      "end_frame": 98
+    },
+    {
+      "scene_id": "s003",
+      "token_ids": [
+        "tok_0049",
+        "tok_0050",
+        "tok_0051",
+        "tok_0052",
+        "tok_0053",
+        "tok_0054",
+        "tok_0055",
+        "tok_0056",
+        "tok_0057",
+        "tok_0058",
+        "tok_0059",
+        "tok_0060"
+      ],
+      "start_frame": 98,
+      "end_frame": 125
+    },
+    {
+      "scene_id": "s004",
+      "token_ids": [
+        "tok_0062",
+        "tok_0063",
+        "tok_0064",
+        "tok_0065",
+        "tok_0066",
+        "tok_0067",
+        "tok_0068",
+        "tok_0069",
+        "tok_0070",
+        "tok_0071",
+        "tok_0072",
+        "tok_0073"
+      ],
+      "start_frame": 125,
+      "end_frame": 151
+    },
+    {
+      "scene_id": "s005",
+      "token_ids": [
+        "tok_0075",
+        "tok_0076",
+        "tok_0077",
+        "tok_0078",
+        "tok_0079",
+        "tok_0080",
+        "tok_0081",
+        "tok_0082",
+        "tok_0083",
+        "tok_0084",
+        "tok_0085",
+        "tok_0086",
+        "tok_0087"
+      ],
+      "start_frame": 151,
+      "end_frame": 179
+    },
+    {
+      "scene_id": "s006",
+      "token_ids": [
+        "tok_0089",
+        "tok_0090",
+        "tok_0091",
+        "tok_0092",
+        "tok_0093",
+        "tok_0094",
+        "tok_0095",
+        "tok_0096",
+        "tok_0097",
+        "tok_0098",
+        "tok_0099",
+        "tok_0100",
+        "tok_0101",
+        "tok_0102",
+        "tok_0103",
+        "tok_0104",
+        "tok_0105",
+        "tok_0106",
+        "tok_0107"
+      ],
+      "start_frame": 179,
+      "end_frame": 219
+    },
+    {
+      "scene_id": "s007",
+      "token_ids": [
+        "tok_0109",
+        "tok_0110",
+        "tok_0111",
+        "tok_0112",
+        "tok_0113",
+        "tok_0114",
+        "tok_0115",
+        "tok_0116",
+        "tok_0117",
+        "tok_0118",
+        "tok_0119",
+        "tok_0120",
+        "tok_0121",
+        "tok_0122",
+        "tok_0123",
+        "tok_0124",
+        "tok_0125",
+        "tok_0126"
+      ],
+      "start_frame": 219,
+      "end_frame": 257
+    },
+    {
+      "scene_id": "s008",
+      "token_ids": [
+        "tok_0128",
+        "tok_0129",
+        "tok_0130",
+        "tok_0131",
+        "tok_0132",
+        "tok_0133",
+        "tok_0134",
+        "tok_0135",
+        "tok_0136",
+        "tok_0137",
+        "tok_0138",
+        "tok_0139"
+      ],
+      "start_frame": 257,
+      "end_frame": 283
+    },
+    {
+      "scene_id": "s009",
+      "token_ids": [
+        "tok_0141",
+        "tok_0142",
+        "tok_0143",
+        "tok_0144",
+        "tok_0145",
+        "tok_0146",
+        "tok_0147",
+        "tok_0148",
+        "tok_0149",
+        "tok_0150",
+        "tok_0151",
+        "tok_0152"
+      ],
+      "start_frame": 283,
+      "end_frame": 310
+    },
+    {
+      "scene_id": "s010",
+      "token_ids": [
+        "tok_0154",
+        "tok_0155",
+        "tok_0156",
+        "tok_0157",
+        "tok_0158",
+        "tok_0159",
+        "tok_0160",
+        "tok_0161",
+        "tok_0162",
+        "tok_0163",
+        "tok_0164",
+        "tok_0165"
+      ],
+      "start_frame": 310,
+      "end_frame": 336
+    }
+  ],
+  "anchors": [
+    {
+      "anchor_id": "anchor://s001/c11_17",
+      "scene_id": "s001",
+      "text": "打开柯幻熊猫",
+      "token_ids": [
+        "tok_0012",
+        "tok_0013",
+        "tok_0014",
+        "tok_0015",
+        "tok_0016",
+        "tok_0017"
+      ],
+      "onset_ms": 804,
+      "end_ms": 1206,
+      "onset_frame": 24,
+      "end_frame": 37,
+      "hit_frame": 24
+    },
+    {
+      "anchor_id": "anchor://s002/c27_30",
+      "scene_id": "s002",
+      "text": "文化墙",
+      "token_ids": [
+        "tok_0030",
+        "tok_0031",
+        "tok_0032"
+      ],
+      "onset_ms": 2010,
+      "end_ms": 2211,
+      "onset_frame": 60,
+      "end_frame": 67,
+      "hit_frame": 60
+    },
+    {
+      "anchor_id": "anchor://s002/c30_34",
+      "scene_id": "s002",
+      "text": "门头招牌",
+      "token_ids": [
+        "tok_0034",
+        "tok_0035",
+        "tok_0036",
+        "tok_0037"
+      ],
+      "onset_ms": 2278,
+      "end_ms": 2546,
+      "onset_frame": 68,
+      "end_frame": 77,
+      "hit_frame": 68
+    },
+    {
+      "anchor_id": "anchor://s002/c34_36",
+      "scene_id": "s002",
+      "text": "美陈",
+      "token_ids": [
+        "tok_0039",
+        "tok_0040"
+      ],
+      "onset_ms": 2613,
+      "end_ms": 2747,
+      "onset_frame": 78,
+      "end_frame": 83,
+      "hit_frame": 78
+    },
+    {
+      "anchor_id": "anchor://s002/c36_42",
+      "scene_id": "s002",
+      "text": "都能一键出图",
+      "token_ids": [
+        "tok_0042",
+        "tok_0043",
+        "tok_0044",
+        "tok_0045",
+        "tok_0046",
+        "tok_0047"
+      ],
+      "onset_ms": 2814,
+      "end_ms": 3216,
+      "onset_frame": 84,
+      "end_frame": 97,
+      "hit_frame": 84
+    },
+    {
+      "anchor_id": "anchor://s003/c48_53",
+      "scene_id": "s003",
+      "text": "进入功能页",
+      "token_ids": [
+        "tok_0056",
+        "tok_0057",
+        "tok_0058",
+        "tok_0059",
+        "tok_0060"
+      ],
+      "onset_ms": 3752,
+      "end_ms": 4087,
+      "onset_frame": 113,
+      "end_frame": 123,
+      "hit_frame": 113
+    },
+    {
+      "anchor_id": "anchor://s004/c53_55",
+      "scene_id": "s004",
+      "text": "填上",
+      "token_ids": [
+        "tok_0062",
+        "tok_0063"
+      ],
+      "onset_ms": 4154,
+      "end_ms": 4288,
+      "onset_frame": 125,
+      "end_frame": 129,
+      "hit_frame": 125
+    },
+    {
+      "anchor_id": "anchor://s004/c55_60",
+      "scene_id": "s004",
+      "text": "行业和风格",
+      "token_ids": [
+        "tok_0064",
+        "tok_0065",
+        "tok_0066",
+        "tok_0067",
+        "tok_0068"
+      ],
+      "onset_ms": 4288,
+      "end_ms": 4623,
+      "onset_frame": 129,
+      "end_frame": 139,
+      "hit_frame": 129
+    },
+    {
+      "anchor_id": "anchor://s004/c60_64",
+      "scene_id": "s004",
+      "text": "点击生成",
+      "token_ids": [
+        "tok_0070",
+        "tok_0071",
+        "tok_0072",
+        "tok_0073"
+      ],
+      "onset_ms": 4690,
+      "end_ms": 4958,
+      "onset_frame": 141,
+      "end_frame": 149,
+      "hit_frame": 141
+    },
+    {
+      "anchor_id": "anchor://s004/c53_60",
+      "scene_id": "s004",
+      "text": "填上行业和风格",
+      "token_ids": [
+        "tok_0062",
+        "tok_0063",
+        "tok_0064",
+        "tok_0065",
+        "tok_0066",
+        "tok_0067",
+        "tok_0068"
+      ],
+      "onset_ms": 4154,
+      "end_ms": 4623,
+      "onset_frame": 125,
+      "end_frame": 139,
+      "hit_frame": 125
+    },
+    {
+      "anchor_id": "anchor://s005/c64_72",
+      "scene_id": "s005",
+      "text": "一整面文化墙方案",
+      "token_ids": [
+        "tok_0075",
+        "tok_0076",
+        "tok_0077",
+        "tok_0078",
+        "tok_0079",
+        "tok_0080",
+        "tok_0081",
+        "tok_0082"
+      ],
+      "onset_ms": 5025,
+      "end_ms": 5561,
+      "onset_frame": 151,
+      "end_frame": 167,
+      "hit_frame": 151
+    },
+    {
+      "anchor_id": "anchor://s006/c82_85",
+      "scene_id": "s006",
+      "text": "选中它",
+      "token_ids": [
+        "tok_0095",
+        "tok_0096",
+        "tok_0097"
+      ],
+      "onset_ms": 6365,
+      "end_ms": 6566,
+      "onset_frame": 191,
+      "end_frame": 197,
+      "hit_frame": 191
+    },
+    {
+      "anchor_id": "anchor://s006/c85_89",
+      "scene_id": "s006",
+      "text": "继续编辑",
+      "token_ids": [
+        "tok_0098",
+        "tok_0099",
+        "tok_0100",
+        "tok_0101"
+      ],
+      "onset_ms": 6566,
+      "end_ms": 6834,
+      "onset_frame": 197,
+      "end_frame": 206,
+      "hit_frame": 197
+    },
+    {
+      "anchor_id": "anchor://s006/c89_94",
+      "scene_id": "s006",
+      "text": "改完直接用",
+      "token_ids": [
+        "tok_0103",
+        "tok_0104",
+        "tok_0105",
+        "tok_0106",
+        "tok_0107"
+      ],
+      "onset_ms": 6901,
+      "end_ms": 7236,
+      "onset_frame": 207,
+      "end_frame": 218,
+      "hit_frame": 207
+    },
+    {
+      "anchor_id": "anchor://s007/c96_103",
+      "scene_id": "s007",
+      "text": "上传实景参考图",
+      "token_ids": [
+        "tok_0111",
+        "tok_0112",
+        "tok_0113",
+        "tok_0114",
+        "tok_0115",
+        "tok_0116",
+        "tok_0117"
+      ],
+      "onset_ms": 7437,
+      "end_ms": 7906,
+      "onset_frame": 223,
+      "end_frame": 238,
+      "hit_frame": 223
+    },
+    {
+      "anchor_id": "anchor://s007/c103_111",
+      "scene_id": "s007",
+      "text": "按你的现场出效果",
+      "token_ids": [
+        "tok_0119",
+        "tok_0120",
+        "tok_0121",
+        "tok_0122",
+        "tok_0123",
+        "tok_0124",
+        "tok_0125",
+        "tok_0126"
+      ],
+      "onset_ms": 7973,
+      "end_ms": 8509,
+      "onset_frame": 239,
+      "end_frame": 256,
+      "hit_frame": 239
+    },
+    {
+      "anchor_id": "anchor://s008/c112_117",
+      "scene_id": "s008",
+      "text": "施工平面图",
+      "token_ids": [
+        "tok_0129",
+        "tok_0130",
+        "tok_0131",
+        "tok_0132",
+        "tok_0133"
+      ],
+      "onset_ms": 8643,
+      "end_ms": 8978,
+      "onset_frame": 259,
+      "end_frame": 270,
+      "hit_frame": 259
+    },
+    {
+      "anchor_id": "anchor://s008/c121_123",
+      "scene_id": "s008",
+      "text": "导出",
+      "token_ids": [
+        "tok_0138",
+        "tok_0139"
+      ],
+      "onset_ms": 9246,
+      "end_ms": 9380,
+      "onset_frame": 277,
+      "end_frame": 282,
+      "hit_frame": 277
+    },
+    {
+      "anchor_id": "anchor://s009/c123_134",
+      "scene_id": "s009",
+      "text": "设计这件事，从没这么省心。",
+      "token_ids": [
+        "tok_0141",
+        "tok_0142",
+        "tok_0143",
+        "tok_0144",
+        "tok_0145",
+        "tok_0146",
+        "tok_0147",
+        "tok_0148",
+        "tok_0149",
+        "tok_0150",
+        "tok_0151",
+        "tok_0152"
+      ],
+      "onset_ms": 9447,
+      "end_ms": 10251,
+      "onset_frame": 283,
+      "end_frame": 308,
+      "hit_frame": 283
+    },
+    {
+      "anchor_id": "anchor://s010/c134_140",
+      "scene_id": "s010",
+      "text": "搜索柯幻熊猫",
+      "token_ids": [
+        "tok_0154",
+        "tok_0155",
+        "tok_0156",
+        "tok_0157",
+        "tok_0158",
+        "tok_0159"
+      ],
+      "onset_ms": 10318,
+      "end_ms": 10720,
+      "onset_frame": 310,
+      "end_frame": 322,
+      "hit_frame": 310
+    }
+  ],
+  "bindings": [
+    {
+      "binding_id": "binding://s001/slot/home",
+      "scene_id": "s001",
+      "anchor_id": "anchor://s001/c11_17",
+      "binding_kind": "slot",
+      "source_id": "home"
+    },
+    {
+      "binding_id": "binding://s001/claim/real_website_screenshot",
+      "scene_id": "s001",
+      "anchor_id": "anchor://s001/c11_17",
+      "binding_kind": "claim",
+      "source_id": "real_website_screenshot"
+    },
+    {
+      "binding_id": "binding://s002/slot/g1",
+      "scene_id": "s002",
+      "anchor_id": "anchor://s002/c27_30",
+      "binding_kind": "slot",
+      "source_id": "g1"
+    },
+    {
+      "binding_id": "binding://s002/slot/g2",
+      "scene_id": "s002",
+      "anchor_id": "anchor://s002/c30_34",
+      "binding_kind": "slot",
+      "source_id": "g2"
+    },
+    {
+      "binding_id": "binding://s002/slot/g3",
+      "scene_id": "s002",
+      "anchor_id": "anchor://s002/c34_36",
+      "binding_kind": "slot",
+      "source_id": "g3"
+    },
+    {
+      "binding_id": "binding://s002/claim/feature_can_generate_result",
+      "scene_id": "s002",
+      "anchor_id": "anchor://s002/c36_42",
+      "binding_kind": "claim",
+      "source_id": "feature_can_generate_result"
+    },
+    {
+      "binding_id": "binding://s003/slot/entry",
+      "scene_id": "s003",
+      "anchor_id": "anchor://s003/c48_53",
+      "binding_kind": "slot",
+      "source_id": "entry"
+    },
+    {
+      "binding_id": "binding://s003/operation/open_feature",
+      "scene_id": "s003",
+      "anchor_id": "anchor://s003/c48_53",
+      "binding_kind": "operation",
+      "source_id": "open_feature"
+    },
+    {
+      "binding_id": "binding://s004/slot/p_base",
+      "scene_id": "s004",
+      "anchor_id": "anchor://s004/c53_55",
+      "binding_kind": "slot",
+      "source_id": "p_base"
+    },
+    {
+      "binding_id": "binding://s004/slot/p_stage",
+      "scene_id": "s004",
+      "anchor_id": "anchor://s004/c55_60",
+      "binding_kind": "slot",
+      "source_id": "p_stage"
+    },
+    {
+      "binding_id": "binding://s004/slot/p_final",
+      "scene_id": "s004",
+      "anchor_id": "anchor://s004/c60_64",
+      "binding_kind": "slot",
+      "source_id": "p_final"
+    },
+    {
+      "binding_id": "binding://s004/operation/fill_fields",
+      "scene_id": "s004",
+      "anchor_id": "anchor://s004/c53_60",
+      "binding_kind": "operation",
+      "source_id": "fill_fields"
+    },
+    {
+      "binding_id": "binding://s004/operation/generate",
+      "scene_id": "s004",
+      "anchor_id": "anchor://s004/c60_64",
+      "binding_kind": "operation",
+      "source_id": "generate"
+    },
+    {
+      "binding_id": "binding://s005/slot/result",
+      "scene_id": "s005",
+      "anchor_id": "anchor://s005/c64_72",
+      "binding_kind": "slot",
+      "source_id": "result"
+    },
+    {
+      "binding_id": "binding://s005/claim/feature_can_generate_result",
+      "scene_id": "s005",
+      "anchor_id": "anchor://s005/c64_72",
+      "binding_kind": "claim",
+      "source_id": "feature_can_generate_result"
+    },
+    {
+      "binding_id": "binding://s006/slot/selected",
+      "scene_id": "s006",
+      "anchor_id": "anchor://s006/c82_85",
+      "binding_kind": "slot",
+      "source_id": "selected"
+    },
+    {
+      "binding_id": "binding://s006/slot/editor",
+      "scene_id": "s006",
+      "anchor_id": "anchor://s006/c85_89",
+      "binding_kind": "slot",
+      "source_id": "editor"
+    },
+    {
+      "binding_id": "binding://s006/slot/edited",
+      "scene_id": "s006",
+      "anchor_id": "anchor://s006/c89_94",
+      "binding_kind": "slot",
+      "source_id": "edited"
+    },
+    {
+      "binding_id": "binding://s006/operation/select_result",
+      "scene_id": "s006",
+      "anchor_id": "anchor://s006/c82_85",
+      "binding_kind": "operation",
+      "source_id": "select_result"
+    },
+    {
+      "binding_id": "binding://s006/operation/open_editor",
+      "scene_id": "s006",
+      "anchor_id": "anchor://s006/c85_89",
+      "binding_kind": "operation",
+      "source_id": "open_editor"
+    },
+    {
+      "binding_id": "binding://s007/slot/reference",
+      "scene_id": "s007",
+      "anchor_id": "anchor://s007/c96_103",
+      "binding_kind": "slot",
+      "source_id": "reference"
+    },
+    {
+      "binding_id": "binding://s007/slot/generated",
+      "scene_id": "s007",
+      "anchor_id": "anchor://s007/c103_111",
+      "binding_kind": "slot",
+      "source_id": "generated"
+    },
+    {
+      "binding_id": "binding://s007/operation/upload_reference",
+      "scene_id": "s007",
+      "anchor_id": "anchor://s007/c96_103",
+      "binding_kind": "operation",
+      "source_id": "upload_reference"
+    },
+    {
+      "binding_id": "binding://s008/slot/plan",
+      "scene_id": "s008",
+      "anchor_id": "anchor://s008/c112_117",
+      "binding_kind": "slot",
+      "source_id": "plan"
+    },
+    {
+      "binding_id": "binding://s008/operation/export_plan",
+      "scene_id": "s008",
+      "anchor_id": "anchor://s008/c121_123",
+      "binding_kind": "operation",
+      "source_id": "export_plan"
+    },
+    {
+      "binding_id": "binding://s009/operation/s009.scene",
+      "scene_id": "s009",
+      "anchor_id": "anchor://s009/c123_134",
+      "binding_kind": "operation",
+      "source_id": "s009.scene"
+    },
+    {
+      "binding_id": "binding://s010/slot/outro",
+      "scene_id": "s010",
+      "anchor_id": "anchor://s010/c134_140",
+      "binding_kind": "slot",
+      "source_id": "outro"
+    }
+  ]
+}

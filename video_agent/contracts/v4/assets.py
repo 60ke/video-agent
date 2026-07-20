@@ -217,6 +217,8 @@ class AssetRepositorySnapshotAsset(V4Contract):
     content_sha256: str = Field(pattern=_SHA256_PATTERN)
     status: AssetStatus
     lineage_sha256: str | None = Field(default=None, pattern=_SHA256_PATTERN)
+    evidence_class: EvidenceClass
+    claims: list[str] = Field(default_factory=list)
 
 
 class AssetRepositorySnapshotGroup(V4Contract):

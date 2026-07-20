@@ -1,6 +1,6 @@
 # Video Agent V4 Implementation Progress
 
-Last updated: 2026-07-18
+Last updated: 2026-07-20
 
 ## Authority
 
@@ -22,10 +22,10 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Baseline audit | complete | Current executable pipeline is V3. Stage 1 had design documents only. |
 | Stage 1: semantic Contract and AI runtime | runtime complete / golden conformance partial | Runtime, structured prompts, trace/replay, repair and routing are implemented. Relation-pattern binding, full registry freeze and Stage 0 Rev3 semantic conformance remain open. |
 | Stage 2: capability and asset domain | complete | Typed dynamic registries, deterministic frozen snapshots, strict AssetRecord/Lineage/Group/Evidence contracts, registry-bound validation and Stage 1 projection are implemented. |
-| Stage 3: repository, SQLite, ObjectStore and migration | core complete / evidence snapshot amendment pending | Repository, ObjectStore, import, snapshot, audit and deterministic migration are implemented. Stage6 Unit 0 must add `evidence_class/claims` to `AssetRepositorySnapshotAsset`, bump snapshot schema and hash fixtures so Claim compilation never queries live SQLite. |
+| Stage 3: repository, SQLite, ObjectStore and migration | complete | Repository, ObjectStore, import, snapshot (schema v4 with `evidence_class/claims`), audit and migration are implemented. |
 | Stage 4: dependency, selection and derivation | complete | DoD closed: six slot sources, DAG, alias/dedup, gap policy, signature/`group_reuse`, atomic `register_derived_group`, parameter callout fields, E2 website filter, s001–s010 golden. Production wires Stage5 executor when `repo_root` set; Fake is test-only. |
-| Stage 5: effect, SFX, voice and derivation registries | control plane complete / timing integration pending | Registries/Voice/Derivation/Motion-SFX, signatures, handler fingerprints and Stage0 capability matrix are complete. Stage6 Unit 3 must reconnect Motion to exact `AnchoredTimingPlan.scene_spans`, remove proportional timing fallback and move frame-dependent SFX density arbitration out of Stage5. Effect handlers remain Stage6 Remotion stubs (`noop`). |
-| Stage 6: semantic timing and compilation | design frozen / implementation pending | Design review gaps are closed. Begin with Unit 0 contracts, evidence-bearing repository snapshot amendment and fixtures before compiler or Remotion Adapter work. |
+| Stage 5: effect, SFX, voice and derivation registries | control plane complete / Stage6 timing wired | Registries/Voice/Derivation/Motion-SFX complete. Motion now consumes exact `AnchoredTimingPlan.scene_spans`; proportional fallback removed; Stage5 SFX no longer truncates distinct Anchors via `window_event_budget`. |
+| Stage 6: semantic timing and compilation | Pass B closed / Git checkpoint open | Real MiniMax Pass B closed on run `20260720_110920_904455` (145 tokens, 24.7s, 19 SFX, Remotion+FFmpeg final.mp4). JSON reload uses `load_model(..., strict=False)`. Remaining: Stage6 Git checkpoint. |
 | Stage 7: planner cutover and verification | pending | Formal design document required before implementation. |
 
 ## Working Decisions
@@ -93,9 +93,56 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 - [x] Legacy dry-run follows the real transaction path and rolls back all repository writes.
 - [x] Repaired authoritative editor relationships/workflow data pass a real `migrate-legacy --dry-run` without warnings or failures.
 
+## Stage 6 review fixes (2026-07-20)
+
+| Issue | Fix |
+|---|---|
+| P0 LightSweep empty black | Remotion `EffectStage` draws dedicated sweep/glow layer for `light_sweep` (no asset children required) |
+| P0 BeforeAfter/GridReveal cuts | Comparison (and gallery when effect is multi-asset) compile as one scene-spanning clip with `asset_bindings` + `ordered_items`; export projects them onto one effect instance |
+| P1 Resume never hits | `compiled_video_timeline_sha256` moved to `output_fingerprint*`; Resume compares stable `input_fingerprint` only |
+| Subtitle hardcoded slots | Remotion `SubtitleTrack` reads `platform_profile.subtitle_*` from export; compile uses `get_profile` + PIL 56px font measure |
+| Golden cleared SFX | Golden keeps Stage5 SFX intents; compile peak-aligns real wavs; default CI runs FFmpeg mix on lavfi black; Remotion+mix via `STAGE6_GOLDEN_RENDER=1` |
+| Temp `_patch_*.py` | Deleted from repo root |
+
+## Stage 6 Golden Acceptance Ledger (2026-07-20)
+
+| Check | Result | Notes |
+|---|---|---|
+| s001–s010 compile path (§18 mappings) | PASS | Synthetic char-level `SpeechTimingLock` |
+| Gallery yellow cues + distinct phrase hits | PASS | 文化墙 / 门头招牌 / 美陈 |
+| s005 ≠ s002 gallery identity; s006–s008 inherit primary | PASS | Seeded Stage4 golden repo |
+| s009 no_asset + s010 configured outro | PASS | LightSweep layer + configured outro |
+| Multi-asset comparison export | PASS | `ordered_items` ≥ 2 on one effect instance |
+| Platform subtitle profile export | PASS | `subtitle_top/lower` + `subtitle_font_px=56` |
+| SFX peak compile + FFmpeg mix | PASS | Default CI: lavfi black + mix; Remotion path optional |
+| Remotion `V4Timeline` + final mix | PASS | `STAGE6_GOLDEN_RENDER=1` |
+| Stage0 Pass B MiniMax speech | PASS | run `20260720_110920_904455`; ledger `tests/fixtures/v4/stage6/pass_b_ledger.json` |
+
+Commands:
+
+```powershell
+python -m pytest tests/test_v4_stage6_golden_compile.py::test_stage0_golden_s001_to_s010_compile -q
+$env:STAGE6_GOLDEN_RENDER='1'; python -m pytest tests/test_v4_stage6_golden_compile.py::test_stage0_golden_remotion_render -q
+```
+
+## Stage0 Pass B (2026-07-20)
+
+| Item | Result |
+|---|---|
+| Run | `cases/v4_stage0_golden_20260717/runs/20260720_110920_904455` |
+| MiniMax SpeechTimingLock | 145 word tokens, 24732 ms; no `phrase_anchors` |
+| Scene oracle | Rev3 fixture s001–s010 |
+| s005 ≠ s002 gallery identity | `A0003` ≠ `A0002` |
+| s006–s008 inherit primary | `source_result=A0003` |
+| Compiled frames | 742 @ 30fps |
+| SFX tracks | 19 |
+| Final MP4 | `render/final.mp4` (~2.4 MB with mix) |
+| Entrypoint | `python scripts/run_stage0_pass_b.py` |
+| Status | `pass_b_closed` |
+
 ## Next Continuation Point
 
-Stage 5 control-plane DoD is closed; its exact timing integration remains Stage6 Unit 3. Next: implement Stage6 Unit 0 contracts, evidence-bearing repository snapshot amendment and fixtures.
-- Effect Registry handlers remain `noop` stubs until Stage 6 wires Remotion.
-- Full legacy suite currently has three unrelated baseline failures in `tests/test_assets.py`; they assert removed review metadata and the deleted brand-IP directory scan. These are tracked for the Stage 2 cutover rather than weakening the new Contract.
-- Stage 5 closeout verification: `python -m pytest tests/test_v4_stage5_*.py tests/test_v4_stage4_*.py -q` and `python -m ruff check video_agent/v4/stage5.py video_agent/derivation/v4 video_agent/assets/v4/derivation_orchestrator.py`.
+Stage0 Pass B is closed. Remaining before Stage7:
+1. Create an independent Stage6 Git checkpoint (exclude case runs, derived smoke images, `test*.txt`).
+2. Optionally re-run Pass B against production `var/v4` assets instead of seeded Pass-B sqlite when catalog coverage is ready.
+3. Do not start Stage7 design until the Stage6 checkpoint is committed.

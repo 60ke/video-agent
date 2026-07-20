@@ -1,0 +1,24 @@
+{
+  "effect_instance_id": "fx1",
+  "effect_id": "none",
+  "effect_version": "1",
+  "variant_id": "instant",
+  "start_frame": 0,
+  "end_frame": 12,
+  "events": [],
+  "direction": "none",
+  "layout": {
+    "x": 0,
+    "y": 0,
+    "width": 1080,
+    "height": 1920,
+    "fit": "contain",
+    "border_radius": 0,
+    "opacity": 1.0,
+    "background_style_id": "none",
+    "safe_area_profile_id": "douyin_safe"
+  },
+  "parameters": {},
+  "assets": {},
+  "ordered_items": []
+}

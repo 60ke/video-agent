@@ -36,7 +36,7 @@ from .repository import (
     ResolutionVisibility,
 )
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS repository_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -652,6 +652,8 @@ class SQLiteAssetRepository:
                     content_sha256=asset.content_sha256,
                     status=asset.status,
                     lineage_sha256=lineage_hash,
+                    evidence_class=asset.evidence_class,
+                    claims=list(asset.claims),
                 )
             )
         snapshot_groups = [
@@ -692,6 +694,8 @@ class SQLiteAssetRepository:
                 asset.object_key != summary.object_key
                 or asset.content_sha256 != summary.content_sha256
                 or lineage_hash != summary.lineage_sha256
+                or asset.evidence_class != summary.evidence_class
+                or list(asset.claims) != list(summary.claims)
             ):
                 raise AssetConflictError(f"snapshot asset drift: {summary.asset_ref}")
             self.object_store.verify(asset.object_key, asset.content_sha256)

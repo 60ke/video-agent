@@ -107,6 +107,53 @@ def command_v4_stage4(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def command_v4_stage5(args: argparse.Namespace) -> dict[str, Any]:
+    case_dir = Path(args.case).resolve()
+    context = RunContext.open(case_dir, args.resume) if args.resume else RunContext.create(case_dir)
+    result = V4Orchestrator(context).run_stage5(
+        run_seed=args.seed,
+        sfx_profile_id=args.sfx_profile,
+    )
+    return {
+        "ok": True,
+        "run_id": context.run_id,
+        "run_dir": context.run_dir.as_posix(),
+        "motion_audio_plan": result.motion_audio_plan.as_posix(),
+        "anchored_timing_plan": result.anchored_timing_plan.as_posix(),
+        "manifest": result.manifest.as_posix(),
+    }
+
+
+def command_v4_stage6(args: argparse.Namespace) -> dict[str, Any]:
+    case_dir = Path(args.case).resolve()
+    if not args.resume:
+        raise ValueError("v4-stage6 requires --resume <run_id>")
+    context = RunContext.open(case_dir, args.resume)
+    result = V4Orchestrator(context).run_stage6(
+        phase=args.phase,
+        postroll_frames=args.postroll_frames,
+        object_root=Path(args.object_root).resolve() if args.object_root else None,
+        render=bool(args.render),
+        skip_ffmpeg=bool(args.skip_ffmpeg),
+    )
+    payload: dict[str, Any] = {
+        "ok": True,
+        "run_id": context.run_id,
+        "run_dir": context.run_dir.as_posix(),
+        "phase": result.phase,
+        "manifest": result.manifest.as_posix(),
+    }
+    if result.anchored_timing_plan is not None:
+        payload["anchored_timing_plan"] = result.anchored_timing_plan.as_posix()
+    if result.compiled_timeline is not None:
+        payload["compiled_video_timeline"] = result.compiled_timeline.as_posix()
+    if result.remotion_timeline is not None:
+        payload["remotion_timeline"] = result.remotion_timeline.as_posix()
+    if result.final_video is not None:
+        payload["final_video"] = result.final_video.as_posix()
+    return payload
+
+
 def command_generate_video(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(__file__).resolve().parents[1]
     cases_root = Path(args.cases).resolve()
@@ -430,6 +477,29 @@ def build_parser() -> argparse.ArgumentParser:
     v4_stage4.add_argument("--db")
     v4_stage4.add_argument("--object-root")
     v4_stage4.set_defaults(handler=command_v4_stage4)
+
+    v4_stage5 = sub.add_parser("v4-stage5", help="Assign motion/SFX into MotionAudioPlan")
+    v4_stage5.add_argument("--json", dest="sub_json", action="store_true")
+    v4_stage5.add_argument("--case", required=True)
+    v4_stage5.add_argument("--resume")
+    v4_stage5.add_argument("--seed", default="default")
+    v4_stage5.add_argument("--sfx-profile", default="normal")
+    v4_stage5.set_defaults(handler=command_v4_stage5)
+
+    v4_stage6 = sub.add_parser("v4-stage6", help="Anchor timing and compile Remotion timeline")
+    v4_stage6.add_argument("--json", dest="sub_json", action="store_true")
+    v4_stage6.add_argument("--case", required=True)
+    v4_stage6.add_argument("--resume", required=True)
+    v4_stage6.add_argument("--phase", choices=["anchor", "compile-render"])
+    v4_stage6.add_argument("--postroll-frames", type=int, default=0)
+    v4_stage6.add_argument("--object-root")
+    v4_stage6.add_argument("--render", action="store_true", help="Run Remotion V4Timeline + FFmpeg mix")
+    v4_stage6.add_argument(
+        "--skip-ffmpeg",
+        action="store_true",
+        help="With --render, keep silent Remotion MP4 and skip audio mix",
+    )
+    v4_stage6.set_defaults(handler=command_v4_stage6)
 
     v4_assets = sub.add_parser("v4-assets", help="Manage the V4 asset repository")
     v4_assets.add_argument("--json", dest="sub_json", action="store_true")

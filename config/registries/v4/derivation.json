@@ -10,9 +10,15 @@
       "capabilities": {
         "version": "1",
         "executor_kind": "deterministic",
-        "input_roles": ["site_home", "parameter_panel"],
+        "input_roles": [
+          "site_home",
+          "parameter_panel"
+        ],
         "context_roles": [],
-        "output_roles": ["site_home", "parameter_panel"],
+        "output_roles": [
+          "site_home",
+          "parameter_panel"
+        ],
         "allowed_group_patterns": [],
         "minimum_parents": 1,
         "maximum_parents": 1,
@@ -20,9 +26,14 @@
         "prompt_template": null,
         "prompt_contract_version": null,
         "provider_profile": null,
-        "supports_orientations": ["portrait", "landscape", "square"],
+        "supports_orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "website_truth_policy": "faithful_only"
-      }
+      },
+      "handler": "video_agent.derivation.v4.handler_refs:DeterministicDerivationExecutor"
     },
     {
       "id": "site_feature_entry_callout_keyframe",
@@ -31,9 +42,13 @@
       "capabilities": {
         "version": "1",
         "executor_kind": "deterministic",
-        "input_roles": ["feature_entry"],
+        "input_roles": [
+          "feature_entry"
+        ],
         "context_roles": [],
-        "output_roles": ["feature_entry"],
+        "output_roles": [
+          "feature_entry"
+        ],
         "allowed_group_patterns": [],
         "minimum_parents": 1,
         "maximum_parents": 1,
@@ -41,9 +56,14 @@
         "prompt_template": null,
         "prompt_contract_version": null,
         "provider_profile": null,
-        "supports_orientations": ["portrait", "landscape", "square"],
+        "supports_orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "website_truth_policy": "faithful_only"
-      }
+      },
+      "handler": "video_agent.derivation.v4.handler_refs:DeterministicDerivationExecutor"
     },
     {
       "id": "site_params_flower_text_frame_sequence",
@@ -52,19 +72,30 @@
       "capabilities": {
         "version": "1",
         "executor_kind": "deterministic",
-        "input_roles": ["parameter_panel"],
+        "input_roles": [
+          "parameter_panel"
+        ],
         "context_roles": [],
-        "output_roles": ["parameter_panel"],
-        "allowed_group_patterns": ["parameter_callout_sequence"],
+        "output_roles": [
+          "parameter_panel"
+        ],
+        "allowed_group_patterns": [
+          "parameter_callout_sequence"
+        ],
         "minimum_parents": 1,
         "maximum_parents": 1,
         "output_evidence_class": "E1_faithful_derivative",
         "prompt_template": null,
         "prompt_contract_version": null,
         "provider_profile": null,
-        "supports_orientations": ["portrait", "landscape", "square"],
+        "supports_orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "website_truth_policy": "faithful_only"
-      }
+      },
+      "handler": "video_agent.derivation.v4.handler_refs:DeterministicDerivationExecutor"
     },
     {
       "id": "result_to_reference_mock",
@@ -73,19 +104,30 @@
       "capabilities": {
         "version": "1",
         "executor_kind": "gpt_image",
-        "input_roles": ["result_image"],
+        "input_roles": [
+          "result_image"
+        ],
         "context_roles": [],
-        "output_roles": ["reference_image"],
-        "allowed_group_patterns": ["reference_result_plan"],
+        "output_roles": [
+          "reference_image"
+        ],
+        "allowed_group_patterns": [
+          "reference_result_plan"
+        ],
         "minimum_parents": 1,
         "maximum_parents": 1,
         "output_evidence_class": "E2_semantic_derivative",
         "prompt_template": "video_agent/prompts/v4/derivation/result_to_reference_mock/system.v1.md",
         "prompt_contract_version": "result_to_reference_mock.v1",
         "provider_profile": "gpt_image_default",
-        "supports_orientations": ["portrait", "landscape", "square"],
+        "supports_orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "website_truth_policy": "forbidden"
-      }
+      },
+      "handler": "video_agent.derivation.v4.handler_refs:GptImageDerivationExecutor"
     },
     {
       "id": "reference_to_result",
@@ -94,19 +136,30 @@
       "capabilities": {
         "version": "1",
         "executor_kind": "gpt_image",
-        "input_roles": ["reference_image"],
+        "input_roles": [
+          "reference_image"
+        ],
         "context_roles": [],
-        "output_roles": ["result_image"],
-        "allowed_group_patterns": ["reference_result_plan"],
+        "output_roles": [
+          "result_image"
+        ],
+        "allowed_group_patterns": [
+          "reference_result_plan"
+        ],
         "minimum_parents": 1,
         "maximum_parents": 1,
         "output_evidence_class": "E2_semantic_derivative",
         "prompt_template": "video_agent/prompts/v4/derivation/reference_to_result/system.v1.md",
         "prompt_contract_version": "reference_to_result.v1",
         "provider_profile": "gpt_image_default",
-        "supports_orientations": ["portrait", "landscape", "square"],
+        "supports_orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "website_truth_policy": "forbidden"
-      }
+      },
+      "handler": "video_agent.derivation.v4.handler_refs:GptImageDerivationExecutor"
     },
     {
       "id": "result_to_flat_plan",
@@ -115,19 +168,30 @@
       "capabilities": {
         "version": "1",
         "executor_kind": "gpt_image",
-        "input_roles": ["result_image"],
+        "input_roles": [
+          "result_image"
+        ],
         "context_roles": [],
-        "output_roles": ["flat_plan"],
-        "allowed_group_patterns": ["reference_result_plan"],
+        "output_roles": [
+          "flat_plan"
+        ],
+        "allowed_group_patterns": [
+          "reference_result_plan"
+        ],
         "minimum_parents": 1,
         "maximum_parents": 1,
         "output_evidence_class": "E2_semantic_derivative",
         "prompt_template": "video_agent/prompts/v4/derivation/result_to_flat_plan/system.v1.md",
         "prompt_contract_version": "result_to_flat_plan.v1",
         "provider_profile": "gpt_image_default",
-        "supports_orientations": ["portrait", "landscape", "square"],
+        "supports_orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "website_truth_policy": "forbidden"
-      }
+      },
+      "handler": "video_agent.derivation.v4.handler_refs:GptImageDerivationExecutor"
     },
     {
       "id": "result_to_editor_process",
@@ -136,19 +200,33 @@
       "capabilities": {
         "version": "1",
         "executor_kind": "composite",
-        "input_roles": ["result_image"],
-        "context_roles": ["editor_modal"],
-        "output_roles": ["editor_page", "edited_result"],
-        "allowed_group_patterns": ["editor_sequence"],
+        "input_roles": [
+          "result_image"
+        ],
+        "context_roles": [
+          "editor_modal"
+        ],
+        "output_roles": [
+          "editor_page",
+          "edited_result"
+        ],
+        "allowed_group_patterns": [
+          "editor_sequence"
+        ],
         "minimum_parents": 1,
         "maximum_parents": 1,
         "output_evidence_class": "E2_semantic_derivative",
         "prompt_template": "video_agent/prompts/v4/derivation/result_to_editor_process/system.v1.md",
         "prompt_contract_version": "result_to_editor_process.v1",
         "provider_profile": "gpt_image_default",
-        "supports_orientations": ["portrait", "landscape", "square"],
+        "supports_orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "website_truth_policy": "forbidden"
-      }
+      },
+      "handler": "video_agent.derivation.v4.handler_refs:GptImageDerivationExecutor"
     },
     {
       "id": "result_to_edited_result",
@@ -157,9 +235,13 @@
       "capabilities": {
         "version": "1",
         "executor_kind": "gpt_image",
-        "input_roles": ["result_image"],
+        "input_roles": [
+          "result_image"
+        ],
         "context_roles": [],
-        "output_roles": ["edited_result"],
+        "output_roles": [
+          "edited_result"
+        ],
         "allowed_group_patterns": [],
         "minimum_parents": 1,
         "maximum_parents": 1,
@@ -167,9 +249,14 @@
         "prompt_template": "video_agent/prompts/v4/derivation/result_to_edited_result/system.v1.md",
         "prompt_contract_version": "result_to_edited_result.v1",
         "provider_profile": "gpt_image_default",
-        "supports_orientations": ["portrait", "landscape", "square"],
+        "supports_orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "website_truth_policy": "forbidden"
-      }
+      },
+      "handler": "video_agent.derivation.v4.handler_refs:GptImageDerivationExecutor"
     },
     {
       "id": "text_to_result",
@@ -180,7 +267,9 @@
         "executor_kind": "gpt_image",
         "input_roles": [],
         "context_roles": [],
-        "output_roles": ["result_image"],
+        "output_roles": [
+          "result_image"
+        ],
         "allowed_group_patterns": [],
         "minimum_parents": 0,
         "maximum_parents": 0,
@@ -188,9 +277,14 @@
         "prompt_template": "video_agent/prompts/v4/derivation/text_to_result/system.v1.md",
         "prompt_contract_version": "text_to_result.v1",
         "provider_profile": "gpt_image_default",
-        "supports_orientations": ["portrait", "landscape", "square"],
+        "supports_orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "website_truth_policy": "forbidden"
-      }
+      },
+      "handler": "video_agent.derivation.v4.handler_refs:GptImageDerivationExecutor"
     },
     {
       "id": "normalize_gallery_asset",
@@ -199,9 +293,13 @@
       "capabilities": {
         "version": "1",
         "executor_kind": "deterministic",
-        "input_roles": ["result_image"],
+        "input_roles": [
+          "result_image"
+        ],
         "context_roles": [],
-        "output_roles": ["result_image"],
+        "output_roles": [
+          "result_image"
+        ],
         "allowed_group_patterns": [],
         "minimum_parents": 1,
         "maximum_parents": 1,
@@ -209,9 +307,14 @@
         "prompt_template": null,
         "prompt_contract_version": null,
         "provider_profile": null,
-        "supports_orientations": ["portrait", "landscape", "square"],
+        "supports_orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "website_truth_policy": "forbidden"
-      }
+      },
+      "handler": "video_agent.derivation.v4.handler_refs:DeterministicDerivationExecutor"
     }
   ]
 }

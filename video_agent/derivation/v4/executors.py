@@ -5,14 +5,14 @@ from hashlib import sha256
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+from PIL import Image, ImageOps
 
 from video_agent.ai.gpt_image import edit_image
 from video_agent.assets.v4.derivation_orchestrator import (
     DerivationCapabilityBinding,
     DerivationResultDraft,
     PreparedDerivation,
-    build_derivation_signature,
+    member_derivation_signature,
 )
 from video_agent.assets.v4.repository import AssetDraft, AssetResolutionSession
 from video_agent.assets.v4.stage4_errors import Stage4Error
@@ -24,12 +24,16 @@ from video_agent.contracts.v4 import (
     SourceKind,
 )
 from video_agent.contracts.v4.resolved_assets import DerivationRequest
+from video_agent.derivation.v4.e1_compositor import (
+    apply_feature_entry_callout,
+    fit_to_douyin_canvas,
+    render_parameter_flower_frames,
+    try_load_persisted_parameter_sequence,
+)
 from video_agent.derivation.v4.prompt_composer import compose_derivation_prompt
 from video_agent.derivation.v4.sizing import target_size_for_orientation
 from video_agent.io import write_json_atomic
 from video_agent.registries import CapabilityRegistryHub
-
-_CANVAS = (1080, 1920)
 
 
 def _evidence_from_class(value: str) -> EvidenceClass:
@@ -52,21 +56,6 @@ def _resolve_object_path(session: AssetResolutionSession, asset_ref: str, *, sce
     return object_store.resolve(asset.object_key)
 
 
-def _fit_paste(source: Path, output: Path, *, canvas: tuple[int, int] = _CANVAS) -> None:
-    with Image.open(source) as opened:
-        image = opened.convert("RGB")
-        frame = Image.new("RGB", canvas, (7, 10, 14))
-        scale = min((canvas[0] - 80) / image.width, (canvas[1] - 220) / image.height)
-        resized = image.resize(
-            (max(1, round(image.width * scale)), max(1, round(image.height * scale))),
-            Image.Resampling.LANCZOS,
-        )
-        x = (canvas[0] - resized.width) // 2
-        y = 160 + ((canvas[1] - 220) - resized.height) // 2
-        frame.paste(resized, (x, y))
-        frame.save(output, format="PNG")
-
-
 def _normalize_orientation(source: Path, output: Path, orientation: str | None) -> None:
     with Image.open(source) as opened:
         image = opened.convert("RGB")
@@ -83,22 +72,6 @@ def _normalize_orientation(source: Path, output: Path, orientation: str | None) 
             canvas.save(output, format="PNG")
             return
         image.save(output, format="PNG")
-
-
-def _sequence_variant(source: Path, output: Path, stage: str) -> None:
-    with Image.open(source) as opened:
-        image = opened.convert("RGB")
-        if stage == "base":
-            image.save(output, format="PNG")
-            return
-        if stage == "stage":
-            enhanced = ImageEnhance.Contrast(image).enhance(1.08)
-            enhanced = ImageEnhance.Color(enhanced).enhance(1.05)
-            enhanced.save(output, format="PNG")
-            return
-        # final: slight sharpen settle
-        settled = image.filter(ImageFilter.UnsharpMask(radius=1.2, percent=80, threshold=2))
-        settled.save(output, format="PNG")
 
 
 def _combined_panels(paths: list[Path], output: Path) -> Path:
@@ -210,12 +183,25 @@ class DeterministicDerivationExecutor:
         with NamedTemporaryFile(suffix=".png", delete=False) as handle:
             temporary = Path(handle.name)
         try:
-            if entry.id in {"site_faithful_reframe", "site_feature_entry_callout_keyframe"}:
-                _fit_paste(source, temporary)
+            if entry.id == "site_faithful_reframe":
+                fit_to_douyin_canvas(source, temporary)
+            elif entry.id == "site_feature_entry_callout_keyframe":
+                parent = session.get_asset(request.parent_asset_refs[0])
+                target = (
+                    request.narrative_context.anchor_phrase
+                    if request.narrative_context is not None
+                    else request.slot_id
+                )
+                apply_feature_entry_callout(
+                    source,
+                    temporary,
+                    target_label=target,
+                    description=parent.description if parent is not None else None,
+                )
             elif entry.id == "normalize_gallery_asset":
                 _normalize_orientation(source, temporary, request.target_orientation)
             else:
-                _fit_paste(source, temporary)
+                fit_to_douyin_canvas(source, temporary)
             return temporary.read_bytes()
         finally:
             temporary.unlink(missing_ok=True)
@@ -249,55 +235,48 @@ class DeterministicDerivationExecutor:
         reuse: dict[str, str] = {}
         drafts: list[AssetDraft] = []
         draft_keys: list[str] = []
+        member_bytes = self._render_group_member_bytes(
+            request=request,
+            entry=entry,
+            source=source,
+            parent_sha256=parent.content_sha256,
+        )
         for member in sorted(pattern.members, key=lambda item: item.order):
-            if entry.id == "site_params_flower_text_frame_sequence" and member.member_key == "base":
-                reuse[member.member_key] = parent.asset_ref
-                continue
-            signature = build_derivation_signature(
-                parent_refs=list(request.parent_asset_refs),
-                parent_hashes=[parent.content_sha256],
-                context_refs=list(request.context_asset_refs),
-                context_hashes=[],
-                category_id=request.category_id,
-                role=member.asset_role,
-                pattern_id=request.required_group.pattern_id,
+            signature = member_derivation_signature(
+                prepared,
                 member_key=member.member_key,
-                capability_id=binding.capability_id,
-                capability_version=binding.capability_version,
-                execution_fingerprint=binding.execution_fingerprint,
-                narrative_fingerprint=sha256(f"{request.scene_id}|{member.member_key}".encode("utf-8")).hexdigest(),
-                target_orientation=request.target_orientation or "",
+                member_role=member.asset_role,
             )
             existing = session.find_by_derivation_signature(signature)
             if existing is not None:
                 reuse[member.member_key] = existing.asset_ref
                 continue
-            with NamedTemporaryFile(suffix=".png", delete=False) as handle:
-                temporary = Path(handle.name)
-            try:
-                if entry.id == "site_params_flower_text_frame_sequence":
-                    _sequence_variant(source, temporary, member.member_key)
-                else:
-                    _fit_paste(source, temporary)
-                drafts.append(
-                    self._draft_from_bytes(
-                        request=request,
-                        binding=binding,
-                        prepared=prepared,
-                        session=session,
-                        entry=entry,
-                        role=member.asset_role,
-                        member_key=member.member_key,
-                        signature=signature,
-                        image_bytes=temporary.read_bytes(),
-                        provider="deterministic",
-                        model="pil",
-                        prompt_sha256=prepared.prompt_template_sha256,
-                    )
+            image_bytes = member_bytes.get(member.member_key)
+            if image_bytes is None:
+                with NamedTemporaryFile(suffix=".png", delete=False) as handle:
+                    temporary = Path(handle.name)
+                try:
+                    fit_to_douyin_canvas(source, temporary)
+                    image_bytes = temporary.read_bytes()
+                finally:
+                    temporary.unlink(missing_ok=True)
+            drafts.append(
+                self._draft_from_bytes(
+                    request=request,
+                    binding=binding,
+                    prepared=prepared,
+                    session=session,
+                    entry=entry,
+                    role=member.asset_role,
+                    member_key=member.member_key,
+                    signature=signature,
+                    image_bytes=image_bytes,
+                    provider="deterministic",
+                    model="e1_compositor_v1",
+                    prompt_sha256=prepared.prompt_template_sha256,
                 )
-                draft_keys.append(member.member_key)
-            finally:
-                temporary.unlink(missing_ok=True)
+            )
+            draft_keys.append(member.member_key)
         _write_run_artifacts(
             run_dir=self.run_dir,
             request=request,
@@ -314,6 +293,39 @@ class DeterministicDerivationExecutor:
             pattern_id=request.required_group.pattern_id,
             category_id=request.category_id or parent.category_id,
         )
+
+    def _render_group_member_bytes(
+        self,
+        *,
+        request: DerivationRequest,
+        entry: DerivationEntry,
+        source: Path,
+        parent_sha256: str,
+    ) -> dict[str, bytes]:
+        if entry.id != "site_params_flower_text_frame_sequence":
+            return {}
+        persisted = try_load_persisted_parameter_sequence(self.repo_root, parent_sha256=parent_sha256)
+        if persisted is not None:
+            return {key: path.read_bytes() for key, path in persisted.items()}
+        callout_fields: list[str] = []
+        if request.narrative_context is not None:
+            callout_fields = list(request.narrative_context.callout_fields)
+            if not callout_fields:
+                callout_fields = list(request.narrative_context.spoken_operation_fields)
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            render_parameter_flower_frames(
+                source,
+                callout_fields=callout_fields,
+                output_base=root / "base.png",
+                output_stage=root / "stage.png",
+                output_final=root / "final.png",
+            )
+            return {
+                "base": (root / "base.png").read_bytes(),
+                "stage": (root / "stage.png").read_bytes(),
+                "final": (root / "final.png").read_bytes(),
+            }
 
     def _draft_from_bytes(
         self,
@@ -491,20 +503,10 @@ class GptImageDerivationExecutor:
             ):
                 reuse[member.member_key] = parent.asset_ref
                 continue
-            signature = build_derivation_signature(
-                parent_refs=list(request.parent_asset_refs),
-                parent_hashes=[parent.content_sha256],
-                context_refs=list(request.context_asset_refs),
-                context_hashes=[],
-                category_id=request.category_id,
-                role=member.asset_role,
-                pattern_id=request.required_group.pattern_id,
+            signature = member_derivation_signature(
+                prepared,
                 member_key=member.member_key,
-                capability_id=binding.capability_id,
-                capability_version=binding.capability_version,
-                execution_fingerprint=binding.execution_fingerprint,
-                narrative_fingerprint=sha256(f"{request.scene_id}|{member.member_key}".encode("utf-8")).hexdigest(),
-                target_orientation=request.target_orientation or "",
+                member_role=member.asset_role,
             )
             existing = session.find_by_derivation_signature(signature)
             if existing is not None:

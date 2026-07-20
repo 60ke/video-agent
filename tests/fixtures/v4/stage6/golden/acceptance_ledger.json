@@ -1,0 +1,25 @@
+{
+  "schema_version": "v4.stage6_golden_acceptance.1",
+  "scenes": [
+    "s001",
+    "s002",
+    "s003",
+    "s004",
+    "s005",
+    "s006",
+    "s007",
+    "s008",
+    "s009",
+    "s010"
+  ],
+  "frame_count": 336,
+  "primary_result": "asset://A0002",
+  "s002_g1": "asset://A0003",
+  "gallery_yellow": [
+    "文化墙",
+    "美陈",
+    "门头招牌"
+  ],
+  "outro_asset": "asset://A0018",
+  "note": "Synthetic SpeechTimingLock; Pass B MiniMax speech still open"
+}

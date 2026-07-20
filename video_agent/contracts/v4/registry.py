@@ -192,6 +192,39 @@ class DerivationRegistryDocument(V4Contract):
     entries: list[DerivationEntry]
 
 
+EffectTimingVariantId = Literal["full", "compact", "instant"]
+EffectActivation = Literal["at_anchor", "scene_start"]
+
+
+class EffectTimingVariant(V4Contract):
+    variant_id: EffectTimingVariantId
+    minimum_interval_frames: int = Field(ge=1)
+    reveal_frames: int = Field(ge=1)
+    readable_settle_frames: int = Field(ge=0, default=0)
+
+    @model_validator(mode="after")
+    def validate_interval(self) -> "EffectTimingVariant":
+        needed = self.reveal_frames + self.readable_settle_frames
+        if self.minimum_interval_frames < needed:
+            raise ValueError(
+                "minimum_interval_frames must be >= reveal_frames + readable_settle_frames"
+            )
+        return self
+
+
+class EffectEventTiming(V4Contract):
+    activation: EffectActivation = "at_anchor"
+    semantic_visible_at_hit: bool = True
+    variants: list[EffectTimingVariant] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_variants(self) -> "EffectEventTiming":
+        ids = [item.variant_id for item in self.variants]
+        if len(ids) != len(set(ids)):
+            raise ValueError("effect timing variant_id values must be unique")
+        return self
+
+
 class EffectCapabilities(V4Contract):
     visual_structures: list[str] = Field(min_length=1)
     asset_roles: list[str] = Field(min_length=1)
@@ -206,6 +239,7 @@ class EffectCapabilities(V4Contract):
     readable_settle_frames: int = Field(ge=0, default=0)
     requires_readable_hold: bool = False
     event_bindings: list[str] = Field(default_factory=list)
+    event_timing: dict[str, EffectEventTiming] = Field(default_factory=dict)
     fallback_effect_ids: list[str] = Field(default_factory=list)
     weight: int = Field(ge=0, default=100)
 
@@ -217,6 +251,24 @@ class EffectCapabilities(V4Contract):
             raise ValueError("visual_structures must be unique")
         if len(self.asset_roles) != len(set(self.asset_roles)):
             raise ValueError("asset_roles must be unique")
+        binding_set = set(self.event_bindings)
+        timing_keys = set(self.event_timing)
+        if binding_set != timing_keys:
+            raise ValueError(
+                "event_timing keys must match event_bindings exactly "
+                f"(bindings={sorted(binding_set)}, timing={sorted(timing_keys)})"
+            )
+        if self.event_bindings:
+            shortest = min(
+                variant.minimum_interval_frames
+                for timing in self.event_timing.values()
+                for variant in timing.variants
+            )
+            if self.minimum_scene_frames > shortest:
+                raise ValueError(
+                    "minimum_scene_frames must be <= shortest event timing variant "
+                    f"({self.minimum_scene_frames} > {shortest})"
+                )
         return self
 
 
@@ -353,12 +405,18 @@ class FrozenRegistrySnapshot(V4Contract):
     content_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     registries: list[FrozenRegistryDocument]
 
-    @field_validator("created_at")
+    @field_validator("created_at", mode="before")
     @classmethod
-    def require_timezone(cls, value: datetime) -> datetime:
-        if value.tzinfo is None:
+    def parse_created_at(cls, value: object) -> datetime:
+        if isinstance(value, datetime):
+            parsed = value
+        elif isinstance(value, str):
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        else:
+            raise ValueError("created_at must be datetime or ISO-8601 string")
+        if parsed.tzinfo is None:
             raise ValueError("created_at must be timezone-aware")
-        return value
+        return parsed
 
     @model_validator(mode="after")
     def validate_unique_registries(self) -> "FrozenRegistrySnapshot":

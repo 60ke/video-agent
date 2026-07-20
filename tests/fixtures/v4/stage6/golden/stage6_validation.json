@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "ok": true,
+  "issues": [],
+  "input_hashes": {
+    "speech_timing_lock_sha256": "52cc1cca3d5298aebfc2938eebc2f394842de6d4055f82f9d4c9c79a6beea4d0",
+    "anchored_timing_plan_sha256": "6295c3ae2d0632da6cc548443a9acf639f38ef8b74d4eb2ae3bbae3a35565c35",
+    "resolved_asset_plan_sha256": "eb6a4e7f7d59a22569f41635357ab89164f9980d166de85366fe56e6609df4be",
+    "motion_audio_plan_sha256": "f69a06e5f80068bdb9b4259f66000d785209020e4c5891abdff88be92b0ddbff"
+  }
+}

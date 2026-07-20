@@ -22,7 +22,13 @@ def load_json(path: Path) -> Any:
 
 
 def load_model(path: Path, model: type[T]) -> T:
-    return model.model_validate(load_json(path))
+    """Load a Pydantic model from JSON on disk.
+
+    Disk artifacts are always JSON-encoded (enums/datetimes as strings). V4 contracts
+    use ``strict=True`` for in-memory construction, so reload must opt into JSON
+    coercion via ``strict=False``.
+    """
+    return model.model_validate(load_json(path), strict=False)
 
 
 def write_json_atomic(path: Path, value: Any) -> None:

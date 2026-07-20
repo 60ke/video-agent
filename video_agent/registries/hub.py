@@ -341,6 +341,22 @@ class CapabilityRegistryHub:
                     effect_ids,
                     f"effect/{entry.id}.fallback_effect_ids",
                 )
+                binding_set = set(caps.event_bindings)
+                timing_keys = set(caps.event_timing)
+                if binding_set != timing_keys:
+                    raise ValueError(
+                        f"effect/{entry.id}.event_timing keys must match event_bindings exactly"
+                    )
+                if caps.event_timing:
+                    shortest = min(
+                        variant.minimum_interval_frames
+                        for timing in caps.event_timing.values()
+                        for variant in timing.variants
+                    )
+                    if caps.minimum_scene_frames > shortest:
+                        raise ValueError(
+                            f"effect/{entry.id}.minimum_scene_frames exceeds shortest variant"
+                        )
 
         if "sfx" in self._documents:
             document = self.registry("sfx")

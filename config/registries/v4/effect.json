@@ -1,16 +1,35 @@
 {
   "registry_id": "effect",
-  "version": "2026.07.18.1",
-  "schema_version": 1,
+  "version": "2026.07.18.2",
+  "schema_version": 2,
   "entries": [
     {
       "id": "none",
       "display_name": "无动效",
       "capabilities": {
-        "visual_structures": ["single", "gallery", "comparison", "sequence", "no_asset_transition"],
-        "asset_roles": ["result_image", "site_home", "feature_entry", "parameter_panel", "brand_logo", "outro"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "single",
+          "gallery",
+          "comparison",
+          "sequence",
+          "no_asset_transition"
+        ],
+        "asset_roles": [
+          "result_image",
+          "site_home",
+          "feature_entry",
+          "parameter_panel",
+          "brand_logo",
+          "outro"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 0,
         "maximum_items": null,
         "supports_mixed_orientation": true,
@@ -21,281 +40,846 @@
         "requires_readable_hold": false,
         "event_bindings": [],
         "fallback_effect_ids": [],
-        "weight": 1
-      }
+        "weight": 1,
+        "event_timing": {}
+      },
+      "handler": "video_agent.motion.v4.handlers:none"
     },
     {
       "id": "fade_in",
       "display_name": "淡入",
       "capabilities": {
-        "visual_structures": ["single", "sequence"],
-        "asset_roles": ["result_image", "parameter_panel", "feature_entry", "site_home", "editor_page", "edited_result"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "single",
+          "sequence"
+        ],
+        "asset_roles": [
+          "result_image",
+          "parameter_panel",
+          "feature_entry",
+          "site_home",
+          "editor_page",
+          "edited_result"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 1,
         "maximum_items": null,
         "supports_mixed_orientation": true,
         "animated_input_policy": "preserve_without_extra_breath",
         "continuity_scope": "scene",
-        "minimum_scene_frames": 6,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 0,
         "requires_readable_hold": false,
-        "event_bindings": ["enter"],
-        "fallback_effect_ids": ["none"],
-        "weight": 40
-      }
+        "event_bindings": [
+          "enter"
+        ],
+        "fallback_effect_ids": [
+          "none"
+        ],
+        "weight": 40,
+        "event_timing": {
+          "enter": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 6,
+                "reveal_frames": 4,
+                "readable_settle_frames": 0
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 4,
+                "reveal_frames": 3,
+                "readable_settle_frames": 0
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:fade_in"
     },
     {
       "id": "result_reveal",
       "display_name": "结果揭示",
       "capabilities": {
-        "visual_structures": ["single", "sequence"],
-        "asset_roles": ["result_image", "edited_result", "parameter_panel"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "single",
+          "sequence"
+        ],
+        "asset_roles": [
+          "result_image",
+          "edited_result",
+          "parameter_panel"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 1,
         "maximum_items": null,
         "supports_mixed_orientation": false,
         "animated_input_policy": "preserve_without_extra_breath",
         "continuity_scope": "scene",
-        "minimum_scene_frames": 12,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 18,
         "requires_readable_hold": true,
-        "event_bindings": ["reveal"],
-        "fallback_effect_ids": ["fade_in"],
-        "weight": 70
-      }
+        "event_bindings": [
+          "reveal"
+        ],
+        "fallback_effect_ids": [
+          "fade_in"
+        ],
+        "weight": 70,
+        "event_timing": {
+          "reveal": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 22,
+                "reveal_frames": 4,
+                "readable_settle_frames": 18
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 15,
+                "reveal_frames": 3,
+                "readable_settle_frames": 12
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:result_reveal"
     },
     {
       "id": "detail_push_in",
       "display_name": "细节推进",
       "capabilities": {
-        "visual_structures": ["single", "sequence"],
-        "asset_roles": ["result_image", "feature_entry", "editor_page", "edited_result", "site_home"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "single",
+          "sequence"
+        ],
+        "asset_roles": [
+          "result_image",
+          "feature_entry",
+          "editor_page",
+          "edited_result",
+          "site_home"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 1,
         "maximum_items": null,
         "supports_mixed_orientation": false,
         "animated_input_policy": "preserve_without_extra_breath",
         "continuity_scope": "scene",
-        "minimum_scene_frames": 18,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 0,
         "requires_readable_hold": false,
-        "event_bindings": ["push_in"],
-        "fallback_effect_ids": ["fade_in"],
-        "weight": 80
-      }
+        "event_bindings": [
+          "push_in"
+        ],
+        "fallback_effect_ids": [
+          "fade_in"
+        ],
+        "weight": 80,
+        "event_timing": {
+          "push_in": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 18,
+                "reveal_frames": 6,
+                "readable_settle_frames": 0
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 12,
+                "reveal_frames": 4,
+                "readable_settle_frames": 0
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:detail_push_in"
     },
     {
       "id": "full_bleed_to_safe_card",
       "display_name": "全幅到安全区卡片",
       "capabilities": {
-        "visual_structures": ["single"],
-        "asset_roles": ["result_image"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "single"
+        ],
+        "asset_roles": [
+          "result_image"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 1,
         "maximum_items": 1,
         "supports_mixed_orientation": false,
         "animated_input_policy": "preserve_without_extra_breath",
         "continuity_scope": "scene",
-        "minimum_scene_frames": 18,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 12,
         "requires_readable_hold": true,
-        "event_bindings": ["settle"],
-        "fallback_effect_ids": ["detail_push_in", "fade_in"],
-        "weight": 75
-      }
+        "event_bindings": [
+          "settle"
+        ],
+        "fallback_effect_ids": [
+          "detail_push_in",
+          "fade_in"
+        ],
+        "weight": 75,
+        "event_timing": {
+          "settle": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 18,
+                "reveal_frames": 6,
+                "readable_settle_frames": 12
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 12,
+                "reveal_frames": 4,
+                "readable_settle_frames": 8
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:full_bleed_to_safe_card"
     },
     {
       "id": "spring_card_pop",
       "display_name": "弹性卡片弹出",
       "capabilities": {
-        "visual_structures": ["single"],
-        "asset_roles": ["site_home", "feature_entry", "brand_logo"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "single"
+        ],
+        "asset_roles": [
+          "site_home",
+          "feature_entry",
+          "brand_logo"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 1,
         "maximum_items": 1,
         "supports_mixed_orientation": false,
         "animated_input_policy": "preserve_without_extra_breath",
         "continuity_scope": "scene",
-        "minimum_scene_frames": 12,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 10,
         "requires_readable_hold": true,
-        "event_bindings": ["enter"],
-        "fallback_effect_ids": ["fade_in"],
-        "weight": 90
-      }
+        "event_bindings": [
+          "enter"
+        ],
+        "fallback_effect_ids": [
+          "fade_in"
+        ],
+        "weight": 90,
+        "event_timing": {
+          "enter": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 14,
+                "reveal_frames": 4,
+                "readable_settle_frames": 10
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 10,
+                "reveal_frames": 3,
+                "readable_settle_frames": 6
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:spring_card_pop"
     },
     {
       "id": "card_flip_3d",
       "display_name": "三维翻卡",
       "capabilities": {
-        "visual_structures": ["single"],
-        "asset_roles": ["site_home", "result_image"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "single"
+        ],
+        "asset_roles": [
+          "site_home",
+          "result_image"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 1,
         "maximum_items": 1,
         "supports_mixed_orientation": false,
         "animated_input_policy": "preserve_without_extra_breath",
         "continuity_scope": "scene",
-        "minimum_scene_frames": 24,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 12,
         "requires_readable_hold": true,
-        "event_bindings": ["flip"],
-        "fallback_effect_ids": ["spring_card_pop", "fade_in"],
-        "weight": 85
-      }
+        "event_bindings": [
+          "flip"
+        ],
+        "fallback_effect_ids": [
+          "spring_card_pop",
+          "fade_in"
+        ],
+        "weight": 85,
+        "event_timing": {
+          "flip": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 24,
+                "reveal_frames": 8,
+                "readable_settle_frames": 12
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 16,
+                "reveal_frames": 6,
+                "readable_settle_frames": 8
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:card_flip_3d"
     },
     {
       "id": "paper_curl_flip",
       "display_name": "纸张卷曲翻页",
       "capabilities": {
-        "visual_structures": ["single"],
-        "asset_roles": ["site_home", "result_image"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "single"
+        ],
+        "asset_roles": [
+          "site_home",
+          "result_image"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 1,
         "maximum_items": 1,
         "supports_mixed_orientation": false,
         "animated_input_policy": "preserve_without_extra_breath",
         "continuity_scope": "scene",
-        "minimum_scene_frames": 30,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 12,
         "requires_readable_hold": true,
-        "event_bindings": ["flip"],
-        "fallback_effect_ids": ["card_flip_3d", "fade_in"],
-        "weight": 80
-      }
+        "event_bindings": [
+          "flip"
+        ],
+        "fallback_effect_ids": [
+          "card_flip_3d",
+          "fade_in"
+        ],
+        "weight": 80,
+        "event_timing": {
+          "flip": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 30,
+                "reveal_frames": 10,
+                "readable_settle_frames": 12
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 20,
+                "reveal_frames": 7,
+                "readable_settle_frames": 8
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:paper_curl_flip"
     },
     {
       "id": "slide_gallery",
       "display_name": "横向滑动画廊",
       "capabilities": {
-        "visual_structures": ["gallery"],
-        "asset_roles": ["result_image"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "gallery"
+        ],
+        "asset_roles": [
+          "result_image"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 2,
         "maximum_items": null,
         "supports_mixed_orientation": true,
         "animated_input_policy": "preserve_without_extra_breath",
         "continuity_scope": "scene_group",
-        "minimum_scene_frames": 36,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 12,
         "requires_readable_hold": true,
-        "event_bindings": ["item_transition"],
-        "fallback_effect_ids": ["card_stack", "fade_in"],
-        "weight": 100
-      }
+        "event_bindings": [
+          "item_transition"
+        ],
+        "fallback_effect_ids": [
+          "card_stack",
+          "fade_in"
+        ],
+        "weight": 100,
+        "event_timing": {
+          "item_transition": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 36,
+                "reveal_frames": 12,
+                "readable_settle_frames": 12
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 24,
+                "reveal_frames": 8,
+                "readable_settle_frames": 8
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:slide_gallery"
     },
     {
       "id": "card_stack",
       "display_name": "卡片堆叠画廊",
       "capabilities": {
-        "visual_structures": ["gallery"],
-        "asset_roles": ["result_image"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "gallery"
+        ],
+        "asset_roles": [
+          "result_image"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 2,
         "maximum_items": null,
         "supports_mixed_orientation": true,
         "animated_input_policy": "preserve_without_extra_breath",
         "continuity_scope": "scene_group",
-        "minimum_scene_frames": 36,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 12,
         "requires_readable_hold": true,
-        "event_bindings": ["item_transition"],
-        "fallback_effect_ids": ["slide_gallery", "fade_in"],
-        "weight": 95
-      }
+        "event_bindings": [
+          "item_transition"
+        ],
+        "fallback_effect_ids": [
+          "slide_gallery",
+          "fade_in"
+        ],
+        "weight": 95,
+        "event_timing": {
+          "item_transition": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 36,
+                "reveal_frames": 12,
+                "readable_settle_frames": 12
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 24,
+                "reveal_frames": 8,
+                "readable_settle_frames": 8
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:card_stack"
     },
     {
       "id": "grid_reveal",
       "display_name": "网格揭示",
       "capabilities": {
-        "visual_structures": ["gallery", "single"],
-        "asset_roles": ["result_image"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "gallery",
+          "single"
+        ],
+        "asset_roles": [
+          "result_image"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 2,
         "maximum_items": null,
         "supports_mixed_orientation": true,
         "animated_input_policy": "preserve_without_extra_breath",
         "continuity_scope": "scene_group",
-        "minimum_scene_frames": 24,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 12,
         "requires_readable_hold": true,
-        "event_bindings": ["grid_enter"],
-        "fallback_effect_ids": ["fade_in"],
-        "weight": 70
-      }
+        "event_bindings": [
+          "grid_enter"
+        ],
+        "fallback_effect_ids": [
+          "fade_in"
+        ],
+        "weight": 70,
+        "event_timing": {
+          "grid_enter": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 24,
+                "reveal_frames": 8,
+                "readable_settle_frames": 12
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 16,
+                "reveal_frames": 6,
+                "readable_settle_frames": 8
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:grid_reveal"
     },
     {
       "id": "before_after",
       "display_name": "前后对比",
       "capabilities": {
-        "visual_structures": ["comparison"],
-        "asset_roles": ["result_image", "reference_image", "edited_result", "flat_plan"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "comparison"
+        ],
+        "asset_roles": [
+          "result_image",
+          "reference_image",
+          "edited_result",
+          "flat_plan"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 2,
         "maximum_items": 2,
         "supports_mixed_orientation": true,
         "animated_input_policy": "preserve_without_extra_breath",
         "continuity_scope": "scene_group",
-        "minimum_scene_frames": 18,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 6,
         "requires_readable_hold": true,
-        "event_bindings": ["compare_reveal"],
-        "fallback_effect_ids": ["fade_in"],
-        "weight": 90
-      }
+        "event_bindings": [
+          "compare_reveal"
+        ],
+        "fallback_effect_ids": [
+          "fade_in"
+        ],
+        "weight": 90,
+        "event_timing": {
+          "compare_reveal": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 18,
+                "reveal_frames": 6,
+                "readable_settle_frames": 6
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 12,
+                "reveal_frames": 4,
+                "readable_settle_frames": 4
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:before_after"
     },
     {
       "id": "light_sweep",
       "display_name": "轻扫承接",
       "capabilities": {
-        "visual_structures": ["no_asset_transition", "single"],
-        "asset_roles": ["brand_logo", "outro", "result_image"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "no_asset_transition",
+          "single"
+        ],
+        "asset_roles": [
+          "brand_logo",
+          "outro",
+          "result_image"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 0,
         "maximum_items": 1,
         "supports_mixed_orientation": true,
         "animated_input_policy": "preserve_without_extra_breath",
         "continuity_scope": "scene",
-        "minimum_scene_frames": 12,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 0,
         "requires_readable_hold": false,
-        "event_bindings": ["sweep"],
-        "fallback_effect_ids": ["none"],
-        "weight": 60
-      }
+        "event_bindings": [
+          "sweep"
+        ],
+        "fallback_effect_ids": [
+          "none"
+        ],
+        "weight": 60,
+        "event_timing": {
+          "sweep": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 12,
+                "reveal_frames": 4,
+                "readable_settle_frames": 0
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 8,
+                "reveal_frames": 3,
+                "readable_settle_frames": 0
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:light_sweep"
     },
     {
       "id": "brand_breath",
       "display_name": "品牌呼吸",
       "capabilities": {
-        "visual_structures": ["single"],
-        "asset_roles": ["brand_logo"],
-        "media_types": ["image"],
-        "orientations": ["portrait", "landscape", "square"],
+        "visual_structures": [
+          "single"
+        ],
+        "asset_roles": [
+          "brand_logo"
+        ],
+        "media_types": [
+          "image"
+        ],
+        "orientations": [
+          "portrait",
+          "landscape",
+          "square"
+        ],
         "minimum_items": 1,
         "maximum_items": 1,
         "supports_mixed_orientation": false,
         "animated_input_policy": "allow_brand_breath",
         "continuity_scope": "scene",
-        "minimum_scene_frames": 18,
+        "minimum_scene_frames": 1,
         "readable_settle_frames": 0,
         "requires_readable_hold": false,
-        "event_bindings": ["breath"],
-        "fallback_effect_ids": ["fade_in"],
-        "weight": 50
-      }
+        "event_bindings": [
+          "breath"
+        ],
+        "fallback_effect_ids": [
+          "fade_in"
+        ],
+        "weight": 50,
+        "event_timing": {
+          "breath": {
+            "activation": "at_anchor",
+            "semantic_visible_at_hit": true,
+            "variants": [
+              {
+                "variant_id": "full",
+                "minimum_interval_frames": 18,
+                "reveal_frames": 6,
+                "readable_settle_frames": 0
+              },
+              {
+                "variant_id": "compact",
+                "minimum_interval_frames": 12,
+                "reveal_frames": 4,
+                "readable_settle_frames": 0
+              },
+              {
+                "variant_id": "instant",
+                "minimum_interval_frames": 1,
+                "reveal_frames": 1,
+                "readable_settle_frames": 0
+              }
+            ]
+          }
+        }
+      },
+      "handler": "video_agent.motion.v4.handlers:brand_breath"
     }
   ]
 }

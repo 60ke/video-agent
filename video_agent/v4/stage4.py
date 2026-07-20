@@ -8,7 +8,7 @@ from video_agent.assets.v4 import AssetPlanResolver, LocalObjectStore, SQLiteAss
 from video_agent.assets.v4.gap_policy import load_selection_config
 from video_agent.assets.v4.usage_repository import AssetUsageRepository, SQLiteAssetUsageRepository
 from video_agent.contracts.v4 import FrozenRegistrySnapshot, ResolvedAssetPlan, SceneSemanticPlan, Stage4SelectionConfig
-from video_agent.io import load_json, sha256_file, sha256_json, utc_now, write_json_atomic
+from video_agent.io import load_json, load_model, sha256_file, sha256_json, utc_now, write_json_atomic
 from video_agent.progress import get_logger
 from video_agent.registries import CapabilityRegistryHub
 from video_agent.runtime import RunContext
@@ -111,7 +111,7 @@ class V4Stage4Runner:
         registry_snapshot = self.context.artifact("capability_registry.snapshot.json")
         if not registry_snapshot.is_file():
             raise FileNotFoundError(f"Stage4 requires frozen capability registry: {registry_snapshot}")
-        frozen_registry = FrozenRegistrySnapshot.model_validate(load_json(registry_snapshot))
+        frozen_registry = load_model(registry_snapshot, FrozenRegistrySnapshot)
         registry_hub = CapabilityRegistryHub.from_snapshot(frozen_registry)
         registry_snapshot_id = frozen_registry.snapshot_id
 

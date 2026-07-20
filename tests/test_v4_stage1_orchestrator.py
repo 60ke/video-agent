@@ -26,7 +26,7 @@ def test_fixed_voice_frontend_runs_speech_and_scope_concurrently(tmp_path: Path)
     def speech_job() -> Path:
         speech_started.set()
         assert scope_started.wait(timeout=1)
-        output = tmp_path / "timing_lock.json"
+        output = tmp_path / "speech_timing_lock.json"
         output.write_text("{}", encoding="utf-8")
         return output
 
@@ -36,5 +36,5 @@ def test_fixed_voice_frontend_runs_speech_and_scope_concurrently(tmp_path: Path)
         return "scope"
 
     timing, scope = asyncio.run(run_fixed_voice_frontend(speech_job=speech_job, scope_job=scope_job()))
-    assert timing.name == "timing_lock.json"
+    assert timing.name == "speech_timing_lock.json"
     assert scope == "scope"
