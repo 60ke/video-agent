@@ -50,6 +50,20 @@ def load_scope_prompt(repo_root: Path) -> PromptBundle:
     )
 
 
+def load_goal_narration_prompt(repo_root: Path) -> PromptBundle:
+    root = _prompt_root(repo_root, "goal_narration")
+    system = load_prompt(root / "system.v1.md")
+    examples = load_json(root / "examples.v1.json")
+    return PromptBundle(
+        capability="goal_narration",
+        version="goal_narration.v1",
+        system_prompt=system.text + "\n\n# Examples\n" + json.dumps(examples, ensure_ascii=False, indent=2),
+        input_schema=load_json(root / "input.schema.json"),
+        output_schema=load_json(root / "output.schema.json"),
+        component_fingerprints={"system": system.sha256, "examples": sha256_json(examples)},
+    )
+
+
 def load_scene_prompt(repo_root: Path, registry_payload: dict[str, Any]) -> PromptBundle:
     root = _prompt_root(repo_root, "scene_semantics")
     system = load_prompt(root / "system.v1.md")

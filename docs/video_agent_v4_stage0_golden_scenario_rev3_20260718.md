@@ -2,7 +2,7 @@
 
 日期：2026-07-18
 
-状态：语义金标已确认；Stage 1 字段对齐已完成；关系模式 Contract 收口与 Pass B 未完成
+状态：语义金标已确认；Stage 1 字段与关系模式 Contract 已对齐；真实 MiniMax Pass B 已完成
 
 本文是固定文案黄金场景的唯一语义金标。字段表达以 Stage 1 正式 Contract 为准，不保留旧字段别名或兼容写法。若本文与 Stage 1 实现出现差异，应先判断是本文语义错误还是 Stage 1 Contract 缺少必要表达能力；不得用运行时兼容层掩盖冲突。
 
@@ -450,7 +450,7 @@ Scene Semantics Agent 只回答：
 - `relation_from_input` 必须指定 input_name、group_alias、pattern_id、group_type 和 member_key；关系或成员缺失时，由素材服务根据 Derivation Registry 选择合法派生器，Scene Agent 不选择技术派生类型；
 - `asset_group_query` 以 group_alias 建立本计划内的局部绑定，通过 pattern_id 指向注册表模式，并以 member_key 指定首个展示成员；后续 `group_member` 引用同一 alias 和 pattern_id；
 - `pattern_id` 是注册表中的可复用关系模式，`group_alias` 是本计划内的局部绑定名，两者概念不同；同一关系组跨场景复用时必须复用同一 alias；
-- 当前 Stage 1 SlotSource 尚未包含 pattern_id，AssetGroupQuerySource 也没有 member_key。二者是 Stage 1/2 一致性收口的必需 Contract 修订，Pass B 前必须落地，不得用 alias 命名或隐式首成员约定代替；
+- Stage 1 SlotSource 已冻结 `pattern_id`，AssetGroupQuerySource 已冻结 `member_key`；不得回退到 alias 命名或隐式首成员约定；
 - output 必须通过 bound_slot 绑定实际素材身份；
 - `no_asset=true` 时 slots、inputs、outputs 和 claims 为空；
 - AI 不输出字符位置。程序按 scenes 顺序和 phrase 出现顺序解析唯一字符区间。
@@ -936,7 +936,7 @@ Pass B 是一次真实黄金链路构造，不是手工补帧或运行 AI 图片
 7. 验证 s005 不复用 s002 Gallery 身份，s006-s008 都继承 s005.primary_result；
 8. 记录所有无法进入正式 Contract 的字段差异，修订 V4 Contract，不修改黄金语义去迁就旧实现。
 
-上述事项当前尚未执行完成，因此不得把“旧 fixture 能通过现有 schema 校验”等同于 Pass B 完成。
+上述 Pass B 已于 2026-07-20 使用真实 MiniMax 词级时间链路完成。权威运行记录为 `20260720_110920_904455`，验收账本为 `tests/fixtures/v4/stage6/pass_b_ledger.json`。这证明黄金素材种子链能够通过 Stage 6 的语音、Anchor、编译、Remotion 与 FFmpeg 闭环；Stage 7 的生产仓库覆盖门禁仍是独立验收项，不能由 seeded golden Pass B 替代。
 
 阶段 0 完成条件：四个核心对象之间无隐式猜测。
 

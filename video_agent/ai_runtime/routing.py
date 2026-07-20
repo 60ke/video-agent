@@ -62,6 +62,7 @@ def load_runtime_configuration(repo_root: Path) -> RuntimeConfiguration:
     }
     route_values = explicit.get("routes", {})
     routes = {
+        "goal_narration": _route("goal_narration", route_values.get("goal_narration", {}), max_concurrency=1),
         "scope_classifier": _route("scope_classifier", route_values.get("scope_classifier", {}), max_concurrency=2),
         "scene_semantics": _route("scene_semantics", route_values.get("scene_semantics", {}), max_concurrency=1),
         "field_repair": _route("field_repair", route_values.get("field_repair", {}), max_concurrency=1),

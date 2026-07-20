@@ -27,7 +27,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Stage 4: dependency, selection and derivation | complete | DoD closed: six slot sources, DAG, alias/dedup, gap policy, signature/`group_reuse`, atomic `register_derived_group`, parameter callout fields, E2 website filter, s001–s010 golden. Production wires Stage5 executor when `repo_root` set; Fake is test-only. |
 | Stage 5: effect, SFX, voice and derivation registries | control plane complete / Stage6 timing wired | Registries/Voice/Derivation/Motion-SFX complete. Motion now consumes exact `AnchoredTimingPlan.scene_spans`; proportional fallback removed; Stage5 SFX no longer truncates distinct Anchors via `window_event_budget`. |
 | Stage 6: semantic timing and compilation | complete / frozen | Real MiniMax Pass B closed on run `20260720_110920_904455` (145 tokens, 24.7s, 19 SFX, Remotion+FFmpeg final.mp4). Independent Git checkpoint: `a5130312`. |
-| Stage 7: production cutover and acceptance | reviewed / pending freeze | Cursor review incorporated: BGM/QA, atomic Unit5+6 release, real Voice ID, Goal Narration contract and production repository gate are now explicit. No implementation is allowed before Unit0 freezes the contract. |
+| Stage 7: production cutover and acceptance | design frozen / Unit0 complete | Production Case/Run/Cover/BGM/QA/acceptance Contracts, Goal Narration Prompt/route, atomic Unit5+6 release boundary and V3 deletion audit are frozen. Public CLI and V3 code remain unchanged until their approved Units. |
 
 ## Working Decisions
 
@@ -59,6 +59,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 - `python -m pytest tests/test_v4_registry_hub.py tests/test_v4_capability_assets.py tests/test_v4_stage1_orchestrator.py tests/test_v4_semantic_contracts.py tests/test_v4_prompts.py tests/test_v4_ai_runtime.py tests/test_v4_semantic_stages.py tests/test_v4_runtime_routing.py -q`: PASS (42 tests).
 - `python -m ruff check video_agent/contracts/v4 video_agent/registries video_agent/assets/v4_validation.py video_agent/semantic tests/test_v4_registry_hub.py tests/test_v4_capability_assets.py tests/test_v4_stage1_orchestrator.py tests/test_v4_semantic_contracts.py tests/test_v4_prompts.py tests/test_v4_ai_runtime.py tests/test_v4_semantic_stages.py tests/test_v4_runtime_routing.py`: PASS.
 - `python main.py v4-stage1 --case cases/v4_stage0_golden_20260717 --resume 20260717_211546_a4ed36`: PASS after Stage 2 registry cutover; validated Scope and Scene artifacts remain at the same run path.
+- `python -m pytest tests/test_v4_stage7_unit0_contracts.py -q`: PASS (8 tests), covering Production Case/Run, Goal Narration Prompt/route, BGM, Cover, QA and acceptance gates.
 - `python -m pytest tests/test_v4_stage3_repository.py -q`: PASS (15 tests), including video probing, snapshot restore, import lineage ordering/collision protection, configured-role validation and integrity audit.
 - `python -m pytest tests/test_v4_*.py -q`: PASS (59 tests).
 - `python -m ruff check video_agent/assets/v4 video_agent/cli.py video_agent/registries/hub.py tests/test_v4_stage3_repository.py`: PASS.
@@ -143,7 +144,7 @@ $env:STAGE6_GOLDEN_RENDER='1'; python -m pytest tests/test_v4_stage6_golden_comp
 
 ## Next Continuation Point
 
-Stage0 Pass B and the independent Stage6 checkpoint are closed. The next continuation point is Stage7 design review:
-1. Review and freeze `video_agent_v4_stage7_production_cutover_and_acceptance_design_20260720.md`.
-2. Do not change the public production entrypoint or delete V3 code before the Stage7 cutover contract is frozen.
-3. A production-repository Pass B may be re-run later as additional evidence; it is not a blocker for Stage7 design review.
+Stage0 Pass B, the independent Stage6 checkpoint and Stage7 Unit0 contract freeze are closed. The next continuation point is Stage7 Unit1:
+1. Implement native Script/Goal Narration and MiniMax Speech frontend without importing `LegacyOrchestrator`.
+2. Keep the public production entrypoint and V3 code unchanged until Unit5+Unit6 atomic cutover.
+3. Register and verify a real BGM Profile before Unit6.5 may enable BGM in production.

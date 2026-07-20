@@ -1,0 +1,14 @@
+[
+  {
+    "input": {
+      "goal": "柯幻熊猫文生图功能种草",
+      "brand": {"name": "柯幻熊猫", "product": "AI 广告设计网站"},
+      "product_capability_boundary": ["文生图设计", "图片编辑", "参考图生成"]
+    },
+    "output": {
+      "schema_version": "v4.goal_narration.1",
+      "spoken_text": "广告设计不用再反复改提示词。打开柯幻熊猫，从文生图到图片编辑，再到参考图生成，一套流程就能完成。",
+      "language": "zh-CN"
+    }
+  }
+]
