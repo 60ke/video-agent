@@ -170,9 +170,16 @@ class V4ProductionOrchestrator:
 
         # compile + optional render
         t0 = time.perf_counter()
+        assets_root = object_root
+        if assets_root is None:
+            config_path = self.context.repo_root / "config" / "assets.v4.json"
+            if config_path.is_file():
+                assets_root = self.context.repo_root / load_json(config_path)["object_root"]
+            else:
+                assets_root = self.context.repo_root / "assets"
         stage6 = self._stage.run_stage6(
             phase="compile-render",
-            object_root=object_root,
+            object_root=assets_root,
             render=render,
             skip_ffmpeg=skip_ffmpeg,
         )

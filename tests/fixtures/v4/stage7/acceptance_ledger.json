@@ -1,6 +1,6 @@
 {
   "schema_version": "v4.stage7_acceptance_ledger.1",
-  "status": "unit65_passed_live_acceptance_open",
+  "status": "script_acceptance_passed_goal_open",
   "completed_at": "2026-07-20",
   "branch": "codex/parameter-frame-sequence",
   "units": {
@@ -15,19 +15,31 @@
       "status": "passed",
       "entrypoint": "scripts/run_production_asset_coverage_gate.py",
       "ledger": "tests/fixtures/v4/stage7/production_asset_coverage_ledger.json",
-      "fingerprint": "e95a03cc7c42f73a47138ef945d8ee32c922f111b3085a6efa90e6b9a2723034"
+      "reference_result_plan_group_ref": "group://G0018"
     },
-    "7": {"status": "open", "notes": "live MiniMax script/goal production acceptance + final release tag pending"}
+    "7": {
+      "status": "partial",
+      "script_acceptance": {
+        "status": "passed",
+        "case_id": "stage7_accept_script_20260720c",
+        "run_id": "20260720_145636_af70ac",
+        "final_video": "cases/stage7_accept_script_20260720c/runs/20260720_145636_af70ac/final/video.mp4",
+        "final_cover": "cases/stage7_accept_script_20260720c/runs/20260720_145636_af70ac/final/cover.png",
+        "frames": 729
+      },
+      "goal_acceptance": {"status": "open"}
+    }
   },
   "checks": {
     "legacy_orchestrator_in_v4_stage1": false,
     "public_cli_uses_v4_production": true,
     "vertical_demo_registered": false,
     "bgm_default_enabled": false,
-    "production_repository_gate": true
+    "production_repository_gate": true,
+    "live_script_final_deliverables": true
   },
   "blockers_for_final_tag": [
-    "Live MiniMax script/goal production acceptance with final/video.mp4",
+    "Live MiniMax --goal production acceptance with final/video.mp4",
     "Optional full V3 module purge after import-graph audit",
     "Register real BGM profile before enabling bgm"
   ]

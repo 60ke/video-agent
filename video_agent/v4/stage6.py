@@ -151,7 +151,13 @@ class V4Stage6Runner:
         snapshot = load_model(required["used_assets.snapshot.json"], AssetRepositorySnapshot)
         frozen = load_model(required["capability_registry.snapshot.json"], FrozenRegistrySnapshot)
         registry = CapabilityRegistryHub.from_snapshot(frozen)
-        store_root = object_root or (self.context.repo_root / "data" / "object_store")
+        store_root = object_root
+        if store_root is None:
+            config_path = self.context.repo_root / "config" / "assets.v4.json"
+            if config_path.is_file():
+                store_root = self.context.repo_root / load_json(config_path)["object_root"]
+            else:
+                store_root = self.context.repo_root / "assets"
 
         # AnchoredTimingPlan is immutable. Effect/SFX intents resolve by phrase to
         # existing slot/operation/claim anchors at compile time — never rewrite.

@@ -56,6 +56,20 @@ def run_coverage_gate(*, db: Path, object_root: Path, output: Path, repo_root: P
             if status == "fail":
                 missing.append(role)
 
+        causal_groups = repository.connection.execute(
+            "select count(*) as c from asset_groups where pattern_id=? and status='active'",
+            ("reference_result_plan",),
+        ).fetchone()["c"]
+        checks.append(
+            {
+                "check_id": "reference_result_plan_groups",
+                "status": "pass" if causal_groups else "fail",
+                "count": causal_groups,
+            }
+        )
+        if not causal_groups:
+            missing.append("reference_result_plan_groups")
+
         logo = repo_root / "assets/brand/kehuanxiongmao/logo/柯幻熊猫_LOGO.png"
         logo_ok = logo.is_file()
         checks.append({"role": "brand_logo", "status": "pass" if logo_ok else "fail", "path": logo.as_posix()})
