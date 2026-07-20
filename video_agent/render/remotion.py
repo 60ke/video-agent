@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
 from pathlib import Path
 
 from video_agent.contracts import RenderPlan
 from video_agent.io import write_json_atomic
-
-from .ffmpeg import mux_audio_tracks
 
 
 def _safe_segment(value: str) -> str:
@@ -28,9 +25,6 @@ def export_remotion_props(plan: RenderPlan, repo_root: Path) -> Path:
             raise FileNotFoundError(f"Remotion render asset missing: {source}")
         suffix = source.suffix.lower() or ".bin"
         destination = asset_dir / f"{index:03d}_{_safe_segment(asset['asset_id'])}{suffix}"
-        # A render run must read the exact input captured in its RenderPlan.
-        # Copying on each invocation avoids a stale public asset when source
-        # pixels change without affecting dimensions or file size.
         shutil.copy2(source, destination)
         asset["path"] = destination.relative_to(repo_root / "remotion" / "public").as_posix()
     props = public_dir / "timeline.json"
@@ -48,27 +42,7 @@ def _remotion_command(repo_root: Path) -> Path:
 
 
 def render_remotion_video(plan: RenderPlan, output: Path, *, preset: str = "medium", crf: int = 18) -> Path:
-    repo_root = Path(__file__).resolve().parents[2]
-    props = export_remotion_props(plan, repo_root)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    silent_output = output.with_name(f"{output.stem}.remotion-silent.mp4")
-    preset_arg = "ultrafast" if preset in {"ultrafast", "veryfast"} else "medium"
-    command = [
-        str(_remotion_command(repo_root)),
-        "render",
-        "src/index.ts",
-        "VerticalDemo",
-        str(silent_output),
-        f"--props={props}",
-        "--codec=h264",
-        "--muted",
-        f"--crf={crf}",
-        f"--x264-preset={preset_arg}",
-        "--log=warn",
-    ]
-    proc = subprocess.run(command, cwd=repo_root / "remotion", capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if proc.returncode != 0:
-        raise RuntimeError(f"Remotion render failed: {(proc.stderr or proc.stdout)[-4000:]}")
-    mux_audio_tracks(plan, silent_output, output)
-    silent_output.unlink(missing_ok=True)
-    return output
+    raise RuntimeError(
+        "V3 VerticalDemo production composition has been removed; "
+        "use V4Timeline via V4 Stage6 / V4ProductionOrchestrator"
+    )

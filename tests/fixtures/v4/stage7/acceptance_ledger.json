@@ -1,0 +1,29 @@
+{
+  "schema_version": "v4.stage7_acceptance_ledger.1",
+  "status": "partial_cutover_landed",
+  "completed_at": "2026-07-20",
+  "branch": "codex/parameter-frame-sequence",
+  "units": {
+    "0": {"status": "done", "commit": "e9c7223e"},
+    "1": {"status": "done", "commit": "31cc701a"},
+    "2": {"status": "done", "commit": "ad0a419"},
+    "3": {"status": "done", "notes": "V4ProductionOrchestrator DAG + structured/delivery QA"},
+    "4": {"status": "done", "notes": "CoverBrief + independent cover.png finalizer; no prepend"},
+    "5": {"status": "done", "notes": "public generate/run → V4ProductionOrchestrator"},
+    "6": {"status": "partial", "notes": "VerticalDemo removed from Remotion Root; V3 render_remotion_video fail-loud; V3 modules retained for non-production tests until full purge"},
+    "6.5": {"status": "script_ready", "entrypoint": "scripts/run_production_asset_coverage_gate.py"},
+    "7": {"status": "open", "notes": "full production acceptance + final release tag pending live runs"}
+  },
+  "checks": {
+    "legacy_orchestrator_in_v4_stage1": false,
+    "public_cli_uses_v4_production": true,
+    "vertical_demo_registered": false,
+    "bgm_default_enabled": false
+  },
+  "blockers_for_final_tag": [
+    "Run Unit6.5 against production var/v4 and attach coverage ledger",
+    "Live MiniMax script/goal production acceptance with final/video.mp4",
+    "Optional full V3 module purge after import-graph audit",
+    "Register real BGM profile before enabling bgm"
+  ]
+}

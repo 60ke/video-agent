@@ -26,7 +26,6 @@ from video_agent.contracts import CaseConfig, VoiceConfig
 from video_agent.cover import postprocess_cover
 from video_agent.outro import postprocess_outro
 from video_agent.io import load_json, load_model, write_json_atomic
-from video_agent.orchestrator import Orchestrator
 from video_agent.progress import configure_logging, get_logger
 from video_agent.runtime import RunContext, STAGES
 from video_agent.script_lock import locked_narration_from_text
@@ -67,12 +66,17 @@ def command_catalog(args: argparse.Namespace) -> dict[str, Any]:
 def command_run(args: argparse.Namespace) -> dict[str, Any]:
     case_dir = Path(args.case).resolve()
     context = RunContext.open(case_dir, args.resume) if args.resume else RunContext.create(case_dir)
-    final_video = Orchestrator(context).run(from_stage=args.from_stage, until_stage=args.until_stage)
+    from video_agent.v4.production import V4ProductionOrchestrator
+
+    result = V4ProductionOrchestrator(context).run(render=True, allow_fake_derivation=False)
     return {
         "ok": True,
+        "pipeline_version": "v4",
         "run_id": context.run_id,
         "run_dir": context.run_dir.as_posix(),
-        "final_video": final_video.as_posix() if final_video else None,
+        "run_manifest": result.run_manifest.as_posix(),
+        "final_video": result.final_video.as_posix() if result.final_video else None,
+        "final_cover": result.final_cover.as_posix() if result.final_cover else None,
     }
 
 
@@ -167,37 +171,49 @@ def command_generate_video(args: argparse.Namespace) -> dict[str, Any]:
     script_text = script_path.read_text(encoding="utf-8-sig").strip() if script_path else None
     if script_path and not script_text:
         raise ValueError(f"script file must not be empty: {script_path}")
-    script_narration = locked_narration_from_text(case_id, script_text) if script_text else None
     default_goal = "柯幻熊猫文生图功能种草"
 
     voice_id = local_minimax_voice_id(repo_root)
-    voice = VoiceConfig(voice_id=voice_id) if voice_id else VoiceConfig()
+    voice = VoiceConfig(
+        voice_id=voice_id or VoiceConfig().voice_id,
+        voice_profile_id="minimax_adman_clear_01",
+    )
     config = CaseConfig(
         case_id=case_id,
         goal=args.goal or default_goal,
         feature_path=["文生图"],
         voice=voice,
         mode="script_locked" if script_text else "material_first",
-        narration_source="input/narration.json" if script_text else None,
+        narration_source="input/source_script.txt" if script_text else None,
         ai_enabled=not bool(script_text),
     )
     case_dir.mkdir()
     input_dir = case_dir / "input"
     input_dir.mkdir()
     write_json_atomic(case_dir / "case.json", config)
-    if script_narration:
-        write_json_atomic(input_dir / "narration.json", script_narration)
+    if script_text:
+        (input_dir / "source_script.txt").write_text(script_text + "\n", encoding="utf-8")
 
     context = RunContext.create(case_dir)
-    logger.info("[任务] 已创建 case=%s run=%s source=%s", case_id, context.run_id, "script" if script_text else "goal")
-    final_video = Orchestrator(context).run()
+    logger.info(
+        "[V4][production] 已创建 case=%s run=%s source=%s",
+        case_id,
+        context.run_id,
+        "script" if script_text else "goal",
+    )
+    from video_agent.v4.production import V4ProductionOrchestrator
+
+    result = V4ProductionOrchestrator(context).run(render=True, allow_fake_derivation=False)
     return {
         "ok": True,
+        "pipeline_version": "v4",
         "case_id": case_id,
         "case": case_dir.as_posix(),
         "run_id": context.run_id,
         "run_dir": context.run_dir.as_posix(),
-        "final_video": final_video.as_posix() if final_video else None,
+        "run_manifest": result.run_manifest.as_posix(),
+        "final_video": result.final_video.as_posix() if result.final_video else None,
+        "final_cover": result.final_cover.as_posix() if result.final_cover else None,
     }
 
 

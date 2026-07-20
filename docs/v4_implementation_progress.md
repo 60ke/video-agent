@@ -27,7 +27,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Stage 4: dependency, selection and derivation | complete | DoD closed: six slot sources, DAG, alias/dedup, gap policy, signature/`group_reuse`, atomic `register_derived_group`, parameter callout fields, E2 website filter, s001–s010 golden. Production wires Stage5 executor when `repo_root` set; Fake is test-only. |
 | Stage 5: effect, SFX, voice and derivation registries | control plane complete / Stage6 timing wired | Registries/Voice/Derivation/Motion-SFX complete. Motion now consumes exact `AnchoredTimingPlan.scene_spans`; proportional fallback removed; Stage5 SFX no longer truncates distinct Anchors via `window_event_budget`. |
 | Stage 6: semantic timing and compilation | complete / frozen | Real MiniMax Pass B closed on run `20260720_110920_904455` (145 tokens, 24.7s, 19 SFX, Remotion+FFmpeg final.mp4). Independent Git checkpoint: `a5130312`. |
-| Stage 7: production cutover and acceptance | design frozen / Unit0 complete | Production Case/Run/Cover/BGM/QA/acceptance Contracts, Goal Narration Prompt/route, atomic Unit5+6 release boundary and V3 deletion audit are frozen. Public CLI and V3 code remain unchanged until their approved Units. |
+| Stage 7: production cutover and acceptance | Units 0-6.5 landed / Unit7 docs open | Native speech, golden validators, Production Orchestrator, public CLI→V4, VerticalDemo removed, coverage gate script added. Remaining: full production acceptance ledger + release tag. |
 
 ## Working Decisions
 
@@ -144,7 +144,8 @@ $env:STAGE6_GOLDEN_RENDER='1'; python -m pytest tests/test_v4_stage6_golden_comp
 
 ## Next Continuation Point
 
-Stage0 Pass B, the independent Stage6 checkpoint and Stage7 Unit0 contract freeze are closed. The next continuation point is Stage7 Unit1:
-1. Implement native Script/Goal Narration and MiniMax Speech frontend without importing `LegacyOrchestrator`.
-2. Keep the public production entrypoint and V3 code unchanged until Unit5+Unit6 atomic cutover.
-3. Register and verify a real BGM Profile before Unit6.5 may enable BGM in production.
+Stage7 Units 0–6.5 are implemented on branch. Next:
+1. Run Unit6.5 coverage gate against production ar/v4 and record ledger.
+2. Run seeded golden + script/goal acceptance; freeze Unit7 acceptance ledger.
+3. Create the final release tag covering Unit5+Unit6 cutover commits.
+4. Keep BGM disabled until a real Profile is registered.
