@@ -34,6 +34,9 @@
     {"rule": "不得用一个槽覆盖多个逐字出现的 Gallery 对象。"},
     {"rule": "编辑页不得随机 asset_query，必须引用上游结果并通过关系来源解析。"},
     {"rule": "素材缺失属于下游 Resolver，不得提前改成 no_asset。"},
-    {"rule": "不得只写 group_type 而省略 pattern_id，也不得把 result_image 用 editor_page member_key 承载。"}
+    {"rule": "不得只写 group_type 而省略 pattern_id，也不得把 result_image 用 editor_page member_key 承载。"},
+    {"rule": "不得把独立 feature_entry/asset_query 与 parameter_callout_sequence 塞进同一个 sequence。"},
+    {"rule": "不得在 sequence 末尾用 asset_query 结果图冒充 parameter final；结果图必须拆成后续 single 并导出 output。"},
+    {"rule": "reference_result_plan 不得用独立 asset_query 参考图混搭；首个槽必须是同组 asset_group_query/reference_image。"}
   ]
 }

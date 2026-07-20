@@ -1,0 +1,301 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from video_agent.contracts.v4 import SceneSemanticPlan
+from video_agent.registries import CapabilityRegistrySnapshot
+from video_agent.semantic.deterministic_scene_repair import repair_scene_plan_payload
+from video_agent.semantic.validation import validate_scene_semantic_plan
+
+
+FIXTURE_DIR = Path(__file__).parent / "fixtures" / "v4" / "stage0"
+FROZEN_NARRATION = (
+    "想让门店设计不再等档期？打开柯幻熊猫，一个网站搞定全部设计。"
+    "文化墙、门头招牌、美陈，都能一键出图。"
+    "以文化墙为例，进入功能页，填上行业和风格，点击生成，一整面文化墙方案直接出来了。"
+    "细节不满意？选中它继续编辑，改完直接用。"
+    "还能上传实景参考图，按你的现场出效果，连施工平面图都能一并导出。"
+    "设计这件事，从没这么省心。搜索柯幻熊猫，今天就试试。"
+)
+
+
+def test_deterministic_repair_splits_result_and_rewrites_causal_and_editor() -> None:
+    registry = CapabilityRegistrySnapshot.model_validate(
+        json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
+    )
+    # Shape mirrors the failed Stage7 live rebuild draft.
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "sc1",
+                "order": 1,
+                "text": "想让门店设计不再等档期？打开柯幻熊猫，一个网站搞定全部设计。",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "s1",
+                        "anchor_phrase": "打开柯幻熊猫",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "网站/主页",
+                        "asset_role": "site_home",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            },
+            {
+                "scene_id": "sc2",
+                "order": 2,
+                "text": "文化墙、门头招牌、美陈，都能一键出图。",
+                "visual_structure": "gallery",
+                "slots": [
+                    {
+                        "slot_id": "g1",
+                        "anchor_phrase": "文化墙",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "result_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "keyword",
+                    },
+                    {
+                        "slot_id": "g2",
+                        "anchor_phrase": "门头招牌",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": "文生图/门头招牌",
+                        "asset_role": "result_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "keyword",
+                    },
+                    {
+                        "slot_id": "g3",
+                        "anchor_phrase": "美陈",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/美陈",
+                        "asset_role": "result_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "keyword",
+                    },
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            },
+            {
+                "scene_id": "sc3",
+                "order": 3,
+                "text": "以文化墙为例，进入功能页，填上行业和风格，点击生成，一整面文化墙方案直接出来了。",
+                "visual_structure": "sequence",
+                "slots": [
+                    {
+                        "slot_id": "base",
+                        "anchor_phrase": "填上行业和风格",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "parameter_panel",
+                        "source": {
+                            "kind": "asset_group_query",
+                            "group_alias": "wall_params",
+                            "group_type": "process",
+                            "pattern_id": "parameter_callout_sequence",
+                            "member_key": "base",
+                        },
+                        "subtitle_emphasis": "none",
+                    },
+                    {
+                        "slot_id": "stage",
+                        "anchor_phrase": "点击生成",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "parameter_panel",
+                        "source": {
+                            "kind": "group_member",
+                            "group_alias": "wall_params",
+                            "group_type": "process",
+                            "pattern_id": "parameter_callout_sequence",
+                            "member_key": "stage",
+                        },
+                        "subtitle_emphasis": "none",
+                    },
+                    {
+                        "slot_id": "final",
+                        "anchor_phrase": "一整面文化墙方案直接出来了",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "result_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    },
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [{"output_name": "wall_result", "bound_slot": "final", "asset_role": "result_image"}],
+                "claims": [],
+                "no_asset": False,
+            },
+            {
+                "scene_id": "sc4",
+                "order": 4,
+                "text": "细节不满意？选中它继续编辑，改完直接用。",
+                "visual_structure": "sequence",
+                "slots": [
+                    {
+                        "slot_id": "s1",
+                        "anchor_phrase": "选中它",
+                        "entry_policy": "scene_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "result_image",
+                        "source": {"kind": "scene_input", "input_name": "previous_result"},
+                        "subtitle_emphasis": "none",
+                    },
+                    {
+                        "slot_id": "editor_page",
+                        "anchor_phrase": "继续编辑",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "editor_page",
+                        "source": {
+                            "kind": "relation_from_input",
+                            "input_name": "previous_result",
+                            "group_alias": "wall_edit",
+                            "group_type": "process",
+                            "pattern_id": "editor_sequence",
+                            "member_key": "editor_page",
+                        },
+                        "subtitle_emphasis": "none",
+                    },
+                    {
+                        "slot_id": "edited_result",
+                        "anchor_phrase": "改完直接用",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "edited_result",
+                        "source": {
+                            "kind": "group_member",
+                            "group_alias": "wall_edit",
+                            "group_type": "process",
+                            "pattern_id": "editor_sequence",
+                            "member_key": "edited_result",
+                        },
+                        "subtitle_emphasis": "none",
+                    },
+                ],
+                "events": [],
+                "inputs": [
+                    {
+                        "input_name": "previous_result",
+                        "from_scene": "sc3",
+                        "from_output": "wall_result",
+                        "required": True,
+                    }
+                ],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            },
+            {
+                "scene_id": "sc5",
+                "order": 5,
+                "text": "还能上传实景参考图，按你的现场出效果，连施工平面图都能一并导出。",
+                "visual_structure": "sequence",
+                "slots": [
+                    {
+                        "slot_id": "ref",
+                        "anchor_phrase": "实景参考图",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "reference_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    },
+                    {
+                        "slot_id": "res",
+                        "anchor_phrase": "按你的现场出效果",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "result_image",
+                        "source": {
+                            "kind": "asset_group_query",
+                            "group_alias": "ref_plan",
+                            "group_type": "causal",
+                            "pattern_id": "reference_result_plan",
+                            "member_key": "result_image",
+                        },
+                        "subtitle_emphasis": "none",
+                    },
+                    {
+                        "slot_id": "plan",
+                        "anchor_phrase": "施工平面图",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "flat_plan",
+                        "source": {
+                            "kind": "group_member",
+                            "group_alias": "ref_plan",
+                            "group_type": "causal",
+                            "pattern_id": "reference_result_plan",
+                            "member_key": "flat_plan",
+                        },
+                        "subtitle_emphasis": "none",
+                    },
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            },
+            {
+                "scene_id": "sc6",
+                "order": 6,
+                "text": "设计这件事，从没这么省心。搜索柯幻熊猫，今天就试试。",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "outro",
+                        "anchor_phrase": "搜索柯幻熊猫",
+                        "entry_policy": "scene_start",
+                        "hold_policy": "scene_end",
+                        "category_id": None,
+                        "asset_role": "outro",
+                        "source": {"kind": "configured_asset", "config_key": "default_outro"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            },
+        ]
+    }
+    repaired = repair_scene_plan_payload(payload)
+    plan = SceneSemanticPlan.model_validate(repaired)
+    validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
+    structures = [scene.visual_structure for scene in plan.scenes]
+    assert "comparison" in structures
+    assert any(scene.outputs for scene in plan.scenes if scene.visual_structure == "single")
+    editor = next(scene for scene in plan.scenes if "继续编辑" in scene.text)
+    assert all(slot.source.kind == "relation_from_input" for slot in editor.slots)

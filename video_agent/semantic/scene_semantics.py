@@ -18,6 +18,7 @@ from video_agent.contracts.v4.common import DomainValidationError, ValidationIss
 from video_agent.io import load_json, sha256_json, utc_now, write_json_atomic
 from video_agent.registries import CapabilityRegistrySnapshot
 
+from .deterministic_scene_repair import apply_deterministic_scene_repairs
 from .prompts import load_scene_prompt
 from .registry_payload import scene_registry_payload
 from .repair import can_field_repair, request_field_repair
@@ -47,7 +48,10 @@ async def plan_scene_semantics(
         "registry_snapshot": registry_payload,
     }
     def validator(value: SceneSemanticPlan) -> None:
+        repaired = apply_deterministic_scene_repairs(value)
+        value.scenes = repaired.scenes
         validate_scene_semantic_plan(value, frozen_narration=frozen_narration, registry=registry)
+
     try:
         invocation = await gateway.invoke_structured(
             capability="scene_semantics",
@@ -103,6 +107,8 @@ async def _recover_scene_plan(
 ) -> StructuredInvocation[SceneSemanticPlan]:
     route = gateway.configuration.routes["scene_semantics"]
     def validator(value: SceneSemanticPlan) -> None:
+        repaired = apply_deterministic_scene_repairs(value)
+        value.scenes = repaired.scenes
         validate_scene_semantic_plan(value, frozen_narration=frozen_narration, registry=registry)
     repair_count = 0
     payload = _raw_payload(trace_dir)
