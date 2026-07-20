@@ -113,3 +113,35 @@ def test_cross_scene_group_alias_keeps_same_upstream_output(registry: Capability
     with pytest.raises(DomainValidationError) as error:
         validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
     assert any(issue.code == "group_binding_mismatch" for issue in error.value.issues)
+
+
+def test_gallery_must_not_export_outputs(registry: CapabilityRegistrySnapshot) -> None:
+    payload = copy.deepcopy(_json("scene_semantic_plan.payload.json"))
+    payload["scenes"][1]["outputs"] = [
+        {"output_name": "g1", "bound_slot": "g1", "asset_role": "result_image"}
+    ]
+    plan = SceneSemanticPlan.model_validate(payload)
+    with pytest.raises(DomainValidationError) as error:
+        validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
+    assert any(issue.code == "gallery_must_not_export" for issue in error.value.issues)
+
+
+def test_result_identity_must_be_asset_query(registry: CapabilityRegistrySnapshot) -> None:
+    payload = copy.deepcopy(_json("scene_semantic_plan.payload.json"))
+    payload["scenes"][4]["inputs"] = [
+        {"input_name": "from_param", "from_scene": "s004", "from_output": "final", "required": True}
+    ]
+    payload["scenes"][4]["slots"][0]["source"] = {"kind": "scene_input", "input_name": "from_param"}
+    plan = SceneSemanticPlan.model_validate(payload)
+    with pytest.raises(DomainValidationError) as error:
+        validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
+    assert any(issue.code == "result_identity_must_be_queried" for issue in error.value.issues)
+
+
+def test_outro_requires_configured_asset(registry: CapabilityRegistrySnapshot) -> None:
+    payload = copy.deepcopy(_json("scene_semantic_plan.payload.json"))
+    payload["scenes"][9]["slots"][0]["source"] = {"kind": "asset_query"}
+    plan = SceneSemanticPlan.model_validate(payload)
+    with pytest.raises(DomainValidationError) as error:
+        validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
+    assert any(issue.code == "outro_requires_configured_asset" for issue in error.value.issues)

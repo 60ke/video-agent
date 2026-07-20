@@ -268,13 +268,86 @@ def _validate_scene(
 
     if scene.visual_structure == "gallery":
         _validate_gallery(scene, base, issues)
+        if scene.outputs:
+            issues.append(
+                _issue(
+                    "gallery_must_not_export",
+                    f"{base}.outputs",
+                    "gallery scenes must not export outputs for later inheritance",
+                )
+            )
     elif scene.visual_structure in {"sequence", "comparison"}:
         relation_kinds = {"asset_group_query", "group_member", "scene_input", "relation_from_input"}
         if any(slot.source.kind not in relation_kinds for slot in scene.slots):
             issues.append(_issue("unrelated_structured_slots", f"{base}.slots", f"{scene.visual_structure} cannot use unrelated asset queries"))
         if not any(slot.source.kind in {"asset_group_query", "group_member", "relation_from_input"} for slot in scene.slots):
             issues.append(_issue("missing_relation_source", f"{base}.slots", f"{scene.visual_structure} requires a group or relation source"))
+        if scene.visual_structure == "comparison":
+            for slot_index, slot in enumerate(scene.slots):
+                source = slot.source
+                if hasattr(source, "group_type") and source.group_type != "causal":
+                    issues.append(
+                        _issue(
+                            "comparison_requires_causal",
+                            f"{base}.slots[{slot_index}].source.group_type",
+                            "comparison scenes must use causal relation groups",
+                        )
+                    )
 
+    for output_index, output in enumerate(scene.outputs):
+        if output.asset_role != "result_image":
+            continue
+        bound_slot = slot_map.get(output.bound_slot)
+        if bound_slot is None:
+            continue
+        if bound_slot.source.kind != "asset_query":
+            issues.append(
+                _issue(
+                    "result_identity_must_be_queried",
+                    f"{base}.outputs[{output_index}]",
+                    "result_image outputs must bind to a fresh asset_query slot",
+                )
+            )
+
+    for slot_index, slot in enumerate(scene.slots):
+        if slot.asset_role == "outro" and not isinstance(slot.source, ConfiguredAssetSource):
+            issues.append(
+                _issue(
+                    "outro_requires_configured_asset",
+                    f"{base}.slots[{slot_index}].source",
+                    "outro slots must use configured_asset",
+                )
+            )
+        if isinstance(slot.source, RelationFromInputSource) and slot.source.pattern_id in {
+            "editor_sequence",
+            "reference_result_plan",
+        }:
+            identity = input_identity.get(slot.source.input_name)
+            if identity is None:
+                continue
+            from_scene_id, from_output = identity
+            upstream = earlier_scenes.get(from_scene_id)
+            if upstream is None:
+                continue
+            upstream_output = next((item for item in upstream.outputs if item.output_name == from_output), None)
+            if upstream_output is None or upstream_output.asset_role != "result_image":
+                issues.append(
+                    _issue(
+                        "must_inherit_established_result",
+                        f"{base}.slots[{slot_index}].source",
+                        "editor/reference relations must inherit an established result_image output",
+                    )
+                )
+            else:
+                upstream_slot = next((item for item in upstream.slots if item.slot_id == upstream_output.bound_slot), None)
+                if upstream_slot is not None and upstream_slot.source.kind != "asset_query":
+                    issues.append(
+                        _issue(
+                            "must_inherit_established_result",
+                            f"{base}.slots[{slot_index}].source",
+                            "inherited result must come from a freshly queried result identity",
+                        )
+                    )
 
 def _validate_relation_member(
     *,
