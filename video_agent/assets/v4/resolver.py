@@ -533,14 +533,15 @@ class AssetPlanResolver:
             )
             groups = [group for group in session.query_groups(query) if group.group_ref not in independent_groups_used]
             if not groups:
+                parent_role = self._group_derivation_parent_role(source.pattern_id)
                 parents = session.query_assets(
                     AssetQuery(
                         category_ids=(slot.category_id,) if slot.category_id else (),
-                        asset_roles=("parameter_panel",),
+                        asset_roles=(parent_role,),
                         active_only=True,
                     )
                 )
-                parents = self._post_filter_evidence(parents, "parameter_panel", session)
+                parents = self._post_filter_evidence(parents, parent_role, session)
                 if not parents:
                     return self._handle_gap(
                         scene=scene,
@@ -677,6 +678,17 @@ class AssetPlanResolver:
             None,
             decision_seq + 1,
             derivation_seq,
+        )
+
+    @staticmethod
+    def _group_derivation_parent_role(pattern_id: str) -> str:
+        if pattern_id == "parameter_callout_sequence":
+            return "parameter_panel"
+        if pattern_id in {"editor_sequence", "reference_result_plan"}:
+            return "result_image"
+        raise Stage4Error(
+            "missing_derivation_capability",
+            f"no parent-role rule for relation pattern {pattern_id}",
         )
 
     def _resolve_relation_from_input(

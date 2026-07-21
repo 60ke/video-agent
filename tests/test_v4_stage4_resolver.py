@@ -203,6 +203,12 @@ def test_resolution_session_excludes_groups_with_missing_members(
     assert session.query_groups(GroupQuery(pattern_ids=("editor_sequence",))) == []
 
 
+def test_group_derivation_uses_pattern_specific_parent_roles() -> None:
+    assert AssetPlanResolver._group_derivation_parent_role("parameter_callout_sequence") == "parameter_panel"
+    assert AssetPlanResolver._group_derivation_parent_role("editor_sequence") == "result_image"
+    assert AssetPlanResolver._group_derivation_parent_role("reference_result_plan") == "result_image"
+
+
 def test_independent_query_dedup(
     repo: SQLiteAssetRepository,
     tmp_path: Path,
