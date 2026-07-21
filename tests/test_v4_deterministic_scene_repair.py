@@ -21,7 +21,7 @@ FROZEN_NARRATION = (
 )
 
 
-def test_deterministic_repair_normalizes_causal_and_editor_without_splitting() -> None:
+def test_deterministic_repair_splits_result_and_rewrites_causal_and_editor() -> None:
     registry = CapabilityRegistrySnapshot.model_validate(
         json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
     )
@@ -297,12 +297,7 @@ def test_deterministic_repair_normalizes_causal_and_editor_without_splitting() -
     validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
     structures = [scene.visual_structure for scene in plan.scenes]
     assert "comparison" in structures
-    # Sequence scenes are no longer split — the sequence with result output stays intact.
-    assert any(scene.outputs for scene in plan.scenes if scene.visual_structure == "sequence")
-    # Ensure the mixed sequence (parameter_panel → result_image) was NOT split.
-    wall_scenes = [s for s in plan.scenes if "一整面文化墙方案" in s.text]
-    assert len(wall_scenes) == 1
-    assert wall_scenes[0].visual_structure == "sequence"
+    assert any(scene.outputs for scene in plan.scenes if scene.visual_structure == "single")
     editor = next(scene for scene in plan.scenes if "继续编辑" in scene.text)
     assert all(slot.source.kind == "relation_from_input" for slot in editor.slots)
 
@@ -422,12 +417,11 @@ def test_deterministic_repair_covers_multiline_frozen_and_claim_phrases() -> Non
     assert all(slot.category_id == "文生图/文化墙" for slot in plan.scenes[1].slots)
     last = plan.scenes[-1]
     assert last.no_asset is False
-    assert last.slots[0].asset_role == "outro"
-    assert last.slots[0].source.kind == "configured_asset"
-    assert last.slots[0].source.config_key == "default_outro"
+    assert last.slots[0].asset_role == "site_home"
+    assert last.slots[0].source.kind == "asset_query"
 
 
-def test_deterministic_repair_forces_terminal_outro_and_keeps_brand_close_visual() -> None:
+def test_deterministic_repair_fills_empty_brand_close_with_site_home() -> None:
     registry = CapabilityRegistrySnapshot.model_validate(
         json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
     )
@@ -476,11 +470,71 @@ def test_deterministic_repair_forces_terminal_outro_and_keeps_brand_close_visual
     validate_scene_semantic_plan(plan, frozen_narration=frozen, registry=registry)
     assert plan.scenes[0].slots[0].asset_role == "site_home"
     last = plan.scenes[-1]
-    assert last.slots[0].asset_role == "outro"
-    assert last.slots[0].source.config_key == "default_outro"
+    assert last.slots[0].asset_role == "site_home"
+    assert last.slots[0].source.kind == "asset_query"
+    assert last.no_asset is False
 
 
-def test_deterministic_repair_fills_empty_close_before_outro() -> None:
+def test_deterministic_repair_hold_extends_soft_empty_from_prior_result() -> None:
+    registry = CapabilityRegistrySnapshot.model_validate(
+        json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
+    )
+    frozen = "一分钟即可出一套完整详情页。简单好上手！"
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "a",
+                "order": 1,
+                "text": "一分钟即可出一套完整详情页。",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "r1",
+                        "anchor_phrase": "完整详情页",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/电商",
+                        "asset_role": "result_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            },
+            {
+                "scene_id": "b",
+                "order": 2,
+                "text": "简单好上手！",
+                "visual_structure": "no_asset_transition",
+                "slots": [],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": True,
+            },
+        ]
+    }
+    repaired = repair_scene_plan_payload(
+        payload,
+        frozen_narration=frozen,
+        primary_category_id="文生图/电商",
+    )
+    plan = SceneSemanticPlan.model_validate(repaired)
+    validate_scene_semantic_plan(plan, frozen_narration=frozen, registry=registry)
+    assert plan.scenes[0].outputs
+    last = plan.scenes[-1]
+    assert last.slots[0].slot_id == "hold_extend"
+    assert last.slots[0].source.kind == "scene_input"
+    assert last.inputs[0].from_scene == plan.scenes[0].scene_id
+    assert last.no_asset is False
+
+
+def test_deterministic_repair_fills_empty_mid_scene_not_only_terminal() -> None:
     registry = CapabilityRegistrySnapshot.model_validate(
         json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
     )
@@ -506,13 +560,13 @@ def test_deterministic_repair_fills_empty_close_before_outro() -> None:
                 "visual_structure": "single",
                 "slots": [
                     {
-                        "slot_id": "home",
-                        "anchor_phrase": "柯幻熊猫",
-                        "entry_policy": "phrase_start",
+                        "slot_id": "outro",
+                        "anchor_phrase": "搜索柯幻熊猫",
+                        "entry_policy": "scene_start",
                         "hold_policy": "scene_end",
                         "category_id": None,
-                        "asset_role": "site_home",
-                        "source": {"kind": "asset_query"},
+                        "asset_role": "outro",
+                        "source": {"kind": "configured_asset", "config_key": "default_outro"},
                         "subtitle_emphasis": "none",
                     }
                 ],
@@ -533,8 +587,8 @@ def test_deterministic_repair_fills_empty_close_before_outro() -> None:
     assert plan.scenes[-1].slots[0].source.config_key == "default_outro"
 
 
-def test_unstocked_reference_result_collapse_drops_orphan_events() -> None:
-    """Collapsing unstocked reference_result_plan must not leave dangling event targets."""
+def test_unstocked_reference_result_keeps_derivable_causal_flow() -> None:
+    """Missing stock must remain a causal flow so Stage4 can derive its members."""
     registry = CapabilityRegistrySnapshot.model_validate(
         json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
     )
@@ -627,11 +681,11 @@ def test_unstocked_reference_result_collapse_drops_orphan_events() -> None:
     repaired = repair_scene_plan_payload(payload, frozen_narration=frozen)
     plan = SceneSemanticPlan.model_validate(repaired)
     validate_scene_semantic_plan(plan, frozen_narration=frozen, registry=registry)
-    collapsed = plan.scenes[0]
-    assert [slot.slot_id for slot in collapsed.slots] == ["result_page"]
-    assert all(slot.source.kind == "asset_query" for slot in collapsed.slots)
-    assert all(event.target_slot != "upload_ref" for event in collapsed.events)
-    assert all(event.target_slot is None or event.target_slot == "result_page" for event in collapsed.events)
+    causal = plan.scenes[0]
+    assert [slot.slot_id for slot in causal.slots] == ["upload_ref", "result_page"]
+    assert causal.slots[0].source.kind == "asset_group_query"
+    assert causal.slots[1].source.kind == "group_member"
+    assert {event.target_slot for event in causal.events} == {"upload_ref", "result_page"}
 
 
 def test_repair_rewrites_nfkc_equivalent_claim_phrase_to_verbatim_scene_span() -> None:
@@ -699,3 +753,135 @@ def test_repair_rewrites_nfkc_equivalent_claim_phrase_to_verbatim_scene_span() -
     assert claim["phrase"] in scene_text
     assert "，" not in claim["phrase"]
     assert "," in claim["phrase"]
+
+
+def test_repair_binds_standalone_editor_queries_to_prior_result() -> None:
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "result",
+                "order": 1,
+                "text": "生成文化墙效果图。",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "result",
+                        "anchor_phrase": "文化墙效果图",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "result_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [
+                    {"output_name": "primary_result", "bound_slot": "result", "asset_role": "result_image"}
+                ],
+                "claims": [],
+            },
+            {
+                "scene_id": "edit",
+                "order": 2,
+                "text": "进入编辑页面继续修改。",
+                "visual_structure": "sequence",
+                "slots": [
+                    {
+                        "slot_id": "editor",
+                        "anchor_phrase": "编辑页面",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "editor_page",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    },
+                    {
+                        "slot_id": "edited",
+                        "anchor_phrase": "继续修改",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "edited_result",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    },
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+            },
+        ]
+    }
+    plan = SceneSemanticPlan.model_validate(
+        repair_scene_plan_payload(payload, frozen_narration="生成文化墙效果图。进入编辑页面继续修改。")
+    )
+    editor = plan.scenes[1]
+    assert editor.inputs[0].from_scene == plan.scenes[0].scene_id
+    assert editor.inputs[0].from_output == "primary_result"
+    assert {slot.source.kind for slot in editor.slots} == {"relation_from_input"}
+    assert {slot.source.pattern_id for slot in editor.slots} == {"editor_sequence"}
+
+
+def test_repair_binds_standalone_flat_plan_to_prior_result() -> None:
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "result",
+                "order": 1,
+                "text": "生成景观小品效果图。",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "result",
+                        "anchor_phrase": "景观小品效果图",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/景观小品",
+                        "asset_role": "result_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [
+                    {"output_name": "primary_result", "bound_slot": "result", "asset_role": "result_image"}
+                ],
+                "claims": [],
+            },
+            {
+                "scene_id": "plan",
+                "order": 2,
+                "text": "还能导出施工平面图。",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "plan",
+                        "anchor_phrase": "施工平面图",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/景观小品",
+                        "asset_role": "flat_plan",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+            },
+        ]
+    }
+    plan = SceneSemanticPlan.model_validate(
+        repair_scene_plan_payload(payload, frozen_narration="生成景观小品效果图。还能导出施工平面图。")
+    )
+    flat_plan = plan.scenes[1]
+    assert flat_plan.inputs[0].from_scene == plan.scenes[0].scene_id
+    assert flat_plan.slots[0].source.kind == "relation_from_input"
+    assert flat_plan.slots[0].source.pattern_id == "reference_result_plan"
+    assert flat_plan.slots[0].source.member_key == "flat_plan"

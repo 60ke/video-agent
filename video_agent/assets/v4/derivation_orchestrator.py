@@ -20,7 +20,7 @@ from video_agent.contracts.v4.resolved_assets import DerivationRequest, Required
 from video_agent.io import sha256_json
 from video_agent.registries import CapabilityRegistryHub
 
-from .repository import AssetDraft, AssetResolutionSession, GroupQuery
+from .repository import AssetDraft, AssetResolutionSession, GroupQuery, category_triple_from_id
 from .stage4_errors import Stage4Error
 
 
@@ -253,14 +253,20 @@ class FakeDerivationExecutor:
         info = object_store.put_file(source_path, object_key)
         website_roles = {"parameter_panel", "feature_entry", "site_home"}
         evidence = EvidenceClass.FAITHFUL if role in website_roles else EvidenceClass.SEMANTIC
+        category_id, module, category_path = category_triple_from_id(
+            request.category_id,
+            fallback_module=parent.module,
+            fallback_category_id=parent.category_id,
+            fallback_category_path=list(parent.category_path),
+        )
         return AssetDraft(
             filename=Path(info.object_key).name,
             object_key=info.object_key,
             content_sha256=info.content_sha256,
             media_type=info.media_type,
-            module=parent.module,
-            category_id=request.category_id or parent.category_id,
-            category_path=list(parent.category_path),
+            module=module,
+            category_id=category_id,
+            category_path=category_path,
             asset_role=role,
             case_label=parent.case_label,
             industry=parent.industry,
@@ -315,16 +321,16 @@ class FakeDerivationExecutor:
             info = object_store.put_file(temporary, object_key)
         finally:
             temporary.unlink(missing_ok=True)
-        category_parts = (request.category_id or "").split("/")
+        category_id, module, category_path = category_triple_from_id(request.category_id)
         now = datetime.now(timezone.utc)
         return AssetDraft(
             filename=Path(info.object_key).name,
             object_key=info.object_key,
             content_sha256=info.content_sha256,
             media_type=info.media_type,
-            module=category_parts[0] if len(category_parts) > 1 else None,
-            category_id=request.category_id,
-            category_path=category_parts[1:] if len(category_parts) > 1 else [],
+            module=module,
+            category_id=category_id,
+            category_path=category_path,
             asset_role=request.target_asset_role,
             description=f"fake derived {request.target_asset_role}",
             width=info.width,
@@ -402,6 +408,14 @@ def infer_derivation_type(
         return "site_faithful_reframe"
     if asset_role == "edited_result":
         return "result_to_edited_result"
+    if asset_role == "editor_page":
+        return "result_to_editor_process"
+    if asset_role == "flat_plan":
+        return "result_to_flat_plan"
+    if asset_role == "other":
+        # Soft brand/utility pages: reframe from site inventory when parents exist,
+        # otherwise treat as a semantic still (same path as text_to_result).
+        return "site_faithful_reframe" if parent_asset_refs else "text_to_result"
     if asset_role == "result_image" and not parent_asset_refs:
         return "text_to_result"
     if asset_role == "result_image" and parent_asset_refs:

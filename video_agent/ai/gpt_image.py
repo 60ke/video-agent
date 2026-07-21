@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import mimetypes
 import os
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urljoin
@@ -23,6 +24,7 @@ class ImageProvider:
     size: str
     timeout_seconds: float
     weight: int
+    max_retries: int
 
 
 @dataclass(frozen=True)
@@ -44,6 +46,7 @@ def _providers(repo_root: Path) -> list[ImageProvider]:
         "quality": payload.get("quality") or "low",
         "size": payload.get("size") or "1024x1792",
         "timeout_seconds": payload.get("timeout_seconds") or 600,
+        "max_retries": payload.get("max_retries") if payload.get("max_retries") is not None else 2,
     }
     raw_items = payload.get("providers") or [payload]
     result: list[ImageProvider] = []
@@ -63,6 +66,7 @@ def _providers(repo_root: Path) -> list[ImageProvider]:
                 size=str(item.get("size") or defaults["size"]),
                 timeout_seconds=float(item.get("timeout_seconds") or defaults["timeout_seconds"]),
                 weight=max(1, int(item.get("weight") or 1)),
+                max_retries=max(0, int(item.get("max_retries", defaults["max_retries"]))),
             )
         )
     if not result:
@@ -94,16 +98,39 @@ def edit_image(repo_root: Path, source: Path, prompt: str, *, size: str | None =
         url = urljoin(provider.base_url.rstrip("/") + "/", provider.edit_path.lstrip("/"))
         headers = {"Authorization": f"Bearer {provider.api_key}"}
         data = {"model": provider.model, "prompt": prompt, "size": size or provider.size, "quality": provider.quality}
-        try:
-            with source.open("rb") as handle, httpx.Client(timeout=provider.timeout_seconds, trust_env=False) as client:
-                response = client.post(
-                    url,
-                    headers=headers,
-                    data=data,
-                    files={"image": (source.name, handle, mimetypes.guess_type(source.name)[0] or "image/png")},
+        for attempt in range(provider.max_retries + 1):
+            try:
+                with source.open("rb") as handle, httpx.Client(
+                    timeout=provider.timeout_seconds, trust_env=False
+                ) as client:
+                    response = client.post(
+                        url,
+                        headers=headers,
+                        data=data,
+                        files={"image": (source.name, handle, mimetypes.guess_type(source.name)[0] or "image/png")},
+                    )
+                content, response_id = _decode(response)
+                return ImageEditResult(
+                    content=content,
+                    provider=provider.name,
+                    model=provider.model,
+                    response_id=response_id,
                 )
-            content, response_id = _decode(response)
-            return ImageEditResult(content=content, provider=provider.name, model=provider.model, response_id=response_id)
-        except Exception as exc:  # noqa: BLE001
-            errors.append(f"{provider.name}:{exc.__class__.__name__}:{exc}")
+            except Exception as exc:  # noqa: BLE001
+                errors.append(
+                    f"{provider.name}[{attempt + 1}/{provider.max_retries + 1}]:"
+                    f"{exc.__class__.__name__}:{exc}"
+                )
+                if attempt >= provider.max_retries or not _is_retryable(exc):
+                    break
+                time.sleep(min(2 ** attempt, 4))
     raise RuntimeError("all GPT Image providers failed: " + " | ".join(errors))
+
+
+def _is_retryable(exc: Exception) -> bool:
+    if isinstance(exc, (httpx.TimeoutException, httpx.NetworkError)):
+        return True
+    if isinstance(exc, httpx.HTTPStatusError):
+        status = exc.response.status_code
+        return status in {408, 409, 425, 429} or status >= 500
+    return False

@@ -80,7 +80,7 @@ class OperationEvent(V4Contract):
     event_id: str = Field(min_length=1)
     phrase: str = Field(min_length=1)
     intent: str = Field(min_length=1)
-    target_slot: str | None
+    target_slot: str | None = None
 
 
 class SceneClaim(V4Contract):
@@ -101,7 +101,10 @@ class SemanticScene(V4Contract):
     inputs: list[SceneInput]
     outputs: list[SceneOutput]
     claims: list[SceneClaim]
-    no_asset: bool
+    # Models occasionally omit this mechanical flag even when slots make the
+    # visual intent unambiguous. Treat omission as the normal materialized
+    # scene; deterministic repair remains responsible for true no-asset scenes.
+    no_asset: bool = False
 
 
 class SceneSemanticPlan(V4Contract):

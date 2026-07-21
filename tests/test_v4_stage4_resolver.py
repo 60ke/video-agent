@@ -160,6 +160,49 @@ def test_resolution_session_hides_concurrent_inserts(repo: SQLiteAssetRepository
     assert outsider.asset_ref not in visible2
 
 
+def test_resolution_session_excludes_missing_objects(repo: SQLiteAssetRepository, tmp_path: Path) -> None:
+    asset = repo.register_asset(_draft(repo, _image(tmp_path / "missing.png"), "missing.png"))
+    repo.object_store.resolve(asset.object_key).unlink()
+
+    session = repo.open_resolution_session()
+    assert session.get_asset(asset.asset_ref) is None
+    assert session.query_assets(AssetQuery(asset_roles=("result_image",))) == []
+
+
+def test_resolution_session_excludes_groups_with_missing_members(
+    repo: SQLiteAssetRepository, tmp_path: Path
+) -> None:
+    result = repo.register_asset(_draft(repo, _image(tmp_path / "result.png"), "result.png"))
+    editor = repo.register_asset(
+        _draft(repo, _image(tmp_path / "editor.png", "blue"), "editor.png", "editor_page")
+    )
+    edited = repo.register_asset(
+        _draft(repo, _image(tmp_path / "edited.png", "green"), "edited.png", "edited_result")
+    )
+    repo.register_group(
+        AssetGroupDraft(
+            group_type="process",
+            pattern_id="editor_sequence",
+            category_id="文生图/文化墙",
+            members=[
+                AssetGroupMember(
+                    member_key="source_result", asset_role="result_image", asset_ref=result.asset_ref, order=1
+                ),
+                AssetGroupMember(
+                    member_key="editor_page", asset_role="editor_page", asset_ref=editor.asset_ref, order=2
+                ),
+                AssetGroupMember(
+                    member_key="edited_result", asset_role="edited_result", asset_ref=edited.asset_ref, order=3
+                ),
+            ],
+        )
+    )
+    repo.object_store.resolve(editor.object_key).unlink()
+
+    session = repo.open_resolution_session()
+    assert session.query_groups(GroupQuery(pattern_ids=("editor_sequence",))) == []
+
+
 def test_independent_query_dedup(
     repo: SQLiteAssetRepository,
     tmp_path: Path,

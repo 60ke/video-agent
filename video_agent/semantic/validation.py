@@ -9,6 +9,7 @@ from video_agent.contracts.v4.common import (
 )
 from video_agent.contracts.v4.scene import (
     AssetGroupQuerySource,
+    AssetQuerySource,
     ConfiguredAssetSource,
     GroupMemberSource,
     RelationFromInputSource,
@@ -161,12 +162,8 @@ def _validate_scene(
     _ensure_unique(output_names, path=f"{base}.outputs", label="output_name", issues=issues)
 
     if scene.no_asset:
-        if scene.visual_structure != "no_asset_transition":
-            issues.append(_issue("invalid_no_asset", f"{base}.visual_structure", "no_asset requires no_asset_transition"))
-        for field_name in ("slots", "inputs", "outputs", "claims"):
-            if getattr(scene, field_name):
-                issues.append(_issue("invalid_no_asset", f"{base}.{field_name}", f"no_asset requires empty {field_name}"))
-    elif not scene.slots:
+        issues.append(_issue("no_asset_forbidden", f"{base}.no_asset", "no_asset scenes are forbidden. Every scene must have visual content."))
+    if not scene.slots:
         issues.append(_issue("missing_slots", f"{base}.slots", "a material scene requires at least one slot"))
 
     input_map = {item.input_name: item for item in scene.inputs}
@@ -277,11 +274,8 @@ def _validate_scene(
                 )
             )
     elif scene.visual_structure in {"sequence", "comparison"}:
-        relation_kinds = {"asset_group_query", "group_member", "scene_input", "relation_from_input"}
-        if any(slot.source.kind not in relation_kinds for slot in scene.slots):
-            issues.append(_issue("unrelated_structured_slots", f"{base}.slots", f"{scene.visual_structure} cannot use unrelated asset queries"))
-        if not any(slot.source.kind in {"asset_group_query", "group_member", "relation_from_input"} for slot in scene.slots):
-            issues.append(_issue("missing_relation_source", f"{base}.slots", f"{scene.visual_structure} requires a group or relation source"))
+        # Slots may freely mix independent asset_query with relation-bound sources.
+        # Relation-bound slots still validated by _validate_group_subslots / pattern member checks.
         if scene.visual_structure == "comparison":
             for slot_index, slot in enumerate(scene.slots):
                 source = slot.source
@@ -310,12 +304,16 @@ def _validate_scene(
             )
 
     for slot_index, slot in enumerate(scene.slots):
-        if slot.asset_role == "outro" and not isinstance(slot.source, ConfiguredAssetSource):
+        if isinstance(slot.source, AssetQuerySource) and slot.asset_role in {
+            "editor_page",
+            "edited_result",
+            "flat_plan",
+        }:
             issues.append(
                 _issue(
-                    "outro_requires_configured_asset",
+                    "dependent_role_requires_upstream_result",
                     f"{base}.slots[{slot_index}].source",
-                    "outro slots must use configured_asset",
+                    f"{slot.asset_role} must be relation_from_input bound to an earlier result_image",
                 )
             )
         if isinstance(slot.source, RelationFromInputSource) and slot.source.pattern_id in {

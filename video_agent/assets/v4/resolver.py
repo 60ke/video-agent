@@ -31,6 +31,7 @@ from video_agent.contracts.v4.resolved_assets import (
 from video_agent.derivation.v4.capability_resolver import RegistryDerivationCapabilityResolver
 from video_agent.registries import CapabilityRegistryHub
 
+from .category_fallbacks import CATEGORY_INVENTORY_FALLBACKS
 from .dependency_graph import topo_sort_scenes
 from .derivation_orchestrator import (
     DerivationCapabilityResolver,
@@ -49,6 +50,8 @@ from .usage_repository import AssetUsageRepository
 
 _WEBSITE_ROLES = frozenset({"site_home", "feature_entry", "parameter_panel"})
 _WEBSITE_EVIDENCE = frozenset({EvidenceClass.SOURCE, EvidenceClass.FAITHFUL})
+# Adjacent selling points may reuse the same stocked page when inventory is thin.
+_REUSABLE_INDEPENDENT_ROLES = frozenset({"site_home", "feature_entry", "parameter_panel", "other", "brand_logo"})
 
 
 @dataclass
@@ -415,7 +418,33 @@ class AssetPlanResolver:
         )
         candidates = session.query_assets(query)
         candidates = self._post_filter_evidence(candidates, slot.asset_role, session)
-        candidates = [item for item in candidates if item.asset_ref not in independent_used]
+        unused = [item for item in candidates if item.asset_ref not in independent_used]
+        if (
+            not unused
+            and candidates
+            and slot.asset_role in _REUSABLE_INDEPENDENT_ROLES
+        ):
+            # Prefer unused inventory; if exhausted, allow reuse (e.g. single site_home).
+            unused = list(candidates)
+        candidates = unused
+        fallback_category = CATEGORY_INVENTORY_FALLBACKS.get(slot.category_id or "")
+        if not candidates and fallback_category:
+            fallback_query = AssetQuery(
+                category_ids=(fallback_category,),
+                asset_roles=(slot.asset_role,),
+                claims=tuple(claims),
+                active_only=True,
+            )
+            candidates = session.query_assets(fallback_query)
+            candidates = self._post_filter_evidence(candidates, slot.asset_role, session)
+            unused = [item for item in candidates if item.asset_ref not in independent_used]
+            if (
+                not unused
+                and candidates
+                and slot.asset_role in _REUSABLE_INDEPENDENT_ROLES
+            ):
+                unused = list(candidates)
+            candidates = unused
         if not candidates:
             return self._handle_gap(
                 scene=scene,
