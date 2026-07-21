@@ -63,10 +63,14 @@ class RegistryDerivationCapabilityResolver:
                     scene_id=request.scene_id,
                     slot_id=request.slot_id,
                 )
-        if request.target_asset_role not in caps.output_roles:
+        target_is_group_input = (
+            request.required_group is not None
+            and request.target_asset_role in caps.input_roles
+        )
+        if request.target_asset_role not in caps.output_roles and not target_is_group_input:
             raise Stage4Error(
                 "capability_not_applicable",
-                f"{entry.id} cannot produce role {request.target_asset_role}",
+                f"{entry.id} cannot produce or reuse role {request.target_asset_role}",
                 scene_id=request.scene_id,
                 slot_id=request.slot_id,
             )
