@@ -106,8 +106,11 @@
     {
       "scene_id": "s009", "order": 9,
       "text": "设计这件事，从没这么省心。",
-      "visual_structure": "no_asset_transition",
-      "slots": [], "events": [], "inputs": [], "outputs": [], "claims": [], "no_asset": true
+      "visual_structure": "single",
+      "slots": [
+        {"slot_id": "hold", "anchor_phrase": "从没这么省心", "entry_policy": "scene_start", "hold_policy": "scene_end", "category_id": "文生图/文化墙", "asset_role": "result_image", "source": {"kind": "scene_input", "input_name": "prev_result"}, "subtitle_emphasis": "none"}
+      ],
+      "events": [], "inputs": [{"input_name": "prev_result", "from_scene": "s005", "from_output": "primary_result", "required": true}], "outputs": [], "claims": [], "no_asset": false
     },
     {
       "scene_id": "s010", "order": 10,

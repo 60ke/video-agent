@@ -257,14 +257,14 @@ def test_stage0_golden_s001_to_s010_compile(tmp_path: Path, hub: CapabilityRegis
         assert len(s007_fx["ordered_items"]) >= 2
         assert len(s007_fx["assets"]) >= 2
 
-        # s009 light_sweep effect is present (pixel layer is Remotion-side)
+        # s009 now reuses s005's result via scene_input (was no_asset_transition)
         s009_fx = next(
             item for item in timeline.effect_instances if item.effect_instance_id == by_scene["s009"][0].effect_instance_id
         )
-        assert s009_fx.effect_id in {"light_sweep", "none"}
+        assert s009_fx.effect_id in {"result_reveal", "light_sweep", "none"}
 
-        # s009 no_asset transition (empty asset bindings)
-        assert by_scene["s009"][0].asset_bindings == {}
+        # s009 has a resolved asset (reused from s005's result)
+        assert by_scene["s009"][0].asset_bindings != {}
         assert by_scene["s009"][0].start_frame == spans["s009"].start_frame
 
         # s010 configured outro through narration end

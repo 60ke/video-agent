@@ -3,11 +3,14 @@
     {"category_id": "文生图/文化墙", "name": "文化墙", "aliases": [], "enabled": true, "scope_eligible": true},
     {"category_id": "文生图/门头招牌", "name": "门头招牌", "aliases": ["门店招牌"], "enabled": true, "scope_eligible": true},
     {"category_id": "文生图/美陈", "name": "美陈", "aliases": [], "enabled": true, "scope_eligible": true},
+    {"category_id": "文生图/电商", "name": "电商", "aliases": [], "enabled": true, "scope_eligible": true},
     {"category_id": "网站/主页", "name": "网站主页", "aliases": ["首页"], "enabled": true, "scope_eligible": false}
   ],
   "asset_roles": [
     {"item_id": "site_home", "enabled": true, "requires_category": false},
     {"item_id": "feature_entry", "enabled": true, "requires_category": true},
+    {"item_id": "feature_list", "enabled": false, "requires_category": false},
+    {"item_id": "other", "enabled": true, "requires_category": false},
     {"item_id": "parameter_panel", "enabled": true, "requires_category": true},
     {"item_id": "result_image", "enabled": true, "requires_category": true},
     {"item_id": "reference_image", "enabled": true, "requires_category": true},
@@ -20,8 +23,7 @@
     {"item_id": "single", "enabled": true, "requires_category": false},
     {"item_id": "gallery", "enabled": true, "requires_category": false},
     {"item_id": "comparison", "enabled": true, "requires_category": false},
-    {"item_id": "sequence", "enabled": true, "requires_category": false},
-    {"item_id": "no_asset_transition", "enabled": true, "requires_category": false}
+    {"item_id": "sequence", "enabled": true, "requires_category": false}
   ],
   "operation_intents": [
     {"item_id": "select", "enabled": true, "requires_category": false},

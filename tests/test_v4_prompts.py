@@ -17,6 +17,15 @@ REQUIRED_HEADINGS = (
     "# Forbidden Decisions",
     "# Output Contract",
 )
+SCENE_REQUIRED_HEADINGS = (
+    "# Role",
+    "# Task",
+    "# Core Principle",
+    "# Forbidden",
+    "# Output",
+    "# Decision Hints",
+    "# Registry Snapshot",
+)
 
 
 def test_scope_prompt_has_required_structure() -> None:
@@ -38,15 +47,13 @@ def test_scene_prompt_injects_registry_and_decision_assets() -> None:
         "configured_assets": [],
     }
     prompt = load_scene_prompt(REPO_ROOT, registry)
-    assert all(heading in prompt.system_prompt for heading in REQUIRED_HEADINGS)
-    assert "# Decision Table" in prompt.system_prompt
+    assert all(heading in prompt.system_prompt for heading in SCENE_REQUIRED_HEADINGS)
     assert "runtime_only_role" in prompt.system_prompt
     assert "{{" not in prompt.system_prompt
     assert json.dumps(registry, ensure_ascii=False, indent=2) in prompt.system_prompt
     assert "`group_member` 不能作为" in prompt.system_prompt
-    assert "不确定时必须输出空数组" in prompt.system_prompt
-    assert "必须在关系边界拆成两个连续 scene" in prompt.system_prompt
-    assert "不得拿上游 `result_image` 充当 `feature_entry`" in prompt.system_prompt
+    assert "不确定时 `claims: []`" in prompt.system_prompt
+    assert "不得使用 `no_asset_transition`" in prompt.system_prompt
 
 
 def test_prompt_fingerprint_changes_with_registry() -> None:

@@ -1,7 +1,7 @@
 {
   "positive": [
     {
-      "rule": "枚举对象逐个建槽",
+      "rule": "连续列举多个对象 → gallery，每对象独立槽",
       "scene": {
         "scene_id": "s001",
         "order": 1,
@@ -15,28 +15,100 @@
       }
     },
     {
-      "rule": "关系模式决定成员键和角色",
+      "rule": "sequence 自由组合角色：parameter_panel → result_image（过程落到结果）",
       "scene": {
-        "scene_id": "s002",
-        "order": 2,
-        "text": "填好参数，花字出现，点击生成。",
+        "scene_id": "s005",
+        "order": 5,
+        "text": "不用死磕复杂提示词,两三步轻松出效果图",
         "visual_structure": "sequence",
         "slots": [
-          {"slot_id": "base", "anchor_phrase": "填好参数", "entry_policy": "scene_start", "hold_policy": "until_next_slot", "category_id": "category/wall", "asset_role": "parameter_panel", "source": {"kind": "asset_group_query", "group_alias": "wall_parameters", "group_type": "process", "pattern_id": "parameter_callout_sequence", "member_key": "base"}, "subtitle_emphasis": "none"},
-          {"slot_id": "stage", "anchor_phrase": "花字出现", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "category/wall", "asset_role": "parameter_panel", "source": {"kind": "group_member", "group_alias": "wall_parameters", "group_type": "process", "pattern_id": "parameter_callout_sequence", "member_key": "stage"}, "subtitle_emphasis": "none"},
-          {"slot_id": "final", "anchor_phrase": "点击生成", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "category/wall", "asset_role": "parameter_panel", "source": {"kind": "group_member", "group_alias": "wall_parameters", "group_type": "process", "pattern_id": "parameter_callout_sequence", "member_key": "final"}, "subtitle_emphasis": "none"}
+          {"slot_id": "p1", "anchor_phrase": "不用死磕复杂提示词", "entry_policy": "scene_start", "hold_policy": "until_next_slot", "category_id": "category/primary", "asset_role": "parameter_panel", "source": {"kind": "asset_group_query", "group_alias": "ps", "group_type": "process", "pattern_id": "parameter_callout_sequence", "member_key": "base"}, "subtitle_emphasis": "keyword"},
+          {"slot_id": "p2", "anchor_phrase": "两三步", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "category/primary", "asset_role": "parameter_panel", "source": {"kind": "group_member", "group_alias": "ps", "group_type": "process", "pattern_id": "parameter_callout_sequence", "member_key": "stage"}, "subtitle_emphasis": "keyword"},
+          {"slot_id": "r1", "anchor_phrase": "出效果图", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "category/primary", "asset_role": "result_image", "source": {"kind": "asset_query"}, "subtitle_emphasis": "keyword"}
+        ],
+        "events": [], "inputs": [], "outputs": [{"output_name": "result", "bound_slot": "r1", "asset_role": "result_image"}],
+        "claims": [{"claim_id": "feature_can_generate_result", "phrase": "出效果图", "quantifier": "any", "supporting_slots": ["r1"], "evidence_window": "anchor"}],
+        "no_asset": false
+      }
+    },
+    {
+      "rule": "多样性主张 → gallery 多张 result_image",
+      "scene": {
+        "scene_id": "s006",
+        "order": 7,
+        "text": "换行业、换主题、换风格",
+        "visual_structure": "gallery",
+        "slots": [
+          {"slot_id": "v1", "anchor_phrase": "换行业", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "category/primary", "asset_role": "result_image", "source": {"kind": "asset_query"}, "subtitle_emphasis": "keyword"},
+          {"slot_id": "v2", "anchor_phrase": "换主题", "entry_policy": "phrase_start", "hold_policy": "until_next_slot", "category_id": "category/primary", "asset_role": "result_image", "source": {"kind": "asset_query"}, "subtitle_emphasis": "keyword"},
+          {"slot_id": "v3", "anchor_phrase": "换风格", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "category/primary", "asset_role": "result_image", "source": {"kind": "asset_query"}, "subtitle_emphasis": "keyword"}
+        ],
+        "events": [], "inputs": [], "outputs": [], "claims": [], "no_asset": false
+      }
+    },
+    {
+      "rule": "承接句/修辞句 → scene_input 复用上游画面（禁止空镜）",
+      "scene": {
+        "scene_id": "s008",
+        "order": 9,
+        "text": "都不在话下",
+        "visual_structure": "single",
+        "slots": [
+          {"slot_id": "hold", "anchor_phrase": "都不在话下", "entry_policy": "scene_start", "hold_policy": "scene_end", "asset_role": "result_image", "source": {"kind": "scene_input", "input_name": "prev_result"}, "subtitle_emphasis": "none"}
+        ],
+        "events": [], "inputs": [{"input_name": "prev_result", "from_scene": "s006", "from_output": "v3", "required": true}], "outputs": [], "claims": [], "no_asset": false
+      }
+    },
+    {
+      "rule": "品牌收束/CTA → site_home 有画面（禁止空镜）",
+      "scene": {
+        "scene_id": "s009",
+        "order": 10,
+        "text": "这就是专为广告人研发的AI智能体！",
+        "visual_structure": "single",
+        "slots": [
+          {"slot_id": "brand", "anchor_phrase": "AI智能体", "entry_policy": "phrase_start", "hold_policy": "scene_end", "asset_role": "site_home", "source": {"kind": "asset_query"}, "subtitle_emphasis": "keyword"}
+        ],
+        "events": [], "inputs": [], "outputs": [], "claims": [], "no_asset": false
+      }
+    },
+    {
+      "rule": "feature_can_generate_result 挂 result_image",
+      "scene": {
+        "scene_id": "s007",
+        "order": 8,
+        "text": "一键生成完整详情页。",
+        "visual_structure": "single",
+        "slots": [
+          {"slot_id": "result", "anchor_phrase": "完整详情页", "entry_policy": "phrase_start", "hold_policy": "scene_end", "category_id": "category/detail", "asset_role": "result_image", "source": {"kind": "asset_query"}, "subtitle_emphasis": "keyword"}
+        ],
+        "events": [], "inputs": [], "outputs": [{"output_name": "out", "bound_slot": "result", "asset_role": "result_image"}],
+        "claims": [
+          {"claim_id": "feature_can_generate_result", "phrase": "一键生成完整详情页", "quantifier": "any", "supporting_slots": ["result"], "evidence_window": "anchor"}
+        ],
+        "no_asset": false
+      }
+    },
+    {
+      "rule": "最后一句 → outro",
+      "scene": {
+        "scene_id": "s999",
+        "order": 99,
+        "text": "这就是柯幻熊猫。",
+        "visual_structure": "single",
+        "slots": [
+          {"slot_id": "end", "anchor_phrase": "柯幻熊猫", "entry_policy": "phrase_start", "hold_policy": "scene_end", "asset_role": "outro", "source": {"kind": "configured_asset", "config_key": "default_outro"}, "subtitle_emphasis": "keyword"}
         ],
         "events": [], "inputs": [], "outputs": [], "claims": [], "no_asset": false
       }
     }
   ],
   "negative": [
-    {"rule": "不得用一个槽覆盖多个逐字出现的 Gallery 对象。"},
-    {"rule": "编辑页不得随机 asset_query，必须引用上游结果并通过关系来源解析。"},
-    {"rule": "素材缺失属于下游 Resolver，不得提前改成 no_asset。"},
-    {"rule": "不得只写 group_type 而省略 pattern_id，也不得把 result_image 用 editor_page member_key 承载。"},
-    {"rule": "不得把独立 feature_entry/asset_query 与 parameter_callout_sequence 塞进同一个 sequence。"},
-    {"rule": "不得在 sequence 末尾用 asset_query 结果图冒充 parameter final；结果图必须拆成后续 single 并导出 output。"},
-    {"rule": "reference_result_plan 不得用独立 asset_query 参考图混搭；首个槽必须是同组 asset_group_query/reference_image。"}
+    {"rule": "不得把过程口播停在参数面板——「出效果图」必须配 result_image，不能停在 parameter_panel。"},
+    {"rule": "不得把多样性主张（换行业/换主题/换风格）只配单张 result_image 或 parameter_panel。"},
+    {"rule": "不得把 feature_can_generate_result 挂到 parameter_panel。"},
+    {"rule": "不得把 real_website_screenshot 挂到 result_image/reference_image/flat_plan。"},
+    {"rule": "不得用 no_asset_transition 或 no_asset=true 制造空镜——承接句、修辞句也要配画面（用 scene_input 复用上游或 site_home）。"},
+    {"rule": "不得创造 Registry 外的 ID。"}
   ]
 }

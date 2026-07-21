@@ -76,15 +76,21 @@ def test_gallery_rejects_missing_enumerated_slot(registry: CapabilityRegistrySna
     assert any(issue.code in {"unknown_slot", "gallery_anchor_order"} for issue in error.value.issues)
 
 
-def test_sequence_rejects_unrelated_asset_queries(registry: CapabilityRegistrySnapshot) -> None:
+def test_sequence_accepts_mixed_asset_queries(registry: CapabilityRegistrySnapshot) -> None:
+    """Sequences may freely mix asset_query with relation sources.
+
+    The updated prompt allows '纯独立 asset_query 的流程拼接' as a valid
+    sequence, so a sequence with all asset_query slots should be accepted.
+    """
     payload = _json("scene_semantic_plan.payload.json")
     scene = payload["scenes"][3]
     for slot in scene["slots"]:
         slot["source"] = {"kind": "asset_query"}
+    # Remove orphaned inputs since slots no longer reference them.
+    scene["inputs"] = []
     plan = SceneSemanticPlan.model_validate(payload)
-    with pytest.raises(DomainValidationError) as error:
-        validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
-    assert any(issue.code == "unrelated_structured_slots" for issue in error.value.issues)
+    # Should NOT raise — mixed/all-asset_query sequences are now valid.
+    validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
 
 
 def test_scene_dependency_must_point_backward(registry: CapabilityRegistrySnapshot) -> None:

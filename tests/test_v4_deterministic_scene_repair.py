@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from video_agent.contracts.v4 import SceneSemanticPlan
+from video_agent.contracts.v4.common import normalize_frozen_text
 from video_agent.registries import CapabilityRegistrySnapshot
 from video_agent.semantic.deterministic_scene_repair import repair_scene_plan_payload
 from video_agent.semantic.validation import validate_scene_semantic_plan
@@ -20,7 +21,7 @@ FROZEN_NARRATION = (
 )
 
 
-def test_deterministic_repair_splits_result_and_rewrites_causal_and_editor() -> None:
+def test_deterministic_repair_normalizes_causal_and_editor_without_splitting() -> None:
     registry = CapabilityRegistrySnapshot.model_validate(
         json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
     )
@@ -296,6 +297,405 @@ def test_deterministic_repair_splits_result_and_rewrites_causal_and_editor() -> 
     validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
     structures = [scene.visual_structure for scene in plan.scenes]
     assert "comparison" in structures
-    assert any(scene.outputs for scene in plan.scenes if scene.visual_structure == "single")
+    # Sequence scenes are no longer split — the sequence with result output stays intact.
+    assert any(scene.outputs for scene in plan.scenes if scene.visual_structure == "sequence")
+    # Ensure the mixed sequence (parameter_panel → result_image) was NOT split.
+    wall_scenes = [s for s in plan.scenes if "一整面文化墙方案" in s.text]
+    assert len(wall_scenes) == 1
+    assert wall_scenes[0].visual_structure == "sequence"
     editor = next(scene for scene in plan.scenes if "继续编辑" in scene.text)
     assert all(slot.source.kind == "relation_from_input" for slot in editor.slots)
+
+
+def test_deterministic_repair_covers_multiline_frozen_and_claim_phrases() -> None:
+    registry = CapabilityRegistrySnapshot.model_validate(
+        json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
+    )
+    frozen = (
+        "专为广告人量身定制的 AI 设计网站来了！\n"
+        "从文化墙、门头招牌到海报等文生图设计功能\n"
+        "这就是专为广告从业者研发的AI智能体！"
+    )
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "a",
+                "order": 1,
+                "text": "专为广告人量身定制的 AI 设计网站来了！",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "home",
+                        "anchor_phrase": "AI 设计网站",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": None,
+                        "asset_role": "site_home",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [
+                    {
+                        "claim_id": "real_website_screenshot",
+                        "phrase": "real_website_screenshot",
+                        "quantifier": "any",
+                        "supporting_slots": ["home"],
+                        "evidence_window": "anchor",
+                    }
+                ],
+                "no_asset": False,
+            },
+            {
+                "scene_id": "b",
+                "order": 2,
+                "text": "从文化墙、门头招牌到海报等文生图设计功能",
+                "visual_structure": "gallery",
+                "slots": [
+                    {
+                        "slot_id": "g1",
+                        "anchor_phrase": "文化墙",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": None,
+                        "asset_role": "result_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "keyword",
+                    },
+                    {
+                        "slot_id": "g2",
+                        "anchor_phrase": "门头招牌",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": None,
+                        "asset_role": "result_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "keyword",
+                    },
+                    {
+                        "slot_id": "g3",
+                        "anchor_phrase": "海报",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": None,
+                        "asset_role": "result_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "keyword",
+                    },
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [{"output_name": "bad", "bound_slot": "missing", "asset_role": "result_image"}],
+                "claims": [],
+                "no_asset": False,
+            },
+            {
+                "scene_id": "c",
+                "order": 3,
+                "text": "这就是专为广告从业者研发的AI智能体！",
+                "visual_structure": "no_asset_transition",
+                "slots": [],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": True,
+            },
+        ]
+    }
+    repaired = repair_scene_plan_payload(
+        payload,
+        frozen_narration=frozen,
+        category_ids=["文生图/文化墙", "文生图/门头招牌", "文生图/海报"],
+        primary_category_id="文生图/文化墙",
+    )
+    plan = SceneSemanticPlan.model_validate(repaired)
+    validate_scene_semantic_plan(plan, frozen_narration=frozen, registry=registry)
+    assert "".join(scene.text for scene in sorted(plan.scenes, key=lambda item: item.order)) == normalize_frozen_text(
+        frozen
+    )
+    assert plan.scenes[0].claims[0].phrase == "AI 设计网站"
+    assert plan.scenes[1].outputs == []
+    assert all(slot.category_id == "文生图/文化墙" for slot in plan.scenes[1].slots)
+    last = plan.scenes[-1]
+    assert last.no_asset is False
+    assert last.slots[0].asset_role == "outro"
+    assert last.slots[0].source.kind == "configured_asset"
+    assert last.slots[0].source.config_key == "default_outro"
+
+
+def test_deterministic_repair_forces_terminal_outro_and_keeps_brand_close_visual() -> None:
+    registry = CapabilityRegistrySnapshot.model_validate(
+        json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
+    )
+    frozen = "打开网站，二十多项编辑小工具随手可用。这就是专为广告从业者研发的AI智能体！"
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "a",
+                "order": 1,
+                "text": "打开网站，二十多项编辑小工具随手可用。",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "home",
+                        "anchor_phrase": "打开网站",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": None,
+                        "asset_role": "site_home",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            },
+            {
+                "scene_id": "b",
+                "order": 2,
+                "text": "这就是专为广告从业者研发的AI智能体！",
+                "visual_structure": "no_asset_transition",
+                "slots": [],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": True,
+            },
+        ]
+    }
+    repaired = repair_scene_plan_payload(payload, frozen_narration=frozen)
+    plan = SceneSemanticPlan.model_validate(repaired)
+    validate_scene_semantic_plan(plan, frozen_narration=frozen, registry=registry)
+    assert plan.scenes[0].slots[0].asset_role == "site_home"
+    last = plan.scenes[-1]
+    assert last.slots[0].asset_role == "outro"
+    assert last.slots[0].source.config_key == "default_outro"
+
+
+def test_deterministic_repair_fills_empty_close_before_outro() -> None:
+    registry = CapabilityRegistrySnapshot.model_validate(
+        json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
+    )
+    frozen = "设计这件事，从没这么省心。搜索柯幻熊猫，今天就试试。"
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "a",
+                "order": 1,
+                "text": "设计这件事，从没这么省心。",
+                "visual_structure": "no_asset_transition",
+                "slots": [],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": True,
+            },
+            {
+                "scene_id": "b",
+                "order": 2,
+                "text": "搜索柯幻熊猫，今天就试试。",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "home",
+                        "anchor_phrase": "柯幻熊猫",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": None,
+                        "asset_role": "site_home",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            },
+        ]
+    }
+    repaired = repair_scene_plan_payload(payload, frozen_narration=frozen)
+    plan = SceneSemanticPlan.model_validate(repaired)
+    validate_scene_semantic_plan(plan, frozen_narration=frozen, registry=registry)
+    assert plan.scenes[0].no_asset is False
+    assert plan.scenes[0].slots[0].asset_role == "site_home"
+    assert plan.scenes[-1].slots[0].asset_role == "outro"
+    assert plan.scenes[-1].slots[0].source.config_key == "default_outro"
+
+
+def test_unstocked_reference_result_collapse_drops_orphan_events() -> None:
+    """Collapsing unstocked reference_result_plan must not leave dangling event targets."""
+    registry = CapabilityRegistrySnapshot.model_validate(
+        json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
+    )
+    frozen = "上传商品图、填写名称和品类，一分钟即可出一套完整详情页。搜索柯幻熊猫，今天就试试。"
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "s001",
+                "order": 1,
+                "text": "上传商品图、填写名称和品类，一分钟即可出一套完整详情页。",
+                "visual_structure": "sequence",
+                "slots": [
+                    {
+                        "slot_id": "upload_ref",
+                        "anchor_phrase": "上传商品图",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": "文生图/电商",
+                        "asset_role": "reference_image",
+                        "source": {
+                            "kind": "asset_group_query",
+                            "group_alias": "detail_flow",
+                            "group_type": "causal",
+                            "pattern_id": "reference_result_plan",
+                            "member_key": "reference_image",
+                        },
+                        "subtitle_emphasis": "none",
+                    },
+                    {
+                        "slot_id": "result_page",
+                        "anchor_phrase": "完整详情页",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/电商",
+                        "asset_role": "result_image",
+                        "source": {
+                            "kind": "group_member",
+                            "group_alias": "detail_flow",
+                            "group_type": "causal",
+                            "pattern_id": "reference_result_plan",
+                            "member_key": "result_image",
+                        },
+                        "subtitle_emphasis": "none",
+                    },
+                ],
+                "events": [
+                    {
+                        "event_id": "ev_upload",
+                        "phrase": "上传商品图",
+                        "intent": "upload",
+                        "target_slot": "upload_ref",
+                    },
+                    {
+                        "event_id": "ev_generate",
+                        "phrase": "一分钟即可出一套完整详情页",
+                        "intent": "generate",
+                        "target_slot": "result_page",
+                    },
+                ],
+                "inputs": [],
+                "outputs": [{"output_name": "final_result", "bound_slot": "result_page", "asset_role": "result_image"}],
+                "claims": [],
+                "no_asset": False,
+            },
+            {
+                "scene_id": "s002",
+                "order": 2,
+                "text": "搜索柯幻熊猫，今天就试试。",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "outro",
+                        "anchor_phrase": "搜索柯幻熊猫",
+                        "entry_policy": "scene_start",
+                        "hold_policy": "scene_end",
+                        "category_id": None,
+                        "asset_role": "outro",
+                        "source": {"kind": "configured_asset", "config_key": "default_outro"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            },
+        ]
+    }
+    repaired = repair_scene_plan_payload(payload, frozen_narration=frozen)
+    plan = SceneSemanticPlan.model_validate(repaired)
+    validate_scene_semantic_plan(plan, frozen_narration=frozen, registry=registry)
+    collapsed = plan.scenes[0]
+    assert [slot.slot_id for slot in collapsed.slots] == ["result_page"]
+    assert all(slot.source.kind == "asset_query" for slot in collapsed.slots)
+    assert all(event.target_slot != "upload_ref" for event in collapsed.events)
+    assert all(event.target_slot is None or event.target_slot == "result_page" for event in collapsed.events)
+
+
+def test_repair_rewrites_nfkc_equivalent_claim_phrase_to_verbatim_scene_span() -> None:
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "s002",
+                "order": 1,
+                "text": "用柯幻熊猫,一个人一分钟就可以搞定 ",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "home",
+                        "anchor_phrase": "柯幻熊猫",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "网站/主页",
+                        "asset_role": "site_home",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [
+                    {
+                        "claim_id": "real_website_screenshot",
+                        "phrase": "用柯幻熊猫，一个人一分钟就可以搞定",
+                        "supporting_slots": ["home"],
+                        "evidence_window": "anchor",
+                        "quantifier": "exists",
+                    }
+                ],
+                "no_asset": False,
+            },
+            {
+                "scene_id": "s007",
+                "order": 2,
+                "text": "简单好上手！",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "outro_slot",
+                        "anchor_phrase": "简单好上手",
+                        "entry_policy": "scene_start",
+                        "hold_policy": "scene_end",
+                        "category_id": None,
+                        "asset_role": "outro",
+                        "source": {"kind": "configured_asset", "config_key": "default_outro"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            },
+        ]
+    }
+    repaired = repair_scene_plan_payload(payload)
+    claim = repaired["scenes"][0]["claims"][0]
+    scene_text = repaired["scenes"][0]["text"]
+    assert claim["phrase"] in scene_text
+    assert "，" not in claim["phrase"]
+    assert "," in claim["phrase"]

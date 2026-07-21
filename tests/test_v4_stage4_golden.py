@@ -307,7 +307,9 @@ def test_stage0_golden_s001_to_s010(tmp_path: Path, hub: CapabilityRegistryHub) 
     assert [slot.member_key for slot in by_id["s007"].slots] == ["reference_image", "result_image"]
     assert by_id["s008"].slots[0].member_key == "flat_plan"
     assert by_id["s007"].slots[0].group_ref == by_id["s008"].slots[0].group_ref == seeded[f"causal:{primary}"]
-    assert by_id["s009"].slots == []
+    # s009 was converted from no_asset_transition to scene_input reusing s005's result.
+    assert len(by_id["s009"].slots) == 1
+    assert by_id["s009"].slots[0].asset_ref == primary
     assert by_id["s010"].slots[0].asset_ref == seeded["outro"]
     assert not resolved.derivation_requests
     repo.close()
