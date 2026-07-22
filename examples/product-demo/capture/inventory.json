@@ -1,0 +1,12 @@
+{
+  "recipes": [
+    {
+      "recipe_id": "demo_image_generation",
+      "source": "recipes/website.recipe.json"
+    }
+  ],
+  "assets": [],
+  "brand": {
+    "title": "AI 网站功能快速验证"
+  }
+}
