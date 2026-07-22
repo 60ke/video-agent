@@ -34,9 +34,14 @@ async def plan_scene_semantics(
     video_scope: VideoScope,
     registry: CapabilityRegistrySnapshot,
     trace_dir: Path,
+    material_availability: dict[str, Any] | None = None,
 ) -> tuple[ArtifactEnvelope[SceneSemanticPlan], StructuredInvocation[SceneSemanticPlan]]:
     registry_payload = scene_registry_payload(registry)
-    prompt = load_scene_prompt(repo_root, registry_payload)
+    availability_payload = material_availability or {
+        "source": "unavailable",
+        "role_category_availability": [],
+    }
+    prompt = load_scene_prompt(repo_root, registry_payload, availability_payload)
     narration_fingerprint = sha256_json({"text": frozen_narration})
     input_payload = {
         "request_id": f"scene_{run_id}",
@@ -46,9 +51,15 @@ async def plan_scene_semantics(
         },
         "video_scope": video_scope.model_dump(mode="json"),
         "registry_snapshot": registry_payload,
+        "material_availability": availability_payload,
     }
     def validator(value: SceneSemanticPlan) -> None:
-        repaired = apply_deterministic_scene_repairs(value)
+        repaired = apply_deterministic_scene_repairs(
+            value,
+            frozen_narration=frozen_narration,
+            category_ids=[item.category_id for item in video_scope.categories],
+            primary_category_id=next((item.category_id for item in video_scope.categories if item.is_primary), None),
+        )
         value.scenes = repaired.scenes
         validate_scene_semantic_plan(value, frozen_narration=frozen_narration, registry=registry)
 
@@ -74,6 +85,7 @@ async def plan_scene_semantics(
             prompt_fingerprint=prompt.fingerprint,
             input_payload=input_payload,
             frozen_narration=frozen_narration,
+            video_scope=video_scope,
             registry=registry,
             trace_dir=trace_dir,
             initial_error=initial_error,
@@ -84,6 +96,7 @@ async def plan_scene_semantics(
             "frozen_narration": narration_fingerprint,
             "video_scope": sha256_json(video_scope),
             "registry": sha256_json(registry_payload),
+            "material_availability": sha256_json(availability_payload),
             "prompt": prompt.fingerprint,
             "request": invocation.request_fingerprint,
         },
@@ -101,13 +114,19 @@ async def _recover_scene_plan(
     prompt_fingerprint: str,
     input_payload: dict[str, Any],
     frozen_narration: str,
+    video_scope: VideoScope,
     registry: CapabilityRegistrySnapshot,
     trace_dir: Path,
     initial_error: AIDomainError | AISchemaError | AIJsonSyntaxError,
 ) -> StructuredInvocation[SceneSemanticPlan]:
     route = gateway.configuration.routes["scene_semantics"]
     def validator(value: SceneSemanticPlan) -> None:
-        repaired = apply_deterministic_scene_repairs(value)
+        repaired = apply_deterministic_scene_repairs(
+            value,
+            frozen_narration=frozen_narration,
+            category_ids=[item.category_id for item in video_scope.categories],
+            primary_category_id=next((item.category_id for item in video_scope.categories if item.is_primary), None),
+        )
         value.scenes = repaired.scenes
         validate_scene_semantic_plan(value, frozen_narration=frozen_narration, registry=registry)
     repair_count = 0

@@ -13,10 +13,11 @@ from video_agent.io import sha256_file, sha256_json
 from .repository import AssetDraft, AssetGroupDraft, AssetQuery, GroupQuery
 from .sqlite_repository import SQLiteAssetRepository
 
-MAPPING_VERSION = "legacy-v3-to-v4.1"
+MAPPING_VERSION = "legacy-v3-to-v4.2"
 ROLE_MAP = {
     "site_home": "site_home",
     "feature_list": "feature_list",
+    "other": "other",
     "feature_entry": "feature_entry",
     "feature_form_params": "parameter_panel",
     "result_image": "result_image",
@@ -39,7 +40,7 @@ AUTHORITATIVE_INPUTS = (
     "results/_library_manifest.json",
 )
 
-ParentKind = Literal["legacy_id", "content_sha256"]
+ParentKind = Literal["legacy_id", "content_sha256", "object_key"]
 
 
 class _DryRunRollback(Exception):
@@ -117,6 +118,8 @@ def migrate_legacy(repository: SQLiteAssetRepository, assets_root: Path, *, dry_
         with repository.transaction():
             refs: dict[str, str] = {}
             hash_refs: dict[str, str] = {}
+            key_refs: dict[str, str] = {}
+            hash_by_category: dict[tuple[str, str | None], str] = {}
             role_by_ref: dict[str, str] = {}
             for plan in plans:
                 mapped = repository.connection.execute(
@@ -136,7 +139,13 @@ def migrate_legacy(repository: SQLiteAssetRepository, assets_root: Path, *, dry_
                         asset = repository.get_asset(existing_by_key["asset_ref"])
                         assert asset is not None
                     else:
-                        draft = _apply_parent_hint(plan, refs, hash_refs)
+                        draft = _apply_parent_hint(
+                            plan,
+                            refs,
+                            hash_refs,
+                            key_refs=key_refs,
+                            hash_by_category=hash_by_category,
+                        )
                         asset = repository._register_asset(draft)
                     payload = plan.source_payload or {
                         "legacy_id": plan.legacy_id,
@@ -153,7 +162,16 @@ def migrate_legacy(repository: SQLiteAssetRepository, assets_root: Path, *, dry_
                         ),
                     )
                 refs[plan.legacy_id] = asset.asset_ref
-                hash_refs[asset.content_sha256] = asset.asset_ref
+                catalog_asset_id = (plan.source_payload or {}).get("asset_id")
+                if isinstance(catalog_asset_id, str) and catalog_asset_id:
+                    # Keep hash-based catalog IDs resolvable for relationships, but never let a
+                    # colliding second path overwrite the first mapping.
+                    refs.setdefault(catalog_asset_id, asset.asset_ref)
+                key_refs[asset.object_key] = asset.asset_ref
+                hash_by_category[(asset.content_sha256, asset.category_id)] = asset.asset_ref
+                # Keep a single sha→ref fallback for workflows that only know content hashes.
+                # Prefer first registration so shared screenshots do not silently flip parents.
+                hash_refs.setdefault(asset.content_sha256, asset.asset_ref)
                 role_by_ref[asset.asset_ref] = asset.asset_role
                 report["assets"].append(
                     {
@@ -232,6 +250,7 @@ def _enrich_site_manifest(enrichment: dict[str, dict[str, Any]], manifest: dict[
         current = dict(enrichment.get(digest, {}))
         current.update(
             {
+                "source_path": item.get("source_path") or current.get("source_path"),
                 "source_sha256": item.get("source_sha256"),
                 "parent_sha256s": [item["source_sha256"]] if item.get("source_sha256") else current.get("parent_sha256s", []),
                 "derive_kind": derive_kind,
@@ -266,7 +285,9 @@ def _plan_catalog_assets(
             )
         meta = enrichment.get(info.content_sha256, {})
         category = _category(item.get("semantic_path") or meta.get("semantic_path") or [], repository, role)
-        source_kind, evidence, parent_hint, lineage = _provenance(item, meta, info.content_sha256)
+        source_kind, evidence, parent_hint, lineage = _provenance(
+            item, meta, info.content_sha256, assets_root=assets_root
+        )
         claims = _map_claims(item.get("claims") or meta.get("claims") or [], repository, evidence)
         draft = AssetDraft(
             filename=Path(object_key).name,
@@ -290,14 +311,18 @@ def _plan_catalog_assets(
             claims=claims,
             lineage=lineage,
         )
+        # object_key is the stable identity. Hash-prefixed catalog asset_ids can collide when
+        # two screenshots intentionally share bytes (e.g. VI vs 文化墙 entry).
+        legacy_id = object_key
         plans.append(
             PlannedAsset(
                 "catalog",
-                item["asset_id"],
+                legacy_id,
                 draft,
                 parent_hint,
                 {
                     "asset_id": item.get("asset_id"),
+                    "object_key": object_key,
                     "quality": item.get("quality"),
                     "production_eligible": item.get("production_eligible"),
                 },
@@ -324,13 +349,15 @@ def _plan_generated_assets(
         parent_hashes = [str(value) for value in (item.get("parent_sha256s") or []) if value]
         if item.get("source_sha256"):
             parent_hashes.append(str(item["source_sha256"]))
-        if not parents and not parent_hashes:
+        source_path = item.get("source_path")
+        if source_path:
+            hint = ParentHint("object_key", (_object_key(str(source_path), assets_root),))
+        elif parent_hashes:
+            hint = ParentHint("content_sha256", tuple(dict.fromkeys(parent_hashes)))
+        elif parents:
+            hint = ParentHint("legacy_id", tuple(parents))
+        else:
             raise ValueError(f"generated asset missing parents: {object_key}")
-        hint = (
-            ParentHint("content_sha256", tuple(parent_hashes))
-            if parent_hashes
-            else ParentHint("legacy_id", tuple(parents))
-        )
         category = _category(item.get("semantic_path") or [], repository, role)
         derivation_type = str(item.get("derive_kind") or item.get("derivation_type") or "generated")
         lineage = _placeholder_lineage(
@@ -386,14 +413,24 @@ def _plan_site_manifest_assets(
             raise ValueError(f"{source_name} hash mismatch for {object_key}")
         feature_path = ["文生图", *item.get("feature_path", [])]
         category = _category(feature_path, repository, role)
-        hint = ParentHint("content_sha256", (str(source_sha),))
+        if item.get("source_path"):
+            source_object_key = _object_key(str(item["source_path"]), assets_root)
+            hint = ParentHint("object_key", (source_object_key,))
+            parent_params = {"source_object_key": source_object_key, "source_sha": source_sha}
+        else:
+            hint = ParentHint("content_sha256", (str(source_sha),))
+            parent_params = {"source_sha": source_sha}
         lineage = _placeholder_lineage(
             derivation_type=derive_kind,
             executor_id=str(item.get("provider") or source_name),
             provider=item.get("provider"),
             model=item.get("model"),
             prompt_sha256=item.get("prompt_sha256"),
-            parameters={"source_sha": source_sha, "object_key": object_key, "derive_kind": derive_kind},
+            parameters={
+                **parent_params,
+                "object_key": object_key,
+                "derive_kind": derive_kind,
+            },
         )
         draft = AssetDraft(
             filename=Path(object_key).name,
@@ -486,15 +523,25 @@ def _plan_sequence_frame_assets(
     for sequence in sequences:
         feature_path = ["文生图", *sequence.get("feature_path", [])]
         source_sha = sequence.get("source_sha256")
+        source_path = sequence.get("source_path")
         for member_key, frame in (sequence.get("frames") or {}).items():
             object_key = _object_key(frame["path"], assets_root)
             info = repository.object_store.inspect(object_key)
             if frame.get("sha256") and frame["sha256"] != info.content_sha256:
                 raise ValueError(f"sequence frame hash mismatch: {object_key}")
             category = _category(feature_path, repository, "parameter_panel")
-            if source_sha:
+            if source_sha or source_path:
                 source_kind, evidence = SourceKind.DERIVED, EvidenceClass.SEMANTIC
-                hint = ParentHint("content_sha256", (str(source_sha),))
+                if source_path:
+                    source_object_key = _object_key(str(source_path), assets_root)
+                    hint = ParentHint("object_key", (source_object_key,))
+                    parent_params = {
+                        "source_object_key": source_object_key,
+                        "source_sha": source_sha,
+                    }
+                else:
+                    hint = ParentHint("content_sha256", (str(source_sha),))
+                    parent_params = {"source_sha": source_sha}
                 lineage = _placeholder_lineage(
                     derivation_type="site_params_flower_text_frame_sequence",
                     executor_id=str(frame.get("origin") or "legacy_sequence"),
@@ -502,7 +549,7 @@ def _plan_sequence_frame_assets(
                     model=frame.get("model"),
                     prompt_sha256=sequence.get("prompt_sha256"),
                     parameters={
-                        "source_sha": source_sha,
+                        **parent_params,
                         "member_key": member_key,
                         "object_key": object_key,
                         "sequence_id": sequence.get("sequence_id"),
@@ -571,7 +618,22 @@ def _dedupe_plans(plans: list[PlannedAsset]) -> list[PlannedAsset]:
 
 def _order_by_lineage_dag(plans: list[PlannedAsset]) -> list[PlannedAsset]:
     by_legacy = {plan.legacy_id: plan for plan in plans}
+    # Catalog plans use object_key as the unique legacy_id; also index unambiguous
+    # catalog asset_ids so parent_asset_ids like "result" still order correctly.
+    asset_id_claims: dict[str, PlannedAsset | None] = {}
+    for plan in plans:
+        asset_id = (plan.source_payload or {}).get("asset_id")
+        if not isinstance(asset_id, str) or not asset_id:
+            continue
+        if asset_id in asset_id_claims and asset_id_claims[asset_id] is not plan:
+            asset_id_claims[asset_id] = None
+        else:
+            asset_id_claims[asset_id] = plan
+    for asset_id, plan in asset_id_claims.items():
+        if plan is not None and asset_id not in by_legacy:
+            by_legacy[asset_id] = plan
     by_hash = {plan.draft.content_sha256: plan for plan in plans}
+    by_object_key = {plan.draft.object_key: plan for plan in plans}
     remaining = {
         f"{plan.source_name}:{plan.legacy_id}": plan
         for plan in sorted(
@@ -609,10 +671,24 @@ def _order_by_lineage_dag(plans: list[PlannedAsset]) -> list[PlannedAsset]:
                     if parent is None and value not in registered_legacy:
                         # Parent may already be outside this batch; allow and fail later if unresolved.
                         continue
+                elif plan.parent_hint.kind == "object_key":
+                    parent = by_object_key.get(value)
+                    if parent is not None and f"{parent.source_name}:{parent.legacy_id}" in remaining:
+                        ready = False
+                        break
                 else:
                     parent = by_hash.get(value)
                     if parent is not None and f"{parent.source_name}:{parent.legacy_id}" in remaining:
                         ready = False
+                        break
+                    # Shared-hash screenshots may have multiple catalog plans. Wait until every
+                    # remaining plan with this hash is registered so category-aware parent
+                    # resolution can see the matching category.
+                    for other in remaining.values():
+                        if other.draft.content_sha256 == value and other is not plan:
+                            ready = False
+                            break
+                    if not ready:
                         break
             if ready:
                 ordered.append(plan)
@@ -627,25 +703,55 @@ def _order_by_lineage_dag(plans: list[PlannedAsset]) -> list[PlannedAsset]:
     return ordered
 
 
+def _resolve_content_sha_parent(
+    content_sha256: str,
+    *,
+    preferred_category_id: str | None,
+    hash_refs: dict[str, str],
+    hash_by_category: dict[tuple[str, str | None], str],
+) -> str:
+    if preferred_category_id is not None:
+        matched = hash_by_category.get((content_sha256, preferred_category_id))
+        if matched is not None:
+            return matched
+    if content_sha256 not in hash_refs:
+        raise ValueError(f"missing parent hash {content_sha256}")
+    return hash_refs[content_sha256]
+
+
 def _apply_parent_hint(
     plan: PlannedAsset,
     refs: dict[str, str],
     hash_refs: dict[str, str],
+    *,
+    key_refs: dict[str, str] | None = None,
+    hash_by_category: dict[tuple[str, str | None], str] | None = None,
 ) -> AssetDraft:
     if plan.draft.lineage is None:
         return plan.draft
     if plan.parent_hint is None:
         raise ValueError(f"derived asset missing parent hint: {plan.draft.object_key}")
+    key_refs = key_refs or {}
+    hash_by_category = hash_by_category or {}
     parent_refs: list[str] = []
     for value in plan.parent_hint.values:
         if plan.parent_hint.kind == "legacy_id":
             if value not in refs:
                 raise ValueError(f"missing parent legacy id {value} for {plan.draft.object_key}")
             parent_refs.append(refs[value])
+        elif plan.parent_hint.kind == "object_key":
+            if value not in key_refs:
+                raise ValueError(f"missing parent object_key {value} for {plan.draft.object_key}")
+            parent_refs.append(key_refs[value])
         else:
-            if value not in hash_refs:
-                raise ValueError(f"missing parent hash {value} for {plan.draft.object_key}")
-            parent_refs.append(hash_refs[value])
+            parent_refs.append(
+                _resolve_content_sha_parent(
+                    value,
+                    preferred_category_id=plan.draft.category_id,
+                    hash_refs=hash_refs,
+                    hash_by_category=hash_by_category,
+                )
+            )
     parent_refs = list(dict.fromkeys(parent_refs))
     lineage = AssetLineage(
         parent_asset_refs=parent_refs,
@@ -766,6 +872,8 @@ def _provenance(
     item: dict[str, Any],
     meta: dict[str, Any],
     content_sha256: str,
+    *,
+    assets_root: Path | None = None,
 ) -> tuple[SourceKind, EvidenceClass, ParentHint | None, AssetLineage | None]:
     provenance = item.get("provenance") or {}
     item_meta = item.get("metadata") if isinstance(item.get("metadata"), dict) else {}
@@ -781,6 +889,7 @@ def _provenance(
     )
     if source_artwork:
         parent_hashes.append(str(source_artwork))
+    source_path = item_meta.get("source_path") or meta.get("source_path") or item.get("source_path")
     derive_kind = item.get("derive_kind") or meta.get("derive_kind") or item_meta.get("derive_kind")
     if not derive_kind and (item.get("editor_flow_role") or item_meta.get("editor_flow_role")) == "edited_result":
         derive_kind = "edited_result"
@@ -792,19 +901,25 @@ def _provenance(
         evidence = EvidenceClass(explicit)
     elif item.get("role") == "outro" or "decorative" in origin:
         evidence = EvidenceClass.DECORATIVE
-    elif derive_kind or parents or parent_hashes:
+    elif derive_kind or parents or parent_hashes or source_path:
         evidence = EvidenceClass.SEMANTIC
     else:
         evidence = EvidenceClass.SOURCE
 
     if evidence is EvidenceClass.SOURCE:
         return SourceKind.ORIGINAL, evidence, None, None
-    if evidence is EvidenceClass.DECORATIVE and not parents and not parent_hashes and not derive_kind:
+    if evidence is EvidenceClass.DECORATIVE and not parents and not parent_hashes and not derive_kind and not source_path:
         return SourceKind.ORIGINAL, evidence, None, None
-    if not parents and not parent_hashes:
+    if not parents and not parent_hashes and not source_path:
         raise ValueError(f"derived legacy asset requires parents: {item.get('asset_id') or content_sha256}")
 
-    hint = ParentHint("content_sha256", tuple(parent_hashes)) if parent_hashes else ParentHint("legacy_id", tuple(parents))
+    # Prefer source object_key so shared-byte screenshots still parent to the matching path/category.
+    if source_path and assets_root is not None:
+        hint = ParentHint("object_key", (_object_key(str(source_path), assets_root),))
+    elif parent_hashes:
+        hint = ParentHint("content_sha256", tuple(dict.fromkeys(parent_hashes)))
+    else:
+        hint = ParentHint("legacy_id", tuple(parents))
     lineage = _placeholder_lineage(
         derivation_type=str(derive_kind or origin or "legacy_derived"),
         executor_id="legacy_catalog",

@@ -13,23 +13,26 @@
       "width": 351,
       "height": 750,
       "semantic_path": [
-        "AI工具"
+        "文生图",
+        "编辑小工具"
       ],
-      "role": "feature_list",
+      "role": "other",
       "production_eligible": true,
       "evidence_class": "E0_source_evidence",
       "claims": [
-        "real_website_screenshot",
-        "feature_list"
+        "real_website_screenshot"
       ],
       "tags": [
-        "AI工具"
+        "文生图",
+        "编辑小工具",
+        "AI工具",
+        "小工具列表"
       ],
       "visual_anchors": [
         {
           "anchor_id": "anchor_a3be540593",
-          "label": "AI工具功能列表",
-          "role": "feature_list",
+          "label": "文生图编辑小工具列表",
+          "role": "other",
           "intent": "highlight_module_entry",
           "rect": {
             "x": 0.0,
@@ -67,8 +70,10 @@
         "parent_asset_ids": []
       },
       "metadata": {
-        "capture_type": "功能列表截图",
-        "mime_type": "image/png"
+        "capture_type": "文生图编辑小工具功能列表截图",
+        "mime_type": "image/png",
+        "category_id": "文生图/编辑小工具",
+        "description": "文生图配套的图片编辑小工具列表页，不是网站主页或通用品牌页"
       }
     },
     {

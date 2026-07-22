@@ -489,6 +489,14 @@ def _expand_scene(scene: dict[str, Any]) -> list[dict[str, Any]]:
     if structure not in {"sequence", "comparison"} or len(slots) < 2:
         return [scene]
 
+    causal_flat_plan_split = _split_causal_flat_plan_comparison(scene)
+    if causal_flat_plan_split is not None:
+        return causal_flat_plan_split
+
+    inline_dependent_split = _split_inline_dependent_sequence(scene)
+    if inline_dependent_split is not None:
+        return inline_dependent_split
+
     kinds = [str((slot.get("source") or {}).get("kind") or "") for slot in slots]
     has_relation = any(kind in RELATION_KINDS for kind in kinds)
     has_independent = any(kind in INDEPENDENT_KINDS for kind in kinds)
@@ -589,6 +597,188 @@ def _expand_scene(scene: dict[str, Any]) -> list[dict[str, Any]]:
     return [scene]
 
 
+def _split_causal_flat_plan_comparison(scene: dict[str, Any]) -> list[dict[str, Any]] | None:
+    """Keep a causal reference/result comparison separate from its flat-plan reveal.
+
+    ``reference_result_plan`` contains three possible members, but ``comparison``
+    is a two-image visual grammar.  A flat plan mentioned after a reference/result
+    demonstration is therefore its own single-image scene, not a third item in a
+    before/after effect.
+    """
+
+    slots = list(scene.get("slots") or [])
+    flat_index = next(
+        (index for index, slot in enumerate(slots) if slot.get("asset_role") == "flat_plan"),
+        None,
+    )
+    if flat_index is None or flat_index == 0:
+        return None
+    head_slots = slots[:flat_index]
+    if {str(slot.get("asset_role") or "") for slot in head_slots} != {"reference_image", "result_image"}:
+        return None
+    for slot in [*head_slots, slots[flat_index]]:
+        source = slot.get("source") or {}
+        if slot.get("asset_role") == "reference_image" and source.get("kind") == "asset_query":
+            continue
+        if source.get("pattern_id") != "reference_result_plan":
+            return None
+
+    head_text, tail_text = _split_text_before_phrase(
+        str(scene.get("text") or ""),
+        str(slots[flat_index].get("anchor_phrase") or ""),
+    )
+    head_text, tail_text = _move_transition_to_tail(head_text, tail_text)
+    if not head_text.strip() or not tail_text.strip():
+        return None
+
+    tail_slots = slots[flat_index:]
+    head_slot_ids = {slot.get("slot_id") for slot in head_slots}
+    tail_slot_ids = {slot.get("slot_id") for slot in tail_slots}
+    head = _scene_with_slots(
+        scene,
+        head_slots,
+        text=head_text,
+        structure="comparison",
+        events=[event for event in (scene.get("events") or []) if event.get("target_slot") in head_slot_ids],
+        claims=[
+            claim
+            for claim in (scene.get("claims") or [])
+            if set(claim.get("supporting_slots") or []).issubset(head_slot_ids)
+        ],
+    )
+    tail = _scene_with_slots(
+        scene,
+        tail_slots,
+        text=tail_text,
+        structure="single" if len(tail_slots) == 1 else "sequence",
+        events=[event for event in (scene.get("events") or []) if event.get("target_slot") in tail_slot_ids],
+        claims=[
+            claim
+            for claim in (scene.get("claims") or [])
+            if set(claim.get("supporting_slots") or []).issubset(tail_slot_ids)
+        ],
+        inputs=list(scene.get("inputs") or []),
+    )
+    tail["scene_id"] = f"{scene.get('scene_id')}__flat_plan"
+    return [head, tail]
+
+
+def _split_inline_dependent_sequence(scene: dict[str, Any]) -> list[dict[str, Any]] | None:
+    """Split ``...出结果。平面图/编辑...`` into a real dependency boundary.
+
+    A flat plan or editor asset cannot be independently queried: it is a view
+    of the fresh result just shown. Models commonly place all three slots in
+    one sequence. The slot order and exact anchor phrases make this repair
+    deterministic, while preserving the frozen narration word-for-word.
+    """
+
+    if scene.get("visual_structure") != "sequence":
+        return None
+    slots = list(scene.get("slots") or [])
+    dependent_index = next(
+        (
+            index
+            for index, slot in enumerate(slots)
+            if slot.get("asset_role") in {"editor_page", "edited_result", "flat_plan"}
+            and (slot.get("source") or {}).get("kind") == "asset_query"
+        ),
+        None,
+    )
+    if dependent_index is None:
+        return None
+
+    result_index = max(
+        (
+            index
+            for index, slot in enumerate(slots[:dependent_index])
+            if slot.get("asset_role") == "result_image"
+            and (slot.get("source") or {}).get("kind") == "asset_query"
+        ),
+        default=-1,
+    )
+    if result_index < 0:
+        return None
+
+    head_text, tail_text = _split_text_before_phrase(
+        str(scene.get("text") or ""),
+        str(slots[dependent_index].get("anchor_phrase") or ""),
+    )
+    head_text, tail_text = _move_transition_to_tail(head_text, tail_text)
+    if not head_text.strip() or not tail_text.strip():
+        return None
+
+    head_slots = slots[:dependent_index]
+    tail_slots = slots[dependent_index:]
+    result_slot = head_slots[result_index]
+    output_name = "primary_result"
+    for output in scene.get("outputs") or []:
+        if output.get("bound_slot") == result_slot.get("slot_id"):
+            output_name = str(output.get("output_name") or output_name)
+            break
+
+    head_slot_ids = {slot.get("slot_id") for slot in head_slots}
+    tail_slot_ids = {slot.get("slot_id") for slot in tail_slots}
+    head = _scene_with_slots(
+        scene,
+        head_slots,
+        text=head_text,
+        structure="sequence",
+        outputs=[
+            {
+                "output_name": output_name,
+                "bound_slot": result_slot.get("slot_id"),
+                "asset_role": "result_image",
+            }
+        ],
+        events=[
+            event
+            for event in (scene.get("events") or [])
+            if event.get("target_slot") in head_slot_ids
+        ],
+        claims=[
+            claim
+            for claim in (scene.get("claims") or [])
+            if set(claim.get("supporting_slots") or []).issubset(head_slot_ids)
+        ],
+    )
+    tail = _scene_with_slots(
+        scene,
+        tail_slots,
+        text=tail_text,
+        structure="sequence" if len(tail_slots) > 1 else "single",
+        outputs=[],
+        events=[
+            event
+            for event in (scene.get("events") or [])
+            if event.get("target_slot") in tail_slot_ids
+        ],
+        claims=[
+            claim
+            for claim in (scene.get("claims") or [])
+            if set(claim.get("supporting_slots") or []).issubset(tail_slot_ids)
+        ],
+        inputs=[
+            {
+                "input_name": "source_result",
+                "from_scene": str(scene.get("scene_id") or ""),
+                "from_output": output_name,
+                "required": True,
+            }
+        ],
+    )
+    tail["scene_id"] = f"{scene.get('scene_id')}__dependent"
+    return [head, tail]
+
+
+def _move_transition_to_tail(head_text: str, tail_text: str) -> tuple[str, str]:
+    """Keep a leading transition with the dependent action it introduces."""
+
+    for transition in ("还有", "另外", "同时", "并且", "以及"):
+        if head_text.endswith(transition):
+            return head_text[: -len(transition)], transition + tail_text
+    return head_text, tail_text
+
+
 def _ensure_parameter_final_role(slots: list[dict[str, Any]]) -> None:
     for slot in slots:
         source = slot.get("source") or {}
@@ -651,7 +841,31 @@ def _repair_reference_result_plan_sources(scene: dict[str, Any]) -> None:
         repaired_slots.append(slot)
     scene["slots"] = repaired_slots
     if group_type == "causal":
+        _normalize_causal_visual_structure(scene)
+
+
+def _normalize_causal_visual_structure(scene: dict[str, Any]) -> None:
+    """Use comparison only for a visible two-endpoint causal pair.
+
+    The relation pattern also contains ``flat_plan``.  That member is normally
+    a deliverable reveal, so a lone flat plan must stay a single scene instead
+    of pretending to be a before/after comparison.
+    """
+
+    causal_slots = [
+        slot
+        for slot in scene.get("slots") or []
+        if (slot.get("source") or {}).get("group_type") == "causal"
+        and (slot.get("source") or {}).get("pattern_id") == "reference_result_plan"
+    ]
+    roles = {str(slot.get("asset_role") or "") for slot in causal_slots}
+    valid_pairs = ({"reference_image", "result_image"}, {"result_image", "flat_plan"})
+    if len(causal_slots) == 2 and roles in valid_pairs and len(scene.get("slots") or []) == 2:
         scene["visual_structure"] = "comparison"
+        return
+    if len(scene.get("slots") or []) == 1:
+        scene["visual_structure"] = "single"
+        _repair_hold_policies(scene)
 
 
 def _repair_editor_sequence_sources(scene: dict[str, Any]) -> None:
@@ -853,7 +1067,7 @@ def _repair_reference_result_inherit_from_prior_result(scenes: list[dict[str, An
                 "member_key": member_key,
             }
         scene["slots"] = slots
-        scene["visual_structure"] = "comparison"
+        _normalize_causal_visual_structure(scene)
 
         # Align later scenes that reuse the same group alias onto the same upstream result.
         for later in ordered:
@@ -981,8 +1195,8 @@ def _normalize_dependent_asset_queries(scenes: list[dict[str, Any]]) -> None:
 
     ordered = sorted(scenes, key=lambda scene: int(scene.get("order") or 0))
 
-    def result_output_before(scene: dict[str, Any], category_id: str | None) -> tuple[str, str] | None:
-        candidates: list[tuple[bool, int, str, str]] = []
+    def result_output_before(scene: dict[str, Any]) -> tuple[str, str, str | None] | None:
+        candidates: list[tuple[int, str, str, str | None]] = []
         current_order = int(scene.get("order") or 0)
         for earlier in ordered:
             earlier_order = int(earlier.get("order") or 0)
@@ -997,19 +1211,18 @@ def _normalize_dependent_asset_queries(scenes: list[dict[str, Any]]) -> None:
                 bound = slot_by_id.get(str(output.get("bound_slot") or ""))
                 if bound is None:
                     continue
-                same_category = bool(category_id and bound.get("category_id") == category_id)
                 candidates.append(
                     (
-                        same_category,
                         earlier_order,
                         str(earlier.get("scene_id") or ""),
                         str(output.get("output_name") or "primary_result"),
+                        bound.get("category_id"),
                     )
                 )
         if not candidates:
             return None
-        _, _, scene_id, output_name = max(candidates, key=lambda item: (item[0], item[1]))
-        return scene_id, output_name
+        _, scene_id, output_name, parent_category_id = max(candidates, key=lambda item: item[0])
+        return scene_id, output_name, parent_category_id
 
     for scene in ordered:
         slots = list(scene.get("slots") or [])
@@ -1021,11 +1234,7 @@ def _normalize_dependent_asset_queries(scenes: list[dict[str, Any]]) -> None:
         ]
         if not dependent:
             continue
-        category_id = next(
-            (str(slot.get("category_id")) for slot in dependent if slot.get("category_id")),
-            None,
-        )
-        upstream = result_output_before(scene, category_id)
+        upstream = result_output_before(scene)
         if upstream is None:
             # Leave the query intact. Semantic validation reports
             # scene_dependency_source_missing with scene/slot context. This is
@@ -1063,6 +1272,10 @@ def _normalize_dependent_asset_queries(scenes: list[dict[str, Any]]) -> None:
         editor_alias = f"editor_{scene.get('scene_id') or 'scene'}"
         causal_alias = f"reference_{scene.get('scene_id') or 'scene'}"
         for slot in dependent:
+            if upstream[2]:
+                # A dependent asset is a transformation of the parent result;
+                # the parent, rather than an LLM guess, owns its category.
+                slot["category_id"] = upstream[2]
             role = str(slot.get("asset_role") or "")
             if role in {"editor_page", "edited_result"}:
                 group_type = "process"
@@ -1086,6 +1299,8 @@ def _normalize_dependent_asset_queries(scenes: list[dict[str, Any]]) -> None:
         scene["no_asset"] = False
         if any(slot.get("asset_role") in {"editor_page", "edited_result"} for slot in dependent):
             scene["visual_structure"] = "sequence"
+        else:
+            _normalize_causal_visual_structure(scene)
 
 
 def _verbatim_phrase_in_scene_text(scene_text: str, phrase: str) -> str | None:

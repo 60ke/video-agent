@@ -20,18 +20,18 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 
 | Stage | Status | Notes |
 |---|---|---|
-| Baseline audit | complete | Public production entry remains V3; V4 Stages 1-6 are implemented behind explicit development entrypoints. |
+| Baseline audit | complete | Superseded by Stage7: public production entry is V4-only. |
 | Stage 1: semantic Contract and AI runtime | runtime complete / production cutover conformance pending | Runtime, structured prompts, trace/replay, repair, routing and full registry freeze are implemented. Real-provider Stage 0 semantic conformance remains a Stage7 cutover gate. |
 | Stage 2: capability and asset domain | complete | Typed dynamic registries, deterministic frozen snapshots, strict AssetRecord/Lineage/Group/Evidence contracts, registry-bound validation and Stage 1 projection are implemented. |
 | Stage 3: repository, SQLite, ObjectStore and migration | complete | Repository, ObjectStore, import, snapshot (schema v4 with `evidence_class/claims`), audit and migration are implemented. |
 | Stage 4: dependency, selection and derivation | complete | DoD closed: six slot sources, DAG, alias/dedup, gap policy, signature/`group_reuse`, atomic `register_derived_group`, parameter callout fields, E2 website filter, s001–s010 golden. Production wires Stage5 executor when `repo_root` set; Fake is test-only. |
 | Stage 5: effect, SFX, voice and derivation registries | control plane complete / Stage6 timing wired | Registries/Voice/Derivation/Motion-SFX complete. Motion now consumes exact `AnchoredTimingPlan.scene_spans`; proportional fallback removed; Stage5 SFX no longer truncates distinct Anchors via `window_event_budget`. |
 | Stage 6: semantic timing and compilation | complete / frozen | Real MiniMax Pass B closed on run `20260720_110920_904455` (145 tokens, 24.7s, 19 SFX, Remotion+FFmpeg final.mp4). Independent Git checkpoint: `a5130312`. |
-| Stage 7: production cutover and acceptance | Unit6 purged / Unit7 passed / tag ready | V3 production DAG, VerticalDemo, and cover prepend removed. Shared media helpers extracted. Live script/goal acceptance closed. Remaining optional: real BGM profile. |
+| Stage 7: production cutover and acceptance | closed locally | V3 purged; public CLI → V4; script/goal + local four-script acceptance; docs cut over to V4-only. Local tag `v4-stage7-cutover` exists (not pushed). BGM remains disabled. Local script visual gaps & proposed Coverage Review are **recorded only** in `docs/video_agent_v4_visual_coverage_review_notes_20260720.md` (implementation deferred until more scripts are reviewed). |
 
 ## Working Decisions
 
-1. V4 contracts are isolated under `video_agent/contracts/v4`; V3 contracts remain untouched until cutover.
+1. V4 contracts under `video_agent/contracts/v4` are the only production contracts; V3 production modules were removed in Stage7 Unit6.
 2. V4 AI nodes emit phrases copied from frozen narration. Python owns IDs outside each semantic object, registry validation, dependency validation and all timing.
 3. Stage 0 Rev3 and its target fixtures use `scope_mode`, `order` and `visual_structure`. The former `scope`, `presentation_index`, `structure` and `continuity_group` fields are retired; runtime compatibility aliases will not be added.
 4. Required root validation scripts (`test.txt` through `test4.txt`) remain local validation inputs and are not committed.
@@ -43,6 +43,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 10. Frozen registry restoration verifies outer IDs/versions, per-document hashes, aggregate hash and snapshot ID before exposing any entries.
 11. `object_key` rejects Windows separators and host paths instead of normalizing them silently. Stage 3 migration is responsible for converting legacy paths deliberately.
 12. Legacy `assets/catalog.json`, relationship manifests and review fields remain untouched Stage 3 migration inputs. The current unrelated local catalog regeneration is explicitly excluded from the Stage 2 commit.
+13. Post-Stage7 local visual gaps: do **not** implement Visual Coverage Review yet. Record findings in `docs/video_agent_v4_visual_coverage_review_notes_20260720.md` while more scripts are tested; prefer generic visual-obligation classes over script-specific rules.
 
 ## Verification Ledger
 
@@ -144,9 +145,9 @@ $env:STAGE6_GOLDEN_RENDER='1'; python -m pytest tests/test_v4_stage6_golden_comp
 
 ## Next Continuation Point
 
-Stage7 Unit6 V3 purge and Unit7 acceptance are closed on branch. Remaining optional follow-ups:
-1. Create the final release tag `v4-stage7-cutover` covering Unit5+Unit6 cutover commits.
-2. Keep BGM disabled until a real Profile is registered.
+Stage7 cutover is closed locally on `codex/parameter-frame-sequence` (tag `v4-stage7-cutover`, not pushed).
+
+Keep BGM disabled until a real Profile is registered. Do not invent a fake profile.
 
 ### Unit6 V3 purge (2026-07-20)
 

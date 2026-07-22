@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TypeVar
 
 from video_agent.ai_runtime import AIRuntimeSession
+from video_agent.assets.v4 import AssetQuery
 from video_agent.contracts.v4 import FrozenNarration
 from video_agent.io import sha256_json, utc_now, write_json_atomic
 from video_agent.progress import get_logger
@@ -15,6 +16,7 @@ from video_agent.registries import CapabilityRegistryHub, project_registry_hub
 from video_agent.runtime import RunContext
 from video_agent.semantic import classify_video_scope, plan_scene_semantics
 from video_agent.semantic.goal_narration import generate_goal_narration, goal_input_fingerprint
+from video_agent.semantic.registry_payload import scene_material_availability_payload
 from video_agent.speech.v4.narration_freeze import (
     freeze_goal_narration,
     freeze_script_narration,
@@ -23,7 +25,7 @@ from video_agent.speech.v4.narration_freeze import (
 )
 from video_agent.speech.v4.tts import ensure_native_speech_timing_lock
 from video_agent.speech.v4.voice_resolve import resolve_fixed_voice_profile
-from video_agent.v4.stage4 import V4Stage4Result, V4Stage4Runner
+from video_agent.v4.stage4 import V4Stage4Result, V4Stage4Runner, open_v4_repository
 from video_agent.v4.stage5 import V4Stage5Result, V4Stage5Runner
 from video_agent.v4.stage6 import V4Stage6Result, V4Stage6Runner
 
@@ -212,6 +214,15 @@ class V4Orchestrator:
             scope_envelope, scope_invocation = scope_result
             scope_path = self.context.artifact("video_scope.json")
             write_json_atomic(scope_path, scope_envelope)
+            repository = open_v4_repository(self.context.repo_root, registry=registry_hub)
+            try:
+                material_availability = scene_material_availability_payload(
+                    repository.query_assets(AssetQuery())
+                )
+            finally:
+                repository.close()
+            material_availability_path = self.context.artifact("material_availability.stage1.json")
+            write_json_atomic(material_availability_path, material_availability)
             scene_envelope, scene_invocation = await plan_scene_semantics(
                 gateway=gateway,
                 repo_root=self.context.repo_root,
@@ -220,6 +231,7 @@ class V4Orchestrator:
                 video_scope=scope_envelope.payload,
                 registry=registry,
                 trace_dir=agents_dir / "02_scene_semantics",
+                material_availability=material_availability,
             )
 
         scene_path = self.context.artifact("scene_semantic_plan.json")
@@ -245,6 +257,7 @@ class V4Orchestrator:
                     "scene_semantic_plan": scene_path.relative_to(self.context.run_dir).as_posix(),
                     "registry_snapshot": registry_snapshot_path.relative_to(self.context.run_dir).as_posix(),
                     "registry_projection": registry_projection_path.relative_to(self.context.run_dir).as_posix(),
+                    "material_availability": material_availability_path.relative_to(self.context.run_dir).as_posix(),
                     "resolved_voice_profile": resolved_voice_path.relative_to(self.context.run_dir).as_posix(),
                 },
             },

@@ -4188,16 +4188,17 @@
     },
     "柯幻熊猫_AI工具_功能列表截图.png": {
       "filename": "柯幻熊猫_AI工具_功能列表截图.png",
-      "asset_kind": "feature_list",
-      "capture_type": "功能列表截图",
-      "feature_label": "AI工具",
+      "asset_kind": "other",
+      "capture_type": "文生图编辑小工具功能列表截图",
+      "feature_label": "文生图编辑小工具",
       "feature_path": [
-        "AI工具"
+        "文生图",
+        "编辑小工具"
       ],
       "callouts": [
         {
           "type": "highlight_box",
-          "target_label": "AI工具功能列表",
+          "target_label": "文生图编辑小工具列表",
           "intent": "highlight_module_entry",
           "box": {
             "x": 0.0,
@@ -4205,7 +4206,7 @@
             "w": 1.0,
             "h": 1.0
           },
-          "target_role": "feature_list",
+          "target_role": "other",
           "coordinate_space": "source_image_normalized"
         },
         {

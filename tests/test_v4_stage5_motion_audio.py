@@ -155,9 +155,11 @@ def test_motion_audio_plan_stage0_s001_to_s010(hub: CapabilityRegistryHub) -> No
 
     assert by_id["s004"].continuity_group_id == "sequence:culture_wall_parameters"
     assert by_id["s007"].continuity_group_id == "comparison:culture_wall_reference_flow"
-    assert by_id["s008"].continuity_group_id == "comparison:culture_wall_reference_flow"
-    assert by_id["s007"].effect.effect_id == by_id["s008"].effect.effect_id
-    assert by_id["s007"].effect.direction == by_id["s008"].effect.direction
+    # A flat plan on its own is a deliverable reveal, not a third comparison
+    # endpoint. It receives a single-image effect instead of inheriting the
+    # preceding reference/result before-after effect.
+    assert by_id["s008"].continuity_group_id is None
+    assert by_id["s008"].effect.effect_id == "detail_push_in"
 
     assert by_id["s009"].effect.effect_id in {"light_sweep", "none"}
     assert not any(

@@ -1,0 +1,59 @@
+{
+  "schema_version": "v4.stage7_local_scripts_acceptance.1",
+  "generated_at": "2026-07-20T09:07:35.440848+00:00",
+  "bgm_enabled": false,
+    "notes": {
+    "theme_park_asset": "asset://A0293 from 美陈/主题公园.png",
+    "category_fallback": {
+      "文生图/雕塑小品": "文生图/景观小品"
+    },
+    "visual_coverage": "Problems and deferred Coverage Review plan: docs/video_agent_v4_visual_coverage_review_notes_20260720.md (do not implement until more scripts reviewed)"
+  },
+  "passed": false,
+  "results": [
+    {
+      "script": "test.txt",
+      "case_id": "stage7_accept_local_test1i",
+      "status": "passed",
+      "reused_existing": true,
+      "run_id": "20260720_165554_08529b",
+      "final_video": "C:/Users/CNGG/Documents/video_generate/video-agent/cases/stage7_accept_local_test1i/runs/20260720_165554_08529b/final/video.mp4",
+      "final_cover": "C:/Users/CNGG/Documents/video_generate/video-agent/cases/stage7_accept_local_test1i/runs/20260720_165554_08529b/final/cover.png"
+    },
+    {
+      "script": "test2.txt",
+      "case_id": "stage7_accept_local_test2j",
+      "status": "failed",
+      "returncode": 1,
+      "payload": {
+        "ok": false,
+        "error": "Stage6Error",
+        "message": "claim_evidence_not_visible | claim feature_can_generate_result has no visible factual evidence"
+      },
+      "stderr_tail": "17:02:21 | INFO | cli.py:195 | [V4][production] 已创建 case=stage7_accept_local_test2j run=20260720_170221_affd1f source=script\n17:02:33 | INFO | orchestrator.py:252 | [V4][Stage1] 完成 case=stage7_accept_local_test2j run=20260720_170221_affd1f elapsed=12.29s native_speech=1\n17:02:34 | INFO | stage4.py:203 | [V4][Stage4] 完成 case=stage7_accept_local_test2j run=20260720_170221_affd1f scenes=2 elapsed=0.24s\n17:02:37 | INFO | stage6.py:112 | [V4][Stage6][anchor] done case=stage7_accept_local_test2j run=20260720_170221_affd1f\n17:02:37 | INFO | stage5.py:120 | [V4][Stage5] 完成 case=stage7_accept_local_test2j run=20260720_170221_affd1f scenes=2 sfx=8 elapsed=0.02s\n",
+      "stdout_tail": "{\n  \"ok\": false,\n  \"error\": \"Stage6Error\",\n  \"message\": \"claim_evidence_not_visible | claim feature_can_generate_result has no visible factual evidence\"\n}"
+    },
+    {
+      "script": "test3.txt",
+      "case_id": "stage7_accept_local_test3j",
+      "status": "failed",
+      "returncode": 1,
+      "payload": {
+        "ok": false,
+        "error": "Stage4Error",
+        "message": "derivation_provider_failed | GPT Image failed for result_to_reference_mock: all GPT Image providers failed: uuapi:HTTPStatusError:Server error '524 <none>' for url 'https://uuapi.net/v1/images/edits'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/524 | casdao:HTTPStatusError:Client error '429 Too Many Requests' for url 'https://maasapi.casdao.com/v1/images/edits'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429 | scene=s003 | slot=cmp_ref"
+      },
+      "stderr_tail": "17:02:47 | INFO | cli.py:195 | [V4][production] 已创建 case=stage7_accept_local_test3j run=20260720_170247_c03bc4 source=script\n17:03:00 | INFO | orchestrator.py:252 | [V4][Stage1] 完成 case=stage7_accept_local_test3j run=20260720_170247_c03bc4 elapsed=12.69s native_speech=1\n",
+      "stdout_tail": "{\n  \"ok\": false,\n  \"error\": \"Stage4Error\",\n  \"message\": \"derivation_provider_failed | GPT Image failed for result_to_reference_mock: all GPT Image providers failed: uuapi:HTTPStatusError:Server error '524 <none>' for url 'https://uuapi.net/v1/images/edits'\\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/524 | casdao:HTTPStatusError:Client error '429 Too Many Requests' for url 'https://maasapi.casdao.com/v1/images/edits'\\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429 | scene=s003 | slot=cmp_ref\"\n}"
+    },
+    {
+      "script": "test4.txt",
+      "case_id": "stage7_accept_local_test4i",
+      "status": "passed",
+      "reused_existing": true,
+      "run_id": "20260720_165853_e3c114",
+      "final_video": "C:/Users/CNGG/Documents/video_generate/video-agent/cases/stage7_accept_local_test4i/runs/20260720_165853_e3c114/final/video.mp4",
+      "final_cover": "C:/Users/CNGG/Documents/video_generate/video-agent/cases/stage7_accept_local_test4i/runs/20260720_165853_e3c114/final/cover.png"
+    }
+  ]
+}

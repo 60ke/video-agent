@@ -753,6 +753,7 @@ def _write_legacy_fixture(root: Path, *, incomplete_editor: bool = False) -> dic
             {
                 "output_path": str(paths["entry_out"]),
                 "output_sha256": sha256_file(paths["entry_out"]),
+                "source_path": str(paths["source_shot"]),
                 "source_sha256": sha256_file(paths["source_shot"]),
                 "parent_sha256s": [sha256_file(paths["source_shot"])],
                 "feature_path": ["文化墙"],
@@ -815,3 +816,127 @@ def test_legacy_migration_dry_run_success_does_not_persist(repo: SQLiteAssetRepo
     assert report["bindings"]
     assert report["groups"]
     assert repo.query_assets(AssetQuery(active_only=False)) == []
+
+
+def test_legacy_migration_shared_hash_parents_use_source_object_key(repo: SQLiteAssetRepository) -> None:
+    """Same screenshot bytes under two categories must parent keyframes by source_path."""
+    from video_agent.assets.v4.legacy_migration import AUTHORITATIVE_INPUTS
+
+    root = repo.object_store.root
+    shared = _image(root / "sites" / "shared_entry.png", "#abcdef")
+    digest = sha256_file(shared)
+    vi_source = root / "sites" / "vi_entry.png"
+    wall_source = root / "sites" / "wall_entry.png"
+    vi_source.write_bytes(shared.read_bytes())
+    wall_source.write_bytes(shared.read_bytes())
+    vi_key = _image(root / "derived" / "sites" / "柯幻熊猫" / "文生图" / "功能入口" / "vi_key.png", "#111111")
+    logo = _image(root / "brand" / "kehuanxiongmao" / "logo" / "柯幻熊猫_LOGO.png", "blue")
+    outro = _image(root / "brand" / "outro.png", "green")
+
+    catalog = {
+        "assets": [
+            {
+                "asset_id": f"asset_site_{digest[:12]}",
+                "path": "assets/sites/vi_entry.png",
+                "sha256": digest,
+                "role": "feature_entry",
+                "semantic_path": ["文生图", "VI"],
+                "evidence_class": "E0_source_evidence",
+                "claims": ["real_website_screenshot"],
+                "provenance": {"origin": "site_screenshot_library", "parent_asset_ids": []},
+            },
+            {
+                "asset_id": f"asset_site_{digest[:12]}",
+                "path": "assets/sites/wall_entry.png",
+                "sha256": digest,
+                "role": "feature_entry",
+                "semantic_path": ["文生图", "文化墙"],
+                "evidence_class": "E0_source_evidence",
+                "claims": ["real_website_screenshot"],
+                "provenance": {"origin": "site_screenshot_library", "parent_asset_ids": []},
+            },
+            {
+                "asset_id": "asset_site_keyframe_vi",
+                "path": "assets/derived/sites/柯幻熊猫/文生图/功能入口/vi_key.png",
+                "sha256": sha256_file(vi_key),
+                "role": "feature_entry",
+                "semantic_path": ["文生图", "VI"],
+                "evidence_class": "E2_semantic_derivative",
+                "claims": [],
+                "provenance": {
+                    "origin": "gpt_image_site_keyframe",
+                    "parent_asset_ids": [f"asset_site_{digest[:12]}"],
+                    "provider": "apiyi",
+                    "model": "gpt-image-2",
+                    "prompt_sha256": "a" * 64,
+                },
+                "metadata": {
+                    "source_path": str(vi_source),
+                    "source_sha256": digest,
+                },
+            },
+            {
+                "asset_id": "logo",
+                "path": "assets/brand/kehuanxiongmao/logo/柯幻熊猫_LOGO.png",
+                "sha256": sha256_file(logo),
+                "role": "brand_logo",
+                "evidence_class": "E0_source_evidence",
+                "claims": [],
+                "provenance": {"origin": "brand", "parent_asset_ids": []},
+            },
+            {
+                "asset_id": "outro",
+                "path": "assets/brand/outro.png",
+                "sha256": sha256_file(outro),
+                "role": "outro",
+                "evidence_class": "E3_decorative",
+                "claims": [],
+                "provenance": {"origin": "decorative", "parent_asset_ids": []},
+            },
+        ]
+    }
+    (root / "catalog.json").write_text(json.dumps(catalog), encoding="utf-8")
+    for name in AUTHORITATIVE_INPUTS:
+        if name == "catalog.json":
+            continue
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if not path.exists():
+            path.write_text("{}", encoding="utf-8")
+    (root / "relationships.json").write_text(json.dumps({"relationships": []}), encoding="utf-8")
+    (root / "derived" / "generated" / "registry.json").write_text(
+        json.dumps({"assets": []}), encoding="utf-8"
+    )
+    (root / "derived" / "workflow_scenes" / "manifest.json").write_text(
+        json.dumps({"assets": []}), encoding="utf-8"
+    )
+    entry_dir = root / "derived" / "sites" / "柯幻熊猫" / "文生图" / "功能入口"
+    entry_dir.mkdir(parents=True, exist_ok=True)
+    (entry_dir / "manifest.json").write_text(json.dumps({"assets": []}), encoding="utf-8")
+    params_dir = root / "derived" / "sites" / "柯幻熊猫" / "文生图" / "参数面板"
+    params_dir.mkdir(parents=True, exist_ok=True)
+    (params_dir / "manifest.json").write_text(json.dumps({"assets": []}), encoding="utf-8")
+    seq_dir = root / "derived" / "sites" / "柯幻熊猫" / "文生图" / "参数面板序列"
+    seq_dir.mkdir(parents=True, exist_ok=True)
+    (seq_dir / "manifest.json").write_text(json.dumps({"sequences": []}), encoding="utf-8")
+    (root / "results").mkdir(parents=True, exist_ok=True)
+    (root / "results" / "_library_manifest.json").write_text(json.dumps({"assets": []}), encoding="utf-8")
+
+    report = migrate_legacy(repo, root)
+    assert not report["failures"]
+    sources = {
+        a.object_key: a
+        for a in repo.query_assets(AssetQuery(asset_roles=("feature_entry",), active_only=True))
+        if a.evidence_class is EvidenceClass.SOURCE
+    }
+    assert "sites/vi_entry.png" in sources
+    assert "sites/wall_entry.png" in sources
+    assert sources["sites/vi_entry.png"].category_id == "文生图/VI"
+    assert sources["sites/wall_entry.png"].category_id == "文生图/文化墙"
+    keyframe = next(
+        a
+        for a in repo.query_assets(AssetQuery(asset_roles=("feature_entry",), active_only=True))
+        if a.filename == "vi_key.png"
+    )
+    assert keyframe.lineage is not None
+    assert keyframe.lineage.parent_asset_refs == [sources["sites/vi_entry.png"].asset_ref]

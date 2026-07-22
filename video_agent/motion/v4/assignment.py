@@ -118,7 +118,12 @@ def assign_scene_motion(
                 ]
                 if preferred:
                     candidates = preferred
-            chosen = _select_effect(candidates, run_seed=run_seed, scene_id=scene.scene_id)
+            chosen = _select_effect(
+                candidates,
+                run_seed=run_seed,
+                scene_id=scene.scene_id,
+                preferred_effect_id=_preferred_effect_id(scene),
+            )
             if chosen is None:
                 raise Stage5Error(
                     "missing_effect_capability",
@@ -185,10 +190,6 @@ def _continuity_group_id(
         return f"sequence:{alias or scene.scene_id}"
     if structure == "comparison":
         return f"comparison:{alias or scene.scene_id}"
-    # Carry a prior relation-alias continuity into a following single-slot scene
-    # (Stage0 s007 comparison → s008 flat_plan member of the same causal group).
-    if alias and previous_group_id and previous_group_id.endswith(f":{alias}"):
-        return previous_group_id
     return None
 
 
@@ -293,14 +294,31 @@ def _filter_effects(
     return matched
 
 
+def _preferred_effect_id(scene: SemanticScene) -> str | None:
+    """Hold-extend empties should keep the prior frame and push in slowly."""
+    if scene.visual_structure != "single" or len(scene.slots) != 1:
+        return None
+    slot = scene.slots[0]
+    if getattr(slot.source, "kind", None) != "scene_input":
+        return None
+    if slot.slot_id == "hold_extend" or any(item.input_name == "hold_visual" for item in scene.inputs):
+        return "detail_push_in"
+    return None
+
+
 def _select_effect(
     candidates: list[EffectEntry],
     *,
     run_seed: str,
     scene_id: str,
+    preferred_effect_id: str | None = None,
 ) -> EffectEntry | None:
     if not candidates:
         return None
+    if preferred_effect_id:
+        preferred = [item for item in candidates if item.id == preferred_effect_id]
+        if preferred:
+            return preferred[0]
     if len(candidates) == 1:
         return candidates[0]
     ordered = sorted(candidates, key=lambda item: item.id)

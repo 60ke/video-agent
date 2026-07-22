@@ -1,6 +1,6 @@
 {
   "registry_id": "effect",
-  "version": "2026.07.18.2",
+  "version": "2026.07.20.1",
   "schema_version": 2,
   "entries": [
     {
@@ -11,8 +11,7 @@
           "single",
           "gallery",
           "comparison",
-          "sequence",
-          "no_asset_transition"
+          "sequence"
         ],
         "asset_roles": [
           "result_image",
@@ -20,7 +19,8 @@
           "feature_entry",
           "parameter_panel",
           "brand_logo",
-          "outro"
+          "outro",
+          "other"
         ],
         "media_types": [
           "image"
@@ -191,7 +191,9 @@
           "feature_entry",
           "editor_page",
           "edited_result",
-          "site_home"
+          "site_home",
+          "flat_plan",
+          "other"
         ],
         "media_types": [
           "image"
@@ -756,13 +758,13 @@
     },
     {
       "id": "light_sweep",
-      "display_name": "轻扫承接",
+      "display_name": "高光扫过",
       "capabilities": {
         "visual_structures": [
-          "no_asset_transition",
           "single"
         ],
         "asset_roles": [
+          "other",
           "brand_logo",
           "outro",
           "result_image"

@@ -270,6 +270,15 @@ def _validate_scene(
         elif isinstance(source, ConfiguredAssetSource):
             _validate_registry_id(registry, "configured_assets", source.config_key, f"{slot_path}.source.config_key", issues)
 
+        if slot.asset_role == "outro" and not isinstance(source, ConfiguredAssetSource):
+            issues.append(
+                _issue(
+                    "outro_requires_configured_asset",
+                    f"{slot_path}.source",
+                    "outro slots must use a configured_asset source",
+                )
+            )
+
     for output_index, output in enumerate(scene.outputs):
         output_path = f"{base}.outputs[{output_index}]"
         bound_slot = slot_map.get(output.bound_slot)
@@ -310,9 +319,26 @@ def _validate_scene(
         # Slots may freely mix independent asset_query with relation-bound sources.
         # Relation-bound slots still validated by _validate_group_subslots / pattern member checks.
         if scene.visual_structure == "comparison":
+            if len(scene.slots) != 2:
+                issues.append(
+                    _issue(
+                        "comparison_requires_two_items",
+                        f"{base}.slots",
+                        "comparison scenes require exactly two visible causal endpoints",
+                    )
+                )
+            comparison_roles = {slot.asset_role for slot in scene.slots}
+            if comparison_roles not in ({"reference_image", "result_image"}, {"result_image", "flat_plan"}):
+                issues.append(
+                    _issue(
+                        "comparison_role_pair_invalid",
+                        f"{base}.slots",
+                        "comparison scenes must be reference_image→result_image or result_image→flat_plan",
+                    )
+                )
             for slot_index, slot in enumerate(scene.slots):
                 source = slot.source
-                if hasattr(source, "group_type") and source.group_type != "causal":
+                if not hasattr(source, "group_type") or source.group_type != "causal":
                     issues.append(
                         _issue(
                             "comparison_requires_causal",

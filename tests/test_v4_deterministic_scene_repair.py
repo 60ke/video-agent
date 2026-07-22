@@ -299,9 +299,150 @@ def test_deterministic_repair_splits_result_and_rewrites_causal_and_editor() -> 
     validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
     structures = [scene.visual_structure for scene in plan.scenes]
     assert "comparison" in structures
+    causal_comparison = next(
+        scene
+        for scene in plan.scenes
+        if {slot.asset_role for slot in scene.slots} == {"reference_image", "result_image"}
+    )
+    flat_plan_reveal = next(scene for scene in plan.scenes if len(scene.slots) == 1 and scene.slots[0].asset_role == "flat_plan")
+    assert causal_comparison.visual_structure == "comparison"
+    assert flat_plan_reveal.visual_structure == "single"
     assert any(scene.outputs for scene in plan.scenes if scene.visual_structure == "single")
     editor = next(scene for scene in plan.scenes if "继续编辑" in scene.text)
     assert all(slot.source.kind == "relation_from_input" for slot in editor.slots)
+
+
+def test_deterministic_repair_splits_inline_result_to_flat_plan_dependency() -> None:
+    registry = CapabilityRegistrySnapshot.model_validate(
+        json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
+    )
+    frozen = "选择行业、主题一键出效果图。还有平面图快速生成。"
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "s005",
+                "order": 5,
+                "text": frozen,
+                "visual_structure": "sequence",
+                "slots": [
+                    {
+                        "slot_id": "params",
+                        "anchor_phrase": "选择行业、主题",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "parameter_panel",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    },
+                    {
+                        "slot_id": "result",
+                        "anchor_phrase": "一键出效果图",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "until_next_slot",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "result_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "keyword",
+                    },
+                    {
+                        "slot_id": "plan",
+                        "anchor_phrase": "平面图快速生成",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/图文广告/展板",
+                        "asset_role": "flat_plan",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "keyword",
+                    },
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            }
+        ]
+    }
+
+    repaired = repair_scene_plan_payload(payload)
+    plan = SceneSemanticPlan.model_validate(repaired)
+    validate_scene_semantic_plan(plan, frozen_narration=frozen, registry=registry)
+
+    result_scene, flat_plan_scene = plan.scenes
+    assert result_scene.text == "选择行业、主题一键出效果图。"
+    assert result_scene.outputs[0].bound_slot == "result"
+    assert flat_plan_scene.text == "还有平面图快速生成。"
+    assert flat_plan_scene.inputs[0].from_scene == result_scene.scene_id
+    flat_plan = flat_plan_scene.slots[0]
+    assert flat_plan.source.kind == "relation_from_input"
+    assert flat_plan.category_id == "文生图/文化墙"
+
+
+def test_deterministic_repair_inherits_parent_category_for_cross_scene_flat_plan() -> None:
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "result_scene",
+                "order": 1,
+                "text": "文化墙效果图生成。",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "result",
+                        "anchor_phrase": "文化墙效果图",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "result_image",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "keyword",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [{"output_name": "primary_result", "bound_slot": "result", "asset_role": "result_image"}],
+                "claims": [],
+                "no_asset": False,
+            },
+            {
+                "scene_id": "flat_plan_scene",
+                "order": 2,
+                "text": "平面图直接导出。",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "flat_plan",
+                        "anchor_phrase": "平面图",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/图文广告/展板",
+                        "asset_role": "flat_plan",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "keyword",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            },
+        ]
+    }
+
+    repaired = repair_scene_plan_payload(payload)
+    flat_plan = repaired["scenes"][1]["slots"][0]
+    assert flat_plan["category_id"] == "文生图/文化墙"
+    assert flat_plan["source"]["kind"] == "relation_from_input"
+    assert repaired["scenes"][1]["inputs"] == [
+        {
+            "input_name": "source_result",
+            "from_scene": "s001",
+            "from_output": "primary_result",
+            "required": True,
+        }
+    ]
 
 
 def test_deterministic_repair_covers_multiline_frozen_and_claim_phrases() -> None:
@@ -896,7 +1037,10 @@ def test_repair_binds_standalone_flat_plan_to_prior_result() -> None:
                 "scene_id": "plan",
                 "order": 2,
                 "text": "还能导出施工平面图。",
-                "visual_structure": "single",
+                # A model may incorrectly call this a comparison even though
+                # only the exported deliverable is visible. Repair must keep
+                # its causal source but use a single-image visual structure.
+                "visual_structure": "comparison",
                 "slots": [
                     {
                         "slot_id": "plan",
@@ -924,6 +1068,7 @@ def test_repair_binds_standalone_flat_plan_to_prior_result() -> None:
     assert flat_plan.slots[0].source.kind == "relation_from_input"
     assert flat_plan.slots[0].source.pattern_id == "reference_result_plan"
     assert flat_plan.slots[0].source.member_key == "flat_plan"
+    assert flat_plan.visual_structure == "single"
 
 
 def test_dependent_query_without_prior_result_fails_with_explicit_dependency_error() -> None:

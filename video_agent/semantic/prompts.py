@@ -64,7 +64,11 @@ def load_goal_narration_prompt(repo_root: Path) -> PromptBundle:
     )
 
 
-def load_scene_prompt(repo_root: Path, registry_payload: dict[str, Any]) -> PromptBundle:
+def load_scene_prompt(
+    repo_root: Path,
+    registry_payload: dict[str, Any],
+    material_availability: dict[str, Any] | None = None,
+) -> PromptBundle:
     root = _prompt_root(repo_root, "scene_semantics")
     system = load_prompt(root / "system.v1.md")
     decision_table = load_prompt(root / "decision_table.v1.md")
@@ -77,6 +81,16 @@ def load_scene_prompt(repo_root: Path, registry_payload: dict[str, Any]) -> Prom
         .replace("{{NEGATIVE_EXAMPLES}}", json.dumps(examples.get("negative", []), ensure_ascii=False, indent=2))
     )
     rendered += "\n\n" + role_rules.text.strip() + "\n"
+    rendered += (
+        "\n# Material Availability\n"
+        "This is an active repository projection, not a file-selection task. "
+        "Choose a role/category pair only when it is listed here, except for a "
+        "relation-bound slot that will be derived from an earlier result. "
+        "For a generic website capability overview, use site_home unless the "
+        "availability explicitly identifies a matching overview page.\n"
+        + json.dumps(material_availability or {"role_category_availability": []}, ensure_ascii=False, indent=2)
+        + "\n"
+    )
     return PromptBundle(
         capability="scene_semantics",
         version="scene_semantics.v1",
@@ -89,6 +103,7 @@ def load_scene_prompt(repo_root: Path, registry_payload: dict[str, Any]) -> Prom
             "role_resolution_rules": role_rules.sha256,
             "examples": sha256_json(examples),
             "registry": sha256_json(registry_payload),
+            "material_availability": sha256_json(material_availability or {"role_category_availability": []}),
         },
     )
 

@@ -36,10 +36,17 @@ logger = get_logger()
 
 def _print(value: Any, as_json: bool) -> None:
     if as_json:
-        print(json.dumps(value, ensure_ascii=False, indent=2))
-    else:
-        for key, item in value.items():
-            print(f"{key}: {item}")
+        printable = {k: v for k, v in value.items() if not str(k).startswith("_")}
+        print(json.dumps(printable, ensure_ascii=False, indent=2))
+        return
+    text = value.get("_text") if isinstance(value, dict) else None
+    if isinstance(text, str):
+        print(text, end="" if text.endswith("\n") else "\n")
+        return
+    for key, item in value.items():
+        if str(key).startswith("_"):
+            continue
+        print(f"{key}: {item}")
 
 
 def _exception_result(exc: Exception) -> dict[str, Any]:
@@ -224,6 +231,102 @@ def command_inspect(args: argparse.Namespace) -> dict[str, Any]:
     manifest = load_json(run_dir / "run_manifest.json")
     qa_path = run_dir / "qa_report.json"
     return {"ok": True, "run_id": run_id, "manifest": manifest, "qa": load_json(qa_path) if qa_path.is_file() else None}
+
+
+def command_v4_probe(args: argparse.Namespace) -> dict[str, Any]:
+    from video_agent.v4.probe import (
+        CHECKPOINT_IDS,
+        format_summary_text,
+        probe_map,
+        summarize_run,
+    )
+
+    action = args.probe_command
+    if action == "map":
+        mapping = probe_map()
+        if not args.json and not getattr(args, "sub_json", False):
+            lines = ["# V4 probe checkpoints", ""]
+            for item in mapping["checkpoints"]:
+                lines.append(f"## {item['id']} — {item['label']}")
+                lines.append(f"AI: {', '.join(item['ai']) or '(none)'}")
+                lines.append(f"Program: {', '.join(item['program'])}")
+                lines.append("Watch:")
+                for rel in item["watch"]:
+                    lines.append(f"  - {rel}")
+                lines.append("")
+            lines.append("# Existing stage CLI")
+            lines.extend(f"- {cmd}" for cmd in mapping["legacy_stage_cli"])
+            lines.append("")
+            lines.append("# Probe CLI")
+            lines.extend(f"- {cmd}" for cmd in mapping["probe_cli"])
+            return {"ok": True, "_text": "\n".join(lines) + "\n"}
+        return mapping
+    if action == "show":
+        summary = summarize_run(Path(args.case).resolve(), args.run)
+        if not args.json and not getattr(args, "sub_json", False):
+            return {"ok": True, "_text": format_summary_text(summary), "run_id": summary["run_id"]}
+        return summary
+    if action == "run":
+        if args.until not in CHECKPOINT_IDS:
+            raise ValueError(f"--until must be one of: {', '.join(CHECKPOINT_IDS)}")
+        repo_root = Path(__file__).resolve().parents[1]
+        cases_root = Path(args.cases).resolve()
+        cases_root.mkdir(parents=True, exist_ok=True)
+        case_id = args.case_id or f"probe_{datetime.now():%Y%m%d_%H%M%S}_{secrets.token_hex(2)}"
+        case_dir = cases_root / case_id
+        if case_dir.exists():
+            raise FileExistsError(f"case already exists: {case_dir}")
+        script_path = Path(args.script).resolve()
+        script_text = script_path.read_text(encoding="utf-8-sig").strip()
+        if not script_text:
+            raise ValueError(f"script file must not be empty: {script_path}")
+        voice_id = local_minimax_voice_id(repo_root)
+        voice = VoiceConfig(
+            voice_id=voice_id or VoiceConfig().voice_id,
+            voice_profile_id="minimax_adman_clear_01",
+        )
+        config = CaseConfig(
+            case_id=case_id,
+            goal="probe",
+            feature_path=["文生图"],
+            voice=voice,
+            mode="script_locked",
+            narration_source="input/source_script.txt",
+            ai_enabled=False,
+        )
+        case_dir.mkdir()
+        input_dir = case_dir / "input"
+        input_dir.mkdir()
+        write_json_atomic(case_dir / "case.json", config)
+        (input_dir / "source_script.txt").write_text(script_text + "\n", encoding="utf-8")
+        context = RunContext.create(case_dir)
+        from video_agent.v4.production import V4ProductionOrchestrator
+
+        result = V4ProductionOrchestrator(context).run(
+            render=args.until == "render",
+            allow_fake_derivation=False,
+            until=args.until,
+        )
+        summary = summarize_run(case_dir, context.run_id)
+        payload = {
+            "ok": True,
+            "case_id": case_id,
+            "case": case_dir.as_posix(),
+            "run_id": context.run_id,
+            "run_dir": context.run_dir.as_posix(),
+            "until": args.until,
+            "run_manifest": result.run_manifest.as_posix(),
+            "summary": summary,
+        }
+        if not args.json and not getattr(args, "sub_json", False):
+            header = (
+                f"until={args.until}\n"
+                f"case={case_dir.as_posix()}\n"
+                f"run={context.run_id}\n\n"
+            )
+            payload["_text"] = header + format_summary_text(summary)
+        return payload
+    raise ValueError(f"unknown v4-probe action: {action}")
 
 
 def command_init(args: argparse.Namespace) -> dict[str, Any]:
@@ -524,6 +627,27 @@ def build_parser() -> argparse.ArgumentParser:
     inspect.add_argument("--case", required=True)
     inspect.add_argument("--run")
     inspect.set_defaults(handler=command_inspect)
+
+    probe = sub.add_parser("v4-probe", help="Stepwise V4 tuning: checkpoint map, summarize, or run until a step")
+    probe.add_argument("--json", dest="sub_json", action="store_true")
+    probe_sub = probe.add_subparsers(dest="probe_command", required=True)
+    probe_map = probe_sub.add_parser("map", help="Print AI/program checkpoint map and watch files")
+    probe_map.set_defaults(handler=command_v4_probe)
+    probe_show = probe_sub.add_parser("show", help="Summarize scope/scenes/assets/subtitles for an existing run")
+    probe_show.add_argument("--case", required=True)
+    probe_show.add_argument("--run", help="Defaults to latest_run.json / newest run")
+    probe_show.set_defaults(handler=command_v4_probe)
+    probe_run = probe_sub.add_parser("run", help="Create a case from script and stop after a checkpoint")
+    probe_run.add_argument("--script", required=True)
+    probe_run.add_argument("--cases", default="cases")
+    probe_run.add_argument("--case-id")
+    probe_run.add_argument(
+        "--until",
+        required=True,
+        choices=["scene", "assets", "anchor", "motion_audio", "compile", "render"],
+        help="Stop after this checkpoint (render = full deliverable)",
+    )
+    probe_run.set_defaults(handler=command_v4_probe)
 
     sfx = sub.add_parser("sfx-register", help="Register the canonical Douyin SFX library")
     sfx.add_argument("--json", dest="sub_json", action="store_true")

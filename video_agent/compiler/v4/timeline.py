@@ -21,7 +21,11 @@ from video_agent.contracts.v4 import (
 )
 from video_agent.contracts.v4.stage6_errors import Stage6Error
 from video_agent.io import sha256_json
+from video_agent.progress import get_logger
 from video_agent.registries import CapabilityRegistryHub
+
+
+logger = get_logger()
 
 
 def compile_video_timeline(
@@ -51,13 +55,21 @@ def compile_video_timeline(
         postroll_frames=postroll_frames,
     )
     base_clips = next(track.clips for track in visual_tracks if track.track_kind == "base")
-    validate_claim_evidence(
+    claim_warnings = validate_claim_evidence(
         scene_plan=scene_plan,
         resolved=resolved,
         anchored=anchored,
         snapshot=snapshot,
         base_clips=base_clips,
     )
+    for warning in claim_warnings:
+        logger.warning(
+            "[V4][Stage6][claim_evidence] %s | scene=%s slot=%s anchor=%s",
+            warning.get("detail"),
+            warning.get("scene_id"),
+            warning.get("slot_id"),
+            warning.get("anchor_id"),
+        )
     subtitles = compile_subtitles_v4(
         speech=speech,
         scene_plan=scene_plan,
@@ -114,6 +126,11 @@ def compile_video_timeline(
         audio_tracks=audio_tracks,
     )
     report = validate_compiled_timeline(timeline)
+    if claim_warnings:
+        report = dict(report)
+        existing = list(report.get("warnings") or [])
+        existing.extend(claim_warnings)
+        report["warnings"] = existing
     raise_if_invalid(report)
     return timeline, report, sfx_audit
 

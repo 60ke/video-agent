@@ -1,9 +1,10 @@
 {
   "registry_id": "category",
-  "version": "2026.07.18.2",
+  "version": "2026.07.20.1",
   "schema_version": 1,
   "entries": [
     {"id": "网站/主页", "display_name": "网站主页", "description": "柯幻熊猫网站主页", "module": "网站", "category_path": ["主页"], "aliases": ["首页"], "scope_eligible": false},
+    {"id": "文生图/编辑小工具", "display_name": "编辑小工具", "description": "文生图配套的图片编辑小工具列表页，不是网站主页或通用品牌页", "module": "文生图", "category_path": ["编辑小工具"], "aliases": ["AI工具", "图片编辑小工具", "小工具列表"], "scope_eligible": false},
     {"id": "文生图/文化墙", "display_name": "文化墙", "module": "文生图", "category_path": ["文化墙"], "aliases": []},
     {"id": "文生图/门头招牌", "display_name": "门头招牌", "module": "文生图", "category_path": ["门头招牌"], "aliases": ["门店招牌", "门头"]},
     {"id": "文生图/景观小品", "display_name": "景观小品", "module": "文生图", "category_path": ["景观小品"], "aliases": ["操作景观小品界面"]},

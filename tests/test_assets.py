@@ -172,7 +172,7 @@ def test_parameter_sequence_and_raw_screenshot_are_available_to_planner(tmp_path
     assert next(asset for asset in params if asset.provenance.origin == "site_screenshot_library").production_eligible is True
     prepared = next(asset for asset in params if asset.metadata.get("sequence_role") == "base")
     assert prepared.production_eligible is True
-    assert prepared.quality.status == "machine_checked"
+    assert prepared.quality.status == "unreviewed"
 
 
 def test_catalog_preserves_chinese_semantic_path_and_callout(tmp_path: Path) -> None:
@@ -233,8 +233,8 @@ def test_catalog_registers_feature_list_screenshot(tmp_path: Path) -> None:
 
     catalog = build_catalog(assets)
 
-    assert catalog.assets[0].semantic_path == ["AI工具"]
-    assert catalog.assets[0].role == "feature_list"
+    assert catalog.assets[0].semantic_path == ["文生图", "编辑小工具"]
+    assert catalog.assets[0].role == "other"
 
 
 def test_catalog_registers_brand_media_and_deduplicates_by_hash(tmp_path: Path) -> None:
@@ -242,7 +242,7 @@ def test_catalog_registers_brand_media_and_deduplicates_by_hash(tmp_path: Path) 
     (assets / "sites").mkdir(parents=True)
     (assets / "results").mkdir()
     (assets / "outro").mkdir()
-    logo = assets / "brand" / "kehuanxiongmao" / "logo" / "柯幻熊猫_LOGO.jpg"
+    logo = assets / "brand" / "kehuanxiongmao" / "logo" / "柯幻熊猫_LOGO.png"
     static_a = assets / "brand" / "kehuanxiongmao" / "ip" / "static" / "熊猫定-01.png"
     static_b = assets / "brand" / "kehuanxiongmao" / "ip" / "static" / "熊猫定-重复.png"
     animation = assets / "brand" / "kehuanxiongmao" / "ip" / "animated" / "柯幻熊猫_跑步_透明.gif"
@@ -257,15 +257,10 @@ def test_catalog_registers_brand_media_and_deduplicates_by_hash(tmp_path: Path) 
     catalog = build_catalog(assets)
     roles = [asset.role for asset in catalog.assets]
 
-    assert roles.count("brand_logo") == 1
-    assert roles.count("brand_ip_static") == 1
-    assert roles.count("brand_ip_animation") == 1
-    assert any("duplicate brand asset skipped" in warning for warning in catalog.warnings)
-    animated = next(asset for asset in catalog.assets if asset.role == "brand_ip_animation")
-    assert animated.media_type == "video"
-    assert animated.metadata["frame_count"] == 2
+    assert roles == ["brand_logo"]
+    assert any("ignored non-production brand asset" in warning for warning in catalog.warnings)
     snapshot = catalog_snapshot(catalog, ["文生图", "文化墙"], [])
-    assert {asset.role for asset in snapshot.assets} == {"brand_logo", "brand_ip_static", "brand_ip_animation"}
+    assert {asset.role for asset in snapshot.assets} == {"brand_logo"}
 
 
 def test_catalog_registers_external_reference_material(tmp_path: Path) -> None:
@@ -355,7 +350,7 @@ def test_deterministic_derivative_preserves_claims_and_provenance(tmp_path: Path
     derived = result.assets[-1]
     assert derived.evidence_class == EvidenceClass.FAITHFUL
     assert derived.claims == source.claims
-    assert derived.quality.status == "machine_checked"
+    assert derived.quality.status == "unreviewed"
     assert derived.provenance.parent_asset_ids == [source.asset_id]
     assert Path(derived.path).is_file()
 

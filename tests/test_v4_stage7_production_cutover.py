@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from video_agent.contracts.v4.production import PRODUCTION_DAG_DEPENDENCIES
-from video_agent.v4.production import NODE_ORDER, V4ProductionOrchestrator
+from video_agent.v4.production import NODE_ORDER
 
 
 def test_production_dag_node_set_matches_frozen_contract() -> None:

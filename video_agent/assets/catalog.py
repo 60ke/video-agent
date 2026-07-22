@@ -168,6 +168,9 @@ def _site_semantics(path: Path) -> tuple[list[str], str, list[str]]:
     warnings: list[str] = []
     if path.stem == "柯幻熊猫_网站_主页_原始桌面截图":
         return ["网站", "主页"], "site_home", warnings
+    if path.stem == "柯幻熊猫_AI工具_功能列表截图":
+        # Filename legacy says AI工具; asset is the 文生图 editor-tools list page (role=other).
+        return ["文生图", "编辑小工具"], "other", warnings
     capture = parts[-1] if parts else ""
     role = SITE_ROLE_BY_CAPTURE.get(capture, "site_screenshot")
     if len(parts) < 3:

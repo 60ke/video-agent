@@ -14,7 +14,8 @@ from video_agent.assets.v4.derivation_orchestrator import (
     PreparedDerivation,
     member_derivation_signature,
 )
-from video_agent.assets.v4.repository import AssetDraft, AssetResolutionSession
+from video_agent.assets.v4.object_store import ObjectConflictError
+from video_agent.assets.v4.repository import AssetDraft, AssetResolutionSession, category_triple_from_id
 from video_agent.assets.v4.stage4_errors import Stage4Error
 from video_agent.contracts.v4 import (
     AssetLineage,
@@ -44,6 +45,19 @@ def _evidence_from_class(value: str) -> EvidenceClass:
     if value.startswith("E3"):
         return EvidenceClass.DECORATIVE
     return EvidenceClass.SEMANTIC
+
+
+def _active_owner_for_object_key(session: AssetResolutionSession, object_key: str) -> str | None:
+    connection = getattr(session.repository, "connection", None)
+    if connection is None:
+        return None
+    row = connection.execute(
+        "SELECT asset_ref FROM assets WHERE object_key=? AND status='active' LIMIT 1",
+        (object_key,),
+    ).fetchone()
+    if row is None:
+        return None
+    return str(row[0] if not hasattr(row, "keys") else row["asset_ref"])
 
 
 def _resolve_object_path(session: AssetResolutionSession, asset_ref: str, *, scene_id: str, slot_id: str) -> Path:
@@ -351,20 +365,35 @@ class DeterministicDerivationExecutor:
             temporary = Path(handle.name)
         try:
             temporary.write_bytes(image_bytes)
-            info = object_store.put_file(temporary, object_key)
+            try:
+                info = object_store.put_file(temporary, object_key)
+            except ObjectConflictError:
+                # Signature-addressed keys may be left behind when registration
+                # rolls back after a successful put. Replace orphans only.
+                owner = _active_owner_for_object_key(session, object_key)
+                if owner is not None:
+                    raise
+                object_store.resolve(object_key).unlink(missing_ok=True)
+                info = object_store.put_file(temporary, object_key)
         finally:
             temporary.unlink(missing_ok=True)
         parent = session.get_asset(request.parent_asset_refs[0]) if request.parent_asset_refs else None
         evidence = _evidence_from_class(entry.capabilities.output_evidence_class)
         now = datetime.now(timezone.utc)
+        category_id, module, category_path = category_triple_from_id(
+            request.category_id,
+            fallback_module=parent.module if parent else None,
+            fallback_category_id=parent.category_id if parent else None,
+            fallback_category_path=list(parent.category_path) if parent else None,
+        )
         return AssetDraft(
             filename=Path(info.object_key).name,
             object_key=info.object_key,
             content_sha256=info.content_sha256,
             media_type=info.media_type,
-            module=parent.module if parent else ((request.category_id or "").split("/")[0] or None),
-            category_id=request.category_id or (parent.category_id if parent else None),
-            category_path=list(parent.category_path) if parent else [],
+            module=module,
+            category_id=category_id,
+            category_path=category_path,
             asset_role=role,
             case_label=parent.case_label if parent else None,
             industry=parent.industry if parent else None,

@@ -1,6 +1,6 @@
 {
   "registry_id": "asset_role",
-  "version": "2026.07.18.1",
+  "version": "2026.07.20.2",
   "schema_version": 1,
   "entries": [
     {
@@ -10,9 +10,18 @@
       "display_capability_tags": ["single", "sequence"]
     },
     {
-      "id": "feature_list", "display_name": "功能列表", "requires_category": false,
+      "id": "feature_list", "display_name": "功能列表", "description": "暂时禁用：易被卖点口播误选，且动效未覆盖；品牌/能力主张优先 site_home",
+      "enabled": false,
+      "requires_category": false,
       "allowed_source_kinds": ["original", "derived"], "default_derived_evidence": "E1_faithful_derivative",
       "allowed_parent_roles": ["feature_list"], "allowed_group_types": [], "allowed_derivation_ids": [],
+      "display_capability_tags": ["single"]
+    },
+    {
+      "id": "other", "display_name": "其它画面", "description": "未归入专用角色的补充截图/说明页；默认配 light_sweep（高光扫过）",
+      "requires_category": false,
+      "allowed_source_kinds": ["original", "derived"], "default_derived_evidence": "E1_faithful_derivative",
+      "allowed_parent_roles": ["other"], "allowed_group_types": [], "allowed_derivation_ids": [],
       "display_capability_tags": ["single"]
     },
     {

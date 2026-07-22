@@ -98,10 +98,93 @@ class V4ProductionOrchestrator:
         run_seed: str | None = None,
         sfx_profile_id: str = "normal",
         skip_ffmpeg: bool = False,
+        until: str | None = None,
     ) -> V4ProductionResult:
         started = time.perf_counter()
         seed = run_seed or self.context.case.case_id
         nodes: dict[str, ProductionNodeManifest] = {}
+        stop_at = until
+
+        def _skip_remaining(after: str) -> None:
+            seen = False
+            for node_id in NODE_ORDER:
+                if node_id == after:
+                    seen = True
+                    continue
+                if not seen:
+                    continue
+                if node_id in nodes:
+                    continue
+                nodes[node_id] = ProductionNodeManifest(
+                    node_id=node_id,  # type: ignore[arg-type]
+                    status="skipped",
+                    dependency_node_ids=list(PRODUCTION_DAG_DEPENDENCIES[node_id]),
+                    input_fingerprints={"until": sha256_json({"until": stop_at, "after": after})},
+                    outputs=[],
+                    elapsed_ms=0,
+                )
+
+        def _write_result(*, status: str, stopped: bool) -> V4ProductionResult:
+            manifest = V4RunManifest(
+                schema_version="v4.run_manifest.1",
+                pipeline_version="v4",
+                case_id=self.context.case.case_id.lower().replace(" ", "_"),
+                run_id=self.context.run_id.lower(),
+                status=status,  # type: ignore[arg-type]
+                input_mode="script" if self.context.case.mode == "script_locked" else "goal",
+                nodes=[nodes[node_id] for node_id in NODE_ORDER],
+                deliverables=[
+                    a
+                    for a in (
+                        _artifact(self.context.run_dir, "final/video.mp4"),
+                        _artifact(self.context.run_dir, "final/cover.png"),
+                    )
+                    if a is not None
+                ],
+            )
+            write_json_atomic(
+                self.context.artifact("run_manifest.meta.json"),
+                {
+                    "registry_snapshot_id": self._registry_snapshot_id(),
+                    "asset_snapshot_id": self._asset_snapshot_id(),
+                    "until": stop_at,
+                    "stopped_early": stopped,
+                },
+            )
+            manifest_path = self.context.artifact("run_manifest.json")
+            write_json_atomic(manifest_path, manifest)
+            video = self.context.run_dir / "final" / "video.mp4"
+            cover = self.context.run_dir / "final" / "cover.png"
+            write_json_atomic(
+                self.context.case_dir / "latest_run.json",
+                {
+                    "run_id": self.context.run_id,
+                    "status": status,
+                    "pipeline_version": "v4",
+                    "completed_at": utc_now(),
+                    "elapsed_ms": round((time.perf_counter() - started) * 1000),
+                    "until": stop_at,
+                    "stopped_early": stopped,
+                    "final_video": "final/video.mp4" if video.is_file() else None,
+                    "final_cover": "final/cover.png" if cover.is_file() else None,
+                },
+            )
+            logger.info(
+                "[V4][production] %s case=%s run=%s until=%s elapsed=%.2fs",
+                "stopped" if stopped else "completed",
+                self.context.case.case_id,
+                self.context.run_id,
+                stop_at,
+                time.perf_counter() - started,
+            )
+            return V4ProductionResult(
+                run_manifest=manifest_path,
+                final_video=video if video.is_file() else None,
+                final_cover=cover if cover.is_file() else None,
+            )
+
+        def _stop_after(checkpoint: str) -> bool:
+            return stop_at == checkpoint
 
         # Stage1 covers narration → speech ∥ scope → scene (+ registry freeze).
         node_start = time.perf_counter()
@@ -126,6 +209,9 @@ class V4ProductionOrchestrator:
                 outputs=outputs,
                 elapsed_ms=round((time.perf_counter() - node_start) * 1000),
             )
+        if _stop_after("scene"):
+            _skip_remaining("scene")
+            return _write_result(status="completed", stopped=True)
 
         # assets
         t0 = time.perf_counter()
@@ -142,6 +228,9 @@ class V4ProductionOrchestrator:
             outputs=[a for a in [_artifact(self.context.run_dir, "resolved_asset_plan.json")] if a],
             elapsed_ms=round((time.perf_counter() - t0) * 1000),
         )
+        if _stop_after("assets"):
+            _skip_remaining("assets")
+            return _write_result(status="completed", stopped=True)
 
         # anchor
         t0 = time.perf_counter()
@@ -153,6 +242,9 @@ class V4ProductionOrchestrator:
             outputs=[a for a in [_artifact(self.context.run_dir, "anchored_timing_plan.json")] if a],
             elapsed_ms=round((time.perf_counter() - t0) * 1000),
         )
+        if _stop_after("anchor"):
+            _skip_remaining("anchor")
+            return _write_result(status="completed", stopped=True)
 
         # motion_audio
         t0 = time.perf_counter()
@@ -164,6 +256,9 @@ class V4ProductionOrchestrator:
             outputs=[a for a in [_artifact(self.context.run_dir, "motion_audio_plan.json")] if a],
             elapsed_ms=round((time.perf_counter() - t0) * 1000),
         )
+        if _stop_after("motion_audio"):
+            _skip_remaining("motion_audio")
+            return _write_result(status="completed", stopped=True)
 
         # bgm (default disabled)
         nodes["bgm"] = self._run_bgm_node()
@@ -177,10 +272,11 @@ class V4ProductionOrchestrator:
                 assets_root = self.context.repo_root / load_json(config_path)["object_root"]
             else:
                 assets_root = self.context.repo_root / "assets"
+        do_render = bool(render) and not _stop_after("compile")
         stage6 = self._stage.run_stage6(
             phase="compile-render",
             object_root=assets_root,
-            render=render,
+            render=do_render,
             skip_ffmpeg=skip_ffmpeg,
         )
         nodes["compile"] = ProductionNodeManifest(
@@ -191,6 +287,10 @@ class V4ProductionOrchestrator:
             elapsed_ms=round((time.perf_counter() - t0) * 1000),
         )
         nodes["structured_qa"] = self._run_structured_qa()
+        if _stop_after("compile"):
+            _skip_remaining("structured_qa")
+            return _write_result(status="completed", stopped=True)
+
         render_outputs = []
         for rel in ("render/silent.mp4", "render/final.mp4", "render/remotion.timeline.json"):
             art = _artifact(self.context.run_dir, rel)
@@ -198,11 +298,11 @@ class V4ProductionOrchestrator:
                 render_outputs.append(art)
         nodes["render"] = ProductionNodeManifest(
             node_id="render",
-            status="completed" if (not render or stage6.final_video) else "failed",
+            status="completed" if (not do_render or stage6.final_video) else "failed",
             dependency_node_ids=list(PRODUCTION_DAG_DEPENDENCIES["render"]),
             outputs=render_outputs,
             elapsed_ms=0,
-            error_code=None if (not render or stage6.final_video) else "render_failed",
+            error_code=None if (not do_render or stage6.final_video) else "render_failed",
         )
         if nodes["render"].status == "failed":
             raise RuntimeError("render_failed: missing render/final.mp4")
@@ -210,57 +310,7 @@ class V4ProductionOrchestrator:
         nodes["cover"] = self._run_cover_node()
         nodes["delivery_qa"] = self._run_delivery_qa()
         nodes["finalize"] = self._run_finalize()
-
-        manifest = V4RunManifest(
-            schema_version="v4.run_manifest.1",
-            pipeline_version="v4",
-            case_id=self.context.case.case_id.lower().replace(" ", "_"),
-            run_id=self.context.run_id.lower(),
-            status="completed",
-            input_mode="script" if self.context.case.mode == "script_locked" else "goal",
-            nodes=[nodes[node_id] for node_id in NODE_ORDER if node_id in nodes],
-            deliverables=[
-                a
-                for a in (
-                    _artifact(self.context.run_dir, "final/video.mp4"),
-                    _artifact(self.context.run_dir, "final/cover.png"),
-                )
-                if a is not None
-            ],
-        )
-        # Keep diagnostic snapshot ids alongside the frozen manifest.
-        write_json_atomic(
-            self.context.artifact("run_manifest.meta.json"),
-            {
-                "registry_snapshot_id": self._registry_snapshot_id(),
-                "asset_snapshot_id": self._asset_snapshot_id(),
-            },
-        )
-        manifest_path = self.context.artifact("run_manifest.json")
-        write_json_atomic(manifest_path, manifest)
-        write_json_atomic(
-            self.context.case_dir / "latest_run.json",
-            {
-                "run_id": self.context.run_id,
-                "status": "completed",
-                "pipeline_version": "v4",
-                "completed_at": utc_now(),
-                "elapsed_ms": round((time.perf_counter() - started) * 1000),
-                "final_video": "final/video.mp4",
-                "final_cover": "final/cover.png",
-            },
-        )
-        logger.info(
-            "[V4][production] completed case=%s run=%s elapsed=%.2fs",
-            self.context.case.case_id,
-            self.context.run_id,
-            time.perf_counter() - started,
-        )
-        return V4ProductionResult(
-            run_manifest=manifest_path,
-            final_video=self.context.run_dir / "final" / "video.mp4",
-            final_cover=self.context.run_dir / "final" / "cover.png",
-        )
+        return _write_result(status="completed", stopped=False)
 
     def _registry_snapshot_id(self) -> str:
         path = self.context.artifact("capability_registry.snapshot.json")
@@ -297,6 +347,7 @@ class V4ProductionOrchestrator:
     def _run_structured_qa(self) -> ProductionNodeManifest:
         timeline = self.context.artifact("compiled_video_timeline.json")
         validation = self.context.artifact("stage6_validation.json")
+        scene_plan = self.context.artifact("scene_semantic_plan.json")
         checks: list[QaCheck] = []
         if timeline.is_file():
             checks.append(
@@ -329,6 +380,7 @@ class V4ProductionOrchestrator:
                     artifact_refs=["stage6_validation.json"],
                 )
             )
+        checks.append(self._check_no_empty_visual_scenes(scene_plan))
         timeline_sha = sha256_file(timeline) if timeline.is_file() else ("0" * 64)
         report = StructuredQaReport(
             schema_version="v4.structured_qa.1",
@@ -346,6 +398,50 @@ class V4ProductionOrchestrator:
             dependency_node_ids=list(PRODUCTION_DAG_DEPENDENCIES["structured_qa"]),
             outputs=[ProductionArtifact(object_key="structured_qa_report.json", content_sha256=sha256_file(report_path))],
             elapsed_ms=0,
+        )
+
+    def _check_no_empty_visual_scenes(self, scene_plan: Path) -> QaCheck:
+        if not scene_plan.is_file():
+            return QaCheck(
+                check_id="no_empty_visual_scenes",
+                status="fail",
+                hard=True,
+                message="scene_semantic_plan.json missing; cannot verify empty-visual policy",
+            )
+        raw = load_json(scene_plan)
+        payload = raw.get("payload") if isinstance(raw, dict) and "payload" in raw else raw
+        scenes = sorted((payload or {}).get("scenes") or [], key=lambda item: int(item.get("order") or 0))
+        empty_ids: list[str] = []
+        for scene in scenes:
+            slots = scene.get("slots") or []
+            if (
+                scene.get("no_asset")
+                or scene.get("visual_structure") == "no_asset_transition"
+                or not slots
+            ):
+                empty_ids.append(str(scene.get("scene_id") or "?"))
+                continue
+            # Non-CTA outro-only scenes are treated as empty fillers.
+            text = str(scene.get("text") or "")
+            only_outro = all(
+                (slot.get("asset_role") == "outro"
+                 and (slot.get("source") or {}).get("kind") == "configured_asset"
+                 and (slot.get("source") or {}).get("config_key") == "default_outro")
+                for slot in slots
+            )
+            if only_outro and not ("搜索" in text and ("柯幻" in text or "熊猫" in text)):
+                empty_ids.append(str(scene.get("scene_id") or "?"))
+        ok = not empty_ids
+        return QaCheck(
+            check_id="no_empty_visual_scenes",
+            status="pass" if ok else "fail",
+            hard=True,
+            message=(
+                "all scenes have result/site_home/hold-extend (or explicit search outro)"
+                if ok
+                else f"empty or unknown visuals remain: {', '.join(empty_ids)}"
+            ),
+            artifact_refs=["scene_semantic_plan.json"],
         )
 
     def _run_cover_node(self) -> ProductionNodeManifest:
