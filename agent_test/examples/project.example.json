@@ -1,0 +1,17 @@
+{
+  "title": "AI 网站功能快速验证",
+  "script": "打开网站，输入需求，选择科技感风格，再点击开始生成。看，文化墙效果图已经出来了，整个操作过程非常直接。",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "tts": {
+    "speed": 1.05,
+    "emotion": "happy"
+  },
+  "recipes": {
+    "demo_image_generation": "agent_test/examples/website.recipe.json"
+  },
+  "result_assets": [
+    "assets/results/柯幻熊猫_文生图_活动物料_湿地生活节_结果图_01.png"
+  ]
+}
