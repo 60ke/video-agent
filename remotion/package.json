@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "scripts": {
     "studio": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts VerticalDemo"
+    "render": "remotion render src/index.ts VerticalDemo",
+    "render:agent-test": "remotion render src/index.ts AgentTest"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.0",
