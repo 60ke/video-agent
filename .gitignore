@@ -18,6 +18,8 @@ cdp-capture/profiles/*
 cdp-capture/node_modules/*
 remotion/node_modules/
 remotion/public/runs/
+remotion/public/agent-test/
+agent_test_runs/
 output/
 .codex-remote-attachments/
 wanxiang-frontend/
