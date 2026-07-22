@@ -1,0 +1,19 @@
+{
+  "profile_id": "agent-test-demo",
+  "mode": "headless",
+  "width": 1440,
+  "height": 900,
+  "fps": 30,
+  "jpeg_quality": 84,
+  "lead_in_ms": 700,
+  "tail_ms": 1200,
+  "start_url": "data:text/html;charset=utf-8,%3Chtml%3E%3Cbody%3E%3Cmain%20style%3D%22width%3A900px%3Bmargin%3A80px%20auto%3Bfont-family%3AArial%22%3E%3Ch1%3EAI%20%E5%9B%BE%E7%89%87%E7%94%9F%E6%88%90%3C%2Fh1%3E%3Cinput%20id%3D%22prompt%22%20style%3D%22font-size%3A24px%3Bpadding%3A16px%3Bwidth%3A70%25%22%3E%3Cselect%20id%3D%22style%22%20style%3D%22font-size%3A24px%3Bpadding%3A16px%22%3E%3Coption%20value%3D%22tech%22%3E%E7%A7%91%E6%8A%80%E6%84%9F%3C%2Foption%3E%3C%2Fselect%3E%3Cbutton%20id%3D%22generate%22%20style%3D%22display%3Ablock%3Bmargin-top%3A24px%3Bfont-size%3A24px%3Bpadding%3A16px%22%3E%E5%BC%80%E5%A7%8B%E7%94%9F%E6%88%90%3C%2Fbutton%3E%3Cdiv%20id%3D%22result%22%20style%3D%22margin-top%3A30px%3Bpadding%3A80px%3Bbackground%3A%23eef2ff%3Bfont-size%3A36px%22%3E%E7%AD%89%E5%BE%85%E7%94%9F%E6%88%90%3C%2Fdiv%3E%3Cscript%3Edocument.querySelector('%23generate').onclick%3D()%3D%3E%7Bconst%20r%3Ddocument.querySelector('%23result')%3Br.textContent%3D'%E7%94%9F%E6%88%90%E5%AE%8C%E6%88%90%EF%BC%9A%E7%A7%91%E6%8A%80%E6%84%9F%E6%96%87%E5%8C%96%E5%A2%99'%3Br.className%3D'ready'%7D%3C%2Fscript%3E%3C%2Fmain%3E%3C%2Fbody%3E%3C%2Fhtml%3E",
+  "steps": [
+    {"type": "wait_for_selector", "selector": "#prompt"},
+    {"type": "fill", "selector": "#prompt", "value": "为科技公司设计一面未来感企业文化墙", "after_ms": 550},
+    {"type": "select", "selector": "#style", "value": "tech", "after_ms": 450},
+    {"type": "click", "selector": "#generate", "after_ms": 900},
+    {"type": "wait_for_selector", "selector": "#result.ready"},
+    {"type": "wait", "ms": 1200}
+  ]
+}
