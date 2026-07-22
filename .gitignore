@@ -5,6 +5,8 @@ __pycache__/
 config/minimax.local.json
 .env
 runs/
+videos/*/work/
+videos/*/renders/
 cdp-capture/node_modules/
 cdp-capture/profiles/
 remotion/node_modules/
