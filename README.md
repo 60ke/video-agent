@@ -1,38 +1,32 @@
-# Agent Test
+# Agent Test — Website Product Launch Video
 
-这是从 `codex/parameter-frame-sequence` 裁剪出的极简验证分支，只验证一条链路：
+这是一个仿照 HyperFrames `product-launch-video` 编排方式实现的极简网站产品视频 Agent。
+
+它不复制 HyperFrames 的 HTML frame worker，而是保留它最关键的工作流思想：
 
 ```text
-文案
-  -> MiniMax TTS + word 时间戳
-  -> 字幕切分
-  -> LLM 场景规划 Agent
-  -> CDP 按 recipe 操作网站并录屏
-  -> Remotion 根据场景计划剪辑
-  -> MP4
+Brief
+  -> source inventory
+  -> style system
+  -> storyboard + locked script
+  -> TTS + word timing
+  -> time-coded visual plan
+  -> CDP website recording
+  -> Remotion render
+  -> validation
 ```
 
-## 分支边界
+## 核心能力
 
-仅保留：
+- MiniMax 整段 TTS 和 word 级时间戳；
+- 字幕、故事 beat、视觉窗口共享同一时间源；
+- Agent 先设计故事，再设计逐 cue 画面；
+- 网站操作必须使用可复现的 CDP recipe；
+- 支持网站录屏、单结果图、结果画廊、前后对比和文字场景；
+- Remotion 根据 `visual_plan.json` 渲染；
+- 每个阶段都有落盘产物和 Gate。
 
-- `agent_test/`：TTS、字幕对齐、Agent 场景规划和流水线
-- `cdp-capture/`：Chrome CDP 操作录屏
-- `remotion/`：网站录屏、结果图、画廊、前后对比和标题卡片
-- `examples/`：自包含的模拟图片生成网站
-- `tests/`：时间轴和场景规划测试
-
-不保留原项目的素材库、V3/V4 生产 DAG、GPT Image 派生链路、封面、片尾、音效库和历史设计文档。
-
-## 场景类型
-
-- `website_operation`：真实网站操作，必须绑定已有 recipe
-- `result_detail`：单张生成结果
-- `result_gallery`：多张结果图
-- `before_after`：明确的前后对比
-- `title_card`：缺少可信画面时兜底
-
-Agent 只能选择场景和素材，不能修改 TTS 产生的文字与时间戳。
+完整编排规则见 [`SKILL.md`](SKILL.md)。
 
 ## 安装
 
@@ -43,54 +37,102 @@ cd ../remotion && npm install
 cd ..
 ```
 
-复制本地配置：
+准备 MiniMax：
 
 ```bash
 cp config/minimax.example.json config/minimax.local.json
 ```
 
-填写 `api_key` 和 `voice_id`，也可通过 `MINIMAX_API_KEY` 提供密钥。
+填写 `api_key` 和 `voice_id`，或者通过 `MINIMAX_API_KEY` 提供密钥。
 
-场景规划支持 OpenAI-compatible Chat Completions：
-
-```bash
-export AGENT_TEST_API_BASE=https://your-endpoint/v1
-export AGENT_TEST_API_KEY=...
-export AGENT_TEST_MODEL=...
-```
-
-未配置模型时使用透明的关键词规则，方便先验证 CDP 和 Remotion。
-
-## 运行
+## 创建项目
 
 ```bash
-python -m agent_test examples/project.example.json
+python -m agent_test init videos/my-product \
+  --title "My Product" \
+  --script "输入需求，点击生成，结果马上出现。"
 ```
 
-仅生成中间产物，不执行 Remotion：
-
-```bash
-python -m agent_test examples/project.example.json --no-render
-```
-
-输出目录：
+生成的项目结构：
 
 ```text
-runs/<run_id>/
-  timing_lock.json
-  subtitles.json
-  scene_plan.json
-  recordings/
-  remotion_props.json
-  final/video.mp4
-  report.json
+videos/my-product/
+  BRIEF.md
+  SCRIPT.md
+  STORYBOARD.md
+  STYLE.md
+  project.json
+  storyboard.json
+  capture/inventory.json
+  recipes/
+  assets/
+  work/
+  renders/
 ```
+
+也可以直接复制 `examples/product-demo/`。
+
+## 分阶段运行
+
+```bash
+python -m agent_test inventory videos/my-product
+python -m agent_test audio videos/my-product
+python -m agent_test plan videos/my-product
+python -m agent_test build videos/my-product --no-render
+python -m agent_test check videos/my-product
+python -m agent_test build videos/my-product
+```
+
+完整执行：
+
+```bash
+python -m agent_test run videos/my-product
+```
+
+最终输出：
+
+```text
+videos/my-product/renders/video.mp4
+```
+
+## 关键产物
+
+```text
+capture/inventory.json   # 可用 recipe 和结果素材边界
+work/timing_lock.json    # MiniMax word 时间戳
+work/subtitles.json      # 可读字幕 cue
+work/audio_meta.json     # 音频元数据
+work/visual_plan.json    # beat 和视觉窗口的真实时间
+work/recordings/         # CDP 操作录屏
+work/remotion_props.json # Remotion 输入
+work/report.json
+renders/video.mp4
+```
+
+## 场景类型
+
+- `website_operation`
+- `result_detail`
+- `result_gallery`
+- `before_after`
+- `title_card`
+
+## 本地蓝图
+
+- `prompt-submit-result`
+- `cursor-ui-demo`
+- `result-hero`
+- `result-grid`
+- `before-after-wipe`
+- `kinetic-type`
+
+蓝图只是故事和镜头形状，不负责修改真实素材或捏造功能。
 
 ## 验证
 
 ```bash
-python -m pytest
 python -m compileall -q agent_test
+python -m pytest
 node --check cdp-capture/bin/agent-record.js
 cd remotion && npx tsc --noEmit
 ```
