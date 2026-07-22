@@ -1,0 +1,29 @@
+name: agent-test
+
+on:
+  push:
+    branches: [agent-test]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m compileall -q agent_test
+      - run: python -m pytest
+      - run: npm install
+        working-directory: cdp-capture
+      - run: node --check bin/agent-record.js
+        working-directory: cdp-capture
+      - run: npm install
+        working-directory: remotion
+      - run: npx tsc --noEmit
+        working-directory: remotion

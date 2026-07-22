@@ -1,11 +1,11 @@
 {
-  "name": "video-agent-remotion-renderer",
+  "name": "agent-test-remotion",
   "private": true,
   "version": "0.1.0",
   "scripts": {
     "studio": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts VerticalDemo",
-    "render:agent-test": "remotion render src/index.ts AgentTest"
+    "render": "remotion render src/index.ts AgentTest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.0",

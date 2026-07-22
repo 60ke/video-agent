@@ -1,7 +1,0 @@
-{
-  "base_url": "https://api.example.com",
-  "api_key": "replace-locally",
-  "model": "deepseek-v4-pro",
-  "coarse_model": "deepseek-v4-flash",
-  "max_tokens": 8192
-}

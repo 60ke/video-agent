@@ -1,338 +1,96 @@
-# Video Agent V3
+# Agent Test
 
-面向抖音 9:16 短视频的素材驱动视频编译器。系统把文案、MiniMax 词级时间轴、场景分类、素材关系、Remotion 动效、字幕和音效编译为一份确定性的 `render_plan.json`，再输出最终 MP4。
-
-## 核心原则
-
-- 声音、字幕、画面重点和语义音效共用同一个词级时间锚点。
-- 画布固定为 1080x1920、30 fps，并统一使用抖音安全区。
-- 场景先分类，再选素材和动效；具体可视化素材缺口由 AI 判断是否基于现有结果图调用 GPT Image 派生，抽象或不可可靠派生的缺口才使用 `light_sweep`，绝不拿无关图片猜测。
-- `assets/` 是项目外人工整理后的可用素材边界，进入目录即视为可用于生产。运行时只做文件完整性检查，不维护 `reviewed` 或 `human_approved` 状态。
-- 品牌通用素材只保留 `assets/brand/kehuanxiongmao/logo/柯幻熊猫_LOGO.png`；缺少具体画面时使用 `light_sweep` 或 GPT Image 派生，不使用无关熊猫 IP 图兜底。
-- 网站截图的标注使用缓存派生图或 Remotion 图层，不在渲染时读取原始网页坐标重画框选。
-- GPT Image 派生发生在场景识别之后、视觉编排之前；派生只能补素材，不能改动语音和时间轴。
-
-## 生产链路
+这是从 `codex/parameter-frame-sequence` 裁剪出的极简验证分支，只验证一条链路：
 
 ```text
-assets/
-  -> catalog
-  -> narration
-  -> speech + word timing
-  -> DeepSeek Flash full-catalog recall
-  -> DeepSeek Pro ActionScene planning
-  -> asset preflight / cached GPT Image derivation
-  -> VisualPlan
-  -> RenderPlan
-  -> Remotion silent video
-  -> FFmpeg audio mix
-  -> final/video.mp4
+文案
+  -> MiniMax TTS + word 时间戳
+  -> 字幕切分
+  -> LLM 场景规划 Agent
+  -> CDP 按 recipe 操作网站并录屏
+  -> Remotion 根据场景计划剪辑
+  -> MP4
 ```
 
-唯一运行 DAG：
+## 分支边界
 
-```text
-catalog -> narration -> speech -> scene -> prepare_assets -> visual -> compile -> render
-```
+仅保留：
 
-每个阶段的输入指纹、产物哈希和状态记录在 `run_manifest.json`。`--resume` 只复用指纹与产物都没有变化的阶段。
+- `agent_test/`：TTS、字幕对齐、Agent 场景规划和流水线
+- `cdp-capture/`：Chrome CDP 操作录屏
+- `remotion/`：网站录屏、结果图、画廊、前后对比和标题卡片
+- `examples/`：自包含的模拟图片生成网站
+- `tests/`：时间轴和场景规划测试
+
+不保留原项目的素材库、V3/V4 生产 DAG、GPT Image 派生链路、封面、片尾、音效库和历史设计文档。
+
+## 场景类型
+
+- `website_operation`：真实网站操作，必须绑定已有 recipe
+- `result_detail`：单张生成结果
+- `result_gallery`：多张结果图
+- `before_after`：明确的前后对比
+- `title_card`：缺少可信画面时兜底
+
+Agent 只能选择场景和素材，不能修改 TTS 产生的文字与时间戳。
 
 ## 安装
 
-要求：Python 3.10-3.12、Node.js、FFmpeg。
-
-```powershell
+```bash
 python -m pip install -e ".[dev]"
-Set-Location remotion
-npm install
-Set-Location ..
+cd cdp-capture && npm install
+cd ../remotion && npm install
+cd ..
 ```
 
-密钥只放在已忽略的本地配置中：
+复制本地配置：
 
-- `config/minimax.local.json`
-- `config/gpt_image.local.json`
-- `config/ai.local.json`
-
-示例配置位于同目录的 `*.example.json`。运行时配置优先于契约默认值；不要在文档或代码中复制本地音色 ID 和 API Key。
-
-## 命令行生成视频
-
-日常生产只需要下面两种命令。两者都会自动创建唯一 Case、固定使用 `文生图` feature、执行完整 DAG，并在结束时返回成片路径。
-
-使用固定文案：
-
-```powershell
-python main.py --script C:\copy\文案.txt
+```bash
+cp config/minimax.example.json config/minimax.local.json
 ```
 
-只提供目标，由 AI 生成文案：
+填写 `api_key` 和 `voice_id`，也可通过 `MINIMAX_API_KEY` 提供密钥。
 
-```powershell
-python main.py --goal "柯幻熊猫文生图功能种草"
+场景规划支持 OpenAI-compatible Chat Completions：
+
+```bash
+export AGENT_TEST_API_BASE=https://your-endpoint/v1
+export AGENT_TEST_API_KEY=...
+export AGENT_TEST_MODEL=...
 ```
 
-固定文案文件使用 UTF-8 编码。第一种模式锁定原文，不允许 AI 改写；第二种模式先由 Story Planner 生成文案。两种模式随后共用 MiniMax 词级时间轴、ActionScene、素材准备、视觉编排、Remotion 渲染、默认封面和固定片尾链路。
+未配置模型时使用透明的关键词规则，方便先验证 CDP 和 Remotion。
 
-命令执行成功后会返回：
+## 运行
+
+```bash
+python -m agent_test examples/project.example.json
+```
+
+仅生成中间产物，不执行 Remotion：
+
+```bash
+python -m agent_test examples/project.example.json --no-render
+```
+
+输出目录：
 
 ```text
-case_id: video_20260716_120000_ab12
-case: .../cases/video_20260716_120000_ab12
-run_id: 20260716_120000_cd34ef
-final_video: .../cases/video_20260716_120000_ab12/runs/<run_id>/final/video.mp4
+runs/<run_id>/
+  timing_lock.json
+  subtitles.json
+  scene_plan.json
+  recordings/
+  remotion_props.json
+  final/video.mp4
+  report.json
 ```
-
-可选参数：
-
-```powershell
-# 指定 Case 父目录
-python main.py --script C:\copy\文案.txt --cases D:\video_cases
-
-# 显式指定 Case ID；省略时自动生成唯一 ID
-python main.py --script C:\copy\文案.txt --case-id ad_demo_v1
-
-# 输出 JSON
-python main.py --goal "柯幻熊猫文生图功能种草" --json
-```
-
-安装为 Python 包后，也可以使用等价入口：
-
-```powershell
-video-agent generate_video --script C:\copy\文案.txt
-video-agent generate_video --goal "柯幻熊猫文生图功能种草"
-```
-
-### 本地配置
-
-复制示例文件并填写本机密钥。三个 `*.local.json` 均已被 Git 忽略：
-
-```powershell
-Copy-Item config\ai.example.json config\ai.local.json
-Copy-Item config\minimax.example.json config\minimax.local.json
-Copy-Item config\gpt_image.example.json config\gpt_image.local.json
-```
-
-- `ai.local.json`：固定文案和 AI 文案模式都需要。Flash 模型负责素材粗筛，Pro 模型负责 ActionScene 场景分类、素材绑定和派生决策。
-- `minimax.local.json`：必需。负责整段口播和 word 级时间戳；本地 `voice_id`、`speed` 等配置会覆盖 Case 默认值。
-- `gpt_image.local.json`：仅当场景需要补充因果素材、统一轮播比例或生成编辑状态等派生图时调用。已有缓存会直接复用。
-
-Remotion 依赖也必须已安装：
-
-```powershell
-Set-Location remotion
-npm install
-Set-Location ..
-```
-
-### 手动管理 Case
-
-`init`、`script-lock`、`run` 和 `inspect` 是调试及阶段重跑使用的底层命令。日常生成无需调用。完整示例：
-
-```powershell
-python -m video_agent init `
-  --case cases\ad_demo_20260716 `
-  --case-id ad_demo_20260716 `
-  --goal "柯幻熊猫文生图功能种草" `
-  --feature-path 文生图 `
-  --script-file C:\copy\ad_script.txt `
-  --json
-```
-
-执行完整生产链路：
-
-```powershell
-python -m video_agent run --case cases\ad_demo_20260716 --json
-python -m video_agent inspect --case cases\ad_demo_20260716 --json
-```
-
-给已有 Case 更新固定文案：
-
-```powershell
-python -m video_agent script-lock `
-  --case cases\ad_demo_20260716 `
-  --script-file C:\copy\ad_script_v2.txt `
-  --json
-
-python -m video_agent run --case cases\ad_demo_20260716 --json
-```
-
-每次不带 `--resume` 执行 `run` 都会创建新的 Run，不会覆盖历史成片。
-
-## Case 与运行产物
-
-```text
-cases/<case>/
-  case.json
-  input/
-    narration.json          # 锁定文案模式
-    cover.json              # 可选；不存在时按 Case 和口播自动生成封面规格
-  runs/<run_id>/
-    asset_catalog.source.json
-    narration.json
-    timing_lock.json
-    timing_qa.json
-    scene_plan.json
-    asset_preparation_plan.json
-    asset_preparation_report.json
-    asset_catalog.json
-    resolved_scene_plan.json
-    visual_plan.json
-    render_plan.json
-    run_manifest.json
-    cover_report.json          # cover_enabled=true
-    outro_report.json          # outro_enabled=true
-    work/
-    final/cover.png
-    final/cover_3x4_preview.png
-    final/video.mp4
-```
-
-封面和片尾是 Case 配置项，默认都开启：
-
-```json
-{
-  "cover_enabled": true,
-  "cover_source": "input/cover.json",
-  "outro_enabled": true,
-  "outro_source": "assets/outro/default_panda_outro.mp4"
-}
-```
-
-`cover_source` 文件可以不存在，此时系统会根据 Case 目标、完整口播和实际使用素材生成默认封面规格。任一开关设为 `false` 即跳过对应后处理。
-
-阶段重跑：
-
-```powershell
-python -m video_agent run --case cases\demo --resume <run_id> --from-stage scene --json
-python -m video_agent run --case cases\demo --until-stage compile --json
-```
-
-## 素材目录
-
-```text
-assets/
-  sites/                    # 网站主页、功能入口、参数页原始截图
-  results/                  # 结果图，中文语义文件名
-  references/               # 明确注册的参考图
-  brand/                    # 当前仅保留柯幻熊猫官方 Logo
-  workflow_templates/       # 编辑页、弹窗等固定 UI 模板
-  derived/
-    sites/                  # 固定网站截图派生图
-    workflow_scenes/        # 编辑流程等缓存场景素材
-    generated/              # Case 预检生成并复用的派生素材
-  audio/sfx/                # douyin_common_v1 音效库
-  relationships.json        # 参考图、结果图、平面图等严格关系
-  catalog.json              # 全局素材索引
-```
-
-素材文件进入 `assets/` 前由人工在项目外确认。Catalog 会解析中文文件名、角色、语义路径、方向、尺寸和来源；运行时只记录解码、尺寸等技术检查，不产生视觉审核状态。
-
-重新构建索引：
-
-```powershell
-python -m video_agent catalog --assets assets --json
-```
-
-## 场景与动效
-
-当前场景契约：
-
-| 场景 | 典型素材 | 默认动效 |
-|---|---|---|
-| `site_home` | 网站主页 | `spring_card_pop`（单图弹性弹出） |
-| `feature_entry` | 功能入口派生图 | `detail_push_in` |
-| `parameter_input` | 参数页花字序列 | `scale_in` |
-| `result_detail` | 单结果图 | 素材方向自适应展示 |
-| `result_gallery` | 词级枚举结果图 | `slide_gallery` |
-| `result_gallery_summary` | 多结果总结 | `card_stack` |
-| `reference_to_result` | 参考图 -> 结果图 | `before_after` |
-| `result_to_flat_plan` | 结果图 -> 平面图 | `before_after` |
-| `editor_workspace` | 编辑工作区流程 | `fade_in` + 局部放大镜 |
-| `editor_before_after` | 编辑前 -> 编辑后 | `before_after` |
-| `light_sweep_fallback` | 最近的相关画面 | `light_sweep` |
-
-场景默认值在 `config/scene_effects.json` 配置。动效自己的最短帧数和可读停留要求定义在 `video_agent/effects.py`，没有全局镜头时长或图片数量上限。
-
-Scene 阶段始终先由 `deepseek-v4-flash` 对完整 Catalog 做无数量上限的语义粗筛，再由 `deepseek-v4-pro` 输出 ActionScene、精确原文起点和素材缺口决策。具体设计类别缺图时可输出 `contextual_result_fill`，从真实结果图派生缺失画面；抽象、误导风险高或没有可信母图的语义才输出 `light_sweep_fallback`。
-
-严格因果场景优先读取 `assets/relationships.json`。关系或可视化素材缺失且 AI 判断可派生时，`prepare_assets` 才会根据当前场景和来源素材调用 GPT Image，并把输出按内容哈希持久化到 `assets/derived/generated/registry.json`，后续运行直接复用。
-
-## 素材制作工具
-
-这些命令生成可复用素材，不属于每次 Case 的生产 DAG：
-
-```powershell
-# 功能入口：生成拉近并突出目标入口的缓存关键帧
-python -m video_agent site-entry-batch --source assets\sites --json
-
-# 参数页：生成基础帧、花字阶段帧和最终帧
-python -m video_agent site-params-sequence --source assets\sites --json
-
-# 编辑流程：把业务结果图装入固定编辑页和局部编辑弹窗
-python -m video_agent editor-flow `
-  --artwork assets\results\example.png `
-  --editor-template assets\workflow_templates\图片编辑\完整编辑页面模板.png `
-  --modal-template assets\workflow_templates\图片编辑\局部编辑弹窗模板.png `
-  --semantic-path 文生图 `
-  --semantic-path 文化墙 `
-  --json
-
-# 导入外部人工整理素材
-python -m video_agent import-video-materials --source C:\materials --json
-```
-
-CDP 截图命名、稳定等待与登录要求见 [CDP 网站截图素材规范](cdp_screenshot_material_spec.md)。
-
-## 音频
-
-- MiniMax 单次合成完整口播，并要求 `subtitle_type=word`。
-- 本地 MiniMax 配置决定实际模型、音色和采样参数；Case 可覆盖语速和情感。
-- 字幕、镜头 hit 和 SFX 从同一份 `timing_lock.json` 解析。
-- `douyin_common_v1` 在 `assets/audio/sfx/catalog.json` 中保存音效哈希、裁切、增益和峰值偏移。
-- 音效密度通过 `clean`、`normal`、`energetic` 或 `custom` Profile 配置。
-- Remotion 输出静音视频，FFmpeg 负责口播、BGM、SFX 混音和最终编码。
-
-## 其他命令
-
-```powershell
-# 注册抖音音效库
-python -m video_agent sfx-register --source-dir C:\sfx --json
-
-# 重新生成并前置发布封面；未提供 cover.json 时使用自动规格
-python -m video_agent cover-postprocess --case cases\demo --run <run_id> --json
-
-# 汇总全部 Case 的最终视频
-python -m video_agent cases-export --cases cases --destination C:\Users\CNGG\Videos --json
-
-# 仅在导出清单存在时清理 Case
-python -m video_agent cases-clean --cases cases --export-manifest C:\Users\CNGG\Videos\video_agent_export_manifest.json --json
-```
-
-## 模块架构
-
-| 模块 | 职责 |
-|---|---|
-| `video_agent/orchestrator.py` | 唯一生产 DAG、阶段指纹、Resume 和产物管理 |
-| `video_agent/contracts/` | Case、Narration、Timing、ActionScene、VisualPlan、RenderPlan 契约 |
-| `video_agent/ai/` | Story Planner、Flash 素材粗筛、Pro ActionScene 规划、GPT Image 客户端和提示词加载 |
-| `video_agent/speech/` | MiniMax TTS、词级时间锁和停顿标签编译 |
-| `video_agent/assets/` | Catalog、素材导入、网站派生、编辑流程、预检和持久化派生 |
-| `video_agent/planning/` | 场景分类、严格素材匹配、参数序列和 VisualPlan 编排 |
-| `video_agent/compiler/` | 锚点解析、字幕、证据边界、SFX 与 RenderPlan 编译 |
-| `video_agent/render/` | Remotion Props 导出、视频渲染和 FFmpeg 混音 |
-| `video_agent/cover.py` / `video_agent/outro.py` | 默认封面和固定片尾后处理 |
-| `video_agent/qa/` | 时间锁与编译计划的确定性结构检查 |
-| `remotion/src/` | 安全区布局、字幕、场景组件和动效实现 |
-| `config/` | 本地 Provider 配置、场景动效和素材预检策略 |
-
-完整设计边界与数据流见 [当前架构说明](docs/architecture.md)。待办项统一维护在 [TODO](TODO.md)，不再保留日期化设计稿。
 
 ## 验证
 
-```powershell
-python -m compileall -q video_agent
+```bash
 python -m pytest
-Set-Location remotion
-npx tsc --noEmit
+python -m compileall -q agent_test
+node --check cdp-capture/bin/agent-record.js
+cd remotion && npx tsc --noEmit
 ```
