@@ -1,0 +1,88 @@
+{
+  "arc": "demo_loop",
+  "video_direction": {
+    "reveal_model": "voice-paced",
+    "held_beats": ["beat_03"],
+    "negative": [
+      "front-loaded slideshow",
+      "independent floating motion"
+    ]
+  },
+  "beats": [
+    {
+      "beat_id": "beat_01",
+      "role": "hook",
+      "voiceover": "打开网站，",
+      "scene_kind": "title_card",
+      "recipe_id": null,
+      "asset_paths": [],
+      "blueprint": "kinetic-type",
+      "transition_in": "cut",
+      "motion": "text_pop",
+      "visual_windows": [
+        {
+          "cue": "打开网站",
+          "label": "打开网站",
+          "layout": "centered",
+          "motion": "text_pop"
+        }
+      ]
+    },
+    {
+      "beat_id": "beat_02",
+      "role": "feature_showcase",
+      "voiceover": "输入需求，选择科技感风格，再点击开始生成。",
+      "scene_kind": "website_operation",
+      "recipe_id": "demo_image_generation",
+      "asset_paths": [],
+      "blueprint": "prompt-submit-result",
+      "transition_in": "cut",
+      "motion": "screen_push",
+      "visual_windows": [
+        {
+          "cue": "输入需求",
+          "label": "输入需求",
+          "layout": "top-left",
+          "motion": "cursor_fill"
+        },
+        {
+          "cue": "选择科技感风格",
+          "label": "选择风格",
+          "layout": "top-left",
+          "motion": "option_select"
+        },
+        {
+          "cue": "点击开始生成",
+          "label": "开始生成",
+          "layout": "top-left",
+          "motion": "click_pulse"
+        }
+      ]
+    },
+    {
+      "beat_id": "beat_03",
+      "role": "benefit_highlight",
+      "voiceover": "看，效果已经出来了，整个操作过程非常直接。",
+      "scene_kind": "title_card",
+      "recipe_id": null,
+      "asset_paths": [],
+      "blueprint": "kinetic-type",
+      "transition_in": "crossfade",
+      "motion": "hero_reveal",
+      "visual_windows": [
+        {
+          "cue": "效果已经出来了",
+          "label": "结果已生成",
+          "layout": "centered",
+          "motion": "hero_reveal"
+        },
+        {
+          "cue": "整个操作过程非常直接",
+          "label": "操作直接",
+          "layout": "bottom",
+          "motion": "hold"
+        }
+      ]
+    }
+  ]
+}
