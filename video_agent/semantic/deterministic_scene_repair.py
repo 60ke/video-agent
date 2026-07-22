@@ -97,7 +97,6 @@ def repair_scene_plan_payload(
     for scene in repaired:
         _repair_reference_result_plan_sources(scene)
         _repair_editor_sequence_sources(scene)
-        _promote_standalone_editor_queries(scene)
         _repair_hold_policies(scene)
         _repair_gallery_outputs(scene)
         _repair_gallery_asset_roles(scene)
@@ -119,7 +118,7 @@ def repair_scene_plan_payload(
 
     _repair_cross_scene_result_links(repaired)
     _repair_reference_result_inherit_from_prior_result(repaired)
-    _promote_standalone_dependent_queries(repaired)
+    _normalize_dependent_asset_queries(repaired)
     _repair_cross_scene_result_links(repaired)
     for scene in repaired:
         _repair_gallery_outputs(scene)
@@ -706,96 +705,6 @@ def _repair_editor_sequence_sources(scene: dict[str, Any]) -> None:
     scene["visual_structure"] = "sequence"
 
 
-def _promote_standalone_editor_queries(scene: dict[str, Any]) -> None:
-    """Rewrite editor_page/edited_result asset_query pairs into editor_sequence.
-
-    Stage4 only derives editor roles via relation_from_input + editor_sequence.
-    Models often emit bare asset_query pairs; promote them in-place when the
-    scene already has (or can reuse) a prior result as source_result.
-    """
-    slots = list(scene.get("slots") or [])
-    if not slots:
-        return
-    if any((slot.get("source") or {}).get("pattern_id") == "editor_sequence" for slot in slots):
-        return
-    editor_roles = {str(slot.get("asset_role") or "") for slot in slots}
-    if "editor_page" not in editor_roles and "edited_result" not in editor_roles:
-        return
-    if not all((slot.get("source") or {}).get("kind") in {"asset_query", "scene_input", None} for slot in slots):
-        # Mixed relation shapes — leave to the dedicated editor_sequence repair.
-        if any((slot.get("source") or {}).get("kind") in {"relation_from_input", "group_member", "asset_group_query"} for slot in slots):
-            return
-
-    alias = f"editor_{scene.get('scene_id') or 'scene'}"
-    input_name = "source_result"
-    has_source = any(str(slot.get("asset_role") or "") == "result_image" for slot in slots)
-    rebuilt: list[dict[str, Any]] = []
-    if not has_source:
-        # Inject a source_result query so the process group can bind.
-        first = slots[0]
-        category = first.get("category_id")
-        anchor = str(first.get("anchor_phrase") or scene.get("text") or "结果")
-        rebuilt.append(
-            {
-                "slot_id": "source_result",
-                "anchor_phrase": anchor[: min(len(anchor), 16)] or "结果",
-                "entry_policy": "scene_start",
-                "hold_policy": "until_next_slot",
-                "category_id": category,
-                "asset_role": "result_image",
-                "source": {
-                    "kind": "relation_from_input",
-                    "input_name": input_name,
-                    "group_alias": alias,
-                    "group_type": "process",
-                    "pattern_id": "editor_sequence",
-                    "member_key": "source_result",
-                },
-                "subtitle_emphasis": "none",
-            }
-        )
-    for slot in slots:
-        role = str(slot.get("asset_role") or "")
-        member_key = {
-            "result_image": "source_result",
-            "editor_page": "editor_page",
-            "edited_result": "edited_result",
-        }.get(role)
-        if member_key is None:
-            rebuilt.append(slot)
-            continue
-        item = dict(slot)
-        item["source"] = {
-            "kind": "relation_from_input",
-            "input_name": input_name,
-            "group_alias": alias,
-            "group_type": "process",
-            "pattern_id": "editor_sequence",
-            "member_key": member_key,
-        }
-        if member_key == "source_result":
-            item["asset_role"] = "result_image"
-        rebuilt.append(item)
-
-    # Ensure a process input exists; cross-scene linker fills from_scene later.
-    inputs = list(scene.get("inputs") or [])
-    if not any(str(item.get("input_name") or "") == input_name for item in inputs):
-        inputs.append(
-            {
-                "input_name": input_name,
-                "from_scene": "",  # filled by _repair_cross_scene_result_links
-                "from_output": "primary_result",
-                "required": True,
-            }
-        )
-    scene["slots"] = rebuilt
-    scene["inputs"] = inputs
-    scene["visual_structure"] = "sequence"
-    scene["no_asset"] = False
-    _repair_hold_policies(scene)
-    _repair_output_bindings(scene)
-
-
 def _repair_hold_policies(scene: dict[str, Any]) -> None:
     slots = scene.get("slots") or []
     if len(slots) <= 1:
@@ -1062,13 +971,13 @@ def _repair_cross_scene_result_links(scenes: list[dict[str, Any]]) -> None:
             item["from_output"] = established[1]
 
 
-def _promote_standalone_dependent_queries(scenes: list[dict[str, Any]]) -> None:
-    """Compile dependency-sensitive asset queries into executable relations.
+def _normalize_dependent_asset_queries(scenes: list[dict[str, Any]]) -> None:
+    """Compile every dependent asset query into one explicit upstream relation.
 
-    Scene AI describes the desired visual role. Editor and flat-plan assets,
-    however, can only be derived from an already established result identity.
-    Bind those roles to the nearest prior non-gallery result so Stage4 never
-    receives an impossible zero-parent derivation request.
+    Editor pages, edited results, and flat plans are never independent catalog
+    queries. They derive from an established prior result. Keep this rewrite in
+    one pass so same-scene and cross-scene forms cannot compete or depend on
+    execution order.
     """
 
     ordered = sorted(scenes, key=lambda scene: int(scene.get("order") or 0))
@@ -1119,9 +1028,9 @@ def _promote_standalone_dependent_queries(scenes: list[dict[str, Any]]) -> None:
         )
         upstream = result_output_before(scene, category_id)
         if upstream is None:
-            # Leave the original query intact. Domain validation reports the
-            # missing dependency with scene/slot context instead of inventing a
-            # parent or silently changing the requested visual.
+            # Leave the query intact. Semantic validation reports
+            # scene_dependency_source_missing with scene/slot context. This is
+            # a bad scene plan, not a derivable material gap.
             continue
 
         input_name = "source_result"

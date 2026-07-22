@@ -311,9 +311,10 @@ def _validate_scene(
         }:
             issues.append(
                 _issue(
-                    "dependent_role_requires_upstream_result",
+                    "scene_dependency_source_missing",
                     f"{base}.slots[{slot_index}].source",
-                    f"{slot.asset_role} must be relation_from_input bound to an earlier result_image",
+                    f"{slot.asset_role} requires a relation_from_input bound to an earlier result_image; "
+                    "create an earlier result scene before this dependent scene",
                 )
             )
         if isinstance(slot.source, RelationFromInputSource) and slot.source.pattern_id in {

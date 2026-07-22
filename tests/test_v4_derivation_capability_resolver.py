@@ -77,3 +77,28 @@ def test_registry_resolver_accepts_reused_input_member_for_group_derivation(
         )
     )
     assert binding.capability_id == "result_to_editor_process"
+
+
+def test_registry_resolver_rejects_reuse_for_non_source_group_member(
+    hub: CapabilityRegistryHub,
+) -> None:
+    resolver = RegistryDerivationCapabilityResolver(hub)
+    with pytest.raises(Stage4Error) as exc:
+        resolver.resolve(
+            DerivationRequest(
+                request_id="derivation://R0004",
+                scene_id="s006",
+                slot_id="editor",
+                derivation_type="result_to_editor_process",
+                category_id="文生图/文化墙",
+                target_asset_role="result_image",
+                required_group=RequiredGroupSpec(
+                    group_type="process",
+                    pattern_id="editor_sequence",
+                    member_key="editor_page",
+                ),
+                parent_asset_refs=["asset://A0001"],
+                evidence_ceiling="E2_semantic_derivative",
+            )
+        )
+    assert exc.value.code == "capability_not_applicable"

@@ -65,6 +65,8 @@ class RegistryDerivationCapabilityResolver:
                 )
         target_is_group_input = (
             request.required_group is not None
+            and request.required_group.member_key == "source_result"
+            and request.target_asset_role == "result_image"
             and request.target_asset_role in caps.input_roles
         )
         if request.target_asset_role not in caps.output_roles and not target_is_group_input:

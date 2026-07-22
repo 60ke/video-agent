@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from video_agent.contracts.v4 import SceneSemanticPlan
+import pytest
+
+from video_agent.contracts.v4 import DomainValidationError, SceneSemanticPlan
 from video_agent.contracts.v4.common import normalize_frozen_text
 from video_agent.registries import CapabilityRegistrySnapshot
 from video_agent.semantic.deterministic_scene_repair import repair_scene_plan_payload
@@ -885,3 +887,41 @@ def test_repair_binds_standalone_flat_plan_to_prior_result() -> None:
     assert flat_plan.slots[0].source.kind == "relation_from_input"
     assert flat_plan.slots[0].source.pattern_id == "reference_result_plan"
     assert flat_plan.slots[0].source.member_key == "flat_plan"
+
+
+def test_dependent_query_without_prior_result_fails_with_explicit_dependency_error() -> None:
+    registry = CapabilityRegistrySnapshot.model_validate(
+        json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))
+    )
+    narration = "直接进入编辑页面。"
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "edit",
+                "order": 1,
+                "text": narration,
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "editor",
+                        "anchor_phrase": "编辑页面",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "editor_page",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "none",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            }
+        ]
+    }
+    plan = SceneSemanticPlan.model_validate(repair_scene_plan_payload(payload, frozen_narration=narration))
+    with pytest.raises(DomainValidationError) as exc:
+        validate_scene_semantic_plan(plan, frozen_narration=narration, registry=registry)
+    assert {issue.code for issue in exc.value.issues} == {"scene_dependency_source_missing"}
