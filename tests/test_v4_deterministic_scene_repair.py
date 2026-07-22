@@ -477,6 +477,43 @@ def test_deterministic_repair_fills_empty_brand_close_with_site_home() -> None:
     assert last.no_asset is False
 
 
+def test_deterministic_repair_preserves_specific_feature_entry_role() -> None:
+    """Semantic role selection is AI-owned; structural repair must not erase an entry page."""
+    payload = {
+        "scenes": [
+            {
+                "scene_id": "entry",
+                "order": 1,
+                "text": "以文化墙为例，先进入文化墙功能。",
+                "visual_structure": "single",
+                "slots": [
+                    {
+                        "slot_id": "entry",
+                        "anchor_phrase": "进入文化墙功能",
+                        "entry_policy": "phrase_start",
+                        "hold_policy": "scene_end",
+                        "category_id": "文生图/文化墙",
+                        "asset_role": "feature_entry",
+                        "source": {"kind": "asset_query"},
+                        "subtitle_emphasis": "keyword",
+                    }
+                ],
+                "events": [],
+                "inputs": [],
+                "outputs": [],
+                "claims": [],
+                "no_asset": False,
+            }
+        ]
+    }
+
+    repaired = repair_scene_plan_payload(payload)
+
+    slot = repaired["scenes"][0]["slots"][0]
+    assert slot["asset_role"] == "feature_entry"
+    assert slot["category_id"] == "文生图/文化墙"
+
+
 def test_deterministic_repair_hold_extends_soft_empty_from_prior_result() -> None:
     registry = CapabilityRegistrySnapshot.model_validate(
         json.loads((FIXTURE_DIR / "registry_snapshot.json").read_text(encoding="utf-8"))

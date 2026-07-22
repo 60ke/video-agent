@@ -100,7 +100,6 @@ def repair_scene_plan_payload(
         _repair_hold_policies(scene)
         _repair_gallery_outputs(scene)
         _repair_gallery_asset_roles(scene)
-        _repair_product_feature_entry_slots(scene)
         _repair_category_inventory_fallbacks(scene)
         _repair_output_bindings(scene)
         _repair_missing_categories(
@@ -1202,19 +1201,6 @@ def _repair_gallery_asset_roles(scene: dict[str, Any]) -> None:
         if source.get("kind") != "asset_query":
             continue
         if slot.get("asset_role") in {"feature_entry", "feature_list", "site_home", "parameter_panel"}:
-            slot["asset_role"] = "result_image"
-
-
-def _repair_product_feature_entry_slots(scene: dict[str, Any]) -> None:
-    """文生图 product categories do not stock website feature_entry screenshots."""
-    for slot in scene.get("slots") or []:
-        category_id = str(slot.get("category_id") or "")
-        source = slot.get("source") or {}
-        if slot.get("asset_role") != "feature_entry":
-            continue
-        if source.get("kind") != "asset_query":
-            continue
-        if category_id.startswith("文生图/"):
             slot["asset_role"] = "result_image"
 
 
