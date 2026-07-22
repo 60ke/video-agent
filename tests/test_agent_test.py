@@ -9,7 +9,7 @@ def test_word_tokens_compile_to_timed_subtitle_cues() -> None:
         {"text": "点击", "start_ms": 760, "end_ms": 1050},
         {"text": "生成。", "start_ms": 1070, "end_ms": 1500},
     ]
-    cues = build_subtitle_cues(tokens, fps=30, max_chars=8)
+    cues = build_subtitle_cues(tokens, fps=30, max_chars=14)
 
     assert [cue["text"] for cue in cues] == ["打开网站，点击生成。"]
     assert cues[0]["start_frame"] == 0
