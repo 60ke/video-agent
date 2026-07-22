@@ -1,0 +1,15 @@
+{
+  "title": "AI 网站功能快速验证",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "mode": "autonomous",
+  "tts": {
+    "speed": 1.05,
+    "emotion": "happy"
+  },
+  "recipes": {
+    "demo_image_generation": "recipes/website.recipe.json"
+  },
+  "result_assets": []
+}
