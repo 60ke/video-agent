@@ -24,9 +24,10 @@ dev = [
 
 [project.scripts]
 video-agent = "video_agent.cli:main"
+video-agent-test = "agent_test.pipeline:main"
 
 [tool.setuptools.packages.find]
-include = ["video_agent*"]
+include = ["video_agent*", "agent_test*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
