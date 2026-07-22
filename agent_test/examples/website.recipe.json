@@ -1,0 +1,19 @@
+{
+  "profile_id": "agent-test-demo",
+  "mode": "headless",
+  "width": 1440,
+  "height": 900,
+  "fps": 30,
+  "jpeg_quality": 84,
+  "lead_in_ms": 700,
+  "tail_ms": 1200,
+  "start_url": "data:text/html;charset=utf-8,%3Chtml%3E%3Chead%3E%3Cstyle%3Ebody%7Bmargin%3A0%3Bfont-family%3AArial%3Bbackground%3A%23f4f7fb%3Bcolor%3A%23172535%7Dmain%7Bwidth%3A920px%3Bmargin%3A80px%20auto%3Bbackground%3Awhite%3Bpadding%3A48px%3Bborder-radius%3A28px%3Bbox-shadow%3A0%2020px%2060px%20%2300000020%7Dh1%7Bfont-size%3A40px%7D.grid%7Bdisplay%3Agrid%3Bgrid-template-columns%3A1fr%201fr%3Bgap%3A24px%7Dlabel%7Bdisplay%3Ablock%3Bfont-size%3A20px%3Bfont-weight%3A700%7Dinput%2Cselect%7Bwidth%3A100%25%3Bfont-size%3A22px%3Bpadding%3A16px%3Bmargin-top%3A10px%3Bbox-sizing%3Aborder-box%7Dbutton%7Bmargin-top%3A28px%3Bfont-size%3A24px%3Bpadding%3A16px%2032px%3Bborder%3A0%3Bborder-radius%3A14px%3Bbackground%3A%232c6bed%3Bcolor%3Awhite%3Bfont-weight%3A800%7D%23result%7Bmargin-top%3A34px%3Bheight%3A300px%3Bborder-radius%3A22px%3Bdisplay%3Aflex%3Balign-items%3Acenter%3Bjustify-content%3Acenter%3Bbackground%3A%23e9eef7%3Bfont-size%3A34px%3Bfont-weight%3A900%3Btransition%3Aall%20.5s%7D%23result.ready%7Bbackground%3Alinear-gradient(135deg%2C%236d5dfc%2C%2300c2ff)%3Bcolor%3Awhite%3Btransform%3Ascale(1.02)%7D%3C%2Fstyle%3E%3C%2Fhead%3E%3Cbody%3E%3Cmain%3E%3Ch1%3EAI%20%E5%9B%BE%E7%89%87%E7%94%9F%E6%88%90%3C%2Fh1%3E%3Cdiv%20class%3D%22grid%22%3E%3Clabel%3E%E6%8F%90%E7%A4%BA%E8%AF%8D%3Cinput%20id%3D%22prompt%22%20placeholder%3D%22%E8%BE%93%E5%85%A5%E7%94%BB%E9%9D%A2%E6%8F%8F%E8%BF%B0%22%3E%3C%2Flabel%3E%3Clabel%3E%E9%A3%8E%E6%A0%BC%3Cselect%20id%3D%22style%22%3E%3Coption%20value%3D%22tech%22%3E%E7%A7%91%E6%8A%80%E6%84%9F%3C%2Foption%3E%3Coption%20value%3D%22warm%22%3E%E6%B8%A9%E6%9A%96%3C%2Foption%3E%3C%2Fselect%3E%3C%2Flabel%3E%3C%2Fdiv%3E%3Cbutton%20id%3D%22generate%22%3E%E5%BC%80%E5%A7%8B%E7%94%9F%E6%88%90%3C%2Fbutton%3E%3Cdiv%20id%3D%22result%22%3E%E7%AD%89%E5%BE%85%E7%94%9F%E6%88%90%3C%2Fdiv%3E%3C%2Fmain%3E%3Cscript%3Edocument.querySelector('%23generate').onclick%3D()%3D%3E%7Bconst%20r%3Ddocument.querySelector('%23result')%3Br.textContent%3D'%E7%94%9F%E6%88%90%E5%AE%8C%E6%88%90%EF%BC%9A%E7%A7%91%E6%8A%80%E6%84%9F%E6%96%87%E5%8C%96%E5%A2%99'%3Br.className%3D'ready'%7D%3C%2Fscript%3E%3C%2Fbody%3E%3C%2Fhtml%3E",
+  "steps": [
+    {"type": "wait_for_selector", "selector": "#prompt"},
+    {"type": "fill", "selector": "#prompt", "value": "为科技公司设计一面未来感企业文化墙", "after_ms": 550},
+    {"type": "select", "selector": "#style", "value": "tech", "after_ms": 450},
+    {"type": "click", "selector": "#generate", "after_ms": 900},
+    {"type": "wait_for_selector", "selector": "#result.ready"},
+    {"type": "wait", "ms": 1200}
+  ]
+}
