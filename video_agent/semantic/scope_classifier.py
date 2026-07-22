@@ -8,6 +8,7 @@ from video_agent.io import sha256_json
 from video_agent.registries import CapabilityRegistrySnapshot
 
 from .prompts import load_scope_prompt
+from .deterministic_scope_repair import normalize_video_scope
 from .registry_payload import scope_categories_payload
 from .validation import validate_video_scope
 
@@ -32,6 +33,17 @@ async def classify_video_scope(
         },
         "enabled_categories": registry_payload,
     }
+    def validator(value: VideoScope) -> None:
+        repaired = normalize_video_scope(value)
+        value.scope_mode = repaired.scope_mode
+        value.categories = repaired.categories
+        validate_video_scope(
+            value,
+            frozen_narration=frozen_narration,
+            registry=registry,
+            primary_required=_has_explicit_primary(frozen_narration),
+        )
+
     invocation = await gateway.invoke_structured(
         capability="scope_classifier",
         system_prompt=prompt.system_prompt,
@@ -42,12 +54,7 @@ async def classify_video_scope(
             prompt_version=prompt.version,
             prompt_fingerprint=prompt.fingerprint,
         ),
-        domain_validator=lambda value: validate_video_scope(
-            value,
-            frozen_narration=frozen_narration,
-            registry=registry,
-            primary_required=_has_explicit_primary(frozen_narration),
-        ),
+        domain_validator=validator,
     )
     envelope = ArtifactEnvelope[VideoScope](
         schema_version="v4.video_scope.1",

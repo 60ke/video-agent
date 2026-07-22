@@ -40,8 +40,41 @@ class GroupBinding:
     origin: tuple[str, ...]
 
 
+# These are workflow claims, not a catalogue of feature names.  When a line
+# says that a real scene/reference is transformed, the visual must show the
+# two ends of that causal relationship instead of silently substituting a
+# standalone result image.
+_REFERENCE_WORKFLOW_MARKERS = (
+    "参考图",
+    "实景",
+    "原有场景",
+    "场景照片",
+    "现场照片",
+    "场景基础",
+)
+_REFERENCE_RESULT_MARKERS = (
+    "融合",
+    "生成",
+    "出图",
+    "效果",
+    "效果图",
+)
+_GENERIC_HOME_CLOSURE_MARKERS = (
+    "操作就是这么简单",
+    "统一操作简单",
+    "简单好上手",
+    "无效加班",
+    "赶上好时候",
+)
+
+
 def _issue(code: str, path: str, message: str) -> ValidationIssue:
     return ValidationIssue(code=code, path=path, message=message)
+
+
+def _scene_has_marker(text: str, markers: tuple[str, ...]) -> bool:
+    normalized = normalize_frozen_text(text)
+    return any(marker in normalized for marker in markers)
 
 
 def _active_item(
@@ -347,6 +380,72 @@ def _validate_scene(
                             "inherited result must come from a freshly queried result identity",
                         )
                     )
+                if (
+                    upstream_slot is not None
+                    and upstream_slot.category_id is not None
+                    and slot.category_id != upstream_slot.category_id
+                ):
+                    issues.append(
+                        _issue(
+                            "dependent_category_mismatch",
+                            f"{base}.slots[{slot_index}].category_id",
+                            "relation-bound editor/reference assets must inherit the parent result category",
+                        )
+                    )
+
+    editor_member_keys = {
+        slot.source.member_key
+        for slot in scene.slots
+        if isinstance(slot.source, RelationFromInputSource)
+        and slot.source.pattern_id == "editor_sequence"
+    }
+    if editor_member_keys and {"editor_page", "edited_result"} - editor_member_keys:
+        issues.append(
+            _issue(
+                "editor_sequence_incomplete",
+                f"{base}.slots",
+                "editor_sequence must show both editor_page and edited_result; "
+                "split or rebuild the scene so the edit outcome is visible",
+            )
+        )
+
+    # A real-scene/reference workflow is a causal demonstration.  A bare
+    # result image makes the spoken promise look like an unrelated showcase,
+    # so require both endpoints from the registered causal pattern.
+    if _scene_has_marker(scene.text, _REFERENCE_WORKFLOW_MARKERS) and _scene_has_marker(
+        scene.text, _REFERENCE_RESULT_MARKERS
+    ):
+        reference_member_keys = {
+            slot.source.member_key
+            for slot in scene.slots
+            if isinstance(slot.source, (AssetGroupQuerySource, GroupMemberSource, RelationFromInputSource))
+            and slot.source.pattern_id == "reference_result_plan"
+        }
+        if {"reference_image", "result_image"} - reference_member_keys:
+            issues.append(
+                _issue(
+                    "reference_result_workflow_incomplete",
+                    f"{base}.slots",
+                    "real-scene/reference generation must visibly bind both reference_image and result_image "
+                    "from reference_result_plan; do not replace the causal workflow with a standalone result",
+                )
+            )
+
+    # These lines make an abstract product/efficiency conclusion.  They must
+    # not unexpectedly return to a feature-specific input panel.
+    feature_specific_ui_roles = {"feature_entry", "parameter_panel", "editor_page", "editor_modal"}
+    if (
+        _scene_has_marker(scene.text, _GENERIC_HOME_CLOSURE_MARKERS)
+        and any(slot.asset_role in feature_specific_ui_roles for slot in scene.slots)
+        and not any(slot.asset_role == "site_home" for slot in scene.slots)
+    ):
+        issues.append(
+            _issue(
+                "generic_closure_requires_site_home",
+                f"{base}.slots",
+                "abstract ease-of-use or efficiency conclusion must use site_home instead of feature-specific UI",
+            )
+        )
 
 def _validate_relation_member(
     *,

@@ -111,6 +111,45 @@ def test_relation_pattern_rejects_wrong_member_role(registry: CapabilityRegistry
     assert any(issue.code == "pattern_member_role_mismatch" for issue in error.value.issues)
 
 
+def test_editor_sequence_requires_visible_edited_result(registry: CapabilityRegistrySnapshot) -> None:
+    payload = copy.deepcopy(_json("scene_semantic_plan.payload.json"))
+    # The evolving fixture keeps a generic result slot for the Stage7 outro
+    # migration. Give it a category so this test isolates the editor contract.
+    payload["scenes"][8]["slots"][0]["category_id"] = "文生图/文化墙"
+    editor_scene = next(
+        scene
+        for scene in payload["scenes"]
+        if any(slot["source"].get("pattern_id") == "editor_sequence" for slot in scene["slots"])
+    )
+    editor_scene["slots"] = [
+        slot for slot in editor_scene["slots"] if slot["source"].get("member_key") != "edited_result"
+    ]
+    plan = SceneSemanticPlan.model_validate(payload)
+    with pytest.raises(DomainValidationError) as error:
+        validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
+    assert any(issue.code == "editor_sequence_incomplete" for issue in error.value.issues)
+
+
+def test_real_scene_generation_requires_reference_and_result(registry: CapabilityRegistrySnapshot) -> None:
+    payload = copy.deepcopy(_json("scene_semantic_plan.payload.json"))
+    # Isolate the causal-workflow assertion from the fixture's in-progress
+    # Stage7 outro migration.
+    payload["scenes"][8]["slots"][0]["category_id"] = "文生图/文化墙"
+    workflow_scene = payload["scenes"][6]
+    workflow_scene["slots"] = [
+        slot
+        for slot in workflow_scene["slots"]
+        if slot["source"].get("member_key") != "reference_image"
+    ]
+    workflow_scene["events"] = [
+        event for event in workflow_scene["events"] if event.get("target_slot") != "reference"
+    ]
+    plan = SceneSemanticPlan.model_validate(payload)
+    with pytest.raises(DomainValidationError) as error:
+        validate_scene_semantic_plan(plan, frozen_narration=FROZEN_NARRATION, registry=registry)
+    assert any(issue.code == "reference_result_workflow_incomplete" for issue in error.value.issues)
+
+
 def test_cross_scene_group_alias_keeps_same_upstream_output(registry: CapabilityRegistrySnapshot) -> None:
     payload = copy.deepcopy(_json("scene_semantic_plan.payload.json"))
     payload["scenes"][7]["inputs"][0]["from_scene"] = "s006"

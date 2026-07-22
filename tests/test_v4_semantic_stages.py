@@ -95,6 +95,28 @@ def test_scope_stage_builds_validated_envelope_and_trace(tmp_path: Path) -> None
     assert provider.requests[0].input_payload.keys() == {"request_id", "frozen_narration", "enabled_categories"}
 
 
+def test_scope_stage_normalizes_single_category_marked_multi_category(tmp_path: Path) -> None:
+    invalid_scope = _json("video_scope.payload.json")
+    invalid_scope["categories"] = [invalid_scope["categories"][0]]
+    invalid_scope["categories"][0]["is_primary"] = False
+    provider = QueueProvider([invalid_scope])
+    gateway = AsyncModelGateway(_configuration(), {"test": provider})
+
+    envelope, _ = asyncio.run(
+        classify_video_scope(
+            gateway=gateway,
+            repo_root=REPO_ROOT,
+            run_id="run_1",
+            frozen_narration=FROZEN_NARRATION,
+            registry=_registry(),
+            trace_dir=tmp_path / "01_scope_classifier",
+        )
+    )
+
+    assert envelope.payload.scope_mode == "single_category"
+    assert envelope.payload.categories[0].is_primary is True
+
+
 def test_scene_stage_accepts_golden_plan(tmp_path: Path) -> None:
     provider = QueueProvider([_json("scene_semantic_plan.payload.json")])
     gateway = AsyncModelGateway(_configuration(), {"test": provider})
@@ -114,6 +136,8 @@ def test_scene_stage_accepts_golden_plan(tmp_path: Path) -> None:
     request = provider.requests[0].input_payload
     assert "assets" not in request
     assert "registry_snapshot" in request
+    assert request["material_availability"]["role_category_availability"] == []
+    assert "material_availability" in envelope.input_fingerprints
 
 
 def test_scene_stage_repairs_one_registry_field(tmp_path: Path) -> None:
@@ -142,7 +166,7 @@ def test_scene_stage_repairs_one_registry_field(tmp_path: Path) -> None:
 
 def test_scene_stage_rebuilds_nonlocal_contract_failure(tmp_path: Path) -> None:
     invalid = _json("scene_semantic_plan.payload.json")
-    invalid["scenes"][0]["text"] = invalid["scenes"][0]["text"].replace("柯幻熊猫", "其他网站")
+    invalid["scenes"][0]["slots"][0]["anchor_phrase"] = "not-in-frozen-text"
     provider = QueueProvider([invalid, _json("scene_semantic_plan.payload.json")])
     gateway = AsyncModelGateway(_configuration(), {"test": provider})
     trace_dir = tmp_path / "02_scene_semantics"
