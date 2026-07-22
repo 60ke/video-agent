@@ -12,15 +12,28 @@ import {
   useVideoConfig,
 } from "remotion";
 
+export type AgentTestWindow = {
+  window_id: string;
+  label: string;
+  layout: string;
+  motion: string;
+  start_frame: number;
+  end_frame: number;
+};
+
 export type AgentTestScene = {
   scene_id: string;
   cue_id: string;
+  role?: string;
   text: string;
   start_frame: number;
   end_frame: number;
   kind: "website_operation" | "result_detail" | "result_gallery" | "before_after" | "title_card";
+  blueprint?: string;
+  transition_in?: string;
   motion: string;
   sources: string[];
+  windows?: AgentTestWindow[];
 };
 
 export type AgentTestSubtitle = {
@@ -43,14 +56,66 @@ export type AgentTestProps = {
 
 const background = "linear-gradient(160deg, #0b1020 0%, #111a35 55%, #090d18 100%)";
 
-const BrowserScene: React.FC<{ scene: AgentTestScene }> = ({ scene }) => {
+const WindowLabel: React.FC<{window: AgentTestWindow}> = ({window}) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const enter = spring({ frame, fps, config: { damping: 18, stiffness: 140 } });
+  const {fps} = useVideoConfig();
+  const enter = spring({frame, fps, config: {damping: 18, stiffness: 150}});
+  const isCenter = window.layout.includes("center");
+  const isBottom = window.layout.includes("bottom");
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: isCenter ? "50%" : 78,
+        right: isCenter ? undefined : 78,
+        top: isBottom ? undefined : isCenter ? "46%" : 170,
+        bottom: isBottom ? 330 : undefined,
+        transform: isCenter
+          ? `translate(-50%, -50%) translateY(${interpolate(enter, [0, 1], [34, 0])}px) scale(${interpolate(enter, [0, 1], [0.92, 1])})`
+          : `translateY(${interpolate(enter, [0, 1], [28, 0])}px)`,
+        opacity: enter,
+        padding: "16px 26px",
+        borderRadius: 999,
+        color: "white",
+        background: "rgba(5,10,24,.82)",
+        border: "1px solid rgba(255,255,255,.24)",
+        boxShadow: "0 18px 50px rgba(0,0,0,.38)",
+        fontSize: isCenter ? 52 : 34,
+        lineHeight: 1.2,
+        fontWeight: 900,
+        textAlign: "center",
+        maxWidth: 880,
+      }}
+    >
+      {window.label}
+    </div>
+  );
+};
+
+const WindowLayer: React.FC<{scene: AgentTestScene}> = ({scene}) => (
+  <AbsoluteFill style={{pointerEvents: "none"}}>
+    {(scene.windows ?? [])
+      .filter((window) => window.label)
+      .map((window) => (
+        <Sequence
+          key={window.window_id}
+          from={Math.max(0, window.start_frame - scene.start_frame)}
+          durationInFrames={Math.max(1, window.end_frame - window.start_frame)}
+        >
+          <WindowLabel window={window} />
+        </Sequence>
+      ))}
+  </AbsoluteFill>
+);
+
+const BrowserScene: React.FC<{scene: AgentTestScene}> = ({scene}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const enter = spring({frame, fps, config: {damping: 18, stiffness: 140}});
   const scale = interpolate(enter, [0, 1], [0.94, 1]);
   const source = scene.sources[0];
   return (
-    <AbsoluteFill style={{ background, alignItems: "center", justifyContent: "center" }}>
+    <AbsoluteFill style={{background, alignItems: "center", justifyContent: "center"}}>
       <div
         style={{
           width: "92%",
@@ -67,39 +132,36 @@ const BrowserScene: React.FC<{ scene: AgentTestScene }> = ({ scene }) => {
           <OffthreadVideo
             src={staticFile(source)}
             muted
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+            style={{width: "100%", height: "100%", objectFit: "cover", objectPosition: "center"}}
           />
         ) : null}
       </div>
       <div
         style={{
           position: "absolute",
-          top: 170,
-          left: 90,
-          padding: "18px 28px",
-          borderRadius: 999,
-          color: "white",
-          background: "rgba(7,12,26,.78)",
-          border: "1px solid rgba(255,255,255,.2)",
-          fontSize: 34,
+          top: 92,
+          left: 80,
+          color: "rgba(255,255,255,.68)",
+          fontSize: 25,
           fontWeight: 800,
-          letterSpacing: 1,
+          letterSpacing: 1.5,
         }}
       >
-        Agent 正在操作真实网站
+        REAL PRODUCT FLOW · {scene.blueprint ?? "prompt-submit-result"}
       </div>
+      <WindowLayer scene={scene} />
     </AbsoluteFill>
   );
 };
 
-const SingleImageScene: React.FC<{ scene: AgentTestScene }> = ({ scene }) => {
+const SingleImageScene: React.FC<{scene: AgentTestScene}> = ({scene}) => {
   const frame = useCurrentFrame();
   const duration = Math.max(1, scene.end_frame - scene.start_frame);
-  const progress = interpolate(frame, [0, duration], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const progress = interpolate(frame, [0, duration], [0, 1], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
   const scale = 1.02 + progress * 0.08;
   const source = scene.sources[0];
   return (
-    <AbsoluteFill style={{ background, alignItems: "center", justifyContent: "center" }}>
+    <AbsoluteFill style={{background, alignItems: "center", justifyContent: "center"}}>
       <div
         style={{
           width: "88%",
@@ -111,26 +173,22 @@ const SingleImageScene: React.FC<{ scene: AgentTestScene }> = ({ scene }) => {
           background: "rgba(255,255,255,.06)",
         }}
       >
-        {source ? (
-          <Img
-            src={staticFile(source)}
-            style={{ width: "100%", height: "100%", objectFit: "contain", transform: `scale(${scale})` }}
-          />
-        ) : null}
+        {source ? <Img src={staticFile(source)} style={{width: "100%", height: "100%", objectFit: "contain", transform: `scale(${scale})`}} /> : null}
       </div>
+      <WindowLayer scene={scene} />
     </AbsoluteFill>
   );
 };
 
-const GalleryScene: React.FC<{ scene: AgentTestScene }> = ({ scene }) => {
+const GalleryScene: React.FC<{scene: AgentTestScene}> = ({scene}) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const {fps} = useVideoConfig();
   const sources = scene.sources.slice(0, 4);
   return (
-    <AbsoluteFill style={{ background, padding: "210px 70px 360px", boxSizing: "border-box" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28, width: "100%", height: "100%" }}>
+    <AbsoluteFill style={{background, padding: "210px 70px 360px", boxSizing: "border-box"}}>
+      <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28, width: "100%", height: "100%"}}>
         {sources.map((source, index) => {
-          const enter = spring({ frame: frame - index * 4, fps, config: { damping: 18, stiffness: 150 } });
+          const enter = spring({frame: frame - index * 4, fps, config: {damping: 18, stiffness: 150}});
           return (
             <div
               key={source}
@@ -144,62 +202,68 @@ const GalleryScene: React.FC<{ scene: AgentTestScene }> = ({ scene }) => {
                 opacity: enter,
               }}
             >
-              <Img src={staticFile(source)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <Img src={staticFile(source)} style={{width: "100%", height: "100%", objectFit: "cover"}} />
             </div>
           );
         })}
       </div>
+      <WindowLayer scene={scene} />
     </AbsoluteFill>
   );
 };
 
-const BeforeAfterScene: React.FC<{ scene: AgentTestScene }> = ({ scene }) => {
+const BeforeAfterScene: React.FC<{scene: AgentTestScene}> = ({scene}) => {
   const frame = useCurrentFrame();
   const duration = Math.max(1, scene.end_frame - scene.start_frame);
-  const divider = interpolate(frame, [0, duration], [36, 64], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const divider = interpolate(frame, [0, duration], [36, 64], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
   const [before, after] = scene.sources;
   return (
-    <AbsoluteFill style={{ background, alignItems: "center", justifyContent: "center" }}>
-      <div style={{ position: "relative", width: "88%", height: "68%", overflow: "hidden", borderRadius: 36 }}>
-        {after ? <Img src={staticFile(after)} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : null}
+    <AbsoluteFill style={{background, alignItems: "center", justifyContent: "center"}}>
+      <div style={{position: "relative", width: "88%", height: "68%", overflow: "hidden", borderRadius: 36}}>
+        {after ? <Img src={staticFile(after)} style={{width: "100%", height: "100%", objectFit: "cover"}} /> : null}
         {before ? (
-          <div style={{ position: "absolute", inset: 0, width: `${divider}%`, overflow: "hidden", borderRight: "5px solid white" }}>
-            <Img src={staticFile(before)} style={{ width: `${100 / (divider / 100)}%`, height: "100%", objectFit: "cover" }} />
+          <div style={{position: "absolute", inset: 0, width: `${divider}%`, overflow: "hidden", borderRight: "5px solid white"}}>
+            <Img src={staticFile(before)} style={{width: `${100 / (divider / 100)}%`, height: "100%", objectFit: "cover"}} />
           </div>
         ) : null}
-        <div style={{ position: "absolute", left: 24, top: 24, color: "white", fontSize: 34, fontWeight: 900 }}>改前</div>
-        <div style={{ position: "absolute", right: 24, top: 24, color: "white", fontSize: 34, fontWeight: 900 }}>改后</div>
+        <div style={{position: "absolute", left: 24, top: 24, color: "white", fontSize: 34, fontWeight: 900}}>改前</div>
+        <div style={{position: "absolute", right: 24, top: 24, color: "white", fontSize: 34, fontWeight: 900}}>改后</div>
       </div>
+      <WindowLayer scene={scene} />
     </AbsoluteFill>
   );
 };
 
-const TitleScene: React.FC<{ scene: AgentTestScene; title: string }> = ({ scene, title }) => {
+const TitleScene: React.FC<{scene: AgentTestScene; title: string}> = ({scene, title}) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const enter = spring({ frame, fps, config: { damping: 16, stiffness: 135 } });
+  const {fps} = useVideoConfig();
+  const enter = spring({frame, fps, config: {damping: 16, stiffness: 135}});
+  const labels = (scene.windows ?? []).filter((window) => window.label);
   return (
-    <AbsoluteFill style={{ background, alignItems: "center", justifyContent: "center", padding: 100, boxSizing: "border-box" }}>
-      <div style={{ color: "#7fd9ff", fontSize: 32, fontWeight: 800, marginBottom: 30, opacity: enter }}>{title}</div>
-      <div
-        style={{
-          color: "white",
-          fontSize: 72,
-          lineHeight: 1.22,
-          fontWeight: 950,
-          textAlign: "center",
-          transform: `scale(${interpolate(enter, [0, 1], [0.82, 1])})`,
-          opacity: enter,
-          textShadow: "0 16px 48px rgba(0,0,0,.55)",
-        }}
-      >
-        {scene.text}
-      </div>
+    <AbsoluteFill style={{background, alignItems: "center", justifyContent: "center", padding: 100, boxSizing: "border-box"}}>
+      <div style={{color: "#7fd9ff", fontSize: 32, fontWeight: 800, marginBottom: 30, opacity: enter}}>{title}</div>
+      {labels.length === 0 ? (
+        <div
+          style={{
+            color: "white",
+            fontSize: 72,
+            lineHeight: 1.22,
+            fontWeight: 950,
+            textAlign: "center",
+            transform: `scale(${interpolate(enter, [0, 1], [0.82, 1])})`,
+            opacity: enter,
+            textShadow: "0 16px 48px rgba(0,0,0,.55)",
+          }}
+        >
+          {scene.text}
+        </div>
+      ) : null}
+      <WindowLayer scene={scene} />
     </AbsoluteFill>
   );
 };
 
-const SceneView: React.FC<{ scene: AgentTestScene; title: string }> = ({ scene, title }) => {
+const SceneView: React.FC<{scene: AgentTestScene; title: string}> = ({scene, title}) => {
   if (scene.kind === "website_operation") return <BrowserScene scene={scene} />;
   if (scene.kind === "result_gallery") return <GalleryScene scene={scene} />;
   if (scene.kind === "before_after") return <BeforeAfterScene scene={scene} />;
@@ -207,11 +271,11 @@ const SceneView: React.FC<{ scene: AgentTestScene; title: string }> = ({ scene, 
   return <TitleScene scene={scene} title={title} />;
 };
 
-const SubtitleLayer: React.FC<{ subtitles: AgentTestSubtitle[] }> = ({ subtitles }) => (
-  <AbsoluteFill style={{ pointerEvents: "none" }}>
+const SubtitleLayer: React.FC<{subtitles: AgentTestSubtitle[]}> = ({subtitles}) => (
+  <AbsoluteFill style={{pointerEvents: "none"}}>
     {subtitles.map((cue) => (
       <Sequence key={cue.cue_id} from={cue.start_frame} durationInFrames={Math.max(1, cue.end_frame - cue.start_frame)}>
-        <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 235, boxSizing: "border-box" }}>
+        <AbsoluteFill style={{justifyContent: "flex-end", alignItems: "center", paddingBottom: 235, boxSizing: "border-box"}}>
           <div
             style={{
               maxWidth: 900,
@@ -236,8 +300,8 @@ const SubtitleLayer: React.FC<{ subtitles: AgentTestSubtitle[] }> = ({ subtitles
 );
 
 export const AgentTest: React.FC<AgentTestProps> = (props) => (
-  <AbsoluteFill style={{ background: "#090d18", fontFamily: '"Noto Sans CJK SC", "Microsoft YaHei", sans-serif' }}>
-    <Audio src={staticFile(props.voice_path)} />
+  <AbsoluteFill style={{background: "#090d18", fontFamily: '"Noto Sans CJK SC", "Microsoft YaHei", sans-serif'}}>
+    {props.voice_path ? <Audio src={staticFile(props.voice_path)} /> : null}
     {props.scenes.map((scene) => (
       <Sequence key={scene.scene_id} from={scene.start_frame} durationInFrames={Math.max(1, scene.end_frame - scene.start_frame)}>
         <SceneView scene={scene} title={props.title} />
