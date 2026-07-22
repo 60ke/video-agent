@@ -54,6 +54,8 @@ def test_scene_prompt_injects_registry_and_decision_assets() -> None:
     assert "`group_member` 不能作为" in prompt.system_prompt
     assert "不确定时 `claims: []`" in prompt.system_prompt
     assert "不得使用 `no_asset_transition`" in prompt.system_prompt
+    assert "Authoritative Role Resolution Rules" in prompt.system_prompt
+    assert "Registered tool list" in prompt.system_prompt
 
 
 def test_prompt_fingerprint_changes_with_registry() -> None:

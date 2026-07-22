@@ -68,6 +68,7 @@ def load_scene_prompt(repo_root: Path, registry_payload: dict[str, Any]) -> Prom
     root = _prompt_root(repo_root, "scene_semantics")
     system = load_prompt(root / "system.v1.md")
     decision_table = load_prompt(root / "decision_table.v1.md")
+    role_rules = load_prompt(root / "role_resolution_rules.v1.md")
     examples = load_json(root / "examples.v1.json")
     rendered = (
         system.text.replace("{{DECISION_TABLE}}", decision_table.text.strip())
@@ -75,6 +76,7 @@ def load_scene_prompt(repo_root: Path, registry_payload: dict[str, Any]) -> Prom
         .replace("{{POSITIVE_EXAMPLES}}", json.dumps(examples.get("positive", []), ensure_ascii=False, indent=2))
         .replace("{{NEGATIVE_EXAMPLES}}", json.dumps(examples.get("negative", []), ensure_ascii=False, indent=2))
     )
+    rendered += "\n\n" + role_rules.text.strip() + "\n"
     return PromptBundle(
         capability="scene_semantics",
         version="scene_semantics.v1",
@@ -84,6 +86,7 @@ def load_scene_prompt(repo_root: Path, registry_payload: dict[str, Any]) -> Prom
         component_fingerprints={
             "system": system.sha256,
             "decision_table": decision_table.sha256,
+            "role_resolution_rules": role_rules.sha256,
             "examples": sha256_json(examples),
             "registry": sha256_json(registry_payload),
         },
