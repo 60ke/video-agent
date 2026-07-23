@@ -6,6 +6,7 @@ import hashlib
 import json
 import re
 import shutil
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -131,6 +132,34 @@ def _copy_audio(source: Path, destination: Path) -> None:
         shutil.copy2(source, destination)
 
 
+def _motion_context(clip: dict[str, Any]) -> str:
+    slot_id = str(clip.get("slot_id", ""))
+    binding_names = set(clip.get("asset_bindings", {}))
+    if slot_id == "home":
+        return "site_home"
+    if slot_id.startswith("g"):
+        return "gallery"
+    if slot_id == "param":
+        return "parameter"
+    if slot_id == "result":
+        return "result"
+    if {"ref", "res"} <= binding_names:
+        return "reference_result"
+    if {"result_image", "flat_plan"} <= binding_names:
+        return "result_flat_plan"
+    return "other"
+
+
+def _asset_orientation(asset: dict[str, Any]) -> str:
+    width = int(asset["width"])
+    height = int(asset["height"])
+    if width > height:
+        return "landscape"
+    if height > width:
+        return "portrait"
+    return "square"
+
+
 def compile_jianying_blueprint(
     resolved_timeline_path: str | Path,
     output_dir: str | Path,
@@ -146,6 +175,13 @@ def compile_jianying_blueprint(
         effect["effect_instance_id"]: effect for effect in timeline["effect_instances"]
     }
     visual_clips: list[BlueprintVisualClip] = []
+    scene_clip_counts: Counter[str] = Counter()
+    for track in timeline["visual_tracks"]:
+        if track["track_kind"] != "base":
+            continue
+        for clip in track["clips"]:
+            scene_clip_counts[clip["scene_id"]] += len(clip["ordered_items"]) or 1
+    scene_clip_indexes: defaultdict[str, int] = defaultdict(int)
 
     for track in timeline["visual_tracks"]:
         if track["track_kind"] != "base":
@@ -177,15 +213,22 @@ def compile_jianying_blueprint(
                 )
                 start_frame = int(item["start_frame"])
                 end_frame = int(item["end_frame"])
+                scene_id = clip["scene_id"]
+                scene_clip_index = scene_clip_indexes[scene_id]
+                scene_clip_indexes[scene_id] += 1
                 visual_clips.append(
                     BlueprintVisualClip(
                         clip_id=f"{clip['clip_id']}#{index}",
-                        scene_id=clip["scene_id"],
+                        scene_id=scene_id,
                         source_asset_ref=asset_ref,
                         media_path=destination.relative_to(output_root).as_posix(),
                         start_frame=start_frame,
                         end_frame=end_frame,
                         effect_id=effect["effect_id"],
+                        motion_context=_motion_context(clip),
+                        asset_orientation=_asset_orientation(asset),
+                        scene_clip_index=scene_clip_index,
+                        scene_clip_count=scene_clip_counts[scene_id],
                         keyframes=_effect_keyframes(
                             effect,
                             clip_start=start_frame,

@@ -33,6 +33,18 @@ class BlueprintVisualClip(BlueprintModel):
     start_frame: int = Field(ge=0)
     end_frame: int = Field(gt=0)
     effect_id: str = Field(min_length=1)
+    motion_context: Literal[
+        "site_home",
+        "gallery",
+        "parameter",
+        "result",
+        "reference_result",
+        "result_flat_plan",
+        "other",
+    ] = "other"
+    asset_orientation: Literal["landscape", "portrait", "square"] = "square"
+    scene_clip_index: int = Field(default=0, ge=0)
+    scene_clip_count: int = Field(default=1, ge=1)
     keyframes: list[BlueprintKeyframe] = Field(default_factory=list)
 
     @model_validator(mode="after")
@@ -42,6 +54,8 @@ class BlueprintVisualClip(BlueprintModel):
         duration = self.end_frame - self.start_frame
         if any(keyframe.frame_offset >= duration for keyframe in self.keyframes):
             raise ValueError("visual keyframe must fall inside its clip")
+        if self.scene_clip_index >= self.scene_clip_count:
+            raise ValueError("scene_clip_index must be smaller than scene_clip_count")
         return self
 
 

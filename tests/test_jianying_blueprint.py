@@ -69,19 +69,22 @@ def test_single_frame_clip_has_no_generated_keyframes() -> None:
 def test_native_motion_mapping_uses_jianying_assets() -> None:
     first = SimpleNamespace(
         scene_id="s001",
-        effect_id="detail_push_in",
+        motion_context="site_home",
+        asset_orientation="landscape",
         start_frame=0,
         end_frame=45,
     )
     gallery_a = SimpleNamespace(
         scene_id="s002",
-        effect_id="card_stack",
+        motion_context="gallery",
+        asset_orientation="landscape",
         start_frame=45,
         end_frame=60,
     )
     gallery_b = SimpleNamespace(
         scene_id="s002",
-        effect_id="card_stack",
+        motion_context="gallery",
+        asset_orientation="portrait",
         start_frame=60,
         end_frame=75,
     )
@@ -101,3 +104,25 @@ def test_native_motion_mapping_uses_jianying_assets() -> None:
         )
         == _frame_to_us(7, 30)
     )
+
+
+def test_native_motion_selection_ignores_legacy_effect_id() -> None:
+    landscape_result = SimpleNamespace(
+        motion_context="result",
+        asset_orientation="landscape",
+        effect_id="legacy_effect_that_must_not_matter",
+    )
+    portrait_result = SimpleNamespace(
+        motion_context="result",
+        asset_orientation="portrait",
+        effect_id="another_legacy_effect",
+    )
+
+    assert _native_clip_animation(
+        landscape_result,
+        is_first_clip=False,
+    ) == ("GroupAnimationType", "左拉镜")
+    assert _native_clip_animation(
+        portrait_result,
+        is_first_clip=False,
+    ) == ("IntroType", "轻微放大")

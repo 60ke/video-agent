@@ -25,6 +25,12 @@ C:/Users/CNGG/AppData/Local/JianyingPro/User Data/Projects/com.lveditor.draft/Vi
 C:/Users/CNGG/AppData/Local/JianyingPro/User Data/Projects/com.lveditor.draft/VideoAgent_Test5_JianyingNative_20260723
 ```
 
+场景语义驱动的剪映原生动效版：
+
+```text
+C:/Users/CNGG/AppData/Local/JianyingPro/User Data/Projects/com.lveditor.draft/VideoAgent_Test5_SemanticNative_20260723
+```
+
 原生动效版蓝图与清单：
 
 ```text
@@ -56,6 +62,10 @@ cases/probe_anchor_wenan_test5_20260722/runs/20260722_164607_3adafc/jianying_nat
 - Gallery 组内统一使用 `左移`
 - 前后图关系使用 `前后对比 II`
 - 普通场景边界使用 `叠化`
+
+语义驱动版本不读取旧 Remotion `effect_id` 决定剪映效果。选择依据为首页、Gallery、
+参数页、单结果、参考图到结果图、结果图到平面图等场景语义，以及素材横竖方向。
+旧 `effect_id` 只为兼容关键帧版蓝图保留，不参与原生剪映动效决策。
 
 字幕使用短 `渐显` 入场，并保留原词级 Cue 区间。所有配音、字幕、画面片段
 和 SFX 的开始位置继续来自同一份 `CompiledVideoTimeline`，Adapter 不重新估时。

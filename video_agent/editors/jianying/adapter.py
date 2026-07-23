@@ -38,23 +38,32 @@ def _native_clip_animation(
     *,
     is_first_clip: bool,
 ) -> tuple[str, str] | None:
-    """Return the native Jianying animation enum and member name."""
+    """Select a Jianying animation from scene semantics, not legacy effect IDs."""
     if is_first_clip:
         return ("IntroType", "翻入")
-    return {
-        "fade_in": ("IntroType", "渐显"),
-        "detail_push_in": ("GroupAnimationType", "左拉镜"),
-        "full_bleed_to_safe_card": ("IntroType", "缩小"),
-    }.get(clip.effect_id)
+    if clip.motion_context == "parameter":
+        return ("IntroType", "渐显")
+    if clip.motion_context == "result":
+        if clip.asset_orientation == "landscape":
+            return ("GroupAnimationType", "左拉镜")
+        return ("IntroType", "轻微放大")
+    if clip.motion_context == "site_home":
+        return ("IntroType", "缩小")
+    return None
 
 
 def _native_transition_name(previous_clip: Any, current_clip: Any) -> str:
-    """Pick one restrained native transition for the boundary."""
+    """Pick a native transition from semantic grouping and causal relations."""
     if previous_clip.scene_id == current_clip.scene_id:
-        if previous_clip.effect_id == "card_stack":
+        if previous_clip.motion_context == "gallery":
             return "左移"
-        if previous_clip.effect_id == "before_after":
+        if previous_clip.motion_context in {
+            "reference_result",
+            "result_flat_plan",
+        }:
             return "前后对比_II"
+    if current_clip.motion_context == "site_home":
+        return "推近"
     return "叠化"
 
 
