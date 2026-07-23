@@ -10,6 +10,12 @@ from pathlib import Path
 from typing import Any, Literal
 
 from .contracts import BlueprintKeyframe, JianyingEditBlueprint
+from .native_catalog import (
+    NativeEffectCandidate,
+    NativeEffectCatalog,
+    clip_motion_query,
+    transition_motion_query,
+)
 
 _EASING = {
     "linear": {"curve_type": "Line"},
@@ -33,40 +39,6 @@ _EASING = {
 MotionBackend = Literal["keyframes", "jianying_native"]
 
 
-def _native_clip_animation(
-    clip: Any,
-    *,
-    is_first_clip: bool,
-) -> tuple[str, str] | None:
-    """Select a Jianying animation from scene semantics, not legacy effect IDs."""
-    if is_first_clip:
-        return ("IntroType", "翻入")
-    if clip.motion_context == "parameter":
-        return ("IntroType", "渐显")
-    if clip.motion_context == "result":
-        if clip.asset_orientation == "landscape":
-            return ("GroupAnimationType", "左拉镜")
-        return ("IntroType", "轻微放大")
-    if clip.motion_context == "site_home":
-        return ("IntroType", "缩小")
-    return None
-
-
-def _native_transition_name(previous_clip: Any, current_clip: Any) -> str:
-    """Pick a native transition from semantic grouping and causal relations."""
-    if previous_clip.scene_id == current_clip.scene_id:
-        if previous_clip.motion_context == "gallery":
-            return "左移"
-        if previous_clip.motion_context in {
-            "reference_result",
-            "result_flat_plan",
-        }:
-            return "前后对比_II"
-    if current_clip.motion_context == "site_home":
-        return "推近"
-    return "叠化"
-
-
 def _bounded_native_duration_us(
     previous_clip: Any,
     current_clip: Any,
@@ -82,6 +54,18 @@ def _bounded_native_duration_us(
         min(preferred_frames, previous_frames // 2, current_frames // 2),
     )
     return _frame_to_us(duration_frames, fps)
+
+
+def _bounded_catalog_duration_us(
+    candidate: NativeEffectCandidate,
+    *,
+    available_us: int,
+    minimum_us: int = 100_000,
+) -> int:
+    return min(
+        candidate.default_duration_us,
+        max(minimum_us, available_us),
+    )
 
 
 def _frame_to_us(frame: int, fps: int) -> int:
@@ -154,6 +138,9 @@ class JianyingDraftAdapter:
             drafts_root=str(self.drafts_root) if self.drafts_root else None,
             overwrite=True,
         )
+        native_catalog = NativeEffectCatalog(self.draft)
+        native_selections: list[dict[str, Any]] = []
+        native_clip_animation_count = 0
 
         visual_segments: list[tuple[Any, Any]] = []
         for clip_index, clip in enumerate(blueprint.visual_clips):
@@ -175,46 +162,71 @@ class JianyingDraftAdapter:
                         **_EASING[keyframe.easing],
                     )
             else:
-                animation = _native_clip_animation(
+                motion = clip_motion_query(
                     clip,
                     is_first_clip=clip_index == 0,
                 )
-                if animation:
-                    enum_name, member_name = animation
-                    animation_type = getattr(getattr(self.draft, enum_name), member_name)
+                if motion:
+                    intent, query = motion
+                    candidate = native_catalog.resolve(query)
                     clip_duration = _duration_us(
                         clip.start_frame,
                         clip.end_frame,
                         fps,
                     )
-                    duration = min(500_000, max(100_000, clip_duration // 3))
-                    segment.add_animation(animation_type, duration=duration)
+                    duration = _bounded_catalog_duration_us(
+                        candidate,
+                        available_us=max(100_000, clip_duration - _frame_to_us(1, fps)),
+                    )
+                    segment.add_animation(candidate.enum_member, duration=duration)
+                    native_clip_animation_count += 1
+                    native_selections.append(
+                        candidate.manifest_record(
+                            target_id=clip.clip_id,
+                            intent=intent,
+                            applied_duration_us=duration,
+                        )
+                    )
             visual_segments.append((clip, segment))
 
         native_transition_count = 0
         if motion_backend == "jianying_native":
+            transition_groups: dict[str, NativeEffectCandidate] = {}
             for index in range(1, len(visual_segments)):
                 previous_clip, previous_segment = visual_segments[index - 1]
                 current_clip, _ = visual_segments[index]
-                transition_name = _native_transition_name(
+                intent, group_key, query = transition_motion_query(
                     previous_clip,
                     current_clip,
                 )
-                transition_type = project._resolve_enum(
-                    self.draft.TransitionType,
-                    transition_name,
-                )
-                if transition_type is None:
-                    raise RuntimeError(
-                        f"native Jianying transition unavailable: {transition_name}"
-                    )
-                previous_segment.add_transition(
-                    transition_type,
-                    duration=_bounded_native_duration_us(
+                candidate = transition_groups.get(group_key)
+                if candidate is None:
+                    candidate = native_catalog.resolve(query)
+                    transition_groups[group_key] = candidate
+                duration = min(
+                    candidate.default_duration_us,
+                    _bounded_native_duration_us(
                         previous_clip,
                         current_clip,
                         fps=fps,
+                        preferred_frames=max(
+                            1,
+                            round(candidate.default_duration_us * fps / 1_000_000),
+                        ),
                     ),
+                )
+                previous_segment.add_transition(
+                    candidate.enum_member,
+                    duration=duration,
+                )
+                native_selections.append(
+                    candidate.manifest_record(
+                        target_id=(
+                            f"{previous_clip.clip_id}->{current_clip.clip_id}"
+                        ),
+                        intent=intent,
+                        applied_duration_us=duration,
+                    )
                 )
                 native_transition_count += 1
 
@@ -312,15 +324,8 @@ class JianyingDraftAdapter:
             "timeline_sha256": blueprint.timeline_sha256,
             "motion_backend": motion_backend,
             "native_transition_count": native_transition_count,
-            "native_animation_count": (
-                sum(
-                    1
-                    for index, clip in enumerate(blueprint.visual_clips)
-                    if _native_clip_animation(clip, is_first_clip=index == 0)
-                )
-                if motion_backend == "jianying_native"
-                else 0
-            ),
+            "native_animation_count": native_clip_animation_count,
+            "native_effect_selections": native_selections,
         }
         return manifest
 

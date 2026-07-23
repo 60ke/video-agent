@@ -6,10 +6,14 @@ from video_agent.editors.jianying.adapter import (
     _bounded_native_duration_us,
     _duration_us,
     _frame_to_us,
-    _native_clip_animation,
-    _native_transition_name,
 )
 from video_agent.editors.jianying.compiler import _effect_keyframes
+from video_agent.editors.jianying.native_catalog import (
+    NativeEffectCatalog,
+    NativeEffectQuery,
+    clip_motion_query,
+    transition_motion_query,
+)
 
 
 def test_frame_conversion_preserves_30fps_boundaries() -> None:
@@ -66,7 +70,7 @@ def test_single_frame_clip_has_no_generated_keyframes() -> None:
     )
 
 
-def test_native_motion_mapping_uses_jianying_assets() -> None:
+def test_native_motion_intents_use_catalog_queries() -> None:
     first = SimpleNamespace(
         scene_id="s001",
         motion_context="site_home",
@@ -89,12 +93,23 @@ def test_native_motion_mapping_uses_jianying_assets() -> None:
         end_frame=75,
     )
 
-    assert _native_clip_animation(first, is_first_clip=True) == (
-        "IntroType",
-        "翻入",
+    intro_intent, intro_query = clip_motion_query(first, is_first_clip=True)
+    assert intro_intent == "website_book_open"
+    assert intro_query.enum_name == "IntroType"
+    assert intro_query.keywords[0] == "翻书"
+
+    gallery_intent, gallery_group, gallery_query = transition_motion_query(
+        gallery_a,
+        gallery_b,
     )
-    assert _native_transition_name(gallery_a, gallery_b) == "左移"
-    assert _native_transition_name(first, gallery_a) == "叠化"
+    assert gallery_intent == "gallery_page_turn"
+    assert gallery_group == "gallery:s002"
+    assert gallery_query.enum_name == "TransitionType"
+    assert gallery_query.keywords[0] == "翻页"
+
+    ordinary_intent, _, ordinary_query = transition_motion_query(first, gallery_a)
+    assert ordinary_intent == "scene_soft_transition"
+    assert ordinary_query.keywords[0] == "叠化"
     assert (
         _bounded_native_duration_us(
             gallery_a,
@@ -118,11 +133,47 @@ def test_native_motion_selection_ignores_legacy_effect_id() -> None:
         effect_id="another_legacy_effect",
     )
 
-    assert _native_clip_animation(
+    landscape_intent, landscape_query = clip_motion_query(
         landscape_result,
         is_first_clip=False,
-    ) == ("GroupAnimationType", "左拉镜")
-    assert _native_clip_animation(
+    )
+    portrait_intent, portrait_query = clip_motion_query(
         portrait_result,
         is_first_clip=False,
-    ) == ("IntroType", "轻微放大")
+    )
+
+    assert landscape_intent == "landscape_result_focus"
+    assert landscape_query.enum_name == "GroupAnimationType"
+    assert portrait_intent == "portrait_result_focus"
+    assert portrait_query.enum_name == "IntroType"
+
+
+def test_catalog_prefers_free_candidate_when_requested() -> None:
+    class Metadata:
+        def __init__(self, title: str, is_vip: bool, effect_id: str) -> None:
+            self.title = title
+            self.is_vip = is_vip
+            self.effect_id = effect_id
+            self.duration = 500_000
+
+    class Member:
+        def __init__(self, name: str, metadata: Metadata) -> None:
+            self.name = name
+            self.value = metadata
+
+    fake_draft = SimpleNamespace(
+        IntroType=[
+            Member("展开", Metadata("展开", True, "vip")),
+            Member("渐显", Metadata("渐显", False, "free")),
+        ]
+    )
+    candidate = NativeEffectCatalog(fake_draft).resolve(
+        NativeEffectQuery(
+            "IntroType",
+            ("展开", "渐显"),
+            prefer_free=True,
+        )
+    )
+
+    assert candidate.member_name == "渐显"
+    assert candidate.effect_id == "free"
