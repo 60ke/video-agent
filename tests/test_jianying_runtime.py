@@ -47,3 +47,4 @@ def test_probe_without_import_is_stable(tmp_path: Path) -> None:
     assert first.version == "1.5.0"
     assert first.capability_sha256 == second.capability_sha256
     assert first.draft_creation is False
+    assert first.auto_export_supported is False

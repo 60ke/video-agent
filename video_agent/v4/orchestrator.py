@@ -28,6 +28,7 @@ from video_agent.speech.v4.voice_resolve import resolve_fixed_voice_profile
 from video_agent.v4.stage4 import V4Stage4Result, V4Stage4Runner, open_v4_repository
 from video_agent.v4.stage5 import V4Stage5Result, V4Stage5Runner
 from video_agent.v4.stage6 import V4Stage6Result, V4Stage6Runner
+from video_agent.v4.stage6 import EditorBackend
 
 
 logger = get_logger()
@@ -104,6 +105,9 @@ class V4Orchestrator:
         object_root: Path | None = None,
         render: bool = False,
         skip_ffmpeg: bool = False,
+        editor_backend: EditorBackend = "remotion",
+        jianying_skill_root: Path | None = None,
+        jianying_drafts_root: Path | None = None,
     ) -> V4Stage6Result:
         return V4Stage6Runner(self.context).run(
             phase=phase,
@@ -111,6 +115,9 @@ class V4Orchestrator:
             object_root=object_root,
             render=render,
             skip_ffmpeg=skip_ffmpeg,
+            editor_backend=editor_backend,
+            jianying_skill_root=jianying_skill_root,
+            jianying_drafts_root=jianying_drafts_root,
         )
 
     def _input_mode(self) -> str:

@@ -25,6 +25,7 @@ from video_agent.io import load_json, load_model, sha256_file, sha256_json, utc_
 from video_agent.progress import get_logger
 from video_agent.runtime import RunContext
 from video_agent.v4.orchestrator import V4Orchestrator
+from video_agent.v4.stage6 import EditorBackend
 
 
 logger = get_logger()
@@ -53,6 +54,8 @@ class V4ProductionResult:
     run_manifest: Path
     final_video: Path | None
     final_cover: Path | None
+    editor_manifest: Path | None = None
+    editor_draft: Path | None = None
 
 
 def _artifact(run_dir: Path, rel: str) -> ProductionArtifact | None:
@@ -99,6 +102,9 @@ class V4ProductionOrchestrator:
         sfx_profile_id: str = "normal",
         skip_ffmpeg: bool = False,
         until: str | None = None,
+        editor_backend: EditorBackend = "remotion",
+        jianying_skill_root: Path | None = None,
+        jianying_drafts_root: Path | None = None,
     ) -> V4ProductionResult:
         started = time.perf_counter()
         seed = run_seed or self.context.case.case_id
@@ -138,6 +144,10 @@ class V4ProductionOrchestrator:
                     for a in (
                         _artifact(self.context.run_dir, "final/video.mp4"),
                         _artifact(self.context.run_dir, "final/cover.png"),
+                        _artifact(
+                            self.context.run_dir,
+                            "render/jianying/jianying_project_manifest.json",
+                        ),
                     )
                     if a is not None
                 ],
@@ -155,6 +165,16 @@ class V4ProductionOrchestrator:
             write_json_atomic(manifest_path, manifest)
             video = self.context.run_dir / "final" / "video.mp4"
             cover = self.context.run_dir / "final" / "cover.png"
+            editor_manifest = (
+                self.context.run_dir
+                / "render"
+                / "jianying"
+                / "jianying_project_manifest.json"
+            )
+            editor_draft: Path | None = None
+            if editor_manifest.is_file():
+                draft_value = load_json(editor_manifest).get("draft_path")
+                editor_draft = Path(draft_value) if draft_value else None
             write_json_atomic(
                 self.context.case_dir / "latest_run.json",
                 {
@@ -167,6 +187,13 @@ class V4ProductionOrchestrator:
                     "stopped_early": stopped,
                     "final_video": "final/video.mp4" if video.is_file() else None,
                     "final_cover": "final/cover.png" if cover.is_file() else None,
+                    "editor_backend": editor_backend,
+                    "editor_manifest": (
+                        "render/jianying/jianying_project_manifest.json"
+                        if editor_manifest.is_file()
+                        else None
+                    ),
+                    "editor_draft": editor_draft.as_posix() if editor_draft else None,
                 },
             )
             logger.info(
@@ -181,6 +208,8 @@ class V4ProductionOrchestrator:
                 run_manifest=manifest_path,
                 final_video=video if video.is_file() else None,
                 final_cover=cover if cover.is_file() else None,
+                editor_manifest=editor_manifest if editor_manifest.is_file() else None,
+                editor_draft=editor_draft,
             )
 
         def _stop_after(checkpoint: str) -> bool:
@@ -278,6 +307,9 @@ class V4ProductionOrchestrator:
             object_root=assets_root,
             render=do_render,
             skip_ffmpeg=skip_ffmpeg,
+            editor_backend=editor_backend,
+            jianying_skill_root=jianying_skill_root,
+            jianying_drafts_root=jianying_drafts_root,
         )
         nodes["compile"] = ProductionNodeManifest(
             node_id="compile",
@@ -292,20 +324,45 @@ class V4ProductionOrchestrator:
             return _write_result(status="completed", stopped=True)
 
         render_outputs = []
-        for rel in ("render/silent.mp4", "render/final.mp4", "render/remotion.timeline.json"):
+        for rel in (
+            "render/silent.mp4",
+            "render/final.mp4",
+            "render/remotion.timeline.json",
+            "render/jianying/edit_blueprint.json",
+            "render/jianying/jianying_project_manifest.json",
+        ):
             art = _artifact(self.context.run_dir, rel)
             if art:
                 render_outputs.append(art)
         nodes["render"] = ProductionNodeManifest(
             node_id="render",
-            status="completed" if (not do_render or stage6.final_video) else "failed",
+            status=(
+                "completed"
+                if (
+                    not do_render
+                    or stage6.final_video
+                    or (editor_backend == "jianying" and stage6.editor_manifest)
+                )
+                else "failed"
+            ),
             dependency_node_ids=list(PRODUCTION_DAG_DEPENDENCIES["render"]),
             outputs=render_outputs,
             elapsed_ms=0,
-            error_code=None if (not do_render or stage6.final_video) else "render_failed",
+            error_code=(
+                None
+                if (
+                    not do_render
+                    or stage6.final_video
+                    or (editor_backend == "jianying" and stage6.editor_manifest)
+                )
+                else "render_failed"
+            ),
         )
         if nodes["render"].status == "failed":
             raise RuntimeError("render_failed: missing render/final.mp4")
+        if editor_backend == "jianying" and do_render:
+            _skip_remaining("render")
+            return _write_result(status="completed", stopped=True)
 
         nodes["cover"] = self._run_cover_node()
         nodes["delivery_qa"] = self._run_delivery_qa()

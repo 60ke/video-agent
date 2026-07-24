@@ -46,8 +46,9 @@ class JianyingSkillCapabilities:
     native_clip_animations: bool
     rich_subtitles: bool
     audio_tracks: bool
-    screen_recording_tools: bool
+    screen_recording_tool_present: bool
     auto_export_tool_present: bool
+    auto_export_supported: bool
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -58,8 +59,9 @@ class JianyingSkillCapabilities:
             "native_clip_animations": self.native_clip_animations,
             "rich_subtitles": self.rich_subtitles,
             "audio_tracks": self.audio_tracks,
-            "screen_recording_tools": self.screen_recording_tools,
+            "screen_recording_tool_present": self.screen_recording_tool_present,
             "auto_export_tool_present": self.auto_export_tool_present,
+            "auto_export_supported": self.auto_export_supported,
         }
 
 
@@ -131,6 +133,7 @@ class JianyingSkillRuntime:
                     )
                 return _LOADED_MODULES
 
+            self._prepare_host_console()
             scripts_value = str(self.scripts_root)
             if scripts_value not in sys.path:
                 sys.path.insert(0, scripts_value)
@@ -139,6 +142,15 @@ class JianyingSkillRuntime:
             _LOADED_ROOT = self.root
             _LOADED_MODULES = (wrapper, draft)
             return _LOADED_MODULES
+
+    @staticmethod
+    def _prepare_host_console() -> None:
+        if os.name != "nt":
+            return
+        for stream in (sys.stdout, sys.stderr):
+            reconfigure = getattr(stream, "reconfigure", None)
+            if callable(reconfigure):
+                reconfigure(encoding="utf-8", errors="replace")
 
     def probe(self, *, import_modules: bool = True) -> JianyingSkillCapabilities:
         wrapper: Any | None = None
@@ -149,10 +161,13 @@ class JianyingSkillRuntime:
         jy_project = getattr(wrapper, "JyProject", None) if wrapper else None
         capability_material = {
             "version": self.version,
-            "jy_wrapper_sha256": self._sha256(self.scripts_root / "jy_wrapper.py"),
-            "pyjianyingdraft_sha256": self._sha256(
-                self.scripts_root / "vendor" / "pyJianYingDraft" / "__init__.py"
-            ),
+            "files": [
+                (
+                    path.relative_to(self.root).as_posix(),
+                    self._sha256(path),
+                )
+                for path in self._capability_files()
+            ],
         }
         digest = hashlib.sha256(
             repr(sorted(capability_material.items())).encode("utf-8")
@@ -165,12 +180,31 @@ class JianyingSkillRuntime:
             native_clip_animations=bool(draft and getattr(draft, "IntroType", None)),
             rich_subtitles=bool(jy_project and hasattr(jy_project, "add_rich_text")),
             audio_tracks=bool(jy_project and hasattr(jy_project, "add_audio_safe")),
-            screen_recording_tools=(
+            screen_recording_tool_present=(
                 (self.root / "tools" / "recording" / "recorder.py").is_file()
                 and (self.scripts_root / "web_recorder.py").is_file()
             ),
             auto_export_tool_present=(self.scripts_root / "auto_exporter.py").is_file(),
+            auto_export_supported=False,
         )
+
+    def _capability_files(self) -> list[Path]:
+        candidates = [
+            self.root / "VERSION",
+            self.scripts_root / "jy_wrapper.py",
+            *sorted((self.scripts_root / "core").glob("*.py")),
+            *sorted((self.scripts_root / "utils").glob("*.py")),
+            *sorted((self.scripts_root / "vendor" / "pyJianYingDraft").glob("*.py")),
+            *sorted(
+                (
+                    self.scripts_root
+                    / "vendor"
+                    / "pyJianYingDraft"
+                    / "metadata"
+                ).glob("*.py")
+            ),
+        ]
+        return [path for path in candidates if path.is_file()]
 
     @staticmethod
     def _sha256(path: Path) -> str:

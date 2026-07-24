@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from video_agent.compiler.v4 import compile_video_timeline
 from video_agent.contracts.v4 import (
@@ -19,6 +20,7 @@ from video_agent.contracts.v4.stage6_errors import Stage6Error
 from video_agent.io import load_json, load_model, sha256_file, sha256_json, utc_now, write_json_atomic
 from video_agent.progress import get_logger
 from video_agent.registries import CapabilityRegistryHub
+from video_agent.editors.jianying import JianyingEditorBackend, JianyingSkillRuntime
 from video_agent.render.v4 import export_remotion_timeline, mix_compiled_audio, resolve_materials
 from video_agent.render.v4.remotion_render import render_v4_silent_mp4
 from video_agent.runtime import RunContext
@@ -28,6 +30,7 @@ from video_agent.v4.stage6_fingerprint import build_stage6_fingerprint_component
 
 
 logger = get_logger()
+EditorBackend = Literal["remotion", "jianying"]
 
 
 @dataclass(frozen=True)
@@ -37,6 +40,9 @@ class V4Stage6Result:
     compiled_timeline: Path | None
     remotion_timeline: Path | None
     final_video: Path | None
+    editor_backend: EditorBackend
+    editor_manifest: Path | None
+    editor_draft: Path | None
     manifest: Path
 
 
@@ -52,6 +58,9 @@ class V4Stage6Runner:
         object_root: Path | None = None,
         render: bool = False,
         skip_ffmpeg: bool = False,
+        editor_backend: EditorBackend = "remotion",
+        jianying_skill_root: Path | None = None,
+        jianying_drafts_root: Path | None = None,
     ) -> V4Stage6Result:
         if phase in (None, "anchor"):
             anchor_result = self.run_anchor()
@@ -62,6 +71,9 @@ class V4Stage6Runner:
             object_root=object_root,
             render=render if phase in (None, "compile-render") else False,
             skip_ffmpeg=skip_ffmpeg,
+            editor_backend=editor_backend,
+            jianying_skill_root=jianying_skill_root,
+            jianying_drafts_root=jianying_drafts_root,
         )
 
     def run_anchor(self) -> V4Stage6Result:
@@ -116,6 +128,9 @@ class V4Stage6Runner:
             compiled_timeline=None,
             remotion_timeline=None,
             final_video=None,
+            editor_backend="remotion",
+            editor_manifest=None,
+            editor_draft=None,
             manifest=manifest_path,
         )
 
@@ -126,6 +141,9 @@ class V4Stage6Runner:
         object_root: Path | None = None,
         render: bool = False,
         skip_ffmpeg: bool = False,
+        editor_backend: EditorBackend = "remotion",
+        jianying_skill_root: Path | None = None,
+        jianying_drafts_root: Path | None = None,
     ) -> V4Stage6Result:
         started = time.perf_counter()
         required = {
@@ -151,6 +169,16 @@ class V4Stage6Runner:
         snapshot = load_model(required["used_assets.snapshot.json"], AssetRepositorySnapshot)
         frozen = load_model(required["capability_registry.snapshot.json"], FrozenRegistrySnapshot)
         registry = CapabilityRegistryHub.from_snapshot(frozen)
+        skill_runtime: JianyingSkillRuntime | None = None
+        skill_capability_sha256: str | None = None
+        if editor_backend == "jianying":
+            skill_runtime = JianyingSkillRuntime.discover(
+                explicit_root=jianying_skill_root,
+                repo_root=self.context.repo_root,
+            )
+            skill_capability_sha256 = skill_runtime.probe(
+                import_modules=False
+            ).capability_sha256
         store_root = object_root
         if store_root is None:
             config_path = self.context.repo_root / "config" / "assets.v4.json"
@@ -174,6 +202,8 @@ class V4Stage6Runner:
                 "registry_snapshot_id": frozen.snapshot_id,
                 "postroll_frames": postroll_frames,
                 "platform_profile_id": "douyin_portrait_v1",
+                "editor_backend": editor_backend,
+                "jianying_skill_capability_sha256": skill_capability_sha256,
             },
         )
         input_fingerprint_hash = sha256_json(fingerprint)
@@ -186,16 +216,35 @@ class V4Stage6Runner:
             silent_ok = previous.get("status") == "rendered_silent" and (
                 self.context.run_dir / "render" / "silent.mp4"
             ).is_file()
-            if previous.get("input_fingerprint") == input_fingerprint_hash and (rendered_ok or silent_ok):
+            jianying_manifest = self.context.run_dir / "render" / "jianying" / "jianying_project_manifest.json"
+            jianying_ok = previous.get("status") == "drafted" and jianying_manifest.is_file()
+            if previous.get("input_fingerprint") == input_fingerprint_hash and (
+                rendered_ok or silent_ok or jianying_ok
+            ):
                 logger.info("[V4][Stage6] resume hit fingerprint=%s", input_fingerprint_hash[:12])
                 final = self.context.run_dir / "render" / "final.mp4"
                 silent = self.context.run_dir / "render" / "silent.mp4"
+                draft_path: Path | None = None
+                if jianying_ok:
+                    draft_value = load_json(jianying_manifest).get("draft_path")
+                    draft_path = Path(draft_value) if draft_value else None
                 return V4Stage6Result(
                     phase="compile-render",
                     anchored_timing_plan=required["anchored_timing_plan.json"],
                     compiled_timeline=self.context.artifact("compiled_video_timeline.json"),
-                    remotion_timeline=self.context.run_dir / "render" / "remotion.timeline.json",
-                    final_video=final if final.is_file() else silent,
+                    remotion_timeline=(
+                        self.context.run_dir / "render" / "remotion.timeline.json"
+                        if editor_backend == "remotion"
+                        else None
+                    ),
+                    final_video=(
+                        None
+                        if editor_backend == "jianying"
+                        else (final if final.is_file() else silent)
+                    ),
+                    editor_backend=editor_backend,
+                    editor_manifest=jianying_manifest if jianying_ok else None,
+                    editor_draft=draft_path,
                     manifest=manifest_path,
                 )
 
@@ -225,43 +274,73 @@ class V4Stage6Runner:
             object_store_root=store_root,
             repo_root=self.context.repo_root,
         )
-        remotion_path = self.context.run_dir / "render" / "remotion.timeline.json"
-        export_remotion_timeline(resolved_timeline, remotion_path)
+        remotion_path: Path | None = None
+        if editor_backend == "remotion":
+            remotion_path = self.context.run_dir / "render" / "remotion.timeline.json"
+            export_remotion_timeline(resolved_timeline, remotion_path)
 
         final_video: Path | None = None
+        editor_manifest: Path | None = None
+        editor_draft: Path | None = None
         status = "compiled"
         if render:
-            silent = self.context.run_dir / "render" / "silent.mp4"
-            render_v4_silent_mp4(
-                timeline=resolved_timeline,
-                remotion_timeline_path=remotion_path,
-                run_render_dir=self.context.run_dir / "render",
-                repo_root=self.context.repo_root,
-                output=silent,
-            )
-            if not skip_ffmpeg:
-                final_video = self.context.run_dir / "render" / "final.mp4"
-                mix_compiled_audio(
+            if editor_backend == "remotion":
+                if remotion_path is None:
+                    raise RuntimeError("remotion timeline was not exported")
+                silent = self.context.run_dir / "render" / "silent.mp4"
+                render_v4_silent_mp4(
                     timeline=resolved_timeline,
-                    visual_input=silent,
+                    remotion_timeline_path=remotion_path,
                     run_render_dir=self.context.run_dir / "render",
-                    output=final_video,
+                    repo_root=self.context.repo_root,
+                    output=silent,
                 )
-                status = "rendered"
+                if not skip_ffmpeg:
+                    final_video = self.context.run_dir / "render" / "final.mp4"
+                    mix_compiled_audio(
+                        timeline=resolved_timeline,
+                        visual_input=silent,
+                        run_render_dir=self.context.run_dir / "render",
+                        output=final_video,
+                    )
+                    status = "rendered"
+                else:
+                    final_video = silent
+                    status = "rendered_silent"
             else:
-                final_video = silent
-                status = "rendered_silent"
+                backend = JianyingEditorBackend(
+                    repo_root=self.context.repo_root,
+                    skill_root=skill_runtime.root if skill_runtime else jianying_skill_root,
+                    drafts_root=jianying_drafts_root,
+                    motion_backend="jianying_native",
+                )
+                editor_result = backend.build_from_timeline(
+                    resolved_timeline_path=self.context.run_dir
+                    / "render"
+                    / "compiled_timeline.resolved.json",
+                    output_dir=self.context.run_dir / "render" / "jianying",
+                )
+                editor_manifest = editor_result.manifest_path
+                editor_draft = editor_result.draft_path
+                status = "drafted"
 
         output_fingerprint = {
             "compiled_video_timeline_sha256": sha256_json(timeline),
-            "remotion_timeline_sha256": sha256_file(remotion_path),
+            "editor_backend": editor_backend,
+            "remotion_timeline_sha256": sha256_file(remotion_path) if remotion_path else None,
+            "editor_manifest_sha256": sha256_file(editor_manifest) if editor_manifest else None,
             "status": status,
         }
         outputs = {
             "compiled_video_timeline": timeline_path.relative_to(self.context.run_dir).as_posix(),
-            "remotion_timeline": remotion_path.relative_to(self.context.run_dir).as_posix(),
             "stage6_validation": "stage6_validation.json",
         }
+        if remotion_path is not None:
+            outputs["remotion_timeline"] = remotion_path.relative_to(self.context.run_dir).as_posix()
+        if editor_manifest is not None:
+            outputs["editor_manifest"] = editor_manifest.relative_to(self.context.run_dir).as_posix()
+        if editor_draft is not None:
+            outputs["editor_draft"] = editor_draft.as_posix()
         if final_video is not None:
             outputs["final_video"] = final_video.relative_to(self.context.run_dir).as_posix()
         write_json_atomic(
@@ -294,6 +373,9 @@ class V4Stage6Runner:
             compiled_timeline=timeline_path,
             remotion_timeline=remotion_path,
             final_video=final_video,
+            editor_backend=editor_backend,
+            editor_manifest=editor_manifest,
+            editor_draft=editor_draft,
             manifest=manifest_path,
         )
 

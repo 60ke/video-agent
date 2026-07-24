@@ -27,6 +27,7 @@ from video_agent.io import load_json, write_json_atomic
 from video_agent.progress import configure_logging, get_logger
 from video_agent.runtime import RunContext
 from video_agent.speech.minimax import local_minimax_voice_id
+from video_agent.editors.jianying import JianyingSkillRuntime
 from video_agent.v4 import V4Orchestrator
 from video_agent.registries import CapabilityRegistryHub
 
@@ -72,7 +73,17 @@ def command_run(args: argparse.Namespace) -> dict[str, Any]:
     context = RunContext.open(case_dir, args.resume) if args.resume else RunContext.create(case_dir)
     from video_agent.v4.production import V4ProductionOrchestrator
 
-    result = V4ProductionOrchestrator(context).run(render=True, allow_fake_derivation=False)
+    result = V4ProductionOrchestrator(context).run(
+        render=True,
+        allow_fake_derivation=False,
+        editor_backend=args.editor_backend,
+        jianying_skill_root=Path(args.jianying_skill_root).resolve()
+        if args.jianying_skill_root
+        else None,
+        jianying_drafts_root=Path(args.jianying_drafts_root).resolve()
+        if args.jianying_drafts_root
+        else None,
+    )
     return {
         "ok": True,
         "pipeline_version": "v4",
@@ -81,6 +92,8 @@ def command_run(args: argparse.Namespace) -> dict[str, Any]:
         "run_manifest": result.run_manifest.as_posix(),
         "final_video": result.final_video.as_posix() if result.final_video else None,
         "final_cover": result.final_cover.as_posix() if result.final_cover else None,
+        "editor_manifest": result.editor_manifest.as_posix() if result.editor_manifest else None,
+        "editor_draft": result.editor_draft.as_posix() if result.editor_draft else None,
     }
 
 
@@ -143,6 +156,13 @@ def command_v4_stage6(args: argparse.Namespace) -> dict[str, Any]:
         object_root=Path(args.object_root).resolve() if args.object_root else None,
         render=bool(args.render),
         skip_ffmpeg=bool(args.skip_ffmpeg),
+        editor_backend=args.editor_backend,
+        jianying_skill_root=Path(args.jianying_skill_root).resolve()
+        if args.jianying_skill_root
+        else None,
+        jianying_drafts_root=Path(args.jianying_drafts_root).resolve()
+        if args.jianying_drafts_root
+        else None,
     )
     payload: dict[str, Any] = {
         "ok": True,
@@ -159,6 +179,10 @@ def command_v4_stage6(args: argparse.Namespace) -> dict[str, Any]:
         payload["remotion_timeline"] = result.remotion_timeline.as_posix()
     if result.final_video is not None:
         payload["final_video"] = result.final_video.as_posix()
+    if result.editor_manifest is not None:
+        payload["editor_manifest"] = result.editor_manifest.as_posix()
+    if result.editor_draft is not None:
+        payload["editor_draft"] = result.editor_draft.as_posix()
     return payload
 
 
@@ -207,7 +231,17 @@ def command_generate_video(args: argparse.Namespace) -> dict[str, Any]:
     )
     from video_agent.v4.production import V4ProductionOrchestrator
 
-    result = V4ProductionOrchestrator(context).run(render=True, allow_fake_derivation=False)
+    result = V4ProductionOrchestrator(context).run(
+        render=True,
+        allow_fake_derivation=False,
+        editor_backend=args.editor_backend,
+        jianying_skill_root=Path(args.jianying_skill_root).resolve()
+        if args.jianying_skill_root
+        else None,
+        jianying_drafts_root=Path(args.jianying_drafts_root).resolve()
+        if args.jianying_drafts_root
+        else None,
+    )
     return {
         "ok": True,
         "pipeline_version": "v4",
@@ -218,6 +252,21 @@ def command_generate_video(args: argparse.Namespace) -> dict[str, Any]:
         "run_manifest": result.run_manifest.as_posix(),
         "final_video": result.final_video.as_posix() if result.final_video else None,
         "final_cover": result.final_cover.as_posix() if result.final_cover else None,
+        "editor_manifest": result.editor_manifest.as_posix() if result.editor_manifest else None,
+        "editor_draft": result.editor_draft.as_posix() if result.editor_draft else None,
+    }
+
+
+def command_jianying_probe(args: argparse.Namespace) -> dict[str, Any]:
+    runtime = JianyingSkillRuntime.discover(
+        explicit_root=args.jianying_skill_root,
+        repo_root=Path(__file__).resolve().parents[1],
+    )
+    capabilities = runtime.probe(import_modules=True)
+    return {
+        "ok": True,
+        "skill_root": runtime.root.as_posix(),
+        "capabilities": capabilities.as_dict(),
     }
 
 
@@ -527,6 +576,7 @@ def build_parser() -> argparse.ArgumentParser:
     source.add_argument("--goal", help="Goal used by AI to generate the narration")
     generate.add_argument("--cases", default="cases", help="Parent directory for automatically created cases")
     generate.add_argument("--case-id", help="Optional explicit case ID; defaults to a unique timestamp ID")
+    _add_editor_backend_arguments(generate)
     generate.set_defaults(handler=command_generate_video)
 
     catalog = sub.add_parser("catalog", help="Build the legacy asset catalog (admin)")
@@ -558,6 +608,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--json", dest="sub_json", action="store_true")
     run.add_argument("--case", required=True)
     run.add_argument("--resume")
+    _add_editor_backend_arguments(run)
     run.set_defaults(handler=command_run)
 
     v4_stage1 = sub.add_parser("v4-stage1", help="Run the V4 semantic frontend with parallel speech and scope")
@@ -597,7 +648,16 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="With --render, keep silent Remotion MP4 and skip audio mix",
     )
+    _add_editor_backend_arguments(v4_stage6)
     v4_stage6.set_defaults(handler=command_v4_stage6)
+
+    jianying_probe = sub.add_parser(
+        "jianying-probe",
+        help="Locate jianying-editor-skill and validate production capabilities",
+    )
+    jianying_probe.add_argument("--json", dest="sub_json", action="store_true")
+    jianying_probe.add_argument("--jianying-skill-root")
+    jianying_probe.set_defaults(handler=command_jianying_probe)
 
     v4_assets = sub.add_parser("v4-assets", help="Manage the V4 asset repository")
     v4_assets.add_argument("--json", dest="sub_json", action="store_true")
@@ -704,6 +764,23 @@ def build_parser() -> argparse.ArgumentParser:
     cases_clean.add_argument("--export-manifest", help="Require the export manifest before deleting cases")
     cases_clean.set_defaults(handler=command_cases_clean)
     return parser
+
+
+def _add_editor_backend_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--editor-backend",
+        choices=("remotion", "jianying"),
+        default="remotion",
+        help="remotion exports MP4; jianying creates a native draft for manual export",
+    )
+    parser.add_argument(
+        "--jianying-skill-root",
+        help="Overrides JY_SKILL_ROOT and local Skill auto-discovery",
+    )
+    parser.add_argument(
+        "--jianying-drafts-root",
+        help="Optional Jianying draft library root",
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
