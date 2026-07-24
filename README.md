@@ -1,6 +1,8 @@
 # Video Agent V4
 
-面向抖音 9:16 短视频的 V4 生产主线。系统以冻结口播、MiniMax 词级时间轴、Scene Semantics、Stage3 素材仓库、Remotion `V4Timeline` 和 FFmpeg 混音，产出确定性成片。
+面向抖音 9:16 短视频的 V4 生产主线。系统以冻结口播、MiniMax
+词级时间轴、Scene Semantics 和 Stage3 素材仓库生成确定性时间线，再由
+Remotion 输出 MP4，或由剪映 Skill 输出可继续人工编辑的原生草稿。
 
 ## 核心原则
 
@@ -24,7 +26,9 @@
   -> BGM (skipped while disabled)
   -> CompiledVideoTimeline
   -> Structured QA
-  -> Remotion V4Timeline + FFmpeg mix
+  -> Editor Backend
+       |- Remotion V4Timeline + FFmpeg mix
+       `- Jianying Skill -> 原生剪映草稿
   -> Cover.png (独立交付，不改正文首帧)
   -> Delivery QA
   -> final/video.mp4 + final/cover.png
@@ -77,6 +81,48 @@ python main.py generate-video --goal "柯幻熊猫文生图功能种草" --json
 ```powershell
 python main.py --script .\文案.txt --cases D:\video_cases --case-id ad_demo_v1 --json
 ```
+
+### 剪映原生草稿后端
+
+剪映后端复用同一份冻结口播、词级 Anchor、选材和编译时间线，只替换最后的编辑
+执行层。先检查本机 Skill：
+
+```powershell
+python main.py jianying-probe --json `
+  --jianying-skill-root "C:\Users\CNGG\Desktop\jianying-editor-skill"
+```
+
+从文案直接生成剪映草稿：
+
+```powershell
+python main.py --script .\文案.txt `
+  --editor-backend jianying `
+  --jianying-skill-root "C:\Users\CNGG\Desktop\jianying-editor-skill"
+```
+
+也可以把已有 Run 的 Stage6 时间线编译为草稿：
+
+```powershell
+python main.py v4-stage6 `
+  --case cases\<case_id> `
+  --resume <run_id> `
+  --phase compile-render `
+  --render `
+  --editor-backend jianying `
+  --jianying-skill-root "C:\Users\CNGG\Desktop\jianying-editor-skill"
+```
+
+Run 内会写入：
+
+```text
+render/jianying/edit_blueprint.json
+render/jianying/jianying_project_manifest.json
+```
+
+CLI 同时返回剪映草稿的绝对路径。当前生产支持图片轨、剪映原生转场与动画、
+字幕、MiniMax 配音及 SFX；草稿需在剪映中人工打开并导出。本机剪映 11.1
+超出外部 Skill 自动导出控制器的兼容范围，因此不会伪装成已经输出 MP4。
+录屏脚本、鼠标事件和点击动效仍属于后续 Capture 接入，不在当前生产能力内。
 
 ### 本地配置
 
