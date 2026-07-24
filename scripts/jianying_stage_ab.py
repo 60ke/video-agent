@@ -7,10 +7,8 @@ import json
 from pathlib import Path
 
 from video_agent.editors.jianying import (
-    JianyingDraftAdapter,
-    compile_jianying_blueprint,
+    JianyingEditorBackend,
 )
-from video_agent.editors.jianying.adapter import write_manifest
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -19,7 +17,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--skill-root",
         type=Path,
-        default=Path(r"C:\Users\CNGG\Desktop\jianying-editor-skill"),
+        help="Defaults to JY_SKILL_ROOT or an auto-discovered local Skill checkout.",
     )
     parser.add_argument("--project-name")
     parser.add_argument("--drafts-root", type=Path)
@@ -47,36 +45,25 @@ def main() -> int:
         )
 
     output_dir = run_dir / args.output_subdir
-    blueprint, blueprint_path = compile_jianying_blueprint(
-        resolved_timeline,
-        output_dir,
-    )
-    project_name = (
-        args.project_name
-        or f"video-agent_{blueprint.case_id}_{blueprint.run_id}"
-    )
-    adapter = JianyingDraftAdapter(
+    backend = JianyingEditorBackend(
+        repo_root=Path(__file__).resolve().parents[1],
         skill_root=args.skill_root,
         drafts_root=args.drafts_root,
-    )
-    manifest = adapter.build(
-        blueprint,
-        blueprint_root=output_dir,
-        project_name=project_name,
         motion_backend=args.motion_backend,
     )
-    manifest["edit_blueprint_path"] = blueprint_path.as_posix()
-    manifest_path = write_manifest(
-        manifest,
-        output_dir / "jianying_project_manifest.json",
+    result = backend.build_from_timeline(
+        resolved_timeline_path=resolved_timeline,
+        output_dir=output_dir,
+        project_name=args.project_name,
     )
     print(
         json.dumps(
             {
                 "ok": True,
-                "blueprint": blueprint_path.as_posix(),
-                "manifest": manifest_path.as_posix(),
-                "draft": manifest["draft_path"],
+                "blueprint": result.blueprint_path.as_posix(),
+                "manifest": result.manifest_path.as_posix(),
+                "draft": result.draft_path.as_posix(),
+                "skill_version": result.skill_version,
             },
             ensure_ascii=False,
             indent=2,

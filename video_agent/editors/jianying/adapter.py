@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import importlib
 import json
 import math
-import sys
 from pathlib import Path
 from typing import Any, Literal
 
@@ -16,6 +14,7 @@ from .native_catalog import (
     clip_motion_query,
     transition_motion_query,
 )
+from .runtime import JianyingSkillRuntime
 
 _EASING = {
     "linear": {"curve_type": "Line"},
@@ -76,29 +75,6 @@ def _duration_us(start_frame: int, end_frame: int, fps: int) -> int:
     return _frame_to_us(end_frame, fps) - _frame_to_us(start_frame, fps)
 
 
-def _load_skill(skill_root: Path) -> tuple[Any, Any]:
-    scripts = skill_root.resolve() / "scripts"
-    if not scripts.is_dir():
-        raise FileNotFoundError(f"jianying skill scripts missing: {scripts}")
-    scripts_value = str(scripts)
-    for module_name in list(sys.modules):
-        if (
-            module_name == "jy_wrapper"
-            or module_name == "core"
-            or module_name.startswith("core.")
-            or module_name == "utils"
-            or module_name.startswith("utils.")
-            or module_name == "pyJianYingDraft"
-            or module_name.startswith("pyJianYingDraft.")
-        ):
-            sys.modules.pop(module_name, None)
-    if scripts_value not in sys.path:
-        sys.path.insert(0, scripts_value)
-    wrapper = importlib.import_module("jy_wrapper")
-    draft = importlib.import_module("pyJianYingDraft")
-    return wrapper, draft
-
-
 def _keyframe_property(draft: Any, keyframe: BlueprintKeyframe) -> Any:
     mapping = {
         "scale": draft.KeyframeProperty.uniform_scale,
@@ -114,12 +90,14 @@ class JianyingDraftAdapter:
     def __init__(
         self,
         *,
-        skill_root: str | Path,
+        runtime: JianyingSkillRuntime | None = None,
+        skill_root: str | Path | None = None,
         drafts_root: str | Path | None = None,
     ) -> None:
-        self.skill_root = Path(skill_root).resolve()
+        self.runtime = runtime or JianyingSkillRuntime.discover(explicit_root=skill_root)
+        self.skill_root = self.runtime.root
         self.drafts_root = Path(drafts_root).resolve() if drafts_root else None
-        self.wrapper, self.draft = _load_skill(self.skill_root)
+        self.wrapper, self.draft = self.runtime.load_modules()
 
     def build(
         self,
