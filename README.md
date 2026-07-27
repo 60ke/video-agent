@@ -34,7 +34,9 @@ Remotion 输出 MP4，或由剪映 Skill 输出可继续人工编辑的原生草
   -> final/video.mp4 + final/cover.png
 ```
 
-公共入口只走 `V4ProductionOrchestrator`。V3 Orchestrator / VerticalDemo / cover 首帧污染路径已删除。
+批处理入口仍由 `V4ProductionOrchestrator` 执行；交互式生产由 `video-agent` Skill
+逐工具驱动，并复用相同的 V4 Contract、素材仓库、Timing Compiler 和 Jianying
+Adapter。两者不维护两套业务规则。
 
 ## 安装
 
