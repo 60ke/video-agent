@@ -63,6 +63,24 @@ build_jianying_draft
 inspect_delivery
 ```
 
+The local CLI entrypoint for the atomic operations is:
+
+```text
+python main.py agent execute --case <case-dir> --run <run-id> --tool <name> --json
+```
+
+Case creation is separate because it creates the Case, Run, and Agent Session:
+
+```text
+python main.py agent create-case --script <copy.txt> --json
+python main.py agent create-case --goal "..." --json
+```
+
+`freeze_narration`, `build_speech`, and `plan_scenes` share the existing
+deterministic `V4Orchestrator.run_stage1` semantic-front-end kernel.  The
+result includes a warning when that bundled kernel is materialized; this is an
+explicit boundary, not an additional hidden DAG.
+
 Every artifact path is relative to the repository or Case root. Tools may include
 hashes, dimensions, IDs, and summaries, but never credentials or host paths.
 

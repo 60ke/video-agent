@@ -1,6 +1,6 @@
 # Video Agent V4 Implementation Progress
 
-Last updated: 2026-07-20
+Last updated: 2026-07-27
 
 ## Authority
 
@@ -28,6 +28,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 | Stage 5: effect, SFX, voice and derivation registries | control plane complete / Stage6 timing wired | Registries/Voice/Derivation/Motion-SFX complete. Motion now consumes exact `AnchoredTimingPlan.scene_spans`; proportional fallback removed; Stage5 SFX no longer truncates distinct Anchors via `window_event_budget`. |
 | Stage 6: semantic timing and compilation | complete / frozen | Real MiniMax Pass B closed on run `20260720_110920_904455` (145 tokens, 24.7s, 19 SFX, Remotion+FFmpeg final.mp4). Independent Git checkpoint: `a5130312`. |
 | Stage 7: production cutover and acceptance | closed locally | V3 purged; public CLI → V4; script/goal + local four-script acceptance; docs cut over to V4-only. Local tag `v4-stage7-cutover` exists (not pushed). BGM remains disabled. Local script visual gaps & proposed Coverage Review are **recorded only** in `docs/video_agent_v4_visual_coverage_review_notes_20260720.md` (implementation deferred until more scripts are reviewed). |
+| Agent Skill control plane | implemented / external provider handoff explicit | `SKILL.md` is the controller; `agent_runtime` persists `AgentSession` and append-only events; atomic Tool Facade exposes Case creation, semantic frontend, materials, anchors, motion/SFX, Jianying draft, delivery inspection, and explicit CDP/GPT Image waiting states. Existing V4 kernels remain the deterministic backend. |
 
 ## Working Decisions
 
@@ -44,6 +45,7 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 11. `object_key` rejects Windows separators and host paths instead of normalizing them silently. Stage 3 migration is responsible for converting legacy paths deliberately.
 12. Legacy `assets/catalog.json`, relationship manifests and review fields remain untouched Stage 3 migration inputs. The current unrelated local catalog regeneration is explicitly excluded from the Stage 2 commit.
 13. Post-Stage7 local visual gaps: do **not** implement Visual Coverage Review yet. Record findings in `docs/video_agent_v4_visual_coverage_review_notes_20260720.md` while more scripts are tested; prefer generic visual-obligation classes over script-specific rules.
+14. Agent Skill control is a facade over the V4 kernels, not a second orchestrator. One `agent execute --tool` call is recorded in `agent_events.jsonl` and updates `agent_session.json`; the Skill chooses the next tool and may pause for CDP/GPT Image provider work.
 
 ## Verification Ledger
 
@@ -81,6 +83,26 @@ Stage 0 Rev3 is the semantic oracle and uses Stage 1 field names. If the oracle 
 ## Deferred TODOs
 
 - [ ] **GPT Image 派生提示词质量**：`assets/derived/generated` 已清空；旧 `contextual_result_fill` / gallery preview / result_to_* 产物存在明显串类或语义错误（例如 `母婴服务_contextual_result_fill_*.png`）。当前优先推进 V4 架构，暂不修提示词。进入 Stage 4/5 派生执行前，必须重做 Derivation Prompt 模板与验收样例，禁止直接复用旧生成图或旧 prompt 指纹。
+
+## Agent Skill Control Plane (2026-07-27)
+
+| Capability | Status | Entry |
+|---|---|---|
+| Create Case/Run/Session | complete | `agent create-case --script/--goal` |
+| Inspect context and next checkpoint | complete | `agent inspect-context` |
+| Persist session and tool events | complete | `agent_session.json`, `agent_events.jsonl` |
+| Semantic frontend | complete as one atomic kernel | `freeze_narration` / `build_speech` / `plan_scenes` facade over V4 Stage1 |
+| Repository material resolution | complete | `resolve_materials` facade over Stage4 |
+| CDP capture handoff | explicit waiting state | `capture_site` |
+| GPT Image derivation handoff | explicit waiting state | `derive_assets` |
+| Phrase anchors | complete | `compile_anchors` facade over Stage6 anchor |
+| Motion and SFX intents | complete | `plan_edit_intents` facade over Stage5 |
+| Native Jianying draft | complete when external skill is installed | `build_jianying_draft` facade over Stage6 Jianying backend |
+| Delivery inspection | complete | `inspect_delivery` |
+
+The facade intentionally does not guess a missing website capture or derivative.
+The Skill pauses, invokes the corresponding external provider capability, then
+resumes the affected run with the same session and frozen upstream artifacts.
 
 ## Stage 3 Definition Of Done
 

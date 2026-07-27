@@ -27,6 +27,34 @@ backend used by the tools and by the secondary batch client.
 8. Inspect the draft and delivery artifacts. Resume only the affected tool when a
    recoverable error is reported.
 
+The local Tool Facade is invoked as:
+
+```powershell
+python main.py agent create-case --script <copy.txt> --json
+python main.py agent inspect-context --case <case-dir> --json
+python main.py agent session-inspect --run-dir <run-dir> --json
+python main.py agent execute --case <case-dir> --run <run-id> --tool <tool-name> --json
+```
+
+The Agent selects one `--tool` per decision.  The command returns the stable
+ToolResult envelope and appends the result to `agent_events.jsonl`; it does not
+run an implicit downstream DAG.  The initial semantic frontend is an atomic
+kernel shared by `freeze_narration`, `build_speech`, and `plan_scenes`, so the
+first of those calls may materialize all five semantic frontend artifacts.  A
+later call is a resume hit and does not call the provider again.
+
+For a Jianying draft, the final tool call is:
+
+```powershell
+python main.py agent execute --case <case-dir> --run <run-id> `
+  --tool build_jianying_draft --jianying-skill-root <skill-dir> --json
+```
+
+`capture_site` and `derive_assets` deliberately return `waiting_for_tool` when
+no external provider adapter is connected.  The Skill must then invoke the CDP
+or GPT Image provider, register its result, and resume the affected downstream
+tool; the local facade never invents a capture or derivative.
+
 Read these references only when needed:
 
 - `references/tool_contracts.md` for Tool Result and Session contracts.

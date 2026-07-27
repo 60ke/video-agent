@@ -21,7 +21,14 @@ from video_agent.assets.v4 import (
     migrate_legacy,
 )
 from video_agent.audio.register import register_sfx_library
-from video_agent.agent_runtime.tooling import create_agent_session, inspect_context, inspect_session
+from video_agent.agent_runtime.tooling import (
+    AGENT_TOOL_NAMES,
+    create_agent_case,
+    create_agent_session,
+    execute_agent_tool,
+    inspect_context,
+    inspect_session,
+)
 from video_agent.case_admin import clean_cases, export_case_videos
 from video_agent.contracts import CaseConfig, VoiceConfig
 from video_agent.io import load_json, write_json_atomic
@@ -304,6 +311,39 @@ def command_agent_session_create(args: argparse.Namespace) -> dict[str, Any]:
 def command_agent_session_inspect(args: argparse.Namespace) -> dict[str, Any]:
     session = inspect_session(Path(args.run_dir).resolve())
     return {"ok": True, "session": session.model_dump(mode="json")}
+
+
+def command_agent_execute(args: argparse.Namespace) -> dict[str, Any]:
+    result = execute_agent_tool(
+        Path(args.case).resolve(),
+        run_id=args.run,
+        tool=args.tool,
+        options={
+            "seed": args.seed,
+            "sfx_profile": args.sfx_profile,
+            "db": args.db,
+            "object_root": args.object_root,
+            "jianying_skill_root": args.jianying_skill_root,
+            "jianying_drafts_root": args.jianying_drafts_root,
+        },
+    )
+    return result.model_dump(mode="json", exclude_none=True)
+
+
+def command_agent_create_case(args: argparse.Namespace) -> dict[str, Any]:
+    script_text = None
+    if args.script:
+        script_text = Path(args.script).resolve().read_text(encoding="utf-8-sig").strip()
+        if not script_text:
+            raise ValueError(f"script file must not be empty: {args.script}")
+    result = create_agent_case(
+        cases_root=Path(args.cases),
+        goal=args.goal,
+        script_text=script_text,
+        case_id=args.case_id,
+        mode=args.mode,
+    )
+    return result.model_dump(mode="json", exclude_none=True)
 
 
 def command_v4_probe(args: argparse.Namespace) -> dict[str, Any]:
@@ -731,6 +771,27 @@ def build_parser() -> argparse.ArgumentParser:
     agent_session_inspect.add_argument("--json", dest="sub_json", action="store_true")
     agent_session_inspect.add_argument("--run-dir", required=True)
     agent_session_inspect.set_defaults(handler=command_agent_session_inspect)
+    agent_create = agent_sub.add_parser("create-case", help="Create a Case, Run, and persisted Agent Session")
+    agent_create.add_argument("--json", dest="sub_json", action="store_true")
+    case_source = agent_create.add_mutually_exclusive_group(required=True)
+    case_source.add_argument("--goal")
+    case_source.add_argument("--script")
+    agent_create.add_argument("--cases", default="cases")
+    agent_create.add_argument("--case-id")
+    agent_create.add_argument("--mode", choices=("interactive", "batch"), default="interactive")
+    agent_create.set_defaults(handler=command_agent_create_case)
+    agent_execute = agent_sub.add_parser("execute", help="Execute one atomic Agent Skill tool")
+    agent_execute.add_argument("--json", dest="sub_json", action="store_true")
+    agent_execute.add_argument("--case", required=True)
+    agent_execute.add_argument("--run", required=True)
+    agent_execute.add_argument("--tool", required=True, choices=AGENT_TOOL_NAMES)
+    agent_execute.add_argument("--seed", default="default")
+    agent_execute.add_argument("--sfx-profile", default="normal")
+    agent_execute.add_argument("--db")
+    agent_execute.add_argument("--object-root")
+    agent_execute.add_argument("--jianying-skill-root")
+    agent_execute.add_argument("--jianying-drafts-root")
+    agent_execute.set_defaults(handler=command_agent_execute)
 
     probe = sub.add_parser("v4-probe", help="Stepwise V4 tuning: checkpoint map, summarize, or run until a step")
     probe.add_argument("--json", dest="sub_json", action="store_true")
