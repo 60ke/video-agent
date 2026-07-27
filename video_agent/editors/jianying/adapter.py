@@ -7,6 +7,12 @@ import math
 from pathlib import Path
 from typing import Any, Literal
 
+from video_agent.compiler.v4.font_measure import (
+    DEFAULT_SUBTITLE_FONT_PX,
+    measure_text_width_px,
+)
+from video_agent.platform.profiles import PixelRect, get_profile
+
 from .contracts import BlueprintKeyframe, JianyingEditBlueprint
 from .native_catalog import (
     NativeEffectCandidate,
@@ -36,6 +42,44 @@ _EASING = {
 }
 
 MotionBackend = Literal["keyframes", "jianying_native"]
+
+
+def _subtitle_slot(
+    blueprint: JianyingEditBlueprint,
+    slot_id: str,
+) -> PixelRect:
+    profile = get_profile(blueprint.canvas.platform_profile_id)
+    if profile.canvas.w != blueprint.canvas.width or profile.canvas.h != blueprint.canvas.height:
+        raise ValueError(
+            "Jianying canvas does not match its platform profile: "
+            f"{blueprint.canvas.width}x{blueprint.canvas.height} vs "
+            f"{profile.canvas.w}x{profile.canvas.h}"
+        )
+    return profile.subtitle_top if slot_id == "subtitle_top" else profile.subtitle_lower
+
+
+def _subtitle_transform_y(
+    blueprint: JianyingEditBlueprint,
+    slot_id: str,
+) -> float:
+    slot = _subtitle_slot(blueprint, slot_id)
+    center_y = slot.y + slot.h / 2
+    return 1.0 - 2.0 * center_y / blueprint.canvas.height
+
+
+def _subtitle_style_size(
+    blueprint: JianyingEditBlueprint,
+    *,
+    text: str,
+    slot_id: str,
+    style_id: str,
+) -> float:
+    """Map pixel-safe subtitle typography to Jianying's canvas-percent unit."""
+    slot = _subtitle_slot(blueprint, slot_id)
+    font_px = round(DEFAULT_SUBTITLE_FONT_PX * (1.08 if style_id == "gallery_yellow" else 1.0))
+    measured_width = measure_text_width_px(text, font_px=font_px)
+    fit_scale = min(1.0, slot.w / measured_width) if measured_width else 1.0
+    return round(100.0 * font_px * fit_scale / blueprint.canvas.width, 3)
 
 
 def _bounded_native_duration_us(
@@ -199,9 +243,7 @@ class JianyingDraftAdapter:
                 )
                 native_selections.append(
                     candidate.manifest_record(
-                        target_id=(
-                            f"{previous_clip.clip_id}->{current_clip.clip_id}"
-                        ),
+                        target_id=(f"{previous_clip.clip_id}->{current_clip.clip_id}"),
                         intent=intent,
                         applied_duration_us=duration,
                     )
@@ -210,9 +252,7 @@ class JianyingDraftAdapter:
 
         for audio in blueprint.audio_clips:
             source = root / audio.media_path
-            duration = (
-                audio.max_duration_ms * 1000 if audio.max_duration_ms is not None else None
-            )
+            duration = audio.max_duration_ms * 1000 if audio.max_duration_ms is not None else None
             segment = project.add_audio_safe(
                 str(source),
                 start_time=_frame_to_us(audio.start_frame, fps),
@@ -233,29 +273,29 @@ class JianyingDraftAdapter:
         subtitle_lane_ends: list[int] = []
         for cue in blueprint.subtitle_cues:
             lane_index = next(
-                (
-                    index
-                    for index, end_frame in enumerate(subtitle_lane_ends)
-                    if cue.start_frame >= end_frame
-                ),
+                (index for index, end_frame in enumerate(subtitle_lane_ends) if cue.start_frame >= end_frame),
                 len(subtitle_lane_ends),
             )
             if lane_index == len(subtitle_lane_ends):
                 subtitle_lane_ends.append(cue.end_frame)
             else:
                 subtitle_lane_ends[lane_index] = cue.end_frame
-            subtitle_track_name = (
-                "Subtitles" if lane_index == 0 else f"Subtitles_{lane_index + 1}"
-            )
-            clip_settings = self.draft.ClipSettings(
-                transform_y=0.74 if cue.slot_id == "subtitle_top" else -0.72
-            )
+            subtitle_track_name = "Subtitles" if lane_index == 0 else f"Subtitles_{lane_index + 1}"
+            subtitle_slot = _subtitle_slot(blueprint, cue.slot_id)
+            clip_settings = self.draft.ClipSettings(transform_y=_subtitle_transform_y(blueprint, cue.slot_id))
             style = self.draft.TextStyle(
-                size=7.2 if cue.style_id == "gallery_yellow" else 6.2,
+                size=_subtitle_style_size(
+                    blueprint,
+                    text=cue.text,
+                    slot_id=cue.slot_id,
+                    style_id=cue.style_id,
+                ),
                 bold=True,
-                color=(1.0, 0.82, 0.12)
-                if cue.style_id == "gallery_yellow"
-                else (1.0, 1.0, 1.0),
+                align=1,
+                letter_spacing=0,
+                auto_wrapping=False,
+                max_line_width=subtitle_slot.w / blueprint.canvas.width,
+                color=(1.0, 0.82, 0.12) if cue.style_id == "gallery_yellow" else (1.0, 1.0, 1.0),
             )
             kwargs = {
                 "start_time": _frame_to_us(cue.start_frame, fps),
@@ -263,9 +303,7 @@ class JianyingDraftAdapter:
                 "track_name": subtitle_track_name,
                 "clip_settings": clip_settings,
                 "style": style,
-                "border": self.draft.TextBorder(
-                    color=(0.0, 0.0, 0.0), alpha=1.0, width=45.0
-                ),
+                "border": self.draft.TextBorder(color=(0.0, 0.0, 0.0), alpha=1.0, width=45.0),
             }
             if motion_backend == "jianying_native":
                 cue_duration = _duration_us(cue.start_frame, cue.end_frame, fps)

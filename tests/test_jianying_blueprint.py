@@ -6,8 +6,15 @@ from video_agent.editors.jianying.adapter import (
     _bounded_native_duration_us,
     _duration_us,
     _frame_to_us,
+    _subtitle_style_size,
+    _subtitle_transform_y,
 )
 from video_agent.editors.jianying.compiler import _effect_keyframes
+from video_agent.editors.jianying.contracts import (
+    BlueprintCanvas,
+    BlueprintVisualClip,
+    JianyingEditBlueprint,
+)
 from video_agent.editors.jianying.native_catalog import (
     NativeEffectCatalog,
     NativeEffectQuery,
@@ -20,6 +27,58 @@ def test_frame_conversion_preserves_30fps_boundaries() -> None:
     assert _frame_to_us(0, 30) == 0
     assert _frame_to_us(30, 30) == 1_000_000
     assert _duration_us(98, 115, 30) == 566_666
+
+
+def _blueprint() -> JianyingEditBlueprint:
+    return JianyingEditBlueprint(
+        case_id="case",
+        run_id="run",
+        timeline_sha256="a" * 64,
+        canvas=BlueprintCanvas(
+            width=1080,
+            height=1920,
+            fps=30,
+            platform_profile_id="douyin_portrait_v1",
+        ),
+        frame_count=30,
+        visual_clips=[
+            BlueprintVisualClip(
+                clip_id="clip",
+                scene_id="scene",
+                source_asset_ref="A0001",
+                media_path="asset.png",
+                start_frame=0,
+                end_frame=30,
+                effect_id="fade_in",
+            )
+        ],
+    )
+
+
+def test_jianying_subtitle_uses_platform_safe_slot() -> None:
+    blueprint = _blueprint()
+
+    assert _subtitle_transform_y(blueprint, "subtitle_top") == 0.7958333333333334
+    assert _subtitle_transform_y(blueprint, "subtitle_lower") == -0.43541666666666656
+
+
+def test_jianying_subtitle_size_shrinks_long_text_to_safe_width() -> None:
+    blueprint = _blueprint()
+    short_size = _subtitle_style_size(
+        blueprint,
+        text="简单好上手",
+        slot_id="subtitle_top",
+        style_id="default",
+    )
+    long_size = _subtitle_style_size(
+        blueprint,
+        text="全品类统一操作简单好上手而且人人都能快速学会",
+        slot_id="subtitle_top",
+        style_id="default",
+    )
+
+    assert short_size == 5.185
+    assert long_size < short_size
 
 
 def test_card_stack_compiles_to_bounded_keyframes() -> None:
@@ -110,15 +169,12 @@ def test_native_motion_intents_use_catalog_queries() -> None:
     ordinary_intent, _, ordinary_query = transition_motion_query(first, gallery_a)
     assert ordinary_intent == "scene_soft_transition"
     assert ordinary_query.keywords[0] == "叠化"
-    assert (
-        _bounded_native_duration_us(
-            gallery_a,
-            gallery_b,
-            fps=30,
-            preferred_frames=10,
-        )
-        == _frame_to_us(7, 30)
-    )
+    assert _bounded_native_duration_us(
+        gallery_a,
+        gallery_b,
+        fps=30,
+        preferred_frames=10,
+    ) == _frame_to_us(7, 30)
 
 
 def test_native_motion_selection_ignores_legacy_effect_id() -> None:
