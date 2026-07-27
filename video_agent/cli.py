@@ -21,6 +21,7 @@ from video_agent.assets.v4 import (
     migrate_legacy,
 )
 from video_agent.audio.register import register_sfx_library
+from video_agent.agent_runtime.tooling import create_agent_session, inspect_context, inspect_session
 from video_agent.case_admin import clean_cases, export_case_videos
 from video_agent.contracts import CaseConfig, VoiceConfig
 from video_agent.io import load_json, write_json_atomic
@@ -280,6 +281,29 @@ def command_inspect(args: argparse.Namespace) -> dict[str, Any]:
     manifest = load_json(run_dir / "run_manifest.json")
     qa_path = run_dir / "qa_report.json"
     return {"ok": True, "run_id": run_id, "manifest": manifest, "qa": load_json(qa_path) if qa_path.is_file() else None}
+
+
+def command_agent_inspect_context(args: argparse.Namespace) -> dict[str, Any]:
+    result = inspect_context(Path(args.case).resolve(), args.run)
+    return result.model_dump(mode="json", exclude_none=True)
+
+
+def command_agent_session_create(args: argparse.Namespace) -> dict[str, Any]:
+    case_dir = Path(args.case).resolve()
+    run_id = args.run
+    run_dir = case_dir / "runs" / run_id
+    session = create_agent_session(
+        run_dir,
+        case_id=args.case_id or case_dir.name,
+        run_id=run_id,
+        mode=args.mode,
+    )
+    return {"ok": True, "session": session.model_dump(mode="json")}
+
+
+def command_agent_session_inspect(args: argparse.Namespace) -> dict[str, Any]:
+    session = inspect_session(Path(args.run_dir).resolve())
+    return {"ok": True, "session": session.model_dump(mode="json")}
 
 
 def command_v4_probe(args: argparse.Namespace) -> dict[str, Any]:
@@ -687,6 +711,26 @@ def build_parser() -> argparse.ArgumentParser:
     inspect.add_argument("--case", required=True)
     inspect.add_argument("--run")
     inspect.set_defaults(handler=command_inspect)
+
+    agent = sub.add_parser("agent", help="Run structured tools for the Video Agent Skill")
+    agent.add_argument("--json", dest="sub_json", action="store_true")
+    agent_sub = agent.add_subparsers(dest="agent_command", required=True)
+    agent_inspect = agent_sub.add_parser("inspect-context", help="Inspect Case/Run artifacts and suggest the next tool")
+    agent_inspect.add_argument("--json", dest="sub_json", action="store_true")
+    agent_inspect.add_argument("--case", required=True)
+    agent_inspect.add_argument("--run")
+    agent_inspect.set_defaults(handler=command_agent_inspect_context)
+    agent_session = agent_sub.add_parser("session-create", help="Create the persisted Agent Session for a Run")
+    agent_session.add_argument("--json", dest="sub_json", action="store_true")
+    agent_session.add_argument("--case", required=True)
+    agent_session.add_argument("--run", required=True)
+    agent_session.add_argument("--case-id")
+    agent_session.add_argument("--mode", choices=("interactive", "batch"), default="interactive")
+    agent_session.set_defaults(handler=command_agent_session_create)
+    agent_session_inspect = agent_sub.add_parser("session-inspect", help="Read the persisted Agent Session")
+    agent_session_inspect.add_argument("--json", dest="sub_json", action="store_true")
+    agent_session_inspect.add_argument("--run-dir", required=True)
+    agent_session_inspect.set_defaults(handler=command_agent_session_inspect)
 
     probe = sub.add_parser("v4-probe", help="Stepwise V4 tuning: checkpoint map, summarize, or run until a step")
     probe.add_argument("--json", dest="sub_json", action="store_true")
