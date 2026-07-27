@@ -9,6 +9,7 @@ from video_agent.agent_runtime.tooling import (
     execute_agent_tool,
     inspect_context,
 )
+from video_agent.agent_runtime.setup import setup_installation
 
 
 def test_inspect_context_suggests_case_creation_for_missing_case(tmp_path: Path) -> None:
@@ -78,3 +79,16 @@ def test_create_agent_case_initializes_run_and_session(tmp_path: Path) -> None:
     assert (case_dir / "case.json").is_file()
     assert (case_dir / "input" / "source_script.txt").is_file()
     assert (case_dir / "runs" / result.run_id / "agent_session.json").is_file()
+
+
+def test_setup_non_interactive_does_not_overwrite_local_provider_config(tmp_path: Path) -> None:
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    ai_path = config_dir / "ai.local.json"
+    original = '{"api_key":"local-secret","custom":"keep"}'
+    ai_path.write_text(original, encoding="utf-8")
+
+    report = setup_installation(tmp_path, interactive=False)
+
+    assert report["ok"] is True
+    assert ai_path.read_text(encoding="utf-8") == original

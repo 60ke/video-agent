@@ -57,6 +57,21 @@ Set-Location ..
 
 示例见同目录 `*.example.json`。
 
+首次安装建议运行配置向导：
+
+```powershell
+python main.py agent setup
+```
+
+向导依次配置 AI API Key、MiniMax、GPT Image、CDP 登录态目录和剪映
+Skill/草稿目录。密钥使用隐藏输入并写入 `config/*.local.json`；CDP 只检查
+`auth_state.json` 是否存在，不复制或打印 Cookie。已有配置可用以下命令只读
+检查，不会覆盖文件：
+
+```powershell
+python main.py agent setup --non-interactive --json
+```
+
 ## 命令行生成视频
 
 日常生产只需两种命令（`main.py` 会把以 `-` 开头的参数路由到 `generate_video`）：

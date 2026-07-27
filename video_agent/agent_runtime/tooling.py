@@ -354,16 +354,19 @@ def _run_tool_impl(
         )
 
     if tool == "build_jianying_draft":
+        local = load_json(context.repo_root / "config" / "agent.local.json") if (context.repo_root / "config" / "agent.local.json").is_file() else {}
+        skill_root_value = options.get("jianying_skill_root") or local.get("jianying_skill_root")
+        drafts_root_value = options.get("jianying_drafts_root") or local.get("jianying_drafts_root")
         result = runner.run_stage6(
             phase="compile-render",
             render=True,
             skip_ffmpeg=True,
             editor_backend="jianying",
-            jianying_skill_root=Path(options["jianying_skill_root"]).resolve()
-            if options.get("jianying_skill_root")
+            jianying_skill_root=Path(skill_root_value).resolve()
+            if skill_root_value
             else None,
-            jianying_drafts_root=Path(options["jianying_drafts_root"]).resolve()
-            if options.get("jianying_drafts_root")
+            jianying_drafts_root=Path(drafts_root_value).resolve()
+            if drafts_root_value
             else None,
         )
         return ToolResult(

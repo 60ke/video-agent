@@ -12,6 +12,18 @@ backend used by the tools and by the secondary batch client.
 
 ## Workflow
 
+Before the first production run on a machine, initialize local providers and
+external tools with:
+
+```powershell
+python main.py agent setup
+```
+
+The wizard stores only ignored local configuration, validates the configured
+Jianying Skill path, and reports whether the CDP auth state file exists. It
+does not copy or print cookies. Use `--non-interactive` for a read-only
+readiness check.
+
 1. Inspect the repository, local provider configuration, Jianying capability, and
    current Run artifacts before making a decision.
 2. Create or resume a Case. Freeze fixed copy exactly; for a goal, freeze the

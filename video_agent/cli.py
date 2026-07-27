@@ -29,6 +29,7 @@ from video_agent.agent_runtime.tooling import (
     inspect_context,
     inspect_session,
 )
+from video_agent.agent_runtime.setup import setup_installation
 from video_agent.case_admin import clean_cases, export_case_videos
 from video_agent.contracts import CaseConfig, VoiceConfig
 from video_agent.io import load_json, write_json_atomic
@@ -344,6 +345,11 @@ def command_agent_create_case(args: argparse.Namespace) -> dict[str, Any]:
         mode=args.mode,
     )
     return result.model_dump(mode="json", exclude_none=True)
+
+
+def command_agent_setup(args: argparse.Namespace) -> dict[str, Any]:
+    repo_root = Path(__file__).resolve().parents[1]
+    return setup_installation(repo_root, interactive=not args.non_interactive)
 
 
 def command_v4_probe(args: argparse.Namespace) -> dict[str, Any]:
@@ -780,6 +786,10 @@ def build_parser() -> argparse.ArgumentParser:
     agent_create.add_argument("--case-id")
     agent_create.add_argument("--mode", choices=("interactive", "batch"), default="interactive")
     agent_create.set_defaults(handler=command_agent_create_case)
+    agent_setup = agent_sub.add_parser("setup", help="Guide first-run local provider and editor configuration")
+    agent_setup.add_argument("--json", dest="sub_json", action="store_true")
+    agent_setup.add_argument("--non-interactive", action="store_true", help="Only inspect existing local configuration")
+    agent_setup.set_defaults(handler=command_agent_setup)
     agent_execute = agent_sub.add_parser("execute", help="Execute one atomic Agent Skill tool")
     agent_execute.add_argument("--json", dest="sub_json", action="store_true")
     agent_execute.add_argument("--case", required=True)
